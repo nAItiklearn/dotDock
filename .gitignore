@@ -13,3 +13,6 @@ dist/
 target/
 *.log
 .DS_Store
+
+# Read-only study clones of third-party reference code (never committed)
+/references/
