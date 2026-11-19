@@ -8,33 +8,33 @@ import numpy as np
 from ..core import F32, Canvas, blur, clamp01, rgb, smoothstep, upscale
 from ..registry import Style
 
-PETALS = 15                    # large overlapping soft forms
-SMALL_PETALS = 4               # smaller forms laid over them
+PETALS = 22                    # overlapping soft petals, far to near
+PETAL_ALPHA = 0.84             # petals are slightly translucent: the one beneath shows through where they overlap
 STEM_TUFTS = ((0.30, 0.52, 0.76), (0.40, 0.66))   # where each stem carries a thorn tuft (canvas height fractions)
 NEEDLES = (5, 7)               # thorns per side of a tuft (min, max)
 LIGHT_DIR = (-0.62, -0.78)     # petals are lit from the upper left
 
 
 def _petal_forms(rng, aspect):
-    """Back-to-front list of (cx, cy, rx, ry, rot, tone, exponent, edge softness) on a jittered grid so the frame stays filled."""
-    cols, rows = 5, 3
+    """Far-to-near list of (cx, cy, length, width, rot, tone, bend, asymmetry, edge softness) laid on a jittered grid.
+
+    Far petals are large, pale and heavily blurred; near ones are smaller, sharper and a little darker.
+    """
+    cols, rows = 6, 4
+    cells = [(i % cols, i // cols) for i in range(cols * rows)]
+    rng.shuffle(cells)
     forms = []
-    for i in range(PETALS):
-        gx, gy = (i % cols + 0.5) / cols, ((i // cols) + 0.5) / rows
-        cx = (gx + rng.uniform(-0.09, 0.09)) * aspect
-        cy = gy + rng.uniform(-0.12, 0.12)
-        r = rng.uniform(0.30, 0.46)
-        stretch = rng.uniform(0.80, 1.25)
-        forms.append((cx, cy, r * stretch, r / stretch, rng.uniform(0, math.pi), rng.uniform(0.0, 1.0), rng.uniform(2.0, 2.7),
-                      rng.uniform(0.008, 0.026)))
-    # bigger forms sit further back
-    forms.sort(key=lambda f: -f[2] * f[3])
-    for _ in range(SMALL_PETALS):
-        r = rng.uniform(0.13, 0.22)
-        stretch = rng.uniform(0.8, 1.3)
-        forms.append((rng.uniform(0.55, 1.0) * aspect, rng.uniform(0.1, 0.95), r * stretch, r / stretch,
-                      rng.uniform(0, math.pi), rng.uniform(0.2, 1.0), rng.uniform(2.0, 2.5), rng.uniform(0.018, 0.034)))
-    return forms
+    for gx, gy in cells[:PETALS]:
+        depth = rng.uniform(0.0, 1.0)                                  # 0 far .. 1 near
+        cx = ((gx + 0.5) / cols + rng.uniform(-0.07, 0.07)) * aspect
+        cy = (gy + 0.5) / rows + rng.uniform(-0.09, 0.09)
+        length = (0.62 - 0.30 * depth) * rng.uniform(0.85, 1.15)
+        width = length * rng.uniform(0.34, 0.52)
+        soft = 0.010 + 0.050 * (1.0 - depth) ** 1.4
+        forms.append((depth, (cx, cy, length, width, rng.uniform(0.0, 2.0 * math.pi), 0.55 + 0.45 * depth * rng.uniform(0.4, 1.0),
+                              rng.normal(0.0, 0.16), rng.uniform(-0.22, 0.22), soft)))
+    forms.sort(key=lambda f: f[0])
+    return [f for _, f in forms]
 
 
 def _shift(a, dx_px, dy_px):
@@ -48,21 +48,24 @@ def _shift(a, dx_px, dy_px):
 
 
 def _petal_layer(c: Canvas, form):
-    """One petal: (shade 0..1, coverage). Shade carries a rim light on the lit side and a soft belly."""
-    cx, cy, rx, ry, rot, _tone, p, soft = form
+    """One petal: (shade 0..1, coverage). A rounded base swells to a broad belly and tapers to a point; the axis curls
+    and one flank is fuller than the other. Shade has a lit flank, a soft belly and a faint midrib."""
+    cx, cy, length, width, rot, _tone, bend, asym, soft = form
     ca, sa = math.cos(rot), math.sin(rot)
     dx, dy = c.x - cx, c.y - cy
-    u = (dx * ca + dy * sa) / rx
-    v = (-dx * sa + dy * ca) / ry
-    rho = (np.abs(u) ** p + np.abs(v) ** p) ** (1.0 / p)
-    e = soft / math.sqrt(rx * ry)
-    cov = smoothstep(1.0 + e, 1.0 - e, rho).astype(F32)
-    # outward direction in canvas space, to compare with the light
-    nx, ny = (u * ca * rx - v * sa * ry), (u * sa * rx + v * ca * ry)
-    nl = np.hypot(nx, ny) + 1e-6
-    facing = (nx * LIGHT_DIR[0] + ny * LIGHT_DIR[1]) / nl         # +1 facing the light
-    rim = smoothstep(0.35, 1.0, rho)
-    shade = 0.62 + 0.30 * (1.0 - rho**2) - 0.34 * rim * (1.0 - facing) * 0.5 + 0.12 * rim * facing
+    u = (dx * ca + dy * sa) / length                       # -1 at the base .. +1 at the tip
+    v = (-dx * sa + dy * ca) / length - bend * u * u       # across, in units of the half-length
+    t = np.clip(0.5 * u + 0.5, 0.0, 1.0)
+    prof = 2.5 * np.sqrt(t) * (1.0 - t) ** 0.9             # round base, broad belly near t = 0.36, long taper to the tip
+    half_w = (width / length) * prof * (1.0 + asym * np.sign(v))
+    half_w = np.maximum(half_w, 1e-4)
+    sd = np.maximum(np.abs(v) - half_w, np.abs(u) - 1.0) * length
+    cov = smoothstep(soft, -soft, sd).astype(F32)
+    nv = np.clip(v / half_w, -1.0, 1.0)
+    facing = np.sign(v) * (-sa * LIGHT_DIR[0] + ca * LIGHT_DIR[1])        # +1 where the flank faces the light
+    rim = smoothstep(0.35, 1.0, np.abs(nv))
+    midrib = np.exp(-((v / (0.06 * np.maximum(half_w, 0.02))) ** 2)) * smoothstep(0.0, 0.3, t) * 0.07
+    shade = 0.66 + 0.26 * (1.0 - nv**2) * (0.5 + 0.5 * t) - 0.30 * rim * (1.0 - facing) * 0.5 + 0.14 * rim * facing - midrib
     return shade.astype(F32), cov
 
 
@@ -125,13 +128,13 @@ def _render(c: Canvas, mode: str, seed: int) -> np.ndarray:
     x, y = c.x, c.y
 
     if dark:
-        lo, hi = rgb("#09090a"), rgb("#4c4c50")
+        lo, hi = rgb("#09090a"), rgb("#5c5c61")
         stem_col, halo_col = rgb("#dedcd8"), rgb("#9a9a9c")
         shadow_k, rim_gain = 0.40, 1.0
     else:
         lo, hi = rgb("#9c9c9f"), rgb("#f3f3f4")
         stem_col, halo_col = rgb("#161617"), rgb("#2a2a2c")
-        shadow_k, rim_gain = 0.30, 1.0
+        shadow_k, rim_gain = 0.20, 1.0
 
     # the petals are soft by nature, so they are painted at half resolution and enlarged
     soft_c = Canvas(c.w // 2, c.h // 2)
@@ -144,9 +147,9 @@ def _render(c: Canvas, mode: str, seed: int) -> np.ndarray:
         tone = form[5]
         level = clamp01(shade * rim_gain * (0.62 + 0.38 * tone))
         pet = lo + (hi - lo) * level[..., None]
-        img = img + (pet - img) * cov[..., None]
+        img = img + (pet - img) * (PETAL_ALPHA * cov)[..., None]
     img = upscale(img, c.w, c.h)
-    img = blur(img, 0.0035 * c.h)                       # the whole forest of petals is a little out of focus
+    img = blur(img, 0.0045 * c.h)                       # the whole forest of petals is a little out of focus
 
     # stems: x(y) curves with a gentle taper; perpendicular distance corrects for the slope
     stem_a, stem_b = _stem_curves(c.aspect)

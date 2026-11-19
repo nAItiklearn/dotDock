@@ -39,7 +39,7 @@
       "accent": "#c9ccd0",
       "width": 3840,
       "height": 2160,
-      "bytes": 998334
+      "bytes": 1043926
     },
     {
       "id": "louver-silver",
@@ -52,7 +52,7 @@
       "accent": "#a9abae",
       "width": 3840,
       "height": 2160,
-      "bytes": 1094161
+      "bytes": 1092716
     },
     {
       "id": "arc-red",
@@ -247,7 +247,7 @@
       "accent": "#d6d4d0",
       "width": 3840,
       "height": 2160,
-      "bytes": 1154017
+      "bytes": 1212917
     },
     {
       "id": "soft-mono",
@@ -260,7 +260,7 @@
       "accent": "#8a8a86",
       "width": 3840,
       "height": 2160,
-      "bytes": 1169362
+      "bytes": 1172581
     },
     {
       "id": "glass-orbs",
@@ -403,7 +403,7 @@
       "accent": "#7aa346",
       "width": 3840,
       "height": 2160,
-      "bytes": 1920283
+      "bytes": 2001765
     },
     {
       "id": "halftone-ridge",
@@ -416,7 +416,7 @@
       "accent": "#2d3f66",
       "width": 3840,
       "height": 2160,
-      "bytes": 2183743
+      "bytes": 2003314
     }
   ]
 }
