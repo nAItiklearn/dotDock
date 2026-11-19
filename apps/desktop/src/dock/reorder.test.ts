@@ -18,9 +18,6 @@ describe("dropIndex", () => {
     expect(dropIndex(lane, "d", 150)).toBe(1);
     expect(dropIndex(lane, "d", 110)).toBe(0);
   });
-  it("is unaffected by the slide animation because it reads rest positions", () => {
-    expect(dropIndex(lane, "a", 230)).toBe(dropIndex(lane, "a", 230));
-  });
 });
 
 describe("dropIntent", () => {

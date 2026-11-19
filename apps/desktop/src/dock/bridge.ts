@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { isTauri } from "../providers/bridge";
 import type { Rect } from "./geometry";
+import { activationTarget } from "./model";
 import type { Category, CategoryId, CommandResult, DockApp, DockSettings, DockSnapshot, DockWindow } from "./protocol";
 import { useDockStore } from "./store";
 import { t } from "./strings";
@@ -28,6 +29,7 @@ export interface Handlers {
   readonly settings: (settings: DockSettings) => void;
   readonly library: (action: "toggle" | "open" | "close") => void;
   readonly pointer: (inside: boolean) => void;
+  readonly frozen: (frozen: boolean) => void;
 }
 
 /** A rejected invoke becomes a failed result: every command resolves, as the contract promises. */
@@ -54,6 +56,7 @@ const tauriBackend: DockBackend = {
       listen<DockSettings>("dock://settings", (e) => handlers.settings(e.payload)),
       listen<"toggle" | "open" | "close">("dock://library", (e) => handlers.library(e.payload)),
       listen<{ inside: boolean }>("dock://pointer", (e) => handlers.pointer(e.payload.inside)),
+      listen<{ frozen: boolean }>("dock://frozen", (e) => handlers.frozen(e.payload.frozen)),
     ]);
     return () => offs.forEach((off) => off());
   },
@@ -109,6 +112,7 @@ async function start(): Promise<() => void> {
       setLibrary(action === "toggle" ? !libraryOpen : action === "open");
     },
     pointer: store.setPointerInside,
+    frozen: store.setFrozen,
   });
   const snapshot = await backend.ready();
   if (snapshot) store.applySnapshot(snapshot);
@@ -127,6 +131,14 @@ export const actions = {
     useDockStore.getState().markSeen([appId]);
     const result = await backend.launch(appId);
     if (!result.ok) fail(t("launch.failed", { name }));
+  },
+
+  /** Brings an app forward if it has windows, else starts it. Used by the stack popover and the App Library. */
+  async open(app: { readonly id: string; readonly name: string }): Promise<void> {
+    const windows = useDockStore.getState().windows.filter((w) => w.appId === app.id);
+    const target = activationTarget(windows);
+    if (target) await actions.activate(target.hwnd, app.name);
+    else await actions.launch(app.id, app.name);
   },
 
   async activate(hwnd: string, name: string): Promise<void> {

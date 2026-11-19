@@ -32,9 +32,8 @@ export interface PanelRects {
  * Tells the core which rectangles take the pointer. Everything else clicks through to the desktop, so this is
  * what keeps a full-screen window from getting in the way of the apps beneath it.
  */
-export function useRegions(layout: BarLayout | null, hidden: boolean, panels: PanelRects, viewport: Size): void {
+export function useRegions(layout: BarLayout | null, hidden: boolean, panels: PanelRects, viewport: Size, modal: boolean): void {
   const pointerInside = useDockStore((s) => s.pointerInside);
-  const libraryOpen = useDockStore((s) => s.libraryOpen);
   const sent = useRef<readonly Rect[]>([]);
   useEffect(() => {
     if (!layout) return;
@@ -47,13 +46,13 @@ export function useRegions(layout: BarLayout | null, hidden: boolean, panels: Pa
       growth: layout.growth,
       hidden,
       panels: open,
-      library: libraryOpen,
+      modal,
       viewport,
     }).map(snapRect);
     if (sameRegions(rects, sent.current)) return;
     sent.current = rects;
     actions.setRegions(rects);
-  }, [layout, hidden, panels, viewport, pointerInside, libraryOpen]);
+  }, [layout, hidden, panels, viewport, pointerInside, modal]);
 }
 
 /** Asks the core for keyboard focus while something on screen needs keys, and hands it back afterwards. */

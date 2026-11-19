@@ -1,0 +1,194 @@
+/* The App Library: a full-window overlay. Loaded with its chunk, only when the dock is first approached. */
+.library {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--lib-pad) 0 0;
+  background: var(--scrim);
+  backdrop-filter: var(--scrim-filter);
+  color: var(--text);
+  pointer-events: auto;
+}
+/* Leave the dock's own side free, so the bar stays reachable over the library. */
+.library[data-edge="bottom"] {
+  padding-bottom: calc(var(--d-bar) + var(--d-edge) * 2);
+}
+.library[data-edge="top"] {
+  padding-top: calc(var(--d-bar) + var(--d-edge) * 2 + var(--lib-pad));
+}
+.library[data-edge="left"] {
+  padding-left: calc(var(--d-bar) + var(--d-edge) * 2);
+}
+.library[data-edge="right"] {
+  padding-right: calc(var(--d-bar) + var(--d-edge) * 2);
+}
+.library::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--lattice);
+  background-size: var(--lattice-step) var(--lattice-step);
+  background-position: center;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.library__top {
+  position: relative;
+  display: grid;
+  flex: none;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-4);
+  width: min(calc(100% - 2 * var(--lib-pad)), var(--lib-max));
+}
+.library__title {
+  justify-self: start;
+  margin: 0;
+  font-weight: 400;
+}
+.library__search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: min(560px, 60vw);
+  height: var(--control-lg);
+  padding: 0 var(--space-5);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  box-shadow: var(--top-light), var(--lift-shadow);
+  color: var(--text-dim);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+.library__search:focus-within {
+  box-shadow:
+    0 0 0 var(--focus-ring) var(--accent),
+    var(--lift-shadow);
+  color: var(--text);
+}
+.library__search .icon {
+  flex: none;
+  width: auto;
+  height: var(--text-lg);
+}
+.library__search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-lg);
+}
+.library__search input::placeholder {
+  color: var(--text-dim);
+}
+.library__search kbd {
+  padding: 0 var(--space-2);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-xs);
+  line-height: var(--control-sm);
+}
+.library__close {
+  display: grid;
+  justify-self: end;
+  place-items: center;
+  width: var(--control-md);
+  height: var(--control-md);
+  padding: 0;
+  border: var(--hairline) solid var(--border);
+  border-radius: 50%;
+  background: var(--panel);
+  cursor: pointer;
+}
+.library__close .icon {
+  height: 40%;
+  width: auto;
+}
+.library__close:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}
+
+.library__scroll {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: var(--space-6) var(--lib-pad);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.library__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: var(--lib-max);
+  margin: 0 auto;
+}
+.lib-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--lib-section-hint);
+}
+.lib-section__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-dot);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lib-section__head .caps {
+  margin-left: var(--space-1);
+  font-weight: 400;
+}
+.lib-section__dot {
+  width: var(--marker);
+  height: var(--marker);
+  border-radius: 50%;
+  background: var(--tone);
+}
+.lib-grid {
+  --cell-w: var(--lib-cell-w);
+  --cell-h: var(--lib-cell-h);
+  --cell-face: var(--lib-face);
+  display: grid;
+  gap: var(--lib-gap);
+  justify-content: start;
+}
+
+.library__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: var(--lib-max);
+  margin: 0 auto;
+  padding-top: calc(var(--lib-pad) * 2);
+  color: var(--text-dim);
+  text-align: center;
+}
+.library__empty .doticon {
+  margin-bottom: var(--space-3);
+}
+.library__empty p {
+  margin: 0;
+}
+.library__empty-title {
+  color: var(--text);
+  font-family: var(--font-dot);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.library__empty-hint {
+  font-size: var(--text-md);
+}

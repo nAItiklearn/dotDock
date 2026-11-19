@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useDockStore } from "../store";
+import type { EffectsChoice } from "../effects";
 import type { DockEdge } from "../protocol";
 import { dev } from "./devBackend";
 import { WINDOWS } from "./fixtures";
@@ -7,10 +8,12 @@ import { WINDOWS } from "./fixtures";
 /** DEV ONLY. Fixture controls for the dock. Never part of the production build. */
 
 const EDGES: readonly DockEdge[] = ["bottom", "top", "left", "right"];
+const EFFECTS: readonly EffectsChoice[] = ["auto", "full", "lite"];
 const NEW_APPS = ["Lumen Notes", "Tide Weather", "Grain Recorder"] as const;
 
 export function DevPanel() {
   const settings = useDockStore((s) => s.settings);
+  const choice = useDockStore((s) => s.effectsChoice);
   const [open, setOpen] = useState(true);
   const [installed, setInstalled] = useState(0);
   const set = dev.patchSettings;
@@ -40,6 +43,14 @@ export function DevPanel() {
           <label>
             magnification {settings.magnification.toFixed(1)}
             <input type="range" min={1} max={2.4} step={0.1} value={settings.magnification} onChange={(e) => set({ magnification: Number(e.target.value) })} />
+          </label>
+          <label>
+            effects
+            <select value={choice} onChange={(e) => useDockStore.getState().setEffectsChoice(e.target.value as EffectsChoice)}>
+              {EFFECTS.map((tier) => (
+                <option key={tier}>{tier}</option>
+              ))}
+            </select>
           </label>
           <label className="dev__check">
             <input type="checkbox" checked={settings.autoHide} onChange={(e) => set({ autoHide: e.target.checked })} />

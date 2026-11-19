@@ -37,8 +37,8 @@ export interface RegionInput {
   readonly hidden: boolean;
   /** Popovers, menus and previews that take the pointer. */
   readonly panels: readonly Rect[];
-  /** The App Library covers the whole window. */
-  readonly library: boolean;
+  /** The App Library, an open popover or a menu: a click anywhere else closes it, so the whole window takes the pointer. */
+  readonly modal: boolean;
   readonly viewport: Size;
 }
 
@@ -65,7 +65,7 @@ export function hotStrip(bar: Rect, edge: DockEdge, viewport: Size): Rect {
 
 /** Rectangles for `dock_set_regions`: everything that must take the pointer, nothing else. */
 export function computeRegions(input: RegionInput): Rect[] {
-  if (input.library) return [{ x: 0, y: 0, w: input.viewport.w, h: input.viewport.h }];
+  if (input.modal) return [{ x: 0, y: 0, w: input.viewport.w, h: input.viewport.h }];
   const dock = input.hidden ? hotStrip(input.bar, input.edge, input.viewport) : dockZone(input);
   return [dock, ...input.panels.map((p) => inflate(p, HIT_MARGIN))];
 }

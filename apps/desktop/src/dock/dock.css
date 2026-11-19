@@ -18,14 +18,49 @@
   --disc-hover: color-mix(in srgb, var(--disc) 86%, var(--text));
   --disc-edge: color-mix(in srgb, var(--text) 9%, transparent);
   --lift-shadow: 0 1px 2px rgb(0 0 0 / 0.22);
+  --top-light: inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent);
 
-  /* Panels over the desktop: popovers, menus, the preview. */
-  --panel: color-mix(in srgb, var(--surface-2) 90%, var(--surface));
-  --panel-shadow: 0 18px 48px rgb(0 0 0 / 0.38);
-  --scrim: color-mix(in srgb, var(--bg) 90%, transparent);
+  /* The theme's translucent surface without its alpha: what the bar is always drawn with, and every panel in lite. */
+  --solid: rgb(from var(--surface) r g b / 1);
+  --bar-fill: var(--solid);
+  --panel: color-mix(in srgb, var(--surface-2) 88%, var(--solid));
   --lattice: radial-gradient(circle, color-mix(in srgb, var(--dot-off) 42%, transparent) 0.85px, transparent 1.2px);
   --lattice-step: 6px;
   --row-h: 34px;
+  /* How far the longest shadow reaches; the bar's pieces clip their shadows to this so a piece never shades its neighbour. */
+  --shadow-reach: 64px;
+}
+
+/*
+ * Effects tiers, chosen once on the root (effects.ts). Same layout and motion in both: "lite" only swaps
+ * translucent, blurred and long-shadowed surfaces for solid ones with tight shadows, so a cheap GPU draws
+ * the same dock.
+ */
+.dock-root[data-effects="full"] {
+  --bar-shadow: var(--top-light), var(--shadow);
+  --panel-fill: color-mix(in srgb, var(--panel) 80%, transparent);
+  --panel-filter: blur(22px) saturate(1.2);
+  --panel-shadow: 0 18px 48px rgb(0 0 0 / 0.38);
+  --scrim: color-mix(in srgb, var(--bg) 72%, transparent);
+  --scrim-filter: blur(28px);
+  --art-filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.28));
+}
+.dock-root[data-effects="lite"] {
+  --bar-shadow: var(--top-light), 0 1px 3px rgb(0 0 0 / 0.32);
+  --panel-fill: var(--panel);
+  --panel-filter: none;
+  --panel-shadow: 0 6px 16px rgb(0 0 0 / 0.3);
+  --scrim: color-mix(in srgb, var(--bg) 97%, black);
+  --scrim-filter: none;
+  --art-filter: none;
+}
+
+/* Frozen by the core (display off, locked, fullscreen app, auto-hidden): nothing may animate. */
+.dock-root[data-frozen="true"] *,
+.dock-root[data-frozen="true"] *::before,
+.dock-root[data-frozen="true"] *::after {
+  animation-play-state: paused !important;
+  transition: none !important;
 }
 
 html,
@@ -104,44 +139,85 @@ body {
 }
 
 /*
- * The bar's plate. It is laid out at its resting size and stretched along the axis while the row grows under
- * magnification, so only a transform moves. --stretch (set by the engine) keeps the end caps round and the
- * hairline one pixel wide.
+ * The bar's plate is three pieces: two rounded ends that only move, and a middle that stretches between them
+ * (all by transform, see engine.ts). The fill is solid so the pieces can overlap without a seam; the middle
+ * runs --d-overlap under each end, which sits on top of it.
  */
-.dock__bar {
-  --stretch: 1;
+.plate {
+  z-index: 0;
   position: absolute;
   inset: 0;
-  overflow: hidden;
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+.plate__cap,
+.plate__mid {
+  position: absolute;
+  background: var(--bar-fill);
+  border: var(--hairline) solid var(--border);
+  box-shadow: var(--bar-shadow);
   pointer-events: auto;
   will-change: transform;
 }
-.dock-anchor[data-axis="x"] .dock__bar {
+.plate__cap {
+  z-index: 1;
+}
+.dock-anchor[data-axis="x"] .plate__cap {
+  top: 0;
+  bottom: 0;
+  width: calc(var(--d-bar) / 2);
+}
+.dock-anchor[data-axis="x"] .plate__cap--start {
+  clip-path: inset(calc(-1 * var(--shadow-reach)) 0 calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)));
+  left: 0;
+  border-right: 0;
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+}
+.dock-anchor[data-axis="x"] .plate__cap--end {
+  clip-path: inset(calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) 0);
+  right: 0;
+  border-left: 0;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+}
+.dock-anchor[data-axis="x"] .plate__mid {
+  clip-path: inset(calc(-1 * var(--shadow-reach)) 0);
+  top: 0;
+  bottom: 0;
+  left: calc(var(--d-bar) / 2 - var(--d-overlap));
+  right: calc(var(--d-bar) / 2 - var(--d-overlap));
+  border-left: 0;
+  border-right: 0;
   transform-origin: 0 50%;
-  border: solid var(--border);
-  border-width: var(--hairline) calc(var(--hairline) / var(--stretch));
-  border-radius: calc(var(--d-bar) / 2 / var(--stretch)) / calc(var(--d-bar) / 2);
 }
-.dock-anchor[data-axis="y"] .dock__bar {
+.dock-anchor[data-axis="y"] .plate__cap {
+  left: 0;
+  right: 0;
+  height: calc(var(--d-bar) / 2);
+}
+.dock-anchor[data-axis="y"] .plate__cap--start {
+  clip-path: inset(calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) 0 calc(-1 * var(--shadow-reach)));
+  top: 0;
+  border-bottom: 0;
+  border-radius: var(--radius-pill) var(--radius-pill) 0 0;
+}
+.dock-anchor[data-axis="y"] .plate__cap--end {
+  clip-path: inset(0 calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)));
+  bottom: 0;
+  border-top: 0;
+  border-radius: 0 0 var(--radius-pill) var(--radius-pill);
+}
+.dock-anchor[data-axis="y"] .plate__mid {
+  clip-path: inset(0 calc(-1 * var(--shadow-reach)));
+  left: 0;
+  right: 0;
+  top: calc(var(--d-bar) / 2 - var(--d-overlap));
+  bottom: calc(var(--d-bar) / 2 - var(--d-overlap));
+  border-top: 0;
+  border-bottom: 0;
   transform-origin: 50% 0;
-  border: solid var(--border);
-  border-width: calc(var(--hairline) / var(--stretch)) var(--hairline);
-  border-radius: calc(var(--d-bar) / 2) / calc(var(--d-bar) / 2 / var(--stretch));
-}
-/* The same dot lattice as the island's plate. */
-.dock__bar::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: var(--lattice);
-  background-size: var(--lattice-step) var(--lattice-step);
-  background-position: center;
-  opacity: 0.7;
 }
 
 .dock__row {
+  z-index: 1;
   position: relative;
   display: flex;
   align-items: center;
@@ -203,7 +279,7 @@ body {
     box-shadow var(--dur-fast) var(--ease-out);
 }
 @media (hover: hover) {
-  .disc:hover {
+  .dock-anchor[data-mag="off"] .disc:hover {
     background: var(--disc-hover);
   }
 }
@@ -222,7 +298,7 @@ body {
   height: calc(var(--d-icon) * 0.66);
   object-fit: contain;
   pointer-events: none;
-  filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.28));
+  filter: var(--art-filter);
 }
 .art--missing {
   display: grid;
@@ -250,7 +326,7 @@ body {
   border-color: color-mix(in srgb, var(--tone) 42%, var(--border));
 }
 @media (hover: hover) {
-  .disc--stack:hover {
+  .dock-anchor[data-mag="off"] .disc--stack:hover {
     background: color-mix(in srgb, var(--disc-hover) 76%, var(--tone));
   }
 }
@@ -398,7 +474,7 @@ html[data-dragging="true"] * {
   background: var(--accent);
 }
 .dots[data-attention="true"] i {
-  animation: attention 1s steps(1, end) infinite;
+  animation: attention 1s steps(1, end) 6;
 }
 @keyframes attention {
   50% {
@@ -703,23 +779,89 @@ html[data-dragging="true"] * {
   right: calc(100% + var(--d-gap));
 }
 
-/* A command that failed. */
-.notice {
+/* Stacking: library, then the click-away layer, then the bar, then everything that opens from it. */
+.dock-anchor {
+  z-index: 10;
+}
+.scrim {
   position: absolute;
-  left: 50%;
-  top: var(--space-6);
+  inset: 0;
+  z-index: 9;
+  pointer-events: auto;
+}
+
+/* Edit mode: what a drag does, and the way out. */
+.edit-banner {
+  position: absolute;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 0 var(--space-2) 0 var(--space-5);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--panel-fill);
+  backdrop-filter: var(--panel-filter);
+  box-shadow: var(--top-light), var(--panel-shadow);
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  pointer-events: auto;
+}
+.edit-banner__done {
+  flex: none;
+  height: var(--control-md);
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 500;
+  cursor: pointer;
+}
+.edit-banner__done:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}
+
+/* A command that failed: a pill beside the dock, on the side facing the screen. */
+.notice {
+  --notice-gap: calc(var(--d-bar) / 2 + var(--d-icon) * 1.3);
+  position: absolute;
+  z-index: 60;
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
   border: var(--hairline) solid var(--border);
   border-radius: var(--radius-pill);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  background: var(--panel-fill);
+  backdrop-filter: var(--panel-filter);
+  box-shadow: var(--top-light), var(--panel-shadow);
   font-size: var(--text-sm);
-  transform: translateX(-50%);
-  animation: notice-in var(--dur-med) var(--ease-out);
+  white-space: nowrap;
   pointer-events: none;
+  animation: panel-in var(--dur-med) var(--ease-out);
+}
+.notice[data-edge="bottom"] {
+  left: var(--notice-x);
+  top: calc(var(--notice-y) - var(--notice-gap));
+  translate: -50% -100%;
+}
+.notice[data-edge="top"] {
+  left: var(--notice-x);
+  top: calc(var(--notice-y) + var(--notice-gap));
+  translate: -50% 0;
+}
+.notice[data-edge="left"] {
+  left: calc(var(--notice-x) + var(--notice-gap));
+  top: var(--notice-y);
+  translate: 0 -50%;
+}
+.notice[data-edge="right"] {
+  left: calc(var(--notice-x) - var(--notice-gap));
+  top: var(--notice-y);
+  translate: -100% -50%;
 }
 .notice i {
   width: var(--marker);
@@ -727,9 +869,10 @@ html[data-dragging="true"] * {
   border-radius: 50%;
   background: var(--danger);
 }
-@keyframes notice-in {
+@keyframes panel-in {
   from {
     opacity: 0;
-    transform: translate(-50%, calc(-1 * var(--space-2)));
+    transform: translateY(var(--space-2));
   }
 }
+

@@ -95,7 +95,7 @@ export function fitIconSize(requested: number, kinds: readonly LengthKind[], ava
 /** Popover over a stack, in px. */
 export const POPOVER = {
   cellW: 92,
-  cellH: 100,
+  cellH: 108,
   face: 56,
   pad: 16,
   header: 58,
@@ -173,18 +173,47 @@ export function placeBesideDock(anchor: Rect, size: Size, edge: DockEdge, viewpo
   }
 }
 
-/** The side a context menu opens towards when it is anchored at a point: away from the dock. */
-export function placeMenu(at: Point, size: Size, edge: DockEdge, viewport: Size): Point {
-  const x = isVertical(edge) ? (edge === "left" ? at.x : at.x - size.w) : at.x - size.w / 2;
-  const y = isVertical(edge) ? at.y - size.h / 2 : edge === "bottom" ? at.y - size.h : at.y;
+/** The point on a drawn item that faces the middle of the screen: where menus attach. */
+export function anchorPoint(r: Rect, edge: DockEdge): Point {
+  switch (edge) {
+    case "bottom":
+      return { x: r.x + r.w / 2, y: r.y };
+    case "top":
+      return { x: r.x + r.w / 2, y: r.y + r.h };
+    case "left":
+      return { x: r.x + r.w, y: r.y + r.h / 2 };
+    case "right":
+      return { x: r.x, y: r.y + r.h / 2 };
+  }
+}
+
+/** Where a context menu opens when it is anchored at a point: away from the dock. */
+export function placeMenu(at: Point, size: Size, edge: DockEdge, viewport: Size, gap = 0): Point {
+  const x = isVertical(edge) ? (edge === "left" ? at.x + gap : at.x - size.w - gap) : at.x - size.w / 2;
+  const y = isVertical(edge) ? at.y - size.h / 2 : edge === "bottom" ? at.y - size.h - gap : at.y + gap;
   return {
     x: Math.max(SCREEN_MARGIN, Math.min(x, viewport.w - SCREEN_MARGIN - size.w)),
     y: Math.max(SCREEN_MARGIN, Math.min(y, viewport.h - SCREEN_MARGIN - size.h)),
   };
 }
 
+/** The strip shown above the dock while it is edited, in px. */
+export const EDIT_BANNER = { w: 440, h: 52, gap: 10 } as const;
+
+/** The App Library's grid, in px. */
+export const LIBRARY = { cellW: 112, cellH: 120, face: 64, gap: 8, maxWidth: 1240, pad: 32 } as const;
+
+/** Columns that fit in `width` px of grid, at least one. */
+export function libraryColumns(width: number): number {
+  return Math.max(1, Math.floor((width + LIBRARY.gap) / (LIBRARY.cellW + LIBRARY.gap)));
+}
+
+/** Context menus, in px. */
+export const MENU = { w: 236, row: 34, heading: 30, separator: 9, pad: 6, gap: 4 } as const;
+
 /** Window thumbnails shown on hover. Each slot is where the core draws one live thumbnail. */
 export const PREVIEW = {
+  header: 30,
   slotW: 200,
   slotH: 126,
   slotGap: 10,
@@ -213,8 +242,8 @@ export function previewLayout(windowCount: number, vertical: boolean): PreviewLa
   const titles = Math.min(windowCount, PREVIEW.maxRows);
   return {
     w: wellW + 2 * PREVIEW.pad,
-    h: PREVIEW.pad + wellH + PREVIEW.pad / 2 + titles * PREVIEW.row + PREVIEW.pad / 2,
-    well: { x: PREVIEW.pad, y: PREVIEW.pad, w: wellW, h: wellH },
+    h: PREVIEW.pad + PREVIEW.header + wellH + PREVIEW.pad / 2 + titles * PREVIEW.row + PREVIEW.pad / 2,
+    well: { x: PREVIEW.pad, y: PREVIEW.pad + PREVIEW.header, w: wellW, h: wellH },
     shown,
   };
 }

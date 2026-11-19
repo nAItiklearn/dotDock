@@ -132,4 +132,9 @@ export interface DockEvents {
    * from the WebView, so the core, which already polls the cursor, reports it.
    */
   "dock://pointer": { readonly inside: boolean };
+  /**
+   * The core froze the dock: display off, session locked, a fullscreen app in front, or the dock auto-hidden. The UI stops
+   * every frame loop and timer until `frozen: false`, so a hidden dock costs nothing.
+   */
+  "dock://frozen": { readonly frozen: boolean };
 }

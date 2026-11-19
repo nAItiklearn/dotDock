@@ -2,9 +2,10 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { useReducedMotion } from "motion/react";
 import { useViewport } from "./useViewport";
 import { actions } from "./bridge";
-import { DockEngine, type LayoutItem } from "./engine";
+import { DockEngine, PLATE_OVERLAP, type LayoutItem } from "./engine";
 import {
   clampMagnification,
+  anchorPoint,
   contains,
   fitIconSize,
   isVertical,
@@ -12,7 +13,6 @@ import {
   RATIO,
   SCREEN_MARGIN,
   type Metrics,
-  type Point,
   type Rect,
 } from "./geometry";
 import { entryLabel, isDraggable, Slot, type SlotHandlers } from "./items";
@@ -40,20 +40,6 @@ const rectOf = (el: Element): Rect => {
   const r = el.getBoundingClientRect();
   return { x: r.left, y: r.top, w: r.width, h: r.height };
 };
-
-/** The point on a drawn item that faces the middle of the screen: where menus and panels attach. */
-export function anchorPoint(r: Rect, edge: DockEdge): Point {
-  switch (edge) {
-    case "bottom":
-      return { x: r.x + r.w / 2, y: r.y };
-    case "top":
-      return { x: r.x + r.w / 2, y: r.y + r.h };
-    case "left":
-      return { x: r.x + r.w, y: r.y + r.h / 2 };
-    case "right":
-      return { x: r.x, y: r.y + r.h / 2 };
-  }
-}
 
 interface Press {
   readonly key: string;
@@ -100,7 +86,10 @@ export function Bar({ hidden, onLayout }: BarProps) {
 
   const dockRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
+  const plateStart = useRef<HTMLDivElement>(null);
+  const plateMid = useRef<HTMLDivElement>(null);
+  const plateEnd = useRef<HTMLDivElement>(null);
+  const frozen = useDockStore((s) => s.frozen);
   const [engine] = useState(
     () =>
       new DockEngine({ peak, reach: metrics.reach, gap: metrics.gap, edge, reduced }, (key) => useDockStore.getState().setHovered(key)),
@@ -117,9 +106,13 @@ export function Bar({ hidden, onLayout }: BarProps) {
     engine.configure({ peak, reach: metrics.reach, gap: metrics.gap, edge, reduced });
   }, [engine, peak, metrics.reach, metrics.gap, edge, reduced]);
   useEffect(() => () => engine.destroy(), [engine]);
+  useEffect(() => engine.setFrozen(frozen), [engine, frozen]);
   const attachLabel = useCallback((el: HTMLElement | null) => engine.attachLabel(el), [engine]);
   useLayoutEffect(() => {
-    engine.attachBar(barRef.current);
+    const start = plateStart.current;
+    const mid = plateMid.current;
+    const end = plateEnd.current;
+    if (start && mid && end) engine.attachPlate({ start, mid, end });
   }, [engine]);
 
   const measure = useCallback(() => {
@@ -144,7 +137,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
     const lead = vertical ? dock.offsetTop : dock.offsetLeft;
     items.current = measured;
     origin.current = lead;
-    engine.setLayout({ items: measured, barStart: 0, barSize: vertical ? dock.offsetHeight : dock.offsetWidth, origin: lead });
+    engine.setLayout({ items: measured, barStart: 0, barSize: vertical ? dock.offsetHeight : dock.offsetWidth, cap: metrics.bar / 2, origin: lead });
     const bar = { x: dock.offsetLeft, y: dock.offsetTop, w: dock.offsetWidth, h: dock.offsetHeight };
     const growth = maxGrowth(measured, peak, metrics.reach);
     const headroom = (peak - 1) * metrics.icon + RATIO.label * metrics.icon;
@@ -284,6 +277,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
             store.setLibrary(true);
             return;
           case "add":
+            store.openStack(null);
             store.setMenu({ key: entry.key, at: anchorPoint(rectOf(face), side) });
             return;
           case "stack":
@@ -314,7 +308,9 @@ export function Bar({ hidden, onLayout }: BarProps) {
         }
       },
       context: (entry: BarEntry, _event: MouseEvent | KeyboardEvent, face: HTMLElement) => {
-        useDockStore.getState().setMenu({ key: entry.key, at: anchorPoint(rectOf(face), latest.current.edge) });
+        const store = useDockStore.getState();
+        store.openStack(null);
+        store.setMenu({ key: entry.key, at: anchorPoint(rectOf(face), latest.current.edge) });
       },
       remove: (entry) => {
         const { settings: current } = latest.current;
@@ -370,7 +366,9 @@ export function Bar({ hidden, onLayout }: BarProps) {
 
   const onBarContext = (e: MouseEvent): void => {
     e.preventDefault();
-    useDockStore.getState().setMenu({ key: null, at: { x: e.clientX, y: e.clientY } });
+    const store = useDockStore.getState();
+    store.openStack(null);
+    store.setMenu({ key: null, at: { x: e.clientX, y: e.clientY } });
   };
 
   const rovingKey = entries.some((entry) => entry.key === roving && (entry.kind === "app" || entry.kind === "stack" || entry.kind === "library" || entry.kind === "add"))
@@ -384,12 +382,17 @@ export function Bar({ hidden, onLayout }: BarProps) {
     "--d-edge": `${metrics.edge}px`,
     "--d-bar": `${metrics.bar}px`,
     "--d-status": `${RATIO.statusCross * metrics.icon}px`,
+    "--d-overlap": `${PLATE_OVERLAP}px`,
   } as CSSProperties;
 
   return (
-    <div className="dock-anchor" data-edge={edge} data-axis={vertical ? "y" : "x"} style={vars}>
+    <div className="dock-anchor" data-edge={edge} data-axis={vertical ? "y" : "x"} data-mag={peak > 1 && !reduced ? "on" : "off"} style={vars}>
       <div ref={dockRef} className="dock" data-hidden={hidden ? "true" : undefined} data-editing={editing ? "true" : undefined} onContextMenu={onBarContext}>
-        <div ref={barRef} className="dock__bar" />
+        <div className="plate" aria-hidden="true">
+          <div ref={plateMid} className="plate__mid" />
+          <div ref={plateStart} className="plate__cap plate__cap--start" />
+          <div ref={plateEnd} className="plate__cap plate__cap--end" />
+        </div>
         <div ref={rowRef} className="dock__row" role="toolbar" aria-label={t("dock.label")} aria-orientation={vertical ? "vertical" : "horizontal"} onKeyDown={onRowKeyDown}>
           {entries.map((entry) => (
             <Slot
@@ -413,7 +416,8 @@ export function Bar({ hidden, onLayout }: BarProps) {
 /** The name of the item under the pointer. The engine moves it; this only supplies the words. */
 function Label({ entries, suppressed, onElement }: { readonly entries: readonly BarEntry[]; readonly suppressed: boolean; readonly onElement: (el: HTMLElement | null) => void }) {
   const hoveredKey = useDockStore((s) => s.hoveredKey);
-  const entry = hoveredKey === null || suppressed ? undefined : entries.find((e) => e.key === hoveredKey);
+  const previewKey = useDockStore((s) => s.previewKey);
+  const entry = hoveredKey === null || suppressed || previewKey === hoveredKey ? undefined : entries.find((e) => e.key === hoveredKey);
   const name = entry ? entryLabel(entry) : "";
   const windowCount = entry?.kind === "app" ? entry.windows.length : 0;
   return (

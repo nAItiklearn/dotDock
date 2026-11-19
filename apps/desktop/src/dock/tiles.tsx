@@ -5,6 +5,7 @@ import { useProvider } from "../providers/store";
 import { sendMediaCommand } from "../widgets/mediaControls";
 import { BatteryIcon, DockIcon } from "./DockIcons";
 import type { TileId } from "./model";
+import { useDockStore } from "./store";
 import { t } from "./strings";
 
 const MS_PER_MINUTE = 60_000;
@@ -13,10 +14,23 @@ const MINUTE_LAG_MS = 40;
 const PERCENT = 100;
 const LOW_BATTERY = 20;
 
-/** The current time, refreshed once a minute on the minute. Nothing runs between ticks. */
+/**
+ * The current time, refreshed once a minute on the minute. Nothing runs between ticks, and nothing runs at all
+ * while the core has frozen the dock or the page is hidden: the clock catches up the moment it wakes.
+ */
 export function useMinuteClock(): Date {
   const [now, setNow] = useState(() => new Date());
+  const frozen = useDockStore((s) => s.frozen);
+  const [hidden, setHidden] = useState(() => document.hidden);
   useEffect(() => {
+    const update = (): void => setHidden(document.hidden);
+    document.addEventListener("visibilitychange", update);
+    return () => document.removeEventListener("visibilitychange", update);
+  }, []);
+  const paused = frozen || hidden;
+  useEffect(() => {
+    if (paused) return undefined;
+    setNow(new Date());
     let timer = 0;
     const schedule = (): void => {
       const wait = MS_PER_MINUTE - (Date.now() % MS_PER_MINUTE) + MINUTE_LAG_MS;
@@ -27,7 +41,7 @@ export function useMinuteClock(): Date {
     };
     schedule();
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [paused]);
   return now;
 }
 

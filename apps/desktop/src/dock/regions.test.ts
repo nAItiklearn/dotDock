@@ -5,7 +5,7 @@ import { alongAxis, computeRegions, dockZone, HOT_ZONE, hotStrip, sameRegions, s
 const VIEWPORT = { w: 1536, h: 864 };
 const BAR = { x: 400, y: 770, w: 700, h: 68 };
 
-const base: RegionInput = { bar: BAR, edge: "bottom", engaged: false, headroom: 34, growth: 80, hidden: false, panels: [], library: false, viewport: VIEWPORT };
+const base: RegionInput = { bar: BAR, edge: "bottom", engaged: false, headroom: 34, growth: 80, hidden: false, panels: [], modal: false, viewport: VIEWPORT };
 
 describe("towardInside and alongAxis", () => {
   it("extends the rect towards the middle of the screen on every edge", () => {
@@ -41,10 +41,10 @@ describe("computeRegions", () => {
     expect(hotStrip({ x: 1450, y: 300, w: 68, h: 400 }, "right", VIEWPORT).x).toBe(VIEWPORT.w - HOT_ZONE);
   });
 
-  it("adds panels and covers the whole window for the App Library", () => {
+  it("adds panels and covers the whole window while something modal is open", () => {
     const panel = { x: 600, y: 400, w: 300, h: 300 };
     expect(computeRegions({ ...base, panels: [panel] })).toHaveLength(2);
-    expect(computeRegions({ ...base, library: true, panels: [panel] })).toEqual([{ x: 0, y: 0, w: VIEWPORT.w, h: VIEWPORT.h }]);
+    expect(computeRegions({ ...base, modal: true, panels: [panel] })).toEqual([{ x: 0, y: 0, w: VIEWPORT.w, h: VIEWPORT.h }]);
   });
 });
 

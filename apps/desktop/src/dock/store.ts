@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { readChoice, saveChoice, type EffectsChoice } from "./effects";
 import type { Rect } from "./geometry";
 import type { Category, CategoryId, DockApp, DockSettings, DockSnapshot, DockWindow } from "./protocol";
 
@@ -72,6 +73,12 @@ interface DockStore {
   readonly pointerInside: boolean;
   /** Entry key under the pointer, for the label and the window preview. */
   readonly hoveredKey: string | null;
+  /** Entry whose window preview is open. */
+  readonly previewKey: string | null;
+  /** The core froze the dock (display off, locked, fullscreen app, auto-hidden): no frames, no timers. */
+  readonly frozen: boolean;
+  /** The user's choice for visual effects; "auto" lets the capability check decide. */
+  readonly effectsChoice: EffectsChoice;
 
   applySnapshot: (snapshot: DockSnapshot) => void;
   applyApps: (apps: readonly DockApp[]) => void;
@@ -86,6 +93,9 @@ interface DockStore {
   setNotice: (text: string | null) => void;
   setPointerInside: (inside: boolean) => void;
   setHovered: (key: string | null) => void;
+  setPreviewKey: (key: string | null) => void;
+  setFrozen: (frozen: boolean) => void;
+  setEffectsChoice: (choice: EffectsChoice) => void;
 }
 
 let noticeId = 0;
@@ -105,6 +115,9 @@ export const useDockStore = create<DockStore>((set, get) => ({
   notice: null,
   pointerInside: false,
   hoveredKey: null,
+  previewKey: null,
+  frozen: false,
+  effectsChoice: readChoice(),
 
   applySnapshot: (snapshot) =>
     set({ ready: true, categories: snapshot.categories, apps: snapshot.apps, windows: snapshot.windows, settings: snapshot.settings }),
@@ -122,8 +135,14 @@ export const useDockStore = create<DockStore>((set, get) => ({
   openStack: (stack) => set({ stack, menu: null }),
   setLibrary: (libraryOpen) => set({ libraryOpen, stack: null, menu: null }),
   setEditing: (editing) => set({ editing, menu: null }),
-  setMenu: (menu) => set({ menu, stack: menu ? null : get().stack }),
+  setMenu: (menu) => set({ menu }),
   setNotice: (text) => set({ notice: text === null ? null : { id: ++noticeId, text } }),
   setPointerInside: (pointerInside) => set({ pointerInside }),
   setHovered: (hoveredKey) => (get().hoveredKey === hoveredKey ? undefined : set({ hoveredKey })),
+  setPreviewKey: (previewKey) => (get().previewKey === previewKey ? undefined : set({ previewKey })),
+  setFrozen: (frozen) => (get().frozen === frozen ? undefined : set({ frozen })),
+  setEffectsChoice: (effectsChoice) => {
+    saveChoice(effectsChoice);
+    set({ effectsChoice });
+  },
 }));

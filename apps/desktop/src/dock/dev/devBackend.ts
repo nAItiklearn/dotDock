@@ -61,6 +61,9 @@ export const dev = {
   library(action: "toggle" | "open" | "close"): void {
     handlers?.library(action);
   },
+  freeze(frozen: boolean): void {
+    handlers?.frozen(frozen);
+  },
   pointer(inside: boolean): void {
     handlers?.pointer(inside);
   },

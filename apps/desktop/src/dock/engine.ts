@@ -15,6 +15,8 @@ const FIRST_STEP_S = 1 / 60;
 const EPSILON = 0.02;
 /** Smallest scale change worth writing. */
 const SCALE_STEP = 1e-4;
+/** The bar's middle runs this far under each rounded end, so no seam shows between the pieces. */
+export const PLATE_OVERLAP = 2;
 
 const OMEGA = {
   engage: omegaForSettle(SETTLE_MS.engage),
@@ -39,6 +41,8 @@ export interface Layout {
   /** The bar's own rest span along the axis, in dock-local px. */
   readonly barStart: number;
   readonly barSize: number;
+  /** Length of each rounded end of the bar along the axis: half its thickness. */
+  readonly cap: number;
   /** Window coordinate of dock-local 0 along the axis. */
   readonly origin: number;
 }
@@ -51,6 +55,13 @@ export interface EngineConfig {
   readonly edge: DockEdge;
   /** Reduced motion: no magnification, and everything lands in place at once. */
   readonly reduced: boolean;
+}
+
+/** The three pieces the bar is drawn from. */
+export interface PlateParts {
+  readonly start: HTMLElement;
+  readonly mid: HTMLElement;
+  readonly end: HTMLElement;
 }
 
 interface ItemState extends LayoutItem {
@@ -88,11 +99,13 @@ export class DockEngine {
   private origin = 0;
   private barStart = 0;
   private barSize = 0;
-  private bar: HTMLElement | null = null;
+  private plate: PlateParts | null = null;
+  private cap = 0;
   private barOff: { start: SpringState; end: SpringState } = { start: { x: 0, v: 0 }, end: { x: 0, v: 0 } };
   /** Window coordinates of the bar's two ends as last drawn. */
   private barDrawn = { start: 0, end: 0 };
-  private barWritten = "";
+  private plateWritten = { start: "", mid: "", end: "" };
+  private frozen = false;
   private label: HTMLElement | null = null;
   private labelWritten = "";
   private pointer: number | null = null;
@@ -106,11 +119,20 @@ export class DockEngine {
   constructor(config: EngineConfig, onHover: (key: string | null) => void) {
     this.config = config;
     this.onHover = onHover;
+    document.addEventListener("visibilitychange", this.onVisibility);
   }
+
+  /** A page nobody can see draws nothing: frames stop while the document is hidden and resume when it shows. */
+  private readonly onVisibility = (): void => {
+    if (document.hidden) {
+      cancelAnimationFrame(this.raf);
+      this.raf = 0;
+    } else this.kick();
+  };
 
   configure(config: EngineConfig): void {
     if (config.edge !== this.config.edge) {
-      this.barWritten = "";
+      this.plateWritten = { start: "", mid: "", end: "" };
       this.labelWritten = "";
       for (const item of this.items) {
         item.written = "";
@@ -121,9 +143,19 @@ export class DockEngine {
     this.kick();
   }
 
-  attachBar(el: HTMLElement | null): void {
-    this.bar = el;
-    this.barWritten = "";
+  attachPlate(parts: PlateParts | null): void {
+    this.plate = parts;
+    this.plateWritten = { start: "", mid: "", end: "" };
+  }
+
+  /** The core froze the dock: no frames until it thaws. */
+  setFrozen(frozen: boolean): void {
+    if (frozen === this.frozen) return;
+    this.frozen = frozen;
+    if (frozen) {
+      cancelAnimationFrame(this.raf);
+      this.raf = 0;
+    } else this.kick();
   }
 
   attachLabel(el: HTMLElement | null): void {
@@ -134,6 +166,7 @@ export class DockEngine {
   destroy(): void {
     cancelAnimationFrame(this.raf);
     this.raf = 0;
+    document.removeEventListener("visibilitychange", this.onVisibility);
   }
 
   /** The pointer's position along the axis in window px, or null when it is not over the dock. */
@@ -162,6 +195,7 @@ export class DockEngine {
     this.origin = layout.origin;
     this.barStart = layout.barStart;
     this.barSize = layout.barSize;
+    this.cap = layout.cap;
 
     const frame = this.frame(next);
     const smooth = !this.config.reduced && !firstLayout;
@@ -230,7 +264,7 @@ export class DockEngine {
   }
 
   private kick(): void {
-    if (this.raf !== 0) return;
+    if (this.raf !== 0 || this.frozen || document.hidden) return;
     this.last = 0;
     this.raf = requestAnimationFrame((now) => this.tick(now));
   }
@@ -322,19 +356,28 @@ export class DockEngine {
   private writeBar(frame: MagnifyFrame): void {
     const first = this.items[0];
     const last = this.items[this.items.length - 1];
-    if (!this.bar || !first || !last || this.barSize <= 0) return;
-    const start = this.barStart + (frame.rowStart - first.start) + this.barOff.start.x;
-    const end = this.barStart + this.barSize + (frame.rowEnd - (last.start + last.size)) + this.barOff.end.x;
-    this.barDrawn = { start: this.origin + start, end: this.origin + end };
-    const stretch = Math.max(1, end - start) / this.barSize;
-    const move = px(start - this.barStart);
-    const text = isVertical(this.config.edge)
-      ? `translate3d(0,${move}px,0) scaleY(${stretch.toFixed(4)})`
-      : `translate3d(${move}px,0,0) scaleX(${stretch.toFixed(4)})`;
-    if (text === this.barWritten) return;
-    this.barWritten = text;
-    this.bar.style.transform = text;
-    this.bar.style.setProperty("--stretch", stretch.toFixed(4));
+    const parts = this.plate;
+    if (!parts || !first || !last || this.barSize <= 0) return;
+    const startDelta = frame.rowStart - first.start + this.barOff.start.x;
+    const endDelta = frame.rowEnd - (last.start + last.size) + this.barOff.end.x;
+    this.barDrawn = { start: this.origin + this.barStart + startDelta, end: this.origin + this.barStart + this.barSize + endDelta };
+
+    // Three pieces, all moved by transforms: the rounded ends keep their shape and the middle stretches between them.
+    const mid0 = Math.max(this.barSize - 2 * this.cap + 2 * PLATE_OVERLAP, 1);
+    const drawn = this.barSize + endDelta - startDelta;
+    const stretch = Math.max(drawn - 2 * this.cap + 2 * PLATE_OVERLAP, 1) / mid0;
+    const v = isVertical(this.config.edge);
+    const move = (d: number): string => (v ? `translate3d(0,${px(d)}px,0)` : `translate3d(${px(d)}px,0,0)`);
+    const next = {
+      start: move(startDelta),
+      mid: `${move(startDelta)} ${v ? "scaleY" : "scaleX"}(${stretch.toFixed(4)})`,
+      end: move(endDelta),
+    };
+    for (const part of ["start", "mid", "end"] as const) {
+      if (next[part] === this.plateWritten[part]) continue;
+      this.plateWritten[part] = next[part];
+      parts[part].style.transform = next[part];
+    }
   }
 
   /** The name label rides on the hovered item: its drawn centre, and above its magnified top. */

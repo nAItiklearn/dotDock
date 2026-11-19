@@ -10,7 +10,10 @@ import {
   indicatorFor,
   NEW_APP_WINDOW_MS,
   pin,
+  pinKey,
   pinOf,
+  reorderBy,
+  tileKey,
   unpin,
   type BarEntry,
   type BuildInput,
@@ -175,6 +178,29 @@ describe("pinning", () => {
     expect(entries.map(pinOf)).toContainEqual(a);
     expect(entries.map(pinOf)).toContainEqual(s);
     expect(pinOf({ kind: "divider", key: "d" })).toBeNull();
+  });
+});
+
+describe("reorderBy", () => {
+  const items = [{ k: "a" }, { k: "b" }, { k: "gone" }, { k: "c" }];
+  const key = (i: { k: string }): string => i.k;
+
+  it("puts the listed items in the given order, in the places those items hold", () => {
+    expect(reorderBy(items, key, ["c", "a", "b"]).map(key)).toEqual(["c", "a", "gone", "b"]);
+  });
+
+  it("leaves items that are not listed where they are, and ignores keys that do not exist", () => {
+    expect(reorderBy(items, key, ["b", "zzz", "a"]).map(key)).toEqual(["b", "a", "gone", "c"]);
+  });
+
+  it("is the identity for the current order", () => {
+    expect(reorderBy(items, key, ["a", "b", "c"])).toEqual(items);
+  });
+
+  it("maps pinned items and tiles to the keys the bar uses", () => {
+    expect(pinKey({ kind: "app", id: "x" })).toBe("app:x");
+    expect(pinKey({ kind: "stack", category: "media" })).toBe("stack:media");
+    expect(tileKey("clock")).toBe("tile:clock");
   });
 });
 
