@@ -9,6 +9,7 @@ pub mod providers;
 mod registry;
 pub mod restore;
 pub mod snapshot;
+pub mod taskbar;
 pub mod wallpaper;
 
 use std::path::PathBuf;

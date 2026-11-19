@@ -1,8 +1,8 @@
 //! Records the user's original Windows state once, before the first shell change.
 //! Same file and schema as `tools/snapshot-windows.ps1`, which `tools/restore-windows.ps1` reads.
 
-use crate::registry;
 use crate::{app_data_dir, AUTOSTART_NAME, RUN_KEY, SERIALIZE_KEY, STARTUP_DELAY_VALUE};
+use crate::{registry, taskbar};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -26,6 +26,11 @@ pub struct Snapshot {
     pub serialize_key_existed: bool,
     pub startup_delay_in_m_sec: Option<u32>,
     pub run_entry_existed: bool,
+    /// Original "Automatically hide the taskbar". Absent in snapshots from before the dock phase.
+    #[serde(default)]
+    pub taskbar_auto_hide: Option<bool>,
+    #[serde(default)]
+    pub taskbar_visible: Option<bool>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -83,6 +88,8 @@ pub fn ensure(autostart_active: bool) -> Result<(), SnapshotError> {
         serialize_key_existed: registry::key_exists(SERIALIZE_KEY)?,
         startup_delay_in_m_sec: registry::get_dword(SERIALIZE_KEY, STARTUP_DELAY_VALUE)?,
         run_entry_existed: registry::get_string(RUN_KEY, AUTOSTART_NAME)?.is_some(),
+        taskbar_auto_hide: Some(taskbar::auto_hide()),
+        taskbar_visible: taskbar::is_visible(),
     };
     let tmp = path.with_extension("json.tmp");
     std::fs::write(&tmp, serde_json::to_vec_pretty(&snapshot)?)?;
@@ -108,4 +115,30 @@ fn copy_wallpaper(original: &str, snapshot_path: &std::path::Path) -> Option<Str
 fn humantime_now() -> String {
     let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
     format!("unix:{secs}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Snapshot;
+
+    /// A snapshot written before the dock phase has no taskbar fields and must still load.
+    #[test]
+    fn loads_a_snapshot_without_taskbar_fields() {
+        let old = r#"{"schema":1,"takenAt":"t","wallpaper":null,"wallpaperCopy":null,"wallpaperStyle":"10",
+            "tileWallpaper":"0","hideIconsRegistry":1,"desktopIconsVisible":false,"serializeKeyExisted":false,
+            "startupDelayInMSec":null,"runEntryExisted":false}"#;
+        let snap: Snapshot = serde_json::from_str(old).expect("old snapshot parses");
+        assert_eq!(snap.taskbar_auto_hide, None);
+        assert_eq!(snap.taskbar_visible, None);
+    }
+
+    #[test]
+    fn reads_taskbar_fields_written_by_the_script() {
+        let new = r#"{"schema":1,"takenAt":"t","wallpaper":null,"wallpaperCopy":null,"wallpaperStyle":null,
+            "tileWallpaper":null,"hideIconsRegistry":null,"desktopIconsVisible":null,"serializeKeyExisted":false,
+            "startupDelayInMSec":null,"runEntryExisted":false,"taskbarAutoHide":true,"taskbarVisible":true}"#;
+        let snap: Snapshot = serde_json::from_str(new).expect("new snapshot parses");
+        assert_eq!(snap.taskbar_auto_hide, Some(true));
+        assert_eq!(snap.taskbar_visible, Some(true));
+    }
 }

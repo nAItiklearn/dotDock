@@ -1,7 +1,7 @@
 //! Returns the desktop to the user's original Windows state from the snapshot. Same effect as
 //! `tools/restore-windows.ps1`, but shipped inside the app so the uninstaller can always run it.
 
-use crate::{autostart, registry, snapshot};
+use crate::{autostart, registry, snapshot, taskbar};
 use windows::core::HSTRING;
 use windows::Win32::UI::WindowsAndMessaging::{
     SystemParametersInfoW, SPIF_SENDCHANGE, SPIF_UPDATEINIFILE, SPI_SETDESKWALLPAPER,
@@ -31,11 +31,16 @@ pub struct Report {
 
 pub fn restore_windows() -> Result<Report, RestoreError> {
     let mut report = Report::default();
+    // First and unconditional: a hidden taskbar is the one state a user cannot fix by hand.
+    taskbar::show_all();
     autostart::disable()?;
     report.autostart_removed = true;
 
     let Some(snap) = snapshot::load()? else { return Ok(report) };
     report.had_snapshot = true;
+    if let Some(on) = snap.taskbar_auto_hide {
+        taskbar::set_auto_hide(on);
+    }
 
     // Prefer the private copy: the original path may be a file Windows has since overwritten
     // (Spotlight and slideshow write to `TranscodedWallpaper`).
