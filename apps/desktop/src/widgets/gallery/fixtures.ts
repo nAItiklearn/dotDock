@@ -4,7 +4,7 @@
  * imports this file.
  */
 import { useProviderStore } from "../../providers/store";
-import type { MediaData, ProviderIssue, ProviderName, ProviderPayloads, ProviderState } from "../../providers/types";
+import type { MediaData, ProviderIssue, ProviderName, ProviderPayloads, ProviderState, WeatherData } from "../../providers/types";
 
 const GIB = 1024 ** 3;
 const NOW = Date.now();
@@ -70,7 +70,8 @@ function stateFor<K extends ProviderName>(name: K, mode: GalleryState): Provider
 }
 
 /** Puts every provider into one state, the way the real store would look in that situation. */
-export function applyGalleryState(mode: GalleryState): void {
+export function applyGalleryState(mode: GalleryState, weather: Partial<WeatherData> = {}): void {
+  SAMPLES.weather = { ...SAMPLES.weather, ...weather };
   const states = Object.fromEntries(NAMES.map((name) => [name, stateFor(name, mode)]));
   useProviderStore.setState({ states: states as ReturnType<typeof useProviderStore.getState>["states"] });
 }

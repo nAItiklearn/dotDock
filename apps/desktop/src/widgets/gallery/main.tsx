@@ -15,6 +15,7 @@ import "./gallery.css";
  *   ?theme=obsidian|paper|aurum   ?state=live|cache|offline|empty|error|loading
  *   ?only=clock,weather           ?sizes=m,l (limit sizes)   ?variants=0 (skip config variants)
  *   ?icons=1                      shows the dot-matrix pictograms instead of widgets
+ *   ?code=61&night=1              weather sample: WMO code, and night time
  */
 const params = new URLSearchParams(location.search);
 const stateParam = params.get("state") ?? "live";
@@ -23,7 +24,7 @@ const only = params.get("only")?.split(",") ?? null;
 const sizeFilter = params.get("sizes")?.split(",") ?? null;
 const withVariants = params.get("variants") !== "0";
 const showIcons = params.get("icons") === "1";
-const ICON_PREVIEW_SIZE = 54;
+const ICON_PREVIEW_SIZE = 72;
 
 interface Variant {
   readonly label: string;
@@ -57,7 +58,11 @@ const VARIANTS: Readonly<Record<string, readonly Variant[]>> = {
 };
 
 applyTheme(themeById(params.get("theme") ?? "obsidian"));
-applyGalleryState(state);
+const weatherCode = params.get("code");
+applyGalleryState(state, {
+  ...(weatherCode === null ? {} : { code: Number(weatherCode) }),
+  ...(params.get("night") === "1" ? { isDay: false } : {}),
+});
 
 const root = document.getElementById("root");
 if (!root) throw new Error("gallery index.html is missing #root");

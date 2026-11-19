@@ -16,15 +16,17 @@ export function conditionLabel(code: number): string {
 }
 
 export function conditionIcon(code: number, isDay: boolean): DotIconName {
-  if (code === 0) return isDay ? "sun" : "moon";
-  if (code <= 2) return isDay ? "cloud-sun" : "cloud";
-  if (code === 3) return "cloud";
+  if (code === 0) return isDay ? "clear-day" : "clear-night";
+  if (code <= 2) return isDay ? "partly-day" : "partly-night";
+  if (code === 3) return "cloudy";
   if (code === 45 || code === 48) return "fog";
+  if (code >= 51 && code <= 57) return "drizzle";
+  if (code >= 61 && code <= 67) return "rain";
   if (code >= 71 && code <= 77) return "snow";
+  if (code >= 80 && code <= 82) return isDay ? "showers-day" : "showers-night";
   if (code === 85 || code === 86) return "snow";
-  if (code >= 95) return "storm";
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
-  return "cloud";
+  if (code >= 95) return "thunder";
+  return "cloudy";
 }
 
 /** Where the current temperature sits between today's low and high, 0..1. */

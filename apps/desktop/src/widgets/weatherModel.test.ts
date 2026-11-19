@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DOT_ICON_NAMES } from "../design-system/icons";
 import { conditionIcon, conditionLabel, rangePosition } from "./weatherModel";
 
 describe("weather", () => {
@@ -17,15 +18,27 @@ describe("weather", () => {
   });
 
   it("chooses an icon that fits the sky and the time of day", () => {
-    expect(conditionIcon(0, true)).toBe("sun");
-    expect(conditionIcon(0, false)).toBe("moon");
-    expect(conditionIcon(1, true)).toBe("cloud-sun");
-    expect(conditionIcon(1, false)).toBe("cloud");
-    expect(conditionIcon(61, true)).toBe("rain");
-    expect(conditionIcon(80, false)).toBe("rain");
-    expect(conditionIcon(75, true)).toBe("snow");
-    expect(conditionIcon(95, true)).toBe("storm");
+    expect(conditionIcon(0, true)).toBe("clear-day");
+    expect(conditionIcon(0, false)).toBe("clear-night");
+    expect(conditionIcon(1, true)).toBe("partly-day");
+    expect(conditionIcon(2, false)).toBe("partly-night");
+    expect(conditionIcon(3, true)).toBe("cloudy");
     expect(conditionIcon(48, true)).toBe("fog");
+    expect(conditionIcon(53, true)).toBe("drizzle");
+    expect(conditionIcon(61, true)).toBe("rain");
+    expect(conditionIcon(67, false)).toBe("rain");
+    expect(conditionIcon(75, true)).toBe("snow");
+    expect(conditionIcon(86, false)).toBe("snow");
+    expect(conditionIcon(81, true)).toBe("showers-day");
+    expect(conditionIcon(81, false)).toBe("showers-night");
+    expect(conditionIcon(95, true)).toBe("thunder");
+    expect(conditionIcon(99, false)).toBe("thunder");
+  });
+
+  it("has a drawn pictogram for every code the provider can send", () => {
+    for (let code = 0; code <= 99; code++) {
+      for (const day of [true, false]) expect(DOT_ICON_NAMES).toContain(conditionIcon(code, day));
+    }
   });
 
   it("places now between today's low and high", () => {
