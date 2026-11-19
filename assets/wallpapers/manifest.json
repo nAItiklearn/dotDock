@@ -39,7 +39,7 @@
       "accent": "#c9ccd0",
       "width": 3840,
       "height": 2160,
-      "bytes": 1042760
+      "bytes": 998334
     },
     {
       "id": "louver-silver",
@@ -52,7 +52,7 @@
       "accent": "#a9abae",
       "width": 3840,
       "height": 2160,
-      "bytes": 1064460
+      "bytes": 1094161
     },
     {
       "id": "arc-red",
@@ -238,29 +238,29 @@
     },
     {
       "id": "soft-mono",
-      "name": "Matte Orbits",
-      "style": "soft monochrome gradient with grain",
+      "name": "Petal Haze",
+      "style": "soft monochrome petals with thorn stems",
       "mode": "dark",
       "file": "soft-mono-dark.jpg",
       "thumb": "wallpaper-thumbs/soft-mono-dark.jpg",
       "seed": 9101,
-      "accent": "#e94248",
+      "accent": "#d6d4d0",
       "width": 3840,
       "height": 2160,
-      "bytes": 1028450
+      "bytes": 1154017
     },
     {
       "id": "soft-mono",
-      "name": "Matte Orbits",
-      "style": "soft monochrome gradient with grain",
+      "name": "Petal Haze",
+      "style": "soft monochrome petals with thorn stems",
       "mode": "light",
       "file": "soft-mono-light.jpg",
       "thumb": "wallpaper-thumbs/soft-mono-light.jpg",
       "seed": 9101,
-      "accent": "#e2363d",
+      "accent": "#8a8a86",
       "width": 3840,
       "height": 2160,
-      "bytes": 1109351
+      "bytes": 1169362
     },
     {
       "id": "glass-orbs",
@@ -313,6 +313,110 @@
       "width": 3840,
       "height": 2160,
       "bytes": 1210138
+    },
+    {
+      "id": "bloom-dots",
+      "name": "Lattice Bloom",
+      "style": "dot-matrix flowers over bokeh",
+      "mode": "dark",
+      "file": "bloom-dots-dark.jpg",
+      "thumb": "wallpaper-thumbs/bloom-dots-dark.jpg",
+      "seed": 5301,
+      "accent": "#f1dfb0",
+      "width": 3840,
+      "height": 2160,
+      "bytes": 1617985
+    },
+    {
+      "id": "bloom-dots",
+      "name": "Lattice Bloom",
+      "style": "dot-matrix flowers over bokeh",
+      "mode": "light",
+      "file": "bloom-dots-light.jpg",
+      "thumb": "wallpaper-thumbs/bloom-dots-light.jpg",
+      "seed": 5301,
+      "accent": "#2c3a1c",
+      "width": 3840,
+      "height": 2160,
+      "bytes": 1620703
+    },
+    {
+      "id": "meadow-dots",
+      "name": "Wind Meadow",
+      "style": "dotted wild flowers on wind-swept grass",
+      "mode": "dark",
+      "file": "meadow-dots-dark.jpg",
+      "thumb": "wallpaper-thumbs/meadow-dots-dark.jpg",
+      "seed": 5401,
+      "accent": "#f2ee3a",
+      "width": 3840,
+      "height": 2160,
+      "bytes": 2421408
+    },
+    {
+      "id": "meadow-dots",
+      "name": "Wind Meadow",
+      "style": "dotted wild flowers on wind-swept grass",
+      "mode": "light",
+      "file": "meadow-dots-light.jpg",
+      "thumb": "wallpaper-thumbs/meadow-dots-light.jpg",
+      "seed": 5401,
+      "accent": "#f6d423",
+      "width": 3840,
+      "height": 2160,
+      "bytes": 2354084
+    },
+    {
+      "id": "flute-flower",
+      "name": "Reeded Violet",
+      "style": "fluted glass flower",
+      "mode": "dark",
+      "file": "flute-flower-dark.jpg",
+      "thumb": "wallpaper-thumbs/flute-flower-dark.jpg",
+      "seed": 5501,
+      "accent": "#8d5ff0",
+      "width": 3840,
+      "height": 2160,
+      "bytes": 1330363
+    },
+    {
+      "id": "flute-flower",
+      "name": "Reeded Violet",
+      "style": "fluted glass flower",
+      "mode": "light",
+      "file": "flute-flower-light.jpg",
+      "thumb": "wallpaper-thumbs/flute-flower-light.jpg",
+      "seed": 5501,
+      "accent": "#4a24c0",
+      "width": 3840,
+      "height": 2160,
+      "bytes": 1287604
+    },
+    {
+      "id": "halftone-ridge",
+      "name": "Screen Ridge",
+      "style": "halftone landscape",
+      "mode": "dark",
+      "file": "halftone-ridge-dark.jpg",
+      "thumb": "wallpaper-thumbs/halftone-ridge-dark.jpg",
+      "seed": 5601,
+      "accent": "#7aa346",
+      "width": 3840,
+      "height": 2160,
+      "bytes": 1920283
+    },
+    {
+      "id": "halftone-ridge",
+      "name": "Screen Ridge",
+      "style": "halftone landscape",
+      "mode": "light",
+      "file": "halftone-ridge-light.jpg",
+      "thumb": "wallpaper-thumbs/halftone-ridge-light.jpg",
+      "seed": 5601,
+      "accent": "#2d3f66",
+      "width": 3840,
+      "height": 2160,
+      "bytes": 2183743
     }
   ]
 }
