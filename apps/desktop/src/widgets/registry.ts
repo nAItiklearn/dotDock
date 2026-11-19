@@ -4,9 +4,16 @@ import { clockWidget } from "./ClockWidget";
 import { normalizeConfig, type ConfigValue } from "./configSchema";
 import { dateWidget } from "./DateCircleWidget";
 import type { WidgetDefinition } from "./definition";
+import { funFactWidget } from "./FunFactWidget";
+import { musicWidget } from "./MusicWidget";
+import { notesWidget } from "./NotesWidget";
+import { quoteWidget } from "./QuoteWidget";
 import type { SizeId, SizeSpec } from "./sizes";
 import { systemWidget } from "./SystemWidgets";
+import { timerWidget } from "./TimerWidget";
+import { todoWidget } from "./TodoWidget";
 import { weatherWidget } from "./WeatherWidget";
+import { worldClocksWidget } from "./WorldClocksWidget";
 
 /**
  * Each widget keeps its own config type. The registry erases it because hosts look
@@ -22,6 +29,13 @@ export const WIDGETS: readonly AnyWidgetDefinition[] = [
   weatherWidget,
   batteryWidget,
   systemWidget,
+  musicWidget,
+  quoteWidget,
+  funFactWidget,
+  notesWidget,
+  todoWidget,
+  timerWidget,
+  worldClocksWidget,
 ];
 
 const BY_ID: ReadonlyMap<string, AnyWidgetDefinition> = new Map(WIDGETS.map((w) => [w.id, w]));

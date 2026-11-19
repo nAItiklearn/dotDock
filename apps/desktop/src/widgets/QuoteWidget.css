@@ -1,0 +1,65 @@
+.quote {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-5) var(--space-6);
+}
+.quote__mark {
+  flex: none;
+  color: var(--accent);
+}
+.quote__text {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 500;
+  line-height: var(--leading-body);
+  text-wrap: pretty;
+}
+.quote__by {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.quote__by .caps {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.quote__work {
+  min-width: 0;
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Circle: the quote is centred and the mark sits above it. */
+.quote--s {
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-6);
+  text-align: center;
+}
+.quote--s .quote__mark {
+  height: var(--space-5);
+  width: auto;
+}
+.quote--s .quote__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+}
+.quote--m .quote__mark {
+  height: var(--space-5);
+  width: auto;
+}
