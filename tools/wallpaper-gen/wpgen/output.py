@@ -138,17 +138,14 @@ def _font(size: int):
 
 
 def contact_sheet(entries: list[dict], out_dir: Path, dest: Path) -> None:
-    """1920x1080 sheet: rows alternate dark / light for six wallpapers each."""
-    sheet_w, sheet_h = 1920, 1080
+    """1920 px wide sheet (at least 1080 tall): rows alternate dark / light for six wallpapers each."""
+    sheet_w = 1920
     cols = 6
     gap = 8
     label_h = 24
     cw = (sheet_w - gap * (cols + 1)) // cols
     chh = round(cw * 9 / 16)
     bg = (12, 12, 12)
-    sheet = Image.new("RGB", (sheet_w, sheet_h), bg)
-    d = ImageDraw.Draw(sheet)
-    font = _font(15)
     ids = []
     for e in entries:
         if e["id"] not in ids:
@@ -157,6 +154,10 @@ def contact_sheet(entries: list[dict], out_dir: Path, dest: Path) -> None:
     rows = math.ceil(len(ids) / cols) * 2
     title_h = 44
     total_h = rows * (chh + label_h + gap // 2)
+    sheet_h = max(1080, title_h + total_h + 2 * gap)
+    sheet = Image.new("RGB", (sheet_w, sheet_h), bg)
+    d = ImageDraw.Draw(sheet)
+    font = _font(15)
     y0 = title_h + max(gap, (sheet_h - title_h - total_h) // 2)
     d.text((gap + 2, 12), f"dotDock wallpapers: {len(ids)} procedural originals, dark and light  |  generated from maths + fixed seeds",
            fill=(232, 230, 227), font=_font(18))

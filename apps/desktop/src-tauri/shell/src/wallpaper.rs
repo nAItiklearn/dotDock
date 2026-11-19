@@ -145,7 +145,7 @@ mod tests {
     fn reads_the_shipped_manifest() {
         let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../assets/wallpapers");
         let all = bundled(&dir).expect("shipped manifest parses");
-        assert!(all.len() >= 24, "12 wallpapers x dark/light");
+        assert!(all.len() >= 32, "16 wallpapers x dark/light");
         assert!(all.iter().all(|(_, p)| p.is_file()), "every manifest entry has its file");
     }
 
