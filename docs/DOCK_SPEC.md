@@ -47,10 +47,10 @@ hidden. The dock still has to watch `TaskbarCreated` and call `hide_for_dock` ag
   pinned, a divider, live tiles, the status pill (volume, network, battery, clock).
 - **Category stack**: one tile showing up to four mini icons of its apps in a 2 x 2 grid. Click opens a
   stack popover: category name, a grid of its apps, tinted with the category colour. Arrow keys,
-  type-to-filter, Esc closes.
+  type-to-filter, Esc closes. Opens instantly (content on the first frame, at most an 80 ms fade).
 - **App Library**: full-screen overlay (hotkey, or a dock button), search field on top, every category
   as a section with its apps; typing filters apps, then Start-menu files and calculator results.
-- **Hover**: magnification with spring physics on the compositor (transform only); label tooltip.
+- **Hover**: subtle magnification (about 1.25x peak, none or slight on stacks), transform only, never blurring; label tooltip.
 - **Running indicators**: a dot under each running app; two dots for several windows; accent for the
   focused one. Badges where Windows exposes them.
 - **Window menu**: hovering a running app shows live DWM thumbnails of its windows; click restores or
