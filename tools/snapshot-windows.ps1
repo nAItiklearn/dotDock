@@ -10,8 +10,30 @@ $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'lib\WinShell.psm1') -Force
 
 $path = Get-SnapshotPath
+
+# Taskbar fields came with the dock phase. A snapshot from before then lacks them; nothing in the app
+# touched the taskbar before the dock, so its state now is still the original and can be added.
+function Add-TaskbarFields($snap) {
+    $added = $false
+    if (-not ($snap.PSObject.Properties.Name -contains 'taskbarAutoHide')) {
+        $snap | Add-Member -NotePropertyName taskbarAutoHide -NotePropertyValue (Get-TaskbarAutoHide); $added = $true
+    }
+    if (-not ($snap.PSObject.Properties.Name -contains 'taskbarVisible')) {
+        $snap | Add-Member -NotePropertyName taskbarVisible -NotePropertyValue (Test-TaskbarVisible); $added = $true
+    }
+    return $added
+}
+
 if ((Test-Path $path) -and -not $Force) {
-    Write-Output "Snapshot already exists, keeping it: $path"
+    $existing = Get-Content -LiteralPath $path -Raw -Encoding UTF8 | ConvertFrom-Json
+    if (Add-TaskbarFields $existing) {
+        $tmp = "$path.tmp"
+        $existing | ConvertTo-Json | Set-Content -LiteralPath $tmp -Encoding UTF8
+        Move-Item -LiteralPath $tmp -Destination $path -Force
+        Write-Output "Snapshot kept; added the original taskbar state: $path"
+    } else {
+        Write-Output "Snapshot already exists, keeping it: $path"
+    }
     exit 0
 }
 if (Test-Path $path) {
@@ -42,6 +64,8 @@ $snapshot = [ordered]@{
     serializeKeyExisted = Test-Path $SerializeKey
     startupDelayInMSec  = Get-RegValue $SerializeKey 'StartupDelayInMSec'
     runEntryExisted     = $null -ne (Get-RegValue $RunKey $AppName)
+    taskbarAutoHide     = Get-TaskbarAutoHide
+    taskbarVisible      = Test-TaskbarVisible
 }
 
 $tmp = "$path.tmp"

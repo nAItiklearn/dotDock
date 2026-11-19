@@ -2,8 +2,8 @@
 .SYNOPSIS
   Panic button: returns the desktop to stock Windows using the saved snapshot.
 .DESCRIPTION
-  Stops dotDock, removes its autostart entries, restores the startup-delay value, wallpaper
-  and desktop-icon visibility. Safe to run any number of times. Exits 1 if any step failed.
+  Stops dotDock, shows the Windows taskbar, removes its autostart entries, restores the
+  startup-delay value, wallpaper, taskbar auto-hide and desktop-icon visibility. Safe to run any number of times. Exits 1 if any step failed.
   Use -DryRun to print the plan without changing anything.
   The installed app does the same with `dotdock.exe --restore-windows`.
 #>
@@ -32,6 +32,9 @@ Step "Stop $AppName processes" {
     Get-Process -Name $AppName -ErrorAction SilentlyContinue | Stop-Process -Force
 }
 
+# Always, with or without a snapshot: a hidden taskbar is the one state a user cannot fix by hand.
+Step 'Show the Windows taskbar' { Show-Taskbar }
+
 Step 'Remove autostart Run entry' {
     Remove-ItemProperty -Path $RunKey -Name $AppName -ErrorAction SilentlyContinue
 }
@@ -58,6 +61,10 @@ if ($snap) {
         $source = $snap.wallpaperCopy
         if (-not ($source -and (Test-Path -LiteralPath $source))) { $source = $snap.wallpaper }
         Set-Wallpaper -Path $source -Style $snap.wallpaperStyle -Tile $snap.tileWallpaper
+    }
+
+    if ($snap.PSObject.Properties.Name -contains 'taskbarAutoHide' -and $null -ne $snap.taskbarAutoHide) {
+        Step 'Restore taskbar auto-hide' { Set-TaskbarAutoHide ([bool]$snap.taskbarAutoHide) }
     }
 
     Step 'Restore desktop icon visibility' {
