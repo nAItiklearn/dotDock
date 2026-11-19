@@ -1,11 +1,13 @@
 //! The native Windows taskbar: find it, show it, read and set auto-hide. Same behaviour as the
 //! taskbar helpers in `tools/lib/WinShell.psm1`, so the app and the panic script restore alike.
-//! The dock hides the taskbar; every exit path must be able to bring it back with `show_all`.
+//! The dock hides the taskbar through `dock_guard` only; every exit path can bring it back with `show_all`.
 
 use windows::core::{w, PCWSTR};
 use windows::Win32::Foundation::{HWND, LPARAM};
 use windows::Win32::UI::Shell::{SHAppBarMessage, ABM_GETSTATE, ABM_SETSTATE, APPBARDATA};
-use windows::Win32::UI::WindowsAndMessaging::{FindWindowExW, FindWindowW, IsWindowVisible, ShowWindow, SW_SHOW};
+use windows::Win32::UI::WindowsAndMessaging::{
+    FindWindowExW, FindWindowW, IsWindowVisible, ShowWindow, SW_HIDE, SW_SHOW,
+};
 
 /// `ABS_AUTOHIDE` and `ABS_ALWAYSONTOP` from shellapi.h (not exported by the windows crate).
 const ABS_AUTOHIDE: u32 = 0x1;
@@ -46,12 +48,33 @@ pub fn is_visible() -> Option<bool> {
     Some(bars.iter().all(|&h| unsafe { IsWindowVisible(h) }.as_bool()))
 }
 
+/// True when no taskbar is visible; `None` when Explorer has no taskbar right now.
+pub fn is_hidden() -> Option<bool> {
+    let bars = windows();
+    if bars.is_empty() {
+        return None;
+    }
+    // SAFETY: IsWindowVisible on handles just returned by FindWindow.
+    Some(bars.iter().all(|&h| !unsafe { IsWindowVisible(h) }.as_bool()))
+}
+
 /// Shows every taskbar. Safe to call at any time, any number of times.
 pub fn show_all() {
     for bar in windows() {
         // SAFETY: ShowWindow on a taskbar handle; the return value is the previous visibility.
         unsafe {
             let _ = ShowWindow(bar, SW_SHOW);
+        }
+    }
+}
+
+/// Hides every taskbar. Crate-private on purpose: `dock_guard::hide_for_dock` records who hid it
+/// first, so no code path can leave the taskbar hidden without a way back.
+pub(crate) fn hide_all() {
+    for bar in windows() {
+        // SAFETY: ShowWindow on a taskbar handle; the return value is the previous visibility.
+        unsafe {
+            let _ = ShowWindow(bar, SW_HIDE);
         }
     }
 }

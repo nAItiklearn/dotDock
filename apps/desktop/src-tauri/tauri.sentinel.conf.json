@@ -1,0 +1,7 @@
+{
+  "bundle": {
+    "resources": {
+      "target/release/dotdock-sentinel.exe": "dotdock-sentinel.exe"
+    }
+  }
+}

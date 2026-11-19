@@ -149,9 +149,16 @@ jobs:
           cache-on-failure: true
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
+      # The restore watchdog ships beside dotdock.exe. It is added to the bundle by a config merge
+      # and not in tauri.conf.json, because a configured resource must exist for every build of the
+      # app (clippy included). Without the file the core runs the watchdog from its own exe.
+      - name: Build the restore sentinel
+        run: cargo build --release -p dotdock-sentinel
+        working-directory: apps/desktop/src-tauri
+
       # beforeBuildCommand (pnpm build) produces the frontend; output is target/release/bundle/nsis.
       - name: Build bundle
-        run: pnpm tauri build
+        run: pnpm tauri build --config src-tauri/tauri.sentinel.conf.json
 
       - name: Read app version
         id: app

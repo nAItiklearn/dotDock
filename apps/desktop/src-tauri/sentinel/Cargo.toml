@@ -1,0 +1,14 @@
+[package]
+name = "dotdock-sentinel"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Restore watchdog: puts the Windows taskbar back when dotDock ends without doing it"
+publish = false
+
+[[bin]]
+name = "dotdock-sentinel"
+path = "src/main.rs"
+
+[dependencies]
+dotdock-shell = { path = "../shell" }

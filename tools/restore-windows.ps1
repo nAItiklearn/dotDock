@@ -28,7 +28,13 @@ if (Test-Path $snapshotPath) {
     Write-Output "No snapshot at $snapshotPath. Only removing dotDock autostart and processes."
 }
 
+# The dock's own record first: with it gone, a watching sentinel finds nothing to do while this
+# script restores the taskbar and the two cannot disagree about auto-hide.
+$script:markerAutoHide = $null
+Step 'Take over the dock marker' { $script:markerAutoHide = Clear-TaskbarMarker }
+
 Step "Stop $AppName processes" {
+    Get-Process -Name "$AppName-sentinel" -ErrorAction SilentlyContinue | Stop-Process -Force
     Get-Process -Name $AppName -ErrorAction SilentlyContinue | Stop-Process -Force
 }
 
@@ -70,6 +76,12 @@ if ($snap) {
     Step 'Restore desktop icon visibility' {
         if ($null -ne $snap.desktopIconsVisible) { Set-DesktopIconsVisible ([bool]$snap.desktopIconsVisible) }
     }
+}
+
+# No snapshot value to go by: the value from before the dock hid the taskbar is the next best.
+$snapHasAutoHide = $snap -and $snap.PSObject.Properties.Name -contains 'taskbarAutoHide' -and $null -ne $snap.taskbarAutoHide
+if (-not $snapHasAutoHide -and $null -ne $script:markerAutoHide) {
+    Step 'Restore taskbar auto-hide from the dock marker' { Set-TaskbarAutoHide $script:markerAutoHide }
 }
 
 if ($script:Failures -gt 0) {

@@ -21,13 +21,25 @@ live thumbnails, and a few excellent live tiles, all in the home screen's dot-ma
 - **Explorer restarts.** Listen for `TaskbarCreated`; re-hide the new taskbar and re-register the app bar.
 
 ## 3. Restore guarantees (all must be proven before the dock can hide anything)
+The one way to hide the taskbar is `dock_guard::hide_for_dock` (`shell/src/dock_guard.rs`). It checks the snapshot
+holds the original auto-hide value, makes sure the sentinel is watching, writes the marker
+`%LOCALAPPDATA%\dev.dotdock.desktop\taskbar-hidden.json` (owner pid and start time, auto-hide as it was just before
+the hide; written, flushed and renamed so a power cut leaves no half file), and only then hides. "Hidden by us" means
+"the marker exists". Every path below acts on the marker, and removes it only after checking that the taskbar is
+visible and auto-hide is back. Design record: D-017. Test record: `docs/QA/DOCK_D0_RESTORE.md`.
+
 | Exit path | How the taskbar comes back |
 |---|---|
-| Normal quit, "Use Windows desktop", uninstall | The core shows the taskbar and restores the auto-hide state. |
-| Panic / crash | The panic hook restores, then the crash-loop guard (D-012) disables the dock after 3 unclean starts. |
-| Hard kill (`taskkill /F`), power loss | A tiny watchdog process (`dotdock-sentinel`) waits on the core's process handle and restores when it ends. On next sign-in the core restores before doing anything else if the last run was unclean. |
-| App will not start at all | `tools/restore-windows.ps1` shows the taskbar and restores the snapshot. |
-| Shift held at launch | Safe mode: the dock does not hide the taskbar. |
+| Normal quit, "Use Windows desktop", uninstall | The core calls `restore_after_dock` on `RunEvent::Exit`; `restore_windows` (in-app action, `--restore-windows` run by the uninstaller) calls `release`, which also clears the marker. |
+| Panic / crash | The panic hook calls `restore_after_dock` (own marker only), then the crash-loop guard (D-012) disables the dock after 3 unclean starts. |
+| Hard kill (`taskkill /F`, `/F /T`), exit without restoring | The sentinel (`dotdock-sentinel.exe`, or `dotdock.exe --sentinel` when that file is missing) waits on the core's process handle; when it ends with the marker present, the sentinel restores. It exits quietly when the marker is gone. It starts detached from the core's process tree, so a tree kill cannot take it along. |
+| Sentinel killed | The core checks for it every second and starts a new one; the unwatched window is at most that second. |
+| Power loss, sign-out, sentinel and core both killed | `recover_if_dirty` runs first thing at the next start (also in safe mode) and restores if the marker's owner is not running. A live owner (a second launch) is left alone. Explorer rebuilds a visible taskbar on its own at sign-in; only the auto-hide value can stay changed until then. |
+| App will not start at all | `tools/restore-windows.ps1` removes the marker first, then shows the taskbar and restores the snapshot. |
+| Shift held at launch | Safe mode: it returns before any window exists, so nothing can hide the taskbar (it still recovers a dirty marker). |
+
+Explorer re-shows the taskbar window about 50 ms after auto-hide changes, so a hide is repeated until it stays
+hidden. The dock still has to watch `TaskbarCreated` and call `hide_for_dock` again after an Explorer restart.
 
 ## 4. Layout and surfaces
 - **Dock bar**: a floating pill, bottom by default (top, left, right selectable), per monitor, auto-hide option.

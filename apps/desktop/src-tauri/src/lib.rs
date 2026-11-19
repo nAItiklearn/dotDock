@@ -9,7 +9,7 @@ use desktop_host::{HitRect, HitRegions, Hwnd};
 use dotdock_shell::crash_guard::{self, StartDecision};
 use dotdock_shell::providers::weather::{self, Place};
 use dotdock_shell::wallpaper;
-use dotdock_shell::{autostart, boot_log as boot};
+use dotdock_shell::{autostart, boot_log as boot, dock_guard, sentinel};
 use providers::{ProvidersReady, WeatherWake};
 use std::time::Duration;
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -216,13 +216,27 @@ fn shift_held() -> bool {
     unsafe { GetAsyncKeyState(i32::from(VK_SHIFT.0)) < 0 }
 }
 
+/// The restore watchdog runs from this exe when `dotdock-sentinel.exe` is not beside it (the
+/// portable exe, a dev run): `dotdock.exe --sentinel <launch|watch> <pid>`. Exits the process if so.
+fn run_hosted_sentinel() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().map(String::as_str) == Some(sentinel::HOST_ARG) {
+        std::process::exit(sentinel::run(&args));
+    }
+}
+
 pub fn run() {
+    run_hosted_sentinel();
     crash_guard::install_panic_hook();
     if run_cli_command() {
         return;
     }
     boot::record_process_start();
+    // Before anything else: if the last run left the taskbar hidden (power loss, or even the
+    // sentinel was killed), it comes back now. Also in safe mode: showing it is always safe.
+    dock_guard::recover_if_dirty();
     let launched_at_sign_in = std::env::args().any(|a| a == autostart::AUTOSTART_ARG);
+    // Safe mode returns before any window exists, so nothing can hide the taskbar in it.
     if shift_held() {
         boot::mark("safe-mode");
         notice("Safe mode: dotDock started without changing your desktop.\n\nStart it again without holding Shift to bring your widgets back.");
@@ -295,8 +309,9 @@ pub fn run() {
         .build(tauri::generate_context!())
         .map(|app| {
             app.run(|_, event| {
-                // A clean exit is never a crash.
+                // A clean exit is never a crash, and never leaves the taskbar hidden.
                 if let tauri::RunEvent::Exit = event {
+                    dock_guard::restore_after_dock();
                     crash_guard::mark_stable();
                 }
             })
