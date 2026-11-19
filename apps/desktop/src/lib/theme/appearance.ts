@@ -47,9 +47,11 @@ export function effectiveEdgeMargin(settings: AppSettings, monitorId: MonitorId)
 }
 
 const BASE_DURATIONS_MS = { "--dur-fast": 140, "--dur-med": 260, "--dur-slow": 520 } as const;
+/** The card radius tokens.css ships with (--radius-lg); the Appearance slider shows it when nothing is overridden. */
+export const DEFAULT_CORNER_RADIUS = 28;
 /** Card radius steps relative to the large radius, matching the ratios in tokens.css. */
-const RADIUS_MD_RATIO = 20 / 28;
-const RADIUS_SM_RATIO = 12 / 28;
+const RADIUS_MD_RATIO = 20 / DEFAULT_CORNER_RADIUS;
+const RADIUS_SM_RATIO = 12 / DEFAULT_CORNER_RADIUS;
 
 export interface AppearanceEnvironment {
   readonly monitorId: MonitorId;

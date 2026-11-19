@@ -2,6 +2,11 @@ import { useId, useRef, type ButtonHTMLAttributes, type CSSProperties, type Keyb
 import { Icon, type IconName } from "./Icon";
 import "./controls.css";
 
+/** Form controls carry a name (browsers and autofill expect one); it is just the accessible label, slugged. */
+export function fieldName(label: string): string {
+  return label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 // ----------------------------------------------------------------- buttons
 
 export type ButtonVariant = "default" | "primary" | "danger" | "ghost";
@@ -88,6 +93,7 @@ export function Slider({ value, min, max, step, onChange, label, disabled = fals
   return (
     <input
       type="range"
+      name={fieldName(label)}
       className="ui-slider"
       min={min}
       max={max}
@@ -172,7 +178,7 @@ interface SelectFieldProps<T extends string> {
 export function SelectField<T extends string>({ value, options, onChange, label, disabled = false }: SelectFieldProps<T>) {
   return (
     <span className="ui-select">
-      <select value={value} disabled={disabled} aria-label={label} onChange={(e) => onChange(e.currentTarget.value as T)}>
+      <select name={fieldName(label)} value={value} disabled={disabled} aria-label={label} onChange={(e) => onChange(e.currentTarget.value as T)}>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
@@ -201,6 +207,7 @@ export function TextField({ value, onChange, label, placeholder, maxLength, type
   return (
     <input
       id={id}
+      name={fieldName(label)}
       className="ui-text"
       type={type}
       value={value}

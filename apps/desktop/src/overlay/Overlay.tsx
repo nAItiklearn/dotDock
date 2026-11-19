@@ -1,10 +1,10 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import { boundsFor, type GridMetrics } from "../lib/layout/grid";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { boundsFor } from "../lib/layout/grid";
 import { getNativeApi } from "../lib/native/api";
-import { effectiveEdgeMargin } from "../lib/theme/appearance";
 import { useAppearance } from "../lib/theme/useAppearance";
 import { getApp } from "../lib/state/app";
 import { useLayoutStore, useNoticeStore, useSettingsStore } from "../lib/state/hooks";
+import { useGridMetrics } from "../lib/state/useGridMetrics";
 import { eventMatches } from "../lib/shortcuts";
 import { isTauri } from "../providers/bridge";
 import { NoticeToasts } from "./NoticeToasts";
@@ -14,21 +14,6 @@ import { WidgetSlot } from "./WidgetSlot";
 import "./Overlay.css";
 
 const EditLayer = lazy(() => import("./edit/EditLayer").then((m) => ({ default: m.EditLayer })));
-
-/** Falls back to the stylesheet's own value if the token is missing; keeps JS and CSS from drifting apart. */
-const FALLBACK_CELL_PX = 76;
-
-function readCellPx(): number {
-  const value = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--cell"));
-  return Number.isFinite(value) && value > 0 ? value : FALLBACK_CELL_PX;
-}
-
-function useGridMetrics(): GridMetrics {
-  const gap = useSettingsStore((s) => s.settings.layout.gap);
-  const edge = useSettingsStore((s) => effectiveEdgeMargin(s.settings, getApp().monitorId));
-  const [cell] = useState(readCellPx);
-  return useMemo(() => ({ cell, gap, edge }), [cell, gap, edge]);
-}
 
 function useViewport(): { readonly width: number; readonly height: number } {
   const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
