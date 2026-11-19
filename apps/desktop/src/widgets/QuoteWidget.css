@@ -1,38 +1,92 @@
+/*
+ * Quote typography: the size follows the length of the quote (short ones are set large), the opening
+ * mark hangs in its own column in the dot font, lines balance, and the attribution has its own hierarchy:
+ * a short accent rule, the author in mono caps, then the source in small dim type.
+ */
 .quote {
+  --quote-size: var(--text-lg);
+  --quote-leading: 1.28;
+  --quote-tracking: -0.01em;
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-2);
+  display: grid;
+  grid-template-columns: var(--space-6) minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  column-gap: var(--space-3);
+  row-gap: var(--space-3);
   margin: 0;
   padding: var(--space-5) var(--space-6);
 }
+.quote--short {
+  --quote-size: 24px;
+  --quote-leading: 1.15;
+  --quote-tracking: -0.02em;
+}
+.quote--medium {
+  --quote-size: 19px;
+  --quote-leading: 1.22;
+}
+.quote--long {
+  --quote-size: 16px;
+  --quote-leading: 1.3;
+}
+.quote--xlong {
+  --quote-size: 13.5px;
+  --quote-leading: 1.4;
+  --quote-tracking: 0;
+}
+
 .quote__mark {
-  flex: none;
-  align-self: flex-start;
+  grid-row: 1;
+  grid-column: 1;
+  align-self: start;
+  margin-top: calc(var(--space-2) * -1);
+  font-family: var(--font-dot);
+  font-size: 56px;
+  font-weight: 900;
+  line-height: 1;
   color: var(--accent);
 }
 .quote__text {
+  grid-row: 1;
+  grid-column: 2;
+  align-self: center;
   margin: 0;
-  font-size: var(--text-md);
+  font-size: var(--quote-size);
   font-weight: 500;
-  line-height: var(--leading-body);
-  text-wrap: pretty;
+  line-height: var(--quote-leading);
+  letter-spacing: var(--quote-tracking);
+  text-wrap: balance;
+  overflow-wrap: break-word;
 }
+
 .quote__by {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  grid-row: 2;
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: var(--space-2);
+  row-gap: var(--space-1);
   min-width: 0;
 }
-.quote__by .caps {
+.quote__rule {
+  align-self: center;
+  width: var(--space-4);
+  height: var(--hairline);
+  background: var(--accent);
+}
+.quote__author {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .quote__work {
-  min-width: 0;
+  grid-column: 2;
   font-size: var(--text-xs);
   color: var(--text-dim);
   white-space: nowrap;
@@ -40,28 +94,55 @@
   text-overflow: ellipsis;
 }
 
-/* Circle: the quote is centred and the mark sits above it. */
+/* Circle: everything is centred on one axis and the mark sits above the text. */
 .quote--s {
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-6) var(--space-6);
+  --quote-lines: 5;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  row-gap: var(--space-1);
+  padding: var(--space-6) var(--space-6) var(--space-5);
   text-align: center;
 }
+.quote--s.quote--short {
+  --quote-size: 17px;
+}
+.quote--s.quote--medium {
+  --quote-size: 14px;
+  --quote-leading: 1.22;
+}
+.quote--s.quote--long,
+.quote--s.quote--xlong {
+  --quote-size: 12.5px;
+  --quote-leading: 1.28;
+}
 .quote--s .quote__mark {
-  align-self: center;
-  height: var(--space-5);
-  width: auto;
+  grid-row: 1;
+  grid-column: 1;
+  margin-top: calc(var(--space-2) * -1);
+  height: var(--space-6);
+  font-size: 40px;
+  line-height: 0.9;
 }
 .quote--s .quote__text {
+  grid-row: 2;
+  grid-column: 1;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: var(--quote-lines);
   overflow: hidden;
-  font-size: var(--text-sm);
-  line-height: var(--leading-tight);
 }
-.quote--m .quote__mark {
-  height: var(--space-5);
-  width: auto;
+.quote--s .quote__by {
+  grid-row: 3;
+  grid-column: 1;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  width: 100%;
+}
+.quote--s .quote__rule {
+  width: var(--space-3);
+}
+.quote--s .quote__author {
+  max-width: 100%;
+  letter-spacing: 0.08em;
 }

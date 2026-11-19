@@ -92,13 +92,13 @@ describe("pictograms", () => {
     const rows = iconRows(name);
     const width = rows[0]?.length ?? 0;
     expect(rows.every((r) => r.length === width)).toBe(true);
-    expect(rows.join("")).toContain("#");
+    expect(rows.join("")).toMatch(/[#o]/);
     const geometry = buildIcon(name);
     expect(geometry.cols).toBe(width);
     expect(geometry.rows).toBe(rows.length);
   });
 
   it("draws the sun and the moon differently", () => {
-    expect(iconRows("sun")).not.toEqual(iconRows("moon"));
+    expect(iconRows("clear-day")).not.toEqual(iconRows("clear-night"));
   });
 });

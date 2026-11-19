@@ -42,10 +42,10 @@ const WEATHER_SCHEMA: ConfigSchema = {
 
 const PILL_DIGITS = 28;
 const RING_DIGITS = 38;
-const TODAY_DIGITS = 56;
-const PILL_ICON = 30;
-const RING_ICON = 28;
-const TODAY_ICON = 54;
+const TODAY_DIGITS = 46;
+const PILL_ICON = 46;
+const RING_ICON = 38;
+const TODAY_ICON = 52;
 const RANGE_METER = { count: 16, dot: 6, gap: 4 } as const;
 const DEGREE = "°";
 

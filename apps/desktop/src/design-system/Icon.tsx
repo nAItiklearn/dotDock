@@ -43,14 +43,6 @@ const SHAPES = {
       <circle cx="15" cy="17" r="1.4" fill="currentColor" stroke="none" />
     </>
   ),
-  quote: (
-    <>
-      <circle cx="7.5" cy="15" r="3" fill="currentColor" stroke="none" />
-      <path d="M4.5 15c0-4 1.5-6.5 4.5-8" />
-      <circle cx="17.5" cy="15" r="3" fill="currentColor" stroke="none" />
-      <path d="M14.5 15c0-4 1.5-6.5 4.5-8" />
-    </>
-  ),
   bolt: <path d="M13 3.5 6 14h5.5L10.5 20.5 18 10h-5.5Z" fill="currentColor" />,
 } as const satisfies Record<string, ReactNode>;
 

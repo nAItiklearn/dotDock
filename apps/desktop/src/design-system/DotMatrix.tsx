@@ -82,6 +82,7 @@ export const DotIcon = memo(function DotIcon({ name, size, className }: DotIconP
       shapeRendering="geometricPrecision"
     >
       <path d={g.path} fill="currentColor" />
+      {g.accentPath ? <path d={g.accentPath} fill="var(--accent)" /> : null}
     </svg>
   );
 });

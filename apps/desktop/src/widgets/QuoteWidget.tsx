@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { Icon } from "../design-system/Icon";
-import { Caps, Surface } from "../design-system/primitives";
+import { Surface } from "../design-system/primitives";
 import { useMinute } from "../providers/clock";
 import type { ConfigSchema } from "./configSchema";
 import { SHORT_QUOTE_LIMIT, QUOTES, parseCustomQuote, type Quote } from "./data/quotes";
@@ -74,13 +73,30 @@ export function quotePool(config: QuoteConfig, size: SizeId): readonly Quote[] {
   return short.length > 0 ? short : all;
 }
 
+/** How much text a quote has, which decides the type size: short ones are set large. */
+export type QuoteMeasure = "short" | "medium" | "long" | "xlong";
+
+const MEASURE_LIMITS = { short: 36, medium: 72, long: 110 } as const;
+
+export function quoteMeasure(length: number): QuoteMeasure {
+  if (length <= MEASURE_LIMITS.short) return "short";
+  if (length <= MEASURE_LIMITS.medium) return "medium";
+  if (length <= MEASURE_LIMITS.long) return "long";
+  return "xlong";
+}
+
+const OPENING_MARK = "“";
+
 function QuoteBody({ quote, size }: { readonly quote: Quote; readonly size: SizeId }) {
   return (
-    <figure className={`quote quote--${size}`}>
-      <Icon className="quote__mark" name="quote" />
+    <figure className={`quote quote--${size} quote--${quoteMeasure(quote.text.length)}`}>
+      <span className="quote__mark" aria-hidden="true">
+        {OPENING_MARK}
+      </span>
       <blockquote className="quote__text">{quote.text}</blockquote>
       <figcaption className="quote__by">
-        <Caps accent>{quote.author}</Caps>
+        <span className="quote__rule" aria-hidden="true" />
+        <span className="quote__author">{quote.author}</span>
         {quote.work && size !== "s" ? <span className="quote__work">{quote.work}</span> : null}
       </figcaption>
     </figure>
