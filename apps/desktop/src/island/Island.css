@@ -44,7 +44,9 @@
   left: 50%;
   top: 0;
   transform-origin: 50% 0;
-  background: var(--surface);
+  /* Opaque: the theme surface is translucent for cards on the wallpaper, but the island floats over
+     other apps' text, which would show through and make it unreadable. */
+  background: rgb(from var(--surface) r g b / 1);
   will-change: transform;
 }
 .island__texture {
