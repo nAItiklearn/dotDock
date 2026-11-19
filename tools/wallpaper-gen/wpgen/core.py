@@ -234,3 +234,55 @@ def interest_mask(c: Canvas, left=(0.30, 0.55), corner=(0.66, 0.92), corner_v=(0
     m = smoothstep(left[0], left[1], u) * (1.0 - smoothstep(corner[0], corner[1], u) * smoothstep(corner_v[0], corner_v[1], v))
     return (floor + (1.0 - floor) * m).astype(F32)
 
+
+# ---------------------------------------------------------------------------
+# Value-noise fields (resolution independent: the random grids depend only on the seed)
+# ---------------------------------------------------------------------------
+def fbm(rng, w: int, h: int, cells: float, octaves: int = 5, gain: float = 0.5, stretch: float = 1.0) -> np.ndarray:
+    """Smooth fractal value noise (unit variance), shape (h, w).
+
+    ``cells`` is the number of lattice cells along the canvas *height* in the first octave; ``stretch`` > 1
+    makes features longer in x (it divides the horizontal cell count). Cubic-upsampled random grids.
+    """
+    out = np.zeros((h, w), dtype=F32)
+    amp, norm = 1.0, 0.0
+    for o in range(octaves):
+        gh = max(2, int(round(cells * 2.0**o)))
+        gw = max(2, int(round(cells * 2.0**o * (w / h) / stretch)))
+        grid = rng.standard_normal((gh, gw)).astype(F32)
+        out += F32(amp) * cv2.resize(grid, (w, h), interpolation=cv2.INTER_CUBIC)
+        norm += amp * amp
+        amp *= gain
+    return out / F32(np.sqrt(norm))
+
+
+def disc_cover(r_px, dist_px):
+    """Anti-aliased disc coverage from a radius and a centre distance, both in pixels."""
+    return np.clip(r_px - dist_px + 0.5, 0.0, 1.0)
+
+
+# ---------------------------------------------------------------------------
+# Reeded / fluted glass: a row of cylindrical lenses
+# ---------------------------------------------------------------------------
+def lens_strips(n_px: int, pitch_px: float, curv: float):
+    """Per-column lens coordinates for a row of cylindrical flutes."""
+    p = np.arange(n_px, dtype=F32) + 0.5
+    cell = np.floor(p / pitch_px)
+    s = (p / pitch_px - cell) * 2.0 - 1.0
+    centre = (cell + 0.5) * pitch_px
+    return centre.astype(F32), s.astype(F32), (s + curv * s**3).astype(F32), cell.astype(F32)
+
+
+def remap_axis(field: np.ndarray, src: np.ndarray, out_w: int, out_h: int, f: float, origin_px: float, axis: int):
+    """Sample ``field`` (low-res, extended by origin_px) at per-column (axis=1) or per-row (axis=0) source coordinates."""
+    if axis == 1:  # src has length out_w: source x per column, y is identity
+        fx = ((src + origin_px) / f - 0.5).astype(F32)
+        fy = ((np.arange(out_h, dtype=F32) + 0.5) / f - 0.5).astype(F32)
+        mx = np.ascontiguousarray(np.broadcast_to(fx[None, :], (out_h, out_w)))
+        my = np.ascontiguousarray(np.broadcast_to(fy[:, None], (out_h, out_w)))
+    else:  # src has length out_h: source y per row
+        fy = ((src + origin_px) / f - 0.5).astype(F32)
+        fx = ((np.arange(out_w, dtype=F32) + 0.5) / f - 0.5).astype(F32)
+        mx = np.ascontiguousarray(np.broadcast_to(fx[None, :], (out_h, out_w)))
+        my = np.ascontiguousarray(np.broadcast_to(fy[:, None], (out_h, out_w)))
+    return cv2.remap(field, mx, my, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)

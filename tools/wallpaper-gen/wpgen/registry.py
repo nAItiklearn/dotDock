@@ -16,7 +16,7 @@ class Style:
     grain: dict = field(default_factory=lambda: {"dark": 1.5, "light": 1.5})
 
 
-MODULES = ("louvers", "arcs", "dots", "geometry", "waves", "metal", "soft", "orbs", "topo")
+MODULES = ("louvers", "arcs", "dots", "geometry", "waves", "metal", "soft", "orbs", "topo", "bloom", "meadow", "flute", "halftone")
 
 
 def all_styles() -> list[Style]:
