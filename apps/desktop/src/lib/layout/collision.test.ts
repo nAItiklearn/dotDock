@@ -66,6 +66,34 @@ describe("push collisions", () => {
     expect(result).toBeNull();
   });
 
+  it("refuses a drop that would rearrange more than three neighbours instead of reshuffling the desktop", () => {
+    const crowd = [
+      item("m", 0, 5, 4, 1),
+      item("a", 2, 2, 1, 1),
+      item("b", 3, 2, 1, 1),
+      item("c", 4, 2, 1, 1),
+      item("d", 2, 3, 1, 1),
+      item("e", 3, 3, 1, 1),
+    ];
+    expect(resolvePush(crowd, "m", { x: 2, y: 2, w: 4, h: 2 }, bounds)).toBeNull();
+  });
+
+  it("moves three neighbours when it must, and no more than it must", () => {
+    const row = [item("m", 0, 5, 3, 1), item("a", 1, 1, 1, 1), item("b", 2, 1, 1, 1), item("c", 3, 1, 1, 1), item("far", 6, 5, 1, 1)];
+    const result = resolvePush(row, "m", { x: 1, y: 1, w: 3, h: 1 }, bounds);
+    expect(result).not.toBeNull();
+    expect(noOverlaps(result as Map<string, Rect>)).toBe(true);
+    expect(result?.get("far")).toEqual({ x: 6, y: 5, w: 1, h: 1 });
+  });
+
+  it("chooses the arrangement that moves neighbours least overall, not just the first that works", () => {
+    // Dropping a 2x2 on b: pushing b right is one step, but then b would hit c. Pushing b down clears everything.
+    const items3 = [item("a", 0, 0, 2, 2), item("b", 2, 0, 2, 2), item("c", 4, 0, 2, 2)];
+    const result = resolvePush(items3, "a", { x: 1, y: 0, w: 2, h: 2 }, bounds);
+    expect(result?.get("b")).toEqual({ x: 2, y: 2, w: 2, h: 2 });
+    expect(result?.get("c")).toEqual({ x: 4, y: 0, w: 2, h: 2 });
+  });
+
   it("refuses a widget larger than the grid", () => {
     expect(resolvePush(items, "a", { x: 0, y: 0, w: 9, h: 2 }, bounds)).toBeNull();
   });

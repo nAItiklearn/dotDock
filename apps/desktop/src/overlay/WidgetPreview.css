@@ -1,0 +1,19 @@
+.widget-preview {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  pointer-events: none;
+}
+.widget-preview__stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+/* A preview is a picture of a widget: no hover lift, no tooltips. */
+.widget-preview .surface {
+  transition: none;
+}
+.widget-preview .surface:hover {
+  transform: none;
+}

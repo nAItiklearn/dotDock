@@ -29,6 +29,8 @@ describe("grid geometry", () => {
     expect(roundToCell(0, M)).toBe(0);
     expect(roundToCell(43, M)).toBe(0);
     expect(roundToCell(44, M)).toBe(1);
+    expect(roundToCell(-43, M)).toBe(0);
+    expect(roundToCell(-44, M)).toBe(-1);
     expect(roundToCell(-60, M)).toBe(-1);
     expect(roundToCell(88 * 3 + 10, M)).toBe(3);
   });

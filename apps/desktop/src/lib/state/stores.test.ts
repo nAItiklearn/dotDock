@@ -165,11 +165,20 @@ describe("edit session", () => {
   it("resizes through declared sizes and steps up and down", async () => {
     const app = await boot();
     layout(app).enterEdit();
-    expect(layout(app).resizeTo("clock-1", "l")).toEqual({ ok: true });
-    expect(layout(app).placements.find((p) => p.id === "clock-1")?.size).toBe("l");
-    expect(layout(app).stepSize("clock-1", -1)).toEqual({ ok: true });
+    expect(layout(app).resizeTo("clock-1", "s")).toEqual({ ok: true });
+    expect(layout(app).placements.find((p) => p.id === "clock-1")?.size).toBe("s");
+    expect(layout(app).stepSize("clock-1", 1)).toEqual({ ok: true });
     expect(layout(app).placements.find((p) => p.id === "clock-1")?.size).toBe("m");
     expect(layout(app).stepSize("ram-1", 1)).toEqual({ ok: false, reason: "unknown" });
+  });
+
+  it("refuses a resize the crowded layout cannot absorb, and says why", async () => {
+    const app = await boot();
+    layout(app).enterEdit();
+    expect(layout(app).resizeTo("clock-1", "l")).toEqual({ ok: false, reason: "no-room" });
+    expect(layout(app).placements.find((p) => p.id === "clock-1")?.size).toBe("m");
+    expect(app.notices.getState().notices.at(-1)?.key).toBe("layout:no-room");
+    expect(layout(app).canUndo).toBe(false);
   });
 
   it("coalesces a slider drag into one undo step", async () => {

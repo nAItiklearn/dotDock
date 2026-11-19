@@ -35,9 +35,13 @@ export function rectToPx(rect: Rect, m: GridMetrics): PxRect {
   };
 }
 
-/** Nearest cell coordinate for a pixel offset measured from the cell origin (the top-left of cell 0). */
+/**
+ * Whole cells for a pixel distance, rounding half a pitch away from zero so dragging left and right
+ * (or up and down) snaps at exactly the same distance.
+ */
 export function roundToCell(deltaPx: number, m: GridMetrics): number {
-  return Math.round(deltaPx / pitch(m));
+  const cells = deltaPx / pitch(m);
+  return Math.sign(cells) * Math.round(Math.abs(cells)) || 0;
 }
 
 /** How many cells fit between the safe margins of a viewport. At least one, so layouts never collapse. */

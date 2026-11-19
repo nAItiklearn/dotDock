@@ -1,0 +1,297 @@
+/* Edit-mode chrome. Loaded with the edit chunk, never on the always-on desktop path. */
+:root {
+  --drawer-w: 344px;
+  --toolbar-h: 52px;
+  --handle-size: 28px;
+  --action-size: 28px;
+}
+
+/* ---- per-widget chrome */
+.slot-chrome__frame {
+  position: absolute;
+  inset: calc(-1 * var(--space-1));
+  border: var(--hairline) dashed color-mix(in srgb, var(--text) 45%, transparent);
+  border-radius: calc(var(--radius-lg) + var(--space-1));
+  pointer-events: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.slot-chrome__frame.is-selected {
+  border: var(--focus-width) solid var(--accent);
+}
+
+.slot-chrome__actions {
+  --ctl-h: var(--action-size);
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: default;
+}
+.slot-chrome__resize {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  display: grid;
+  place-items: center;
+  width: var(--handle-size);
+  height: var(--handle-size);
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: var(--shadow);
+  color: var(--bg);
+  cursor: nwse-resize;
+}
+.slot-chrome__lock {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: grid;
+  place-items: center;
+  width: var(--action-size);
+  height: var(--action-size);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-dim);
+}
+
+/* Handles appear on the widget you are working with, not on all of them at once. */
+.slot-chrome__actions,
+.slot-chrome__resize {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    visibility var(--dur-fast);
+}
+.overlay__slot:hover .slot-chrome__actions,
+.overlay__slot:hover .slot-chrome__resize,
+.overlay__slot.is-selected .slot-chrome__actions,
+.overlay__slot.is-selected .slot-chrome__resize,
+.overlay__slot:focus-within .slot-chrome__actions {
+  visibility: visible;
+  opacity: 1;
+}
+.overlay__slot.is-dragging .slot-chrome__actions {
+  visibility: hidden;
+}
+
+/* ---- guides and drop target */
+.guide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 7;
+  background: var(--accent);
+  pointer-events: none;
+  will-change: transform;
+}
+.guide--x {
+  width: var(--hairline);
+}
+.guide--y {
+  height: var(--hairline);
+}
+.ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  border: var(--focus-width) dashed var(--accent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  pointer-events: none;
+  transition: transform var(--dur-fast) var(--ease-out);
+  will-change: transform;
+}
+/* Invisible, but reported to the core as a hit area so the pointer stays ours for the whole drag. */
+.drag-shield {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ---- toolbar */
+.toolbar {
+  position: absolute;
+  bottom: var(--edge);
+  left: 50%;
+  z-index: 10;
+  transform: translateX(-50%);
+}
+.toolbar__panel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--toolbar-h);
+  padding: 0 var(--space-2) 0 var(--space-5);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  white-space: nowrap;
+  animation: panel-rise var(--dur-med) var(--ease-out) both;
+}
+.toolbar__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.toolbar__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.toolbar__profile {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.toolbar__divider {
+  width: var(--hairline);
+  height: var(--space-5);
+  margin: 0 var(--space-1);
+  background: var(--border);
+}
+
+/* ---- drawer */
+.drawer {
+  position: absolute;
+  top: var(--edge);
+  right: var(--edge);
+  bottom: calc(var(--edge) + var(--toolbar-h) + var(--space-3));
+  z-index: 9;
+  width: var(--drawer-w);
+}
+.drawer__panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  overflow: hidden;
+  animation: drawer-in var(--dur-med) var(--ease-out) both;
+}
+.drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  border-bottom: var(--hairline) solid var(--border);
+}
+.drawer__body {
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-3);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dot-off) transparent;
+}
+.drawer__empty {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-3);
+  text-align: center;
+}
+.drawer__empty p,
+.drawer__note {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.gallery {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gallery-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.gallery-card__stage {
+  display: grid;
+  place-items: center;
+  min-height: 112px;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  overflow: hidden;
+}
+.gallery-card__body {
+  display: grid;
+  gap: var(--space-3);
+}
+.gallery-card__text {
+  display: grid;
+  gap: 2px;
+}
+.gallery-card__name {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+.gallery-card__desc {
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+.gallery-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.selected {
+  display: grid;
+  gap: var(--space-4);
+}
+.selected__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.selected__actions {
+  display: flex;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: var(--hairline) solid var(--border);
+}
+
+@keyframes panel-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-3));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--space-6));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
