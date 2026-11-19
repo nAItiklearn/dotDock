@@ -43,6 +43,14 @@ and date go in the status column. Status: **planned**, **built**, **accepted**. 
 | Converter / calculator | In App Library search | as above | planned |
 | Photos | Photo tile (shared with the home-screen photo widget) | Shows a chosen photo | planned |
 | Progress | Day / week / year progress | Correct values | planned |
+| Quick contacts (owner screenshot 2026-11-20) | Favourite contacts tile: call, video, message through the user's own apps (Phone Link `tel:`, Teams/Zoom/WhatsApp/Discord deep links the user picks) | Pick a contact and an app; each button opens that app on that person | planned |
+| Meeting join | Next-event tile with a Join button when the event has a Teams/Zoom/Meet link, and a countdown | Event with a link: Join opens it; without: no button | planned |
+| Stopwatch | Stopwatch tile (lap, reset), separate from the timer | Start, lap, reset; accurate to 0.1 s over 10 min | planned |
+| CPU graph | System tile with a 60-second history graph per metric | Graph follows a CPU load test | planned |
+| Mic level | Mic tile: mute toggle with a live input-level ring | Speak: the ring moves; mute: the system mic is muted | planned |
+| Drink water wave | Hydration tile with a fill level and next-reminder time | Log a glass: the level rises; interval reminder fires | planned |
+| Focus sessions | Focus timer shows session n of 4 and break length | Complete a session: counter advances, break starts | planned |
+| Month progress | Progress tile as a dot grid (day, month, year) | Values match the calendar | planned |
 | Mail | Unread count only if Windows exposes it locally | needs an account otherwise | out of scope for now |
 | Revenue, followers, analytics, Shopify, GitHub, Linear, Supabase, Dropbox | Not built | Need accounts and network access; conflicts with no-account, local-first | out of scope |
 
