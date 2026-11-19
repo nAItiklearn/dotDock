@@ -34,8 +34,7 @@
       }
     },
     "resources": {
-      "../../../assets/wallpapers/*": "wallpapers/",
-      "target/release/dotdock-island-hook.exe": "dotdock-island-hook.exe"
+      "../../../assets/wallpapers/*": "wallpapers/"
     }
   }
 }

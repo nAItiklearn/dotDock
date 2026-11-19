@@ -44,7 +44,6 @@ export const DEFAULT_LAYOUT: Layout = {
     { id: "date-circle-1", kind: "date-circle", x: 5, y: 2 },
     { id: "ram-1", kind: "ram", x: 0, y: 4 },
     { id: "disk-1", kind: "disk", x: 2, y: 4 },
-    { id: "weather-1", kind: "weather", x: 4, y: 4 },
     { id: "battery-grid-1", kind: "battery-grid", x: 4, y: 5 },
   ],
 };

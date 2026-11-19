@@ -151,7 +151,7 @@ jobs:
 
       # beforeBuildCommand (pnpm build) produces the frontend; output is target/release/bundle/nsis.
       - name: Build bundle
-        run: cargo build -p dotdock-island-hook --release --manifest-path src-tauri/Cargo.toml && pnpm tauri build
+        run: pnpm tauri build
 
       - name: Read app version
         id: app
