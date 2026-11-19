@@ -1,0 +1,123 @@
+/*
+ * Hero: a full-bleed canvas lattice (src/scripts/hero-field.ts) with the live clock drawn in it.
+ * The clock's box is a normal element (.hero__slot), so the layout is plain CSS and the canvas
+ * only reads it.
+ */
+.hero {
+  position: relative;
+  min-height: 100svh;
+  padding-top: var(--nav-h);
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
+  isolation: isolate;
+}
+.hero__field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.hero__inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: clamp(16px, 3.5vh, 40px);
+  padding-bottom: clamp(32px, 6vh, 64px);
+}
+.hero__kicker {
+  order: 0;
+  color: var(--text);
+}
+.hero__clock {
+  order: 1;
+  container-type: inline-size;
+  margin-top: clamp(24px, 5vh, 56px);
+}
+.hero__clock-inner {
+  /* Clock width: the column, capped by a max and by the viewport height so short screens fit. */
+  --slot-w: max(min(100cqw, 280px), min(100cqw, 1400px, calc((100svh - 470px) * 2.381)));
+}
+.hero__slot {
+  width: var(--slot-w);
+  aspect-ratio: 25 / 7;
+}
+.hero__caption {
+  /* Two and a half lattice cells below the clock (a cell is 1/25 of the clock width). */
+  margin-top: calc(var(--slot-w) * 0.04 * 2.5);
+  color: var(--text);
+}
+
+.hero__title {
+  order: 2;
+  margin-top: clamp(32px, 7vh, 80px);
+  font-size: clamp(2.5rem, 5.4vw, 5.5rem);
+  line-height: 0.98;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+.hero__dots {
+  font-family: var(--font-dot);
+  font-variation-settings: "ROND" 100;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: var(--accent-text);
+}
+
+.hero__side {
+  order: 3;
+  display: grid;
+  gap: var(--space-6);
+  justify-items: start;
+  align-content: start;
+  max-width: 46ch;
+  margin-top: var(--space-8);
+}
+.hero__lede {
+  font-size: clamp(1.0625rem, 1.3vw, 1.1875rem);
+  line-height: 1.5;
+  color: var(--text);
+  text-wrap: pretty;
+}
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.hero__status {
+  color: var(--text-dim);
+}
+
+@media (min-width: 1100px) {
+  .hero__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "kicker kicker"
+      "clock side"
+      "title title";
+    column-gap: var(--space-16);
+  }
+  .hero__kicker {
+    grid-area: kicker;
+  }
+  .hero__clock {
+    grid-area: clock;
+  }
+  .hero__side {
+    grid-area: side;
+    margin-top: clamp(24px, 5vh, 56px);
+    justify-self: end;
+    padding-top: var(--space-2);
+  }
+  .hero__title {
+    grid-area: title;
+    align-self: end;
+  }
+}

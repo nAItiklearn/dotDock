@@ -1,0 +1,55 @@
+---
+import { LATEST_RELEASE, PRODUCT_NAME, RELEASES_URL, REPO_URL, TAGLINE_DOTS, TAGLINE_LEAD } from "../brand";
+---
+
+<section class="hero" id="top" aria-labelledby="hero-title" data-hero>
+  <canvas class="hero__field" aria-hidden="true" data-hero-canvas></canvas>
+
+  <div class="wrap hero__inner">
+    <p class="caps caps-row hero__kicker">
+      <span class="dot" aria-hidden="true"></span>
+      Free &middot; Open source &middot; For Windows
+    </p>
+
+    <h1 class="hero__title" id="hero-title">
+      {TAGLINE_LEAD}<span class="hero__dots">{TAGLINE_DOTS}</span>.
+    </h1>
+
+    <div class="hero__clock">
+      <div class="hero__clock-inner">
+        <!-- The canvas draws the clock inside this box; CSS owns its size so nothing shifts. -->
+        <div class="hero__slot" data-clock-slot></div>
+        <p class="caps hero__caption" data-clock-caption>Live, your local time</p>
+        <time class="sr-only" data-clock-sr></time>
+      </div>
+    </div>
+
+    <div class="hero__side">
+      <p class="hero__lede">
+        {PRODUCT_NAME} puts a dot-matrix clock, a calendar, battery and system gauges on your desktop, over an
+        original wallpaper. Free, open source, no account.
+      </p>
+      <div class="hero__actions">
+        {
+          LATEST_RELEASE ? (
+            <a class="btn btn--primary" href={LATEST_RELEASE.url} rel="noopener">
+              Download {LATEST_RELEASE.tag}
+            </a>
+          ) : (
+            <a class="btn btn--primary" href={RELEASES_URL} rel="noopener">
+              Watch for the first release
+              <svg class="btn__arrow" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M3.5 10.5l7-7M4.5 3.5h6v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </a>
+          )
+        }
+        <a class="btn" href={REPO_URL} rel="noopener">View source</a>
+      </div>
+      <p class="caps caps-row hero__status">
+        <span class={LATEST_RELEASE ? "dot" : "dot dot--hollow"} aria-hidden="true"></span>
+        {LATEST_RELEASE ? `Latest release ${LATEST_RELEASE.tag}` : "In development. No release yet."}
+      </p>
+    </div>
+  </div>
+</section>

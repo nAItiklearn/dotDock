@@ -1,0 +1,93 @@
+---
+import "../styles/fonts.css";
+import "../styles/base.css";
+import "../styles/hero.css";
+import "../styles/sections.css";
+import "../styles/widgets.css";
+import geistUrl from "../assets/fonts/Geist.woff2?url";
+import geistMonoUrl from "../assets/fonts/GeistMono.woff2?url";
+import dotoUrl from "../assets/fonts/Doto.woff2?url";
+import {
+  DEFAULT_THEME,
+  LIGHT_PREFERENCE_THEME,
+  OBSIDIAN,
+  THEMES,
+  THEME_STORAGE_KEY,
+  themeCss,
+} from "../lib/themes";
+import { PRODUCT_NAME, REPO_URL, SITE_URL } from "../brand";
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+
+// Runs in <head> before first paint so the chosen theme never flashes. Plain string on purpose:
+// it is inlined, so it must not import anything.
+const themeColours = Object.fromEntries(THEMES.map((t) => [t.id, t.colors.bg]));
+const themeBoot = `(()=>{var d=document.documentElement,c=${JSON.stringify(themeColours)},t;try{t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)})}catch(e){}if(!c[t])t=matchMedia("(prefers-color-scheme: light)").matches?${JSON.stringify(LIGHT_PREFERENCE_THEME)}:${JSON.stringify(DEFAULT_THEME)};d.dataset.theme=t;d.classList.add("js");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c[t])})();`;
+
+const canonical = SITE_URL ? new URL("/", SITE_URL).href : null;
+const ogImage = SITE_URL ? new URL("/og.png", SITE_URL).href : null;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: PRODUCT_NAME,
+  description,
+  applicationCategory: "DesktopEnhancementApplication",
+  operatingSystem: "Windows",
+  isAccessibleForFree: true,
+  license: "https://www.gnu.org/licenses/gpl-3.0.html",
+  codeRepository: REPO_URL,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
+---
+
+<!doctype html>
+<html lang="en" data-theme={DEFAULT_THEME}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content={OBSIDIAN.colors.bg} />
+    <meta name="generator" content={Astro.generator} />
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={PRODUCT_NAME} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    {ogImage && <meta property="og:image:width" content="1200" />}
+    {ogImage && <meta property="og:image:height" content="630" />}
+    {ogImage && <meta property="og:image:alt" content={`${PRODUCT_NAME}: a dot-matrix clock and widgets on a Windows desktop`} />}
+    <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <link rel="preload" href={geistUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={geistMonoUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={dotoUrl} as="font" type="font/woff2" crossorigin />
+
+    <style is:inline set:html={themeCss()} />
+    <script is:inline set:html={themeBoot} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+    <noscript>
+      <style>
+        .hero__field, .needs-js { display: none; }
+      </style>
+    </noscript>
+  </body>
+</html>

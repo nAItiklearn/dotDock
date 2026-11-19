@@ -1,0 +1,55 @@
+---
+import { PRODUCT_NAME, REPO_URL } from "../brand";
+import { THEMES } from "../lib/themes";
+
+const links = [
+  { href: "#widgets", label: "Widgets" },
+  { href: "#themes", label: "Themes" },
+  { href: "#startup", label: "Startup" },
+  { href: "#safety", label: "Safety" },
+  { href: "#source", label: "Source" },
+  { href: "#download", label: "Download" },
+];
+---
+
+<header class="nav" data-nav>
+  <div class="wrap nav__inner">
+    <a class="wordmark" href="#top" aria-label={`${PRODUCT_NAME}, back to top`}>
+      <span class="dot" aria-hidden="true"></span>
+      <span class="wordmark__text">{PRODUCT_NAME}</span>
+    </a>
+
+    <nav aria-label="Sections">
+      <ul class="nav__links caps">
+        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </nav>
+
+    <div class="nav__tools">
+      <div class="theme-switch needs-js" role="radiogroup" aria-label="Colour theme" data-theme-switch>
+        {
+          THEMES.map((t) => (
+            <button
+              type="button"
+              class="theme-switch__opt"
+              role="radio"
+              aria-checked="false"
+              aria-label={`${t.name}, ${t.mode}`}
+              title={t.name}
+              data-theme-set={t.id}
+              tabindex="-1"
+            >
+              <span class="theme-switch__swatch" data-theme={t.id} aria-hidden="true" />
+            </button>
+          ))
+        }
+      </div>
+      <a class="btn nav__github" href={REPO_URL} rel="noopener">
+        GitHub
+        <svg class="btn__arrow" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M3.5 10.5l7-7M4.5 3.5h6v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</header>
