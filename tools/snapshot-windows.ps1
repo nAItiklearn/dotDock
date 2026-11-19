@@ -2,7 +2,7 @@
 .SYNOPSIS
   Records the original Windows desktop state once, before dotDock changes anything.
 .DESCRIPTION
-  Writes %LOCALAPPDATA%\dotDock\windows-original.json. Never overwrites an existing
+  Writes %LOCALAPPDATA%\dev.dotdock.desktop\windows-original.json. Never overwrites an existing
   snapshot unless -Force is given, so the user's true original is always preserved.
 #>
 param([switch]$Force)

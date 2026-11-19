@@ -63,7 +63,7 @@ jobs:
           components: clippy, rustfmt
 
       - name: Format check
-        run: cargo fmt --check
+        run: cargo fmt --all --check
         working-directory: apps/desktop/src-tauri
 
       # tauri::generate_context! requires frontendDist (apps/desktop/dist) to exist at compile time.
@@ -90,11 +90,11 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
         working-directory: apps/desktop/src-tauri
 
       - name: Test
-        run: cargo test
+        run: cargo test --workspace
         working-directory: apps/desktop/src-tauri
 
   audit:

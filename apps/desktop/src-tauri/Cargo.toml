@@ -11,6 +11,9 @@ name = "dotdock_lib"
 # rlib only: cdylib is for mobile targets and overflows the MinGW export table.
 crate-type = ["rlib"]
 
+[workspace]
+members = ["shell"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
@@ -19,8 +22,8 @@ tauri = { version = "2", features = [] }
 tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sysinfo = { version = "0.40", default-features = false, features = ["system", "disk"] }
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_Power"] }
+dotdock-shell = { path = "shell" }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
 
 [profile.release]
 opt-level = 3

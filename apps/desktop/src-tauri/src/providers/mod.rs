@@ -1,8 +1,6 @@
 //! System data providers. Each pushes typed payloads to the overlay; the UI never polls.
 
-mod battery;
-mod system;
-
+use dotdock_shell::providers::{battery, system};
 use serde::Serialize;
 use std::sync::{Arc, Condvar, Mutex, PoisonError};
 use std::thread;

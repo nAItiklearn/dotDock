@@ -1,10 +1,10 @@
 //! dotDock core: owns the desktop overlay window, providers and boot timing.
 
-mod boot;
 mod desktop_host;
 mod providers;
 
 use desktop_host::{HitRect, HitRegions};
+use dotdock_shell::{autostart, boot_log as boot};
 use providers::ProvidersReady;
 use std::time::Duration;
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -63,7 +63,27 @@ fn create_overlay(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     Ok(window)
 }
 
+/// One-shot commands handled before any window exists. Returns true if one ran.
+fn run_cli_command() -> bool {
+    let Some(arg) = std::env::args().nth(1) else { return false };
+    let outcome = match arg.as_str() {
+        "--enable-autostart" => autostart::enable().map(|m| format!("autostart enabled via {m:?}")),
+        "--disable-autostart" => autostart::disable().map(|()| "autostart disabled".to_owned()),
+        _ => return false,
+    };
+    let line = match outcome {
+        Ok(msg) => msg,
+        Err(err) => format!("autostart error: {err}"),
+    };
+    boot::record(&line);
+    println!("{line}");
+    true
+}
+
 pub fn run() {
+    if run_cli_command() {
+        return;
+    }
     boot::record_process_start();
     let ready = ProvidersReady::default();
     let regions = HitRegions::default();
@@ -92,6 +112,6 @@ pub fn run() {
         })
         .run(tauri::generate_context!());
     if let Err(err) = result {
-        boot::record_fatal(&err.to_string());
+        boot::record(&format!("fatal {err}"));
     }
 }

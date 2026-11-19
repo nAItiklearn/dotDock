@@ -868,12 +868,23 @@ dependencies = [
 name = "dotdock"
 version = "0.1.0"
 dependencies = [
+ "dotdock-shell",
  "serde",
  "serde_json",
- "sysinfo",
  "tauri",
  "tauri-build",
  "tauri-plugin-single-instance",
+ "windows",
+]
+
+[[package]]
+name = "dotdock-shell"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "thiserror 2.0.21",
  "windows",
 ]
 

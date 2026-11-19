@@ -4,6 +4,9 @@
 Set-StrictMode -Version Latest
 
 $script:AppName = 'dotDock'
+# App data folder; must match APP_DIR in apps/desktop/src-tauri/shell/src/lib.rs.
+# Separate from %LOCALAPPDATA%\dotDock, where the per-user installer puts the program.
+$script:DataDirName = 'dev.dotdock.desktop'
 $script:DesktopKey = 'HKCU:\Control Panel\Desktop'
 $script:AdvancedKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
 $script:SerializeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize'
@@ -25,7 +28,7 @@ public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, In
 }
 
 function Get-AppDataDir {
-    $dir = Join-Path $env:LOCALAPPDATA $script:AppName
+    $dir = Join-Path $env:LOCALAPPDATA $script:DataDirName
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
     return $dir
 }
@@ -79,4 +82,4 @@ function Set-Wallpaper([string]$Path, [string]$Style, [string]$Tile) {
     [void][DotDock.Native]::SystemParametersInfo($spiSetDeskWallpaper, 0, $value, $updateAndBroadcast)
 }
 
-Export-ModuleMember -Function * -Variable AppName, DesktopKey, AdvancedKey, SerializeKey, RunKey
+Export-ModuleMember -Function * -Variable AppName, DataDirName, DesktopKey, AdvancedKey, SerializeKey, RunKey
