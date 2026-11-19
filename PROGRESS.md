@@ -9,7 +9,7 @@
 - Original Windows state snapshotted to `%LOCALAPPDATA%\dotDock\windows-original.json`.
 - Desktop window probe (`tools/probe-desktop.ps1`): this machine (build 26300) uses the classic `Progman > SHELLDLL_DefView > SysListView32` layout. Icons are currently hidden by the user.
 - Hackatime read-only check passed.
-- Rust core (Tauri 2): overlay window at desktop level (S2), hidden until the UI reports it is ready, cursor-driven click-through, providers for RAM/CPU/disk/battery pushed at 1 Hz, boot stage timing in `%LOCALAPPDATA%\dotDockboot.log`.
+- Rust core (Tauri 2): overlay window at desktop level (S2), hidden until the UI reports it is ready, cursor-driven click-through, providers for RAM/CPU/disk/battery pushed at 1 Hz, boot stage timing in `%LOCALAPPDATA%\dotDock\boot.log`.
 - Measured release cold start (local GNU build, 3 runs): window shown at 1003 / 856 / 721 ms after process start. WebView2 creation is ~600 ms of that.
 - Live data verified in the release build: RAM 68 %, C: 222/236 GB, battery 32 % charging.
 - CI: `.github/workflows/ci.yml` (frontend, rust fmt/clippy/test, audit, NSIS + portable bundle) and `release.yml` (tags `v*`).
