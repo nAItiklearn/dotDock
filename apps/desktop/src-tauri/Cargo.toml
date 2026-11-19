@@ -12,7 +12,7 @@ name = "dotdock_lib"
 crate-type = ["rlib"]
 
 [workspace]
-members = ["shell"]
+members = ["shell", "island", "island-hook"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
