@@ -1,0 +1,15 @@
+# Owner's reference material: third-party art, kept local only (see docs/DECISIONS.md D-002)
+/*.jpg
+/*.jpeg
+/*.png
+/*.webp
+/*.mp4
+/design/reference/
+/.cache/
+
+# Build output
+node_modules/
+dist/
+target/
+*.log
+.DS_Store
