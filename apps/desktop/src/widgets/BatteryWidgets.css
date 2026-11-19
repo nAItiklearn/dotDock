@@ -1,11 +1,43 @@
-.battery__bolt {
-  width: 10px;
-  height: 14px;
-  background: var(--dot-off);
-  clip-path: polygon(60% 0, 0 58%, 45% 58%, 35% 100%, 100% 40%, 55% 40%);
+.battery__icon {
+  color: var(--dot-off);
+  transition: opacity var(--dur-med) var(--ease-out);
 }
-.battery__bolt--on {
-  background: var(--accent);
+/* The line-icon variant is sized by CSS; the dotted one by its size attribute. */
+.battery__icon.icon {
+  height: var(--text-lg);
+  width: auto;
+}
+.battery__icon--on {
+  color: var(--accent);
+}
+.battery__icon--low {
+  color: var(--danger);
+}
+
+.battery-pill {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-6);
+}
+.battery-pill__side {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.battery-pill__state {
+  max-width: 100%;
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .battery-grid {
@@ -19,14 +51,10 @@
 .battery-grid__head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-}
-.battery-grid__pct {
-  font-family: var(--font-mono);
-  font-size: var(--text-lg);
-  font-weight: 500;
+  align-items: flex-end;
 }
 .battery-grid__state {
-  font-size: var(--text-sm);
-  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }

@@ -4,21 +4,82 @@
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   padding: var(--space-4);
   text-align: center;
-}
-.widget-notice__dash {
   color: var(--text-dim);
+}
+.widget-notice__copy {
+  display: grid;
+  justify-items: inherit;
+  gap: var(--space-1);
 }
 .widget-notice__text {
   font-size: var(--text-sm);
+  line-height: var(--leading-tight);
   color: var(--text-dim);
+}
+.widget-notice__icon {
+  opacity: 0.7;
+}
+@keyframes notice-breathe {
+  50% {
+    opacity: 0.25;
+  }
+}
+.widget-notice__icon--loading {
+  animation: notice-breathe 1.6s var(--ease-in-out) infinite;
 }
 .widget-notice--compact {
   grid-auto-flow: column;
   justify-content: start;
   align-items: center;
-  gap: var(--space-3);
+  justify-items: start;
   padding: 0 var(--space-6);
+  text-align: left;
+}
+
+/* Waits before showing, so the one-second hop from cache to live data never flashes a mark. */
+@keyframes freshness-in {
+  from {
+    opacity: 0;
+  }
+}
+.freshness {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  animation: freshness-in var(--dur-med) var(--ease-out) var(--delay-notice) both;
+  pointer-events: none;
+}
+.freshness__dot {
+  width: var(--marker);
+  height: var(--marker);
+  border-radius: 50%;
+  border: var(--hairline) solid var(--text-dim);
+}
+.freshness__label {
+  display: none;
+}
+.surface--card .freshness__label {
+  display: inline;
+}
+.surface--pill .freshness {
+  top: 50%;
+  right: var(--space-4);
+  margin-top: calc(var(--marker) / -2);
+}
+/* On a circle the mark sits in the gap outside the ring, at about one o'clock. */
+.surface--circle .freshness {
+  top: 16%;
+  right: 16%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .widget-notice__icon--loading {
+    animation: none;
+  }
 }

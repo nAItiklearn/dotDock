@@ -1,0 +1,72 @@
+.world {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  list-style: none;
+}
+.world--1,
+.world--2 {
+  grid-template-columns: 1fr;
+}
+.world--1 {
+  padding: var(--space-5) var(--space-6);
+}
+
+.world__tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.world__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.world__top .caps {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Day: a filled accent dot. Night: an empty ring. */
+.world__sun {
+  flex: none;
+  width: var(--marker);
+  height: var(--marker);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 var(--hairline) var(--text-dim);
+}
+.world__sun--day {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+.world__time {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+.world__meridiem {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1;
+  color: var(--text-dim);
+}
+.world__sub {
+  display: flex;
+  text-transform: capitalize;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: var(--leading-tight);
+  color: var(--text-dim);
+}
