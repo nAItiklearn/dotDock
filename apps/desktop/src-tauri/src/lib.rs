@@ -37,11 +37,6 @@ async fn media_command(command: dotdock_shell::providers::media::MediaCommand) -
     dotdock_shell::providers::media::MediaProvider::new().command(command)
 }
 
-#[tauri::command]
-async fn media_seek(seconds: f64) -> bool {
-    dotdock_shell::providers::media::MediaProvider::new().seek(seconds)
-}
-
 /// City search for the weather settings. Network call to Open-Meteo geocoding.
 #[tauri::command]
 async fn weather_search(query: String, language: String) -> Result<Vec<Place>, String> {
@@ -129,6 +124,15 @@ async fn autostart_set(enabled: bool) -> Result<(), String> {
     }
 }
 
+/// A widget text field gained (`true`) or lost focus.
+#[tauri::command]
+fn overlay_set_typing(app: AppHandle, typing: bool) {
+    let Some(window) = app.get_webview_window(OVERLAY_LABEL) else { return };
+    if let Ok(hwnd) = window.hwnd() {
+        desktop_host::set_typing(Hwnd::from_raw(hwnd.0), typing);
+    }
+}
+
 #[tauri::command]
 fn set_hit_regions(rects: Vec<HitRect>, regions: State<'_, HitRegions>) {
     regions.replace(rects);
@@ -158,6 +162,9 @@ fn create_overlay(app: &AppHandle) -> tauri::Result<WebviewWindow> {
         .skip_taskbar(true)
         .focused(false)
         .focusable(false)
+        .additional_browser_args(
+            "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required",
+        )
         .always_on_bottom(true)
         .build()?;
     desktop_host::configure(Hwnd::from_raw(window.hwnd()?.0));
@@ -240,8 +247,8 @@ pub fn run() {
             providers_ready,
             overlay_ready,
             set_hit_regions,
+            overlay_set_typing,
             media_command,
-            media_seek,
             weather_search,
             weather_set_place,
             wallpapers_list,

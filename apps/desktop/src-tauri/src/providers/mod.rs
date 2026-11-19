@@ -139,7 +139,7 @@ fn media_loop(app: &AppHandle) {
                 idle_reported = false;
             }
             media::Reading::Nothing if !idle_reported => {
-                issue(app, "media", "idle");
+                issue(app, "media", "no-device");
                 last_sent = None;
                 idle_reported = true;
             }

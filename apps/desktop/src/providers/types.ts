@@ -3,6 +3,11 @@
 export interface BatteryData {
   readonly percent: number;
   readonly charging: boolean;
+  /**
+   * On AC power. Can be true while not charging: full, or a charge limit such as a laptop's
+   * conservation mode. Optional only so caches from older versions still parse.
+   */
+  readonly pluggedIn?: boolean;
   /** Seconds until empty (discharging) or full (charging); null when Windows does not know. */
   readonly secondsRemaining: number | null;
 }

@@ -5,6 +5,7 @@ import { applyTheme, themeById } from "../design-system/themes";
 import { connectProviders, isTauri } from "../providers/bridge";
 import { Overlay } from "./Overlay";
 import { DEFAULT_LAYOUT } from "./layout";
+import { syncTypingFocus } from "./typingFocus";
 
 const params = new URLSearchParams(location.search);
 applyTheme(themeById(params.get("theme") ?? "obsidian"));
@@ -21,4 +22,5 @@ void document.fonts.ready.then(() => {
     </StrictMode>,
   );
   connectProviders().catch((err: unknown) => console.error("providers failed to connect", err));
+  syncTypingFocus();
 });

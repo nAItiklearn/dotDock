@@ -30,7 +30,9 @@ pub struct MediaData {
     pub album: String,
     /// `data:` URL of the cover image, or None when the app supplies none.
     pub artwork: Option<String>,
+    #[serde(rename = "positionSec")]
     pub position_seconds: f64,
+    #[serde(rename = "durationSec")]
     pub duration_seconds: f64,
     /// Unix ms when `position_seconds` was sampled; the UI extrapolates from it while playing.
     pub sampled_at_ms: u64,
@@ -65,12 +67,17 @@ pub enum Reading {
     Unavailable,
 }
 
+/// Matches `MediaCommand` in apps/desktop/src/providers/types.ts: `{ action, positionSec? }`.
 #[derive(Clone, Copy, Debug, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(tag = "action", rename_all = "kebab-case")]
 pub enum MediaCommand {
-    PlayPause,
+    Toggle,
     Next,
     Previous,
+    Seek {
+        #[serde(rename = "positionSec")]
+        position_sec: f64,
+    },
 }
 
 pub struct MediaProvider {
@@ -156,18 +163,16 @@ impl MediaProvider {
     pub fn command(&self, command: MediaCommand) -> bool {
         let Some(session) = self.session() else { return false };
         let op = match command {
-            MediaCommand::PlayPause => session.TryTogglePlayPauseAsync(),
+            MediaCommand::Toggle => session.TryTogglePlayPauseAsync(),
             MediaCommand::Next => session.TrySkipNextAsync(),
             MediaCommand::Previous => session.TrySkipPreviousAsync(),
+            MediaCommand::Seek { position_sec } => {
+                // Float-to-int `as` saturates, so out-of-range input cannot wrap.
+                let ticks = (position_sec.max(0.0) * TICKS_PER_SECOND) as i64;
+                session.TryChangePlaybackPositionAsync(ticks)
+            }
         };
         op.and_then(|op| op.join()).unwrap_or(false)
-    }
-
-    pub fn seek(&self, seconds: f64) -> bool {
-        let Some(session) = self.session() else { return false };
-        // Float-to-int `as` saturates, so out-of-range input cannot wrap.
-        let ticks = (seconds.max(0.0) * TICKS_PER_SECOND) as i64;
-        session.TryChangePlaybackPositionAsync(ticks).and_then(|op| op.join()).unwrap_or(false)
     }
 }
 
@@ -222,6 +227,16 @@ mod tests {
         let seeked = MediaData { position_seconds: 90.0, sampled_at_ms: 6_000, ..sample() };
         assert!(!a.clock_drifted(&on_time));
         assert!(a.clock_drifted(&seeked));
+    }
+
+    #[test]
+    fn command_json_matches_the_ui_contract() {
+        let seek: MediaCommand = serde_json::from_str(r#"{"action":"seek","positionSec":42.5}"#).expect("seek parses");
+        assert!(matches!(seek, MediaCommand::Seek { position_sec } if (position_sec - 42.5).abs() < f64::EPSILON));
+        let toggle: MediaCommand = serde_json::from_str(r#"{"action":"toggle"}"#).expect("toggle parses");
+        assert!(matches!(toggle, MediaCommand::Toggle));
+        let json = serde_json::to_value(sample()).expect("serialises");
+        assert!(json.get("positionSec").is_some() && json.get("durationSec").is_some());
     }
 
     #[test]

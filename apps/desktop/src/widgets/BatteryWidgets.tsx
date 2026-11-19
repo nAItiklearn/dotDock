@@ -50,8 +50,12 @@ const PILL_DIGITS = 26;
 const RING_BOLT = 38;
 const FULL = 100;
 
+function onAc(data: BatteryData): boolean {
+  return data.charging || data.pluggedIn === true;
+}
+
 function isLow(data: BatteryData, config: BatteryConfig): boolean {
-  return !data.charging && data.percent <= config.lowLevel;
+  return !onAc(data) && data.percent <= config.lowLevel;
 }
 
 function tone(data: BatteryData, config: BatteryConfig): GaugeTone {
@@ -65,6 +69,8 @@ function statusText(data: BatteryData, showTime: boolean): string {
     if (data.percent >= FULL) return "Charged";
     return remaining ? `Full in ${remaining}` : "Charging";
   }
+  // On AC but not taking charge: full, or held at a charge limit by the laptop.
+  if (data.pluggedIn === true) return data.percent >= FULL ? "Charged" : "Plugged in";
   return remaining ? `${remaining} left` : "On battery";
 }
 
@@ -76,7 +82,7 @@ interface StatusIconProps {
 }
 
 function StatusIcon({ data, config, dotted = false }: StatusIconProps) {
-  const state = data.charging ? "on" : isLow(data, config) ? "low" : "idle";
+  const state = onAc(data) ? "on" : isLow(data, config) ? "low" : "idle";
   const className = `battery__icon battery__icon--${state}`;
   return dotted ? <DotIcon className={className} name="bolt" size={RING_BOLT} /> : <Icon className={className} name="bolt" />;
 }

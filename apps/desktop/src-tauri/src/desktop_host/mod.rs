@@ -6,7 +6,7 @@
 //! model, because that model rewrites GWL_EXSTYLE on its own changes and drops our bits.
 
 use serde::Deserialize;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -14,9 +14,10 @@ use windows::Win32::Foundation::{HWND, POINT, RECT};
 use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromPoint, MONITORINFO, MONITOR_DEFAULTTOPRIMARY};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetCursorPos, GetWindow, GetWindowLongPtrW, GetWindowRect, IsWindow, SetWindowLongPtrW, SetWindowPos, ShowWindow,
-    GWL_EXSTYLE, GW_HWNDNEXT, HWND_BOTTOM, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SW_SHOWNOACTIVATE,
-    USER_DEFAULT_SCREEN_DPI, WS_EX_APPWINDOW, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT,
+    GetCursorPos, GetWindow, GetWindowLongPtrW, GetWindowRect, IsWindow, SetForegroundWindow, SetWindowLongPtrW,
+    SetWindowPos, ShowWindow, GWL_EXSTYLE, GW_HWNDNEXT, HWND_BOTTOM, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
+    SWP_NOZORDER, SW_SHOWNOACTIVATE, USER_DEFAULT_SCREEN_DPI, WS_EX_APPWINDOW, WS_EX_LAYERED, WS_EX_NOACTIVATE,
+    WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT,
 };
 
 /// Cursor sampling period: one cheap syscall, below one 60 Hz frame.
@@ -80,7 +81,12 @@ impl Hwnd {
     }
 }
 
-const WANTED: isize = (WS_EX_TOOLWINDOW.0 | WS_EX_NOACTIVATE.0 | WS_EX_LAYERED.0) as isize;
+/// True while a text field in a widget (notes, to-do) has focus: only then may the overlay
+/// take keyboard focus. Otherwise it never activates, so it can never steal focus from apps.
+static TYPING: AtomicBool = AtomicBool::new(false);
+
+const WANTED: isize = (WS_EX_TOOLWINDOW.0 | WS_EX_LAYERED.0) as isize;
+const NO_ACTIVATE: isize = WS_EX_NOACTIVATE.0 as isize;
 const UNWANTED: isize = WS_EX_APPWINDOW.0 as isize;
 const TRANSPARENT: isize = WS_EX_TRANSPARENT.0 as isize;
 
@@ -91,6 +97,7 @@ fn enforce_styles(hwnd: HWND, click_through: bool) -> bool {
         let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
         let mut wanted = (ex | WANTED) & !UNWANTED;
         wanted = if click_through { wanted | TRANSPARENT } else { wanted & !TRANSPARENT };
+        wanted = if TYPING.load(Ordering::Acquire) { wanted & !NO_ACTIVATE } else { wanted | NO_ACTIVATE };
         if wanted == ex {
             return false;
         }
@@ -146,6 +153,23 @@ pub fn configure(hwnd: Hwnd) {
     let h = hwnd.get();
     enforce_styles(h, true);
     enforce_geometry(h);
+    enforce_bottom(h);
+}
+
+/// A widget text field gained or lost focus. Gaining it lets the overlay take keyboard focus
+/// (the user just clicked into it); the window is pushed straight back to the bottom so it
+/// never covers the user's apps while they type.
+pub fn set_typing(hwnd: Hwnd, typing: bool) {
+    TYPING.store(typing, Ordering::Release);
+    let h = hwnd.get();
+    // Click-through is off while the cursor is over the widget being typed into.
+    enforce_styles(h, false);
+    if typing {
+        // SAFETY: foreground request for our own window right after the user clicked it.
+        unsafe {
+            let _ = SetForegroundWindow(h);
+        }
+    }
     enforce_bottom(h);
 }
 
