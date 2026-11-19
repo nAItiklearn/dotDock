@@ -1,0 +1,53 @@
+.surface {
+  --sw: calc(var(--w) * var(--cell) + (var(--w) - 1) * var(--gap));
+  --sh: calc(var(--h) * var(--cell) + (var(--h) - 1) * var(--gap));
+  position: relative;
+  width: var(--sw);
+  height: var(--sh);
+  background: var(--surface);
+  border: var(--hairline) solid var(--border);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  overflow: hidden;
+  contain: layout paint style;
+  transition: transform var(--dur-med) var(--ease-out);
+}
+.surface:hover {
+  transform: translateY(-2px);
+}
+.surface--card {
+  border-radius: var(--radius-lg);
+}
+.surface--pill {
+  border-radius: var(--radius-pill);
+}
+.surface--circle {
+  border-radius: 50%;
+}
+
+.ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.ring svg {
+  position: absolute;
+  inset: 0;
+}
+.ring__track {
+  stroke: var(--dot-off);
+}
+.ring__value {
+  stroke: var(--accent);
+  transition: stroke-dashoffset var(--dur-slow) var(--ease-out);
+}
+.ring__content {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: var(--space-1);
+}
+
+.caps--accent {
+  color: var(--accent);
+}

@@ -1,0 +1,98 @@
+/* Non-colour tokens. Colours are set at runtime by applyTheme(). */
+@font-face {
+  font-family: "Doto";
+  src: url("/fonts/Doto.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: block;
+}
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/Geist.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: block;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: block;
+}
+
+:root {
+  --font-ui: "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-dot: "Doto", "Geist Mono", monospace;
+
+  /* Grid: widget sizes are multiples of the cell. */
+  --cell: 76px;
+  --gap: 12px;
+  --edge: 28px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  --radius-pill: 999px;
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-sm: 12px;
+
+  --text-xs: 10px;
+  --text-sm: 12px;
+  --text-md: 14px;
+  --text-lg: 18px;
+  --text-xl: 28px;
+  --tracking-caps: 0.16em;
+
+  --ring-stroke: 9px;
+  --hairline: 1px;
+
+  --dur-fast: 140ms;
+  --dur-med: 260ms;
+  --dur-slow: 520ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-med: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+  user-select: none;
+  overflow: hidden;
+}
+
+.caps {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

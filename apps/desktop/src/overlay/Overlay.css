@@ -1,0 +1,28 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  animation: overlay-in var(--dur-slow) var(--ease-out) both;
+}
+.overlay__slot {
+  position: absolute;
+  left: calc(var(--edge) + var(--x) * (var(--cell) + var(--gap)));
+  top: calc(var(--edge) + var(--y) * (var(--cell) + var(--gap)));
+}
+
+/* Opacity only: composited, never triggers layout. */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Design preview in a plain browser: stand in for the wallpaper. */
+.preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg);
+}

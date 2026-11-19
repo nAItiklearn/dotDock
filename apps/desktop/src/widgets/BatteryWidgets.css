@@ -1,0 +1,32 @@
+.battery__bolt {
+  width: 10px;
+  height: 14px;
+  background: var(--dot-off);
+  clip-path: polygon(60% 0, 0 58%, 45% 58%, 35% 100%, 100% 40%, 55% 40%);
+}
+.battery__bolt--on {
+  background: var(--accent);
+}
+
+.battery-grid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+}
+.battery-grid__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.battery-grid__pct {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: 500;
+}
+.battery-grid__state {
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+}

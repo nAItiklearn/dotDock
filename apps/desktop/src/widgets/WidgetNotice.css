@@ -1,0 +1,17 @@
+.widget-notice {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  text-align: center;
+}
+.widget-notice__dash {
+  color: var(--text-dim);
+}
+.widget-notice__text {
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+}
