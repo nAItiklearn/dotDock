@@ -27,6 +27,14 @@ material); dotDock's column is measured on this laptop (1920 x 1080 at 125 %, re
 | Memory | Not a priority (CLAUDE.md), recorded only | Working set |
 | Cold start to dock visible | Under 1 s from process start, taskbar hidden in the same frame the dock appears | Boot stage marks |
 
+## 2b. Low-spec budgets (from `DOCK_MARKET.md`)
+| Metric | Budget | How |
+|---|---|---|
+| Magnification and stack open at 6x CPU throttle | p95 frame under 16.7 ms | DevTools trace with CPU throttling |
+| Dock + overlay + island memory | under 250 MB working set together | Task Manager, process sharing on |
+| Wake from display-off / lock / sleep | no CPU above 5 % for more than 1 s, UI back within 1 s | `GetProcessTimes` sampling |
+| Integrated GPU without blur | identical layout and motion, solid surfaces | visual QA in the fallback mode |
+
 ## 3. Quality (visual and functional)
 | Area | macOS Dock | CoolDock | dotDock target |
 |---|---|---|---|
