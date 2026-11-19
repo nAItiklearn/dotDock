@@ -1,0 +1,58 @@
+/* DEV ONLY: fixture panel and wallpaper backdrop. Never part of the production build. */
+.dev-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--bg);
+  background-position: center;
+  background-size: cover;
+}
+
+.dev {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 100;
+  width: 220px;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  user-select: text;
+}
+.dev__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+}
+.dev__body {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-top: var(--hairline) solid var(--border);
+}
+.dev label {
+  display: grid;
+  gap: var(--space-1);
+}
+.dev__check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.dev__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.dev button,
+.dev select {
+  padding: var(--space-1) var(--space-2);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  cursor: pointer;
+}

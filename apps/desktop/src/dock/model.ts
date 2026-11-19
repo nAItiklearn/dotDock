@@ -255,6 +255,26 @@ export function unpin(pinned: readonly PinnedItem[], item: PinnedItem): PinnedIt
 export const samePin = (a: PinnedItem, b: PinnedItem): boolean =>
   a.kind === "app" ? b.kind === "app" && a.id === b.id : b.kind === "stack" && a.category === b.category;
 
+/** The entry key a pinned item is drawn under. */
+export const pinKey = (item: PinnedItem): string => (item.kind === "app" ? `app:${item.id}` : `stack:${item.category}`);
+
+export const tileKey = (id: string): string => `tile:${id}`;
+
+/**
+ * Puts the items whose key is in `ordered` into that order, in the places those items occupy; every other
+ * item (a pinned app that was uninstalled, say) keeps its place.
+ */
+export function reorderBy<T>(items: readonly T[], keyOf: (item: T) => string, ordered: readonly string[]): T[] {
+  const byKey = new Map(items.map((item) => [keyOf(item), item]));
+  const queue = ordered.filter((key) => byKey.has(key));
+  const inOrder = new Set(queue);
+  return items.map((item) => {
+    if (!inOrder.has(keyOf(item))) return item;
+    const key = queue.shift();
+    return key === undefined ? item : (byKey.get(key) as T);
+  });
+}
+
 /** The pinned item an entry stands for, or null for entries that cannot be pinned. */
 export function pinOf(entry: BarEntry): PinnedItem | null {
   if (entry.kind === "stack") return { kind: "stack", category: entry.category.id };
