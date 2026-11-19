@@ -34,12 +34,10 @@ export const WidgetSlot = memo(function WidgetSlot({ placement, metrics, editing
   if (!meta && !editing) return null;
 
   const { w, h } = footprintOf(widgetCatalog, live);
-  const style = {
-    "--w": w,
-    "--h": h,
-    "--tx": `${cellStartPx(live.x, metrics)}px`,
-    "--ty": `${cellStartPx(live.y, metrics)}px`,
-  } as CSSProperties;
+  const tx = cellStartPx(live.x, metrics);
+  const ty = cellStartPx(live.y, metrics);
+  // Position is a direct transform (not a custom property) so a move never restyles the widget inside.
+  const style = { "--w": w, "--h": h, transform: `translate3d(${tx}px, ${ty}px, 0)` } as CSSProperties;
   const name = meta?.name ?? "Unavailable widget";
   const label = `${name}, ${w} by ${h} cells, column ${live.x + 1}, row ${live.y + 1}`;
   const classes = ["overlay__slot", editing ? "is-editing" : "", selected ? "is-selected" : "", gesture === "move" ? "is-dragging" : ""];
@@ -49,6 +47,8 @@ export const WidgetSlot = memo(function WidgetSlot({ placement, metrics, editing
       className={classes.filter(Boolean).join(" ")}
       style={style}
       data-hit
+      data-tx={tx}
+      data-ty={ty}
       data-slot-id={placement.id}
       role={editing ? "group" : undefined}
       aria-roledescription={editing ? "widget" : undefined}

@@ -249,8 +249,7 @@ export class GestureController {
     const residualX = cellStartPx(a.origin.x, metrics) + dx - cellStartPx(final.x, metrics);
     const residualY = cellStartPx(a.origin.y, metrics) + dy - cellStartPx(final.y, metrics);
     el.style.transition = SCALE_ONLY_TRANSITION;
-    el.style.setProperty("--tx", `${cellStartPx(final.x, metrics)}px`);
-    el.style.setProperty("--ty", `${cellStartPx(final.y, metrics)}px`);
+    el.style.transform = `translate3d(${cellStartPx(final.x, metrics)}px, ${cellStartPx(final.y, metrics)}px, 0)`;
     el.style.translate = `${residualX}px ${residualY}px`;
     el.classList.remove("is-dragging");
     void el.offsetWidth; // flush so the jump above is committed before transitions come back

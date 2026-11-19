@@ -30,13 +30,12 @@ export function reportEditMode(on: boolean): void {
 }
 
 /**
- * Where an element will be once its transition settles. Positioned elements publish their final spot
- * as the `--tx` / `--ty` custom properties (custom properties never transition); everything else
- * is static, so its measured box is final.
+ * Where an element will be once its transition settles. Positioned elements publish their final spot as
+ * `data-tx` / `data-ty` (attributes never transition); everything else is static, so its measured box is final.
  */
 function finalRect(el: HTMLElement): HitRect {
-  const tx = Number.parseFloat(el.style.getPropertyValue("--tx"));
-  const ty = Number.parseFloat(el.style.getPropertyValue("--ty"));
+  const tx = Number.parseFloat(el.dataset["tx"] ?? "");
+  const ty = Number.parseFloat(el.dataset["ty"] ?? "");
   if (Number.isFinite(tx) && Number.isFinite(ty)) {
     return { x: tx - HIT_MARGIN, y: ty - HIT_MARGIN, w: el.offsetWidth + 2 * HIT_MARGIN, h: el.offsetHeight + 2 * HIT_MARGIN };
   }

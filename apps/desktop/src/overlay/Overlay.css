@@ -6,8 +6,8 @@
 }
 
 /*
- * Slots are placed with transforms only. --tx / --ty carry the final pixel position (they also feed the
- * core's click map), and `translate` / `scale` are free for the edit-mode drag so React never fights it.
+ * Slots are placed with an inline transform only. data-tx / data-ty carry the final pixel position (they
+ * feed the core's click map), and `translate` / `scale` are free for the edit-mode drag so React never fights it.
  */
 .overlay__slot {
   --sw: calc(var(--w) * var(--cell) + (var(--w) - 1) * var(--gap));
@@ -18,7 +18,6 @@
   width: var(--sw);
   height: var(--sh);
   outline: none;
-  transform: translate3d(var(--tx), var(--ty), 0);
   transition:
     transform var(--dur-med) var(--ease-out),
     translate var(--dur-med) var(--ease-out),
@@ -32,6 +31,8 @@
 .overlay__slot.is-editing {
   cursor: grab;
   touch-action: none;
+  /* Own compositor layer while arranging: following the pointer is then a pure layer move, never a repaint. */
+  will-change: transform, translate, scale;
 }
 .overlay__slot.is-selected {
   z-index: 2;
