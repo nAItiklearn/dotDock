@@ -42,8 +42,12 @@
 ## In progress
 - Desktop wallpapers from the owner's mood images (louvre and soft-mono reworked, four new styles). Generated from code only.
 
-## v2 plan (next)
-- Dock and launcher replacing the taskbar, with an App Library that groups apps by category (productivity, social, coding, AI, and more). Study the owner's dock videos and images, launchmeapp.com and cooldock.app first; build originals only.
+## v2: the dock (in progress)
+- Spec `docs/DOCK_SPEC.md`, research `docs/design/DOCK_RESEARCH.md`, benchmark vs the macOS Dock and CoolDock `docs/design/DOCK_BENCHMARK.md`, contract `docs/dock/CONTRACT.md` + `apps/desktop/src/dock/protocol.ts`.
+- D0 safety: done so far: both restore paths show the taskbar and restore auto-hide (tested live). Running: sentinel watchdog and hard-kill test (safety track).
+- D1 + D2 running (backend track): app catalogue, automatic category classifier, icons, running windows, launch, thumbnail and app-bar spikes.
+- D3 running (UI track): dock bar, magnification, category stacks, App Library, edit mode, three themes.
+- Rule: the Windows taskbar is never hidden for real use until D4 passes and the owner reviews it (`replaceTaskbar` defaults to off).
 
 ## Machine notes that affect boot time
 - 22 apps autostart from `HKCU\Run` and compete at sign-in.
