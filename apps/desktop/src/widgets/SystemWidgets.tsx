@@ -8,7 +8,7 @@ import "./SystemWidgets.css";
 const RING_SIZE = 164;
 const RING_STROKE = 9;
 const RAM_GRID = { cols: 6, rows: 4, dot: 14, gap: 7 } as const;
-const PCT_HEIGHT = 22;
+const PCT_HEIGHT = 26;
 
 /** S card: RAM use as a dot grid, the way the light reference shows it. */
 export function RamWidget() {
@@ -47,7 +47,7 @@ export function DiskWidget() {
           <Caps>{disk.mount}</Caps>
           <DotMatrix
             text={`${percent(disk.usedBytes, disk.totalBytes)}%`}
-            matrixStyle="dots"
+            matrixStyle="blocks"
             height={PCT_HEIGHT}
             label={`${percent(disk.usedBytes, disk.totalBytes)} percent used`}
           />

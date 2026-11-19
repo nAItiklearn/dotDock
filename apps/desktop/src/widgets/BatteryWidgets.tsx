@@ -7,7 +7,7 @@ import "./BatteryWidgets.css";
 
 const RING_SIZE = 164;
 const RING_STROKE = 9;
-const PERCENT_HEIGHT = 26;
+const PERCENT_HEIGHT = 30;
 const GRID = { cols: 12, rows: 3, dot: 18, gap: 6 } as const;
 
 function statusText(charging: boolean, remaining: string | null): string {
@@ -23,7 +23,7 @@ export function BatteryRingWidget() {
       {data ? (
         <Ring value={data.percent / 100} size={RING_SIZE} stroke={RING_STROKE}>
           <span className={`battery__bolt${data.charging ? " battery__bolt--on" : ""}`} aria-hidden="true" />
-          <DotMatrix text={`${data.percent}%`} matrixStyle="dots" height={PERCENT_HEIGHT} label={`${data.percent} percent`} />
+          <DotMatrix text={`${data.percent}%`} matrixStyle="blocks" height={PERCENT_HEIGHT} label={`${data.percent} percent`} />
           <Caps>{data.charging ? "Charging" : "Battery"}</Caps>
         </Ring>
       ) : (

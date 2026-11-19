@@ -42,7 +42,7 @@ export function WeatherWidget() {
           </div>
         </div>
       ) : (
-        <WidgetNotice title="Weather" issue={issue} />
+        <WidgetNotice title="Weather" issue={issue} compact />
       )}
     </Surface>
   );

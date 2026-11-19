@@ -1,4 +1,4 @@
-import { GLYPH_ROWS, glyphFor } from "./glyphs";
+import { glyphFor, glyphRows, type GlyphSet } from "./glyphs";
 
 export type MatrixStyle = "dots" | "blocks" | "stripes";
 
@@ -42,10 +42,11 @@ function roundedRect(x: number, y: number, w: number, h: number, radii: readonly
 }
 
 /** Places glyphs left to right and returns a lit-cell lookup over the whole string. */
-function layout(text: string): { cols: number; lit: boolean[][] } {
-  const glyphs = [...text].map(glyphFor);
+function layout(text: string, set: GlyphSet): { cols: number; rows: number; lit: boolean[][] } {
+  const rows = glyphRows(set);
+  const glyphs = [...text].map((ch) => glyphFor(set, ch));
   const cols = glyphs.reduce((sum, g, i) => sum + g.width + (i > 0 ? GLYPH_GAP : 0), 0);
-  const lit: boolean[][] = Array.from({ length: GLYPH_ROWS }, () => new Array<boolean>(cols).fill(false));
+  const lit: boolean[][] = Array.from({ length: rows }, () => new Array<boolean>(cols).fill(false));
   let x = 0;
   glyphs.forEach((g, i) => {
     if (i > 0) x += GLYPH_GAP;
@@ -57,7 +58,7 @@ function layout(text: string): { cols: number; lit: boolean[][] } {
     );
     x += g.width;
   });
-  return { cols, lit };
+  return { cols, rows, lit };
 }
 
 const geometryCache = new Map<string, MatrixGeometry>();
@@ -67,12 +68,13 @@ export function buildMatrix(text: string, style: MatrixStyle): MatrixGeometry {
   const cached = geometryCache.get(key);
   if (cached) return cached;
 
-  const { cols, lit } = layout(text);
+  // Solid blocks need chunky strokes; dots and stripes read better with the fine set.
+  const { cols, rows, lit } = layout(text, style === "blocks" ? "bold" : "fine");
   const on = (r: number, c: number): boolean => lit[r]?.[c] === true;
   const lits: string[] = [];
   const offs: string[] = [];
 
-  for (let r = 0; r < GLYPH_ROWS; r++) {
+  for (let r = 0; r < rows; r++) {
     if (style === "stripes") {
       // Horizontal runs of lit cells become one pill-ended bar.
       let c = 0;
@@ -103,7 +105,7 @@ export function buildMatrix(text: string, style: MatrixStyle): MatrixGeometry {
     }
   }
 
-  const geometry: MatrixGeometry = { cols, rows: GLYPH_ROWS, litPath: lits.join(""), offPath: offs.join("") };
+  const geometry: MatrixGeometry = { cols, rows, litPath: lits.join(""), offPath: offs.join("") };
   geometryCache.set(key, geometry);
   return geometry;
 }

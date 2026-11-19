@@ -11,14 +11,21 @@ const COPY: Record<ProviderIssue, string> = {
   "needs-setup": "Set a city",
 };
 
-const DASH_HEIGHT = 18;
+const DASH_HEIGHT = 14;
+
+export interface WidgetNoticeProps {
+  readonly title: string;
+  readonly issue: ProviderIssue | null;
+  /** One-row layout for pill widgets. */
+  readonly compact?: boolean;
+}
 
 /** Designed state for a widget with no live data. Never a blank or a spinner. */
-export function WidgetNotice({ title, issue }: { readonly title: string; readonly issue: ProviderIssue | null }) {
+export function WidgetNotice({ title, issue, compact = false }: WidgetNoticeProps) {
   return (
-    <div className="widget-notice">
+    <div className={`widget-notice${compact ? " widget-notice--compact" : ""}`}>
+      <DotMatrix className="widget-notice__dash" text="--" matrixStyle="blocks" height={DASH_HEIGHT} label="" />
       <Caps>{title}</Caps>
-      <DotMatrix className="widget-notice__dash" text="--" matrixStyle="dots" height={DASH_HEIGHT} label="" />
       <span className="widget-notice__text">{issue ? COPY[issue] : "Waiting for data"}</span>
     </div>
   );

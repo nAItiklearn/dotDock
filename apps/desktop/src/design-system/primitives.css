@@ -30,7 +30,7 @@
   display: grid;
   place-items: center;
 }
-.ring svg {
+.ring > svg {
   position: absolute;
   inset: 0;
 }
