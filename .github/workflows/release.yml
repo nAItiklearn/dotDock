@@ -1,0 +1,103 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # Explicit MSVC toolchain: the owner's local GNU override must never apply here.
+  RUST_TOOLCHAIN: stable-x86_64-pc-windows-msvc
+
+jobs:
+  bundle:
+    name: Bundle (NSIS installer + portable exe)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Read app version
+        id: app
+        run: echo "version=$(node --input-type=commonjs -p "require('./src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+
+      # The installer filename and the "About" version come from tauri.conf.json, not the tag.
+      - name: Check tag matches app version
+        env:
+          APP_VERSION: ${{ steps.app.outputs.version }}
+        run: |
+          if [ "${GITHUB_REF_NAME#v}" != "$APP_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match tauri.conf.json version $APP_VERSION"
+            exit 1
+          fi
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      # Cold build on purpose: release artifacts do not use the shared rust cache.
+      - name: Build bundle
+        run: pnpm tauri build
+
+      - name: Stage portable exe
+        run: |
+          mkdir -p ../../staging/portable
+          cp src-tauri/target/release/dotdock.exe "../../staging/portable/dotDock_${{ steps.app.outputs.version }}_x64-portable.exe"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dotdock-windows-installer
+          path: apps/desktop/src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dotdock-windows-portable
+          path: staging/portable/*.exe
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Publish GitHub Release
+    needs: bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: dotdock-windows-*
+          path: release-assets
+          merge-multiple: true
+
+      # Binaries are unsigned (no signing secrets yet); Windows SmartScreen will warn.
+      # A tag with a hyphen (v0.2.0-rc.1) is published as a prerelease.
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: release-assets/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

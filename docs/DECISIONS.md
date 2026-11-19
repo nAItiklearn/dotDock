@@ -22,3 +22,24 @@ Each entry: decision, alternatives, why, how to reverse.
 ## D-004 Licence GPL-3.0-or-later
 - **Decision:** Spec default. Owner can override.
 - **Reverse:** Replace `LICENSE` and the notice in `README.md`.
+
+## D-005 MSVC builds only in GitHub Actions; local builds use the GNU toolchain
+- **Decision:** Release/installer builds run in GitHub Actions (`windows-latest`, MSVC). Locally: `rustup override` to `stable-x86_64-pc-windows-gnu` in `apps/desktop/src-tauri`, with WinLibs gcc first on PATH (`tools/env-gnu.sh`).
+- **Why:** VS Build Tools cannot install on the owner's laptop: the Windows Installer service is unavailable (bootstrapper exit 8012, `MsiAvailabilityCheck`). Fixing a system service is out of scope.
+- **Consequence:** the lib crate is `rlib` only (a `cdylib` overflows the MinGW export table, "export ordinal too large"). Local GNU builds warn about duplicate manifests; MSVC CI builds are the reference.
+- **Reverse:** once MSVC works locally, `rustup override unset`.
+
+## D-006 Click-through by cursor polling instead of SetWindowRgn
+- **Decision:** The overlay is click-through (`set_ignore_cursor_events`) except while the cursor is inside a widget rectangle reported by the UI. A 16 ms `GetCursorPos` poll toggles it only on change.
+- **Alternatives:** `SetWindowRgn` union of widget rects (spec 8.3).
+- **Why:** a window region also clips rendering, which would cut widget shadows and hover lift. Polling costs one syscall per frame and only acts when the cursor moves.
+- **Reverse:** replace `desktop_host::spawn_hit_tester` with a region update on `set_hit_regions`.
+
+## D-007 Desktop host strategy S2 first
+- **Decision:** Bottom-most, non-activating tool window (`WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE`, `always_on_bottom`). WorkerW parenting (S1) is not used yet.
+- **Why:** Wallpaper Engine runs on this machine and owns the WorkerW layer; S2 coexists with it. Verified on the real desktop: the overlay renders above the wallpaper and below normal windows.
+- **Reverse:** add S1 behind the `desktop_host` module boundary.
+
+## D-008 Show the window on DOM commit, not on animation frames
+- **Decision:** The UI calls `overlay_ready` right after React commits (fonts loaded first). The core also shows the window after a 3 s fallback.
+- **Why:** a hidden WebView2 window receives no `requestAnimationFrame` callbacks, so waiting for frames before showing deadlocks until the fallback (measured: shown at 4.1 s via fallback).

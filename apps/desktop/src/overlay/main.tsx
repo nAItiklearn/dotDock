@@ -20,5 +20,5 @@ void document.fonts.ready.then(() => {
       <Overlay layout={DEFAULT_LAYOUT} />
     </StrictMode>,
   );
-  void connectProviders();
+  connectProviders().catch((err: unknown) => console.error("providers failed to connect", err));
 });

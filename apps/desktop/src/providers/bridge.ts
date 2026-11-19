@@ -1,7 +1,9 @@
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { useProviderStore } from "./store";
 import type { ProviderIssue, ProviderName, ProviderPayloads } from "./types";
 
-/** Event names emitted by the Rust core. Keep in sync with src-tauri/src/ipc. */
+/** Event names emitted by the Rust core. Keep in sync with src-tauri/src/providers/mod.rs. */
 const EVENT_DATA = "provider://data";
 const EVENT_ISSUE = "provider://issue";
 
@@ -23,10 +25,10 @@ export async function connectProviders(): Promise<() => void> {
   const { publish, report } = useProviderStore.getState();
 
   if (isTauri()) {
-    const { listen } = await import("@tauri-apps/api/event");
-    const { invoke } = await import("@tauri-apps/api/core");
     const offData = await listen<DataEvent>(EVENT_DATA, (e) => publish(e.payload.provider, e.payload.data));
     const offIssue = await listen<IssueEvent>(EVENT_ISSUE, (e) => report(e.payload.provider, e.payload.issue));
+    // The weather provider is not built yet; say so honestly instead of "waiting".
+    report("weather", "needs-setup");
     // Ask the core to replay current values now that listeners exist.
     await invoke("providers_ready");
     return () => {

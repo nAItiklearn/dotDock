@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { BatteryGridWidget, BatteryRingWidget } from "../widgets/BatteryWidgets";
 import { CalendarWidget } from "../widgets/CalendarWidget";
 import { ClockWidget } from "../widgets/ClockWidget";
@@ -6,6 +6,7 @@ import { DateCircleWidget } from "../widgets/DateCircleWidget";
 import { DiskWidget, RamWidget } from "../widgets/SystemWidgets";
 import { WeatherWidget } from "../widgets/WeatherWidget";
 import type { Layout, Placement } from "./layout";
+import { reportFirstFrame, syncHitRegions } from "./nativeHost";
 import "./Overlay.css";
 
 function renderWidget(p: Placement) {
@@ -31,10 +32,15 @@ function renderWidget(p: Placement) {
 
 /** The desktop layer: widgets placed on the cell grid over the wallpaper. */
 export function Overlay({ layout }: { readonly layout: Layout }) {
+  const root = useRef<HTMLElement>(null);
+  useEffect(() => {
+    reportFirstFrame();
+    return root.current ? syncHitRegions(root.current) : undefined;
+  }, []);
   return (
-    <main className="overlay">
+    <main className="overlay" ref={root}>
       {layout.placements.map((p) => (
-        <div key={p.id} className="overlay__slot" style={{ "--x": p.x, "--y": p.y } as CSSProperties}>
+        <div key={p.id} className="overlay__slot" data-hit style={{ "--x": p.x, "--y": p.y } as CSSProperties}>
           {renderWidget(p)}
         </div>
       ))}

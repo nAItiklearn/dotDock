@@ -11,6 +11,8 @@ export default defineConfig({
   plugins: [react()],
   publicDir: resolve(here, "../../assets"),
   clearScreen: false,
+  // Pre-bundle the Tauri API so dev never serves a stale optimised copy (504 "Outdated Optimize Dep").
+  optimizeDeps: { include: ["@tauri-apps/api/core", "@tauri-apps/api/event"] },
   server: { port: 1420, strictPort: true },
   build: {
     target: "es2022",
