@@ -175,7 +175,7 @@ Restart Claude Code sessions that were already open: hooks are read at session s
 
 The hook reads the event from stdin, writes `<sessions>\<session id>.json` atomically under a short lock, and always exits 0 (a panic handler exits before the release profile's abort). It never stores prompt text or tool output; commands are shown by their description when Claude wrote one, otherwise with obvious secrets masked.
 
-Measured on this laptop (Windows 11, Defender on, many autostart apps, release GNU build, 438 KB): in-process work 6.2 ms median / 7.9 ms p90 across stdin parse, parent lookup, lock, read, write and rename. Wall time from spawn to exit is dominated by Windows process creation here: median about 375 ms and minimum 81 ms, against 780 ms median for `cmd /c exit` on the same machine. Hooks are registered `async`, so Claude Code never waits for them.
+Measured on this laptop (Windows 11, Defender on, many autostart apps, release GNU build, 438 KB, 40 runs each, kernel process lifetime from start to exit): a full event takes a median of 77 ms (min 59 ms, p90 172 ms); a run with empty input, which only starts and exits, takes 74 ms. So the hook's own work adds about 3 ms to what Windows spends creating any process here; a first, busier measurement had medians of 375 ms for the hook against 780 ms for `cmd /c exit`. Profiled inside one cold process the work is about 6 ms (stdin parse 0.2, parent lookup 0.4, lock 0.7, read 0.5, write plus rename 3.4), before the later removal of two directory-exists calls. The "under 20 ms" goal is therefore met for the hook's work but not for wall time on a machine where an empty process already takes 74 ms. Hooks are registered `async`, so Claude Code never waits for them.
 
 ## 9. Sources and formats
 
