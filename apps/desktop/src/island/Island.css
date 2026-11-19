@@ -1,0 +1,301 @@
+/*
+ * Island window. Sizes come from the custom properties Island.tsx derives from geometry.ts, so this file
+ * never repeats a pixel value of the layout. --k is the user's scale.
+ */
+.island-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--text);
+}
+
+.island-slide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  will-change: transform;
+}
+
+.island {
+  position: relative;
+  flex: none;
+  pointer-events: auto;
+  cursor: default;
+  outline: none;
+}
+.island--off,
+.island--hidden,
+.island--tiny,
+.island--aside {
+  pointer-events: none;
+}
+.island--island:focus-visible {
+  outline: calc(2px * var(--k)) solid var(--accent);
+  outline-offset: calc(3px * var(--k));
+  border-radius: var(--radius-md);
+}
+
+/* The plate is laid out at its final size and squashed by transforms while it grows (see Plate.tsx). */
+.island__plate {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform-origin: 50% 0;
+  background: var(--surface);
+  will-change: transform;
+}
+.island__texture {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--dot-off) 38%, transparent) 0.85px, transparent 1.15px);
+  background-size: calc(6px * var(--k)) calc(6px * var(--k));
+  background-position: center;
+}
+/* A 12 px pill has no room for the lattice texture. */
+.island--tiny .island__texture,
+.island--hidden .island__texture {
+  visibility: hidden;
+}
+
+/* Idle: a dim dot, a breathing accent dot, a dim dot. */
+.island__standby {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--tiny-dot) * 1.7);
+  pointer-events: none;
+}
+.island__standby i {
+  width: var(--tiny-dot);
+  height: var(--tiny-dot);
+  border-radius: 50%;
+  background: var(--text-dim);
+  opacity: 0.45;
+}
+.island__standby .island__standby-lit {
+  background: var(--accent);
+  opacity: 1;
+  animation: standby-breathe 3.2s ease-in-out infinite;
+}
+@keyframes standby-breathe {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island__standby .island__standby-lit {
+    animation: none;
+  }
+}
+
+/* Rows are placed at their resting position (top) and slid by the plate's growth (y), so they ride its bottom edge. */
+.island__active {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--active-w);
+  height: var(--active-h);
+  margin-left: calc(var(--active-w) / -2);
+  pointer-events: none;
+}
+
+.content {
+  --tone: var(--text);
+  position: absolute;
+  inset: 0;
+}
+.content[data-tone="accent"] {
+  --tone: var(--accent);
+}
+.content[data-tone="success"] {
+  --tone: var(--success);
+}
+.content[data-tone="danger"] {
+  --tone: var(--danger);
+}
+.content[data-tone="dim"],
+.content[data-flash="true"] {
+  --tone: var(--text-dim);
+}
+
+.sub {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  height: var(--sub-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(6px * var(--k));
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-sm) * var(--k));
+  line-height: var(--sub-h);
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+.sub__line {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub__time {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.sub__project {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub__dot {
+  flex: none;
+  opacity: 0.6;
+}
+
+.state {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--state-h);
+  padding: 0 var(--pad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8px * var(--k));
+}
+.state__orb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--orb);
+  height: var(--orb);
+}
+.state__orb canvas {
+  display: block;
+}
+.state__word {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-dot);
+  font-size: calc(var(--text-lg) * var(--k));
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+.state__tokens {
+  flex: none;
+}
+
+/* Reserved width: the word keeps its place whether the counter shows "↑ 9" or "↑ 12.4k". */
+.tokens {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(3px * var(--k));
+  min-width: calc(5ch + 11px * var(--k));
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-xs) * var(--k));
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.tokens[data-empty="true"] {
+  visibility: hidden;
+}
+.tokens__arrow {
+  flex: none;
+  width: calc(8px * var(--k));
+  height: calc(8px * var(--k));
+}
+
+/* The strip along the bottom edge. The glow is a plain gradient: static, so it costs no frames. */
+.scene {
+  position: absolute;
+  left: var(--pad);
+  width: var(--scene-w);
+  height: var(--scene-h);
+}
+.scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 100% at 50% 100%, color-mix(in srgb, var(--text) 9%, transparent), transparent 72%);
+  mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+}
+.scene canvas {
+  position: relative;
+  display: block;
+}
+
+.pager-slot {
+  position: absolute;
+  right: var(--pad);
+  display: flex;
+  align-items: center;
+}
+.pager {
+  display: flex;
+  align-items: center;
+}
+.pager__hit {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: calc(5px * var(--k)) calc(2.5px * var(--k));
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.pager__dot {
+  --pager-tone: var(--text);
+  display: block;
+  width: calc(5px * var(--k));
+  height: calc(5px * var(--k));
+  border-radius: var(--radius-pill);
+  background: var(--pager-tone);
+  opacity: 0.55;
+}
+.pager__dot[data-tone="accent"] {
+  --pager-tone: var(--accent);
+}
+.pager__dot[data-tone="success"] {
+  --pager-tone: var(--success);
+}
+.pager__dot[data-tone="danger"] {
+  --pager-tone: var(--danger);
+}
+.pager__dot[data-tone="dim"] {
+  --pager-tone: var(--text-dim);
+}
+.pager__dot--active {
+  width: calc(14px * var(--k));
+  background: var(--accent);
+  opacity: 1;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

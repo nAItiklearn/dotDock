@@ -1,0 +1,14 @@
+[package]
+name = "dotdock-island-hook"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Claude Code hook runner for Agent Island: records what the agent is doing, then exits"
+publish = false
+
+[[bin]]
+name = "dotdock-island-hook"
+path = "src/main.rs"
+
+[dependencies]
+dotdock-island = { path = "../island", default-features = false }

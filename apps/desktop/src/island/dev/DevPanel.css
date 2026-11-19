@@ -1,0 +1,122 @@
+/* DEV ONLY: fixture panel styling. Never part of the production build. */
+body {
+  background: var(--bg);
+}
+#root.dev-frame {
+  inset: auto;
+  left: 50%;
+  top: 0;
+  width: 520px;
+  height: 240px;
+  margin-left: -260px;
+  outline: 1px dashed var(--border);
+  outline-offset: -1px;
+}
+
+.dev {
+  position: fixed;
+  left: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 10;
+  width: 440px;
+  max-height: calc(100vh - 240px);
+  display: flex;
+  flex-direction: column;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  user-select: text;
+}
+.dev__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--hairline) solid var(--border);
+}
+.dev__badge {
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+.dev__body {
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  overflow-y: auto;
+}
+.dev fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.dev legend {
+  padding: 0 var(--space-1);
+  color: var(--text-dim);
+}
+.dev__wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.dev button,
+.dev select {
+  padding: 3px var(--space-2);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.dev button[data-on="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.dev select option {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.dev__field,
+.dev__check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.dev__field select {
+  flex: 1;
+}
+.dev__settings {
+  font-family: var(--font-ui);
+}
+
+.dev__regions {
+  position: fixed;
+  left: 50%;
+  top: 0;
+  width: 520px;
+  height: 240px;
+  margin-left: -260px;
+  pointer-events: none;
+  z-index: 5;
+}
+.dev__region {
+  position: absolute;
+  box-sizing: border-box;
+}
+.dev__region--hit {
+  border: 1px solid var(--success);
+  background: var(--dot-off);
+}
+.dev__region--hover {
+  border: 1px dashed var(--text-dim);
+}
