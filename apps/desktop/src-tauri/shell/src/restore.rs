@@ -1,7 +1,7 @@
 //! Returns the desktop to the user's original Windows state from the snapshot. Same effect as
 //! `tools/restore-windows.ps1`, but shipped inside the app so the uninstaller can always run it.
 
-use crate::{autostart, registry, snapshot, taskbar};
+use crate::{autostart, dock_guard, registry, snapshot, taskbar};
 use windows::core::HSTRING;
 use windows::Win32::UI::WindowsAndMessaging::{
     SystemParametersInfoW, SPIF_SENDCHANGE, SPIF_UPDATEINIFILE, SPI_SETDESKWALLPAPER,
@@ -32,6 +32,8 @@ pub struct Report {
 pub fn restore_windows() -> Result<Report, RestoreError> {
     let mut report = Report::default();
     // First and unconditional: a hidden taskbar is the one state a user cannot fix by hand.
+    // `release` also drops the dock's marker, so no watcher restores it a second time.
+    dock_guard::release();
     taskbar::show_all();
     autostart::disable()?;
     report.autostart_removed = true;
