@@ -3,7 +3,7 @@
 mod desktop_host;
 mod providers;
 
-use desktop_host::{HitRect, HitRegions};
+use desktop_host::{HitRect, HitRegions, Hwnd};
 use dotdock_shell::providers::weather::{self, Place};
 use dotdock_shell::{autostart, boot_log as boot};
 use providers::{ProvidersReady, WeatherWake};
@@ -62,15 +62,15 @@ fn show_overlay(app: &AppHandle) {
     if window.is_visible().unwrap_or(false) {
         return;
     }
-    if window.show().is_ok() {
+    let Ok(hwnd) = window.hwnd() else { return };
+    // Never steal focus from what the user is doing when the widgets appear.
+    if desktop_host::show_without_activating(Hwnd::from_raw(hwnd.0)) {
         boot::mark("shown");
     }
 }
 
 fn create_overlay(app: &AppHandle) -> tauri::Result<WebviewWindow> {
-    let monitor = app.primary_monitor()?.ok_or(tauri::Error::WindowNotFound)?;
-    let size = monitor.size();
-    let position = monitor.position();
+    // Size and position come from Win32 in desktop_host (and are re-fitted on display changes).
     let window = WebviewWindowBuilder::new(app, OVERLAY_LABEL, WebviewUrl::App("overlay.html".into()))
         .title("Desktop")
         .visible(false)
@@ -80,29 +80,37 @@ fn create_overlay(app: &AppHandle) -> tauri::Result<WebviewWindow> {
         .resizable(false)
         .skip_taskbar(true)
         .focused(false)
+        .focusable(false)
         .always_on_bottom(true)
         .build()?;
-    window.set_position(*position)?;
-    window.set_size(*size)?;
-    desktop_host::configure(&window)?;
+    desktop_host::configure(Hwnd::from_raw(window.hwnd()?.0));
     Ok(window)
 }
 
-/// One-shot commands handled before any window exists. Returns true if one ran.
+/// One-shot commands handled before any window exists. Exits the process if one ran.
 fn run_cli_command() -> bool {
     let Some(arg) = std::env::args().nth(1) else { return false };
     let outcome = match arg.as_str() {
-        "--enable-autostart" => autostart::enable().map(|m| format!("autostart enabled via {m:?}")),
-        "--disable-autostart" => autostart::disable().map(|()| "autostart disabled".to_owned()),
+        "--enable-autostart" => {
+            autostart::enable().map(|m| format!("autostart enabled via {m:?}")).map_err(|e| e.to_string())
+        }
+        "--disable-autostart" => {
+            autostart::disable().map(|()| "autostart disabled".to_owned()).map_err(|e| e.to_string())
+        }
+        // Run by the uninstaller, and the in-app "Restore Windows desktop" action.
+        "--restore-windows" => {
+            dotdock_shell::restore::restore_windows().map(|r| format!("restored: {r:?}")).map_err(|e| e.to_string())
+        }
         _ => return false,
     };
-    let line = match outcome {
-        Ok(msg) => msg,
-        Err(err) => format!("autostart error: {err}"),
+    let (line, code) = match outcome {
+        Ok(msg) => (msg, 0),
+        Err(err) => (format!("{arg} failed: {err}"), 1),
     };
     boot::record(&line);
     println!("{line}");
-    true
+    // Non-zero on failure so the uninstaller and scripts can tell.
+    std::process::exit(code);
 }
 
 pub fn run() {
@@ -134,7 +142,7 @@ pub fn run() {
             boot::mark("window-created");
             let wake = providers::spawn(handle.clone(), ready)?;
             app.manage(wake);
-            desktop_host::spawn_hit_tester(window, regions)?;
+            desktop_host::spawn_guard(Hwnd::from_raw(window.hwnd()?.0), regions)?;
             std::thread::spawn(move || {
                 std::thread::sleep(SHOW_FALLBACK);
                 if handle.get_webview_window(OVERLAY_LABEL).is_some_and(|w| !w.is_visible().unwrap_or(true)) {

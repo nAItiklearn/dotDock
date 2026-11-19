@@ -43,3 +43,12 @@ Each entry: decision, alternatives, why, how to reverse.
 ## D-008 Show the window on DOM commit, not on animation frames
 - **Decision:** The UI calls `overlay_ready` right after React commits (fonts loaded first). The core also shows the window after a 3 s fallback.
 - **Why:** a hidden WebView2 window receives no `requestAnimationFrame` callbacks, so waiting for frames before showing deadlocks until the fallback (measured: shown at 4.1 s via fallback).
+
+## D-010 One guard thread owns the overlay's Win32 state
+- **Decision:** `desktop_host::spawn_guard` toggles only `WS_EX_TRANSPARENT` for click-through (`WS_EX_LAYERED` stays set), re-asserts `WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE` and bottom-most z-order every 500 ms, and re-fits the window to the primary monitor on display or DPI changes. The window is shown with `SW_SHOWNOACTIVATE`.
+- **Why:** QA found (confirmed in tao's source) that the windowing library rewrites `GWL_EXSTYLE` from its own model on every `set_ignore_cursor_events`, dropping our tool-window bits, so a click could raise the full-screen overlay over the user's apps and it showed in Alt+Tab.
+- **Reverse:** return to `set_ignore_cursor_events` once tao preserves foreign extended styles.
+
+## D-011 StartupDelayInMSec only on the Run-key fallback
+- **Decision:** With the logon task (the normal path) the startup delay is left at its original value.
+- **Why:** the delay only applies to Run-key apps. Zeroing it with the task would only make the owner's other 22 startup apps launch sooner and compete with us at sign-in.

@@ -14,6 +14,13 @@ use windows::Storage::Streams::DataReader;
 const TICKS_PER_SECOND: f64 = 10_000_000.0;
 /// Artwork bigger than this is skipped rather than shipped over IPC.
 const MAX_ARTWORK_BYTES: u64 = 2 * 1024 * 1024;
+/// Many apps publish cover art a moment after the metadata; retry this many reads per track.
+const ARTWORK_ATTEMPTS: u8 = 6;
+/// WinRT DateTime counts 100 ns ticks from 1601-01-01; this is the Unix epoch in those ticks.
+const UNIX_EPOCH_TICKS: i64 = 116_444_736_000_000_000;
+const TICKS_PER_MS: i64 = 10_000;
+/// A position this far from the extrapolated one means a seek, so the UI must hear about it.
+const SEEK_TOLERANCE_SECONDS: f64 = 2.0;
 
 #[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -40,12 +47,21 @@ impl MediaData {
         let strip = |d: &Self| Self { position_seconds: 0.0, sampled_at_ms: 0, ..d.clone() };
         strip(self) == strip(other)
     }
+
+    /// True when `later`'s position is not where this sample's clock predicts (a seek or a stall).
+    pub fn clock_drifted(&self, later: &Self) -> bool {
+        let elapsed = later.sampled_at_ms.saturating_sub(self.sampled_at_ms) as f64 / 1000.0;
+        let predicted = if self.playing { self.position_seconds + elapsed } else { self.position_seconds };
+        (predicted - later.position_seconds).abs() > SEEK_TOLERANCE_SECONDS
+    }
 }
 
 pub enum Reading {
     Playing(MediaData),
     /// No app has an active media session.
     Nothing,
+    /// The session exists but one read failed (common mid track change); keep the last state.
+    Transient,
     Unavailable,
 }
 
@@ -59,9 +75,10 @@ pub enum MediaCommand {
 
 pub struct MediaProvider {
     manager: Option<Manager>,
-    /// Cover art is only re-read when the track changes.
+    /// Cover art is re-read when the track changes, a few times until the app supplies it.
     artwork_for: Option<(String, String)>,
     artwork: Option<String>,
+    artwork_attempts: u8,
 }
 
 fn unix_ms() -> u64 {
@@ -74,7 +91,7 @@ fn unix_ms() -> u64 {
 impl MediaProvider {
     pub fn new() -> Self {
         let manager = Manager::RequestAsync().and_then(|op| op.join()).ok();
-        Self { manager, artwork_for: None, artwork: None }
+        Self { manager, artwork_for: None, artwork: None, artwork_attempts: 0 }
     }
 
     fn session(&self) -> Option<Session> {
@@ -88,7 +105,7 @@ impl MediaProvider {
         let Some(session) = self.session() else { return Reading::Nothing };
         match self.read_session(&session) {
             Ok(data) => Reading::Playing(data),
-            Err(_) => Reading::Nothing,
+            Err(_) => Reading::Transient,
         }
     }
 
@@ -99,22 +116,35 @@ impl MediaProvider {
         let album = props.AlbumTitle()?.to_string_lossy();
         let track = (title.clone(), artist.clone());
         if self.artwork_for.as_ref() != Some(&track) {
-            self.artwork = props.Thumbnail().ok().and_then(|t| read_artwork(&t));
             self.artwork_for = Some(track);
+            self.artwork = None;
+            self.artwork_attempts = 0;
+        }
+        if self.artwork.is_none() && self.artwork_attempts < ARTWORK_ATTEMPTS {
+            self.artwork_attempts += 1;
+            self.artwork = props.Thumbnail().ok().and_then(|t| read_artwork(&t));
         }
         let timeline = session.GetTimelineProperties()?;
         let info = session.GetPlaybackInfo()?;
         let controls = info.Controls()?;
         let ticks = |t: windows::Foundation::TimeSpan| (t.Duration.max(0) as f64) / TICKS_PER_SECOND;
+        let playing = info.PlaybackStatus()? == Status::Playing;
+        // Anchor the clock to when the app last reported its position, not to now: apps that
+        // update their timeline rarely would otherwise make the progress bar jump backwards.
+        let updated_ms = (timeline.LastUpdatedTime()?.UniversalTime - UNIX_EPOCH_TICKS) / TICKS_PER_MS;
+        let now = unix_ms();
+        let reported = ticks(timeline.Position()?);
+        let since_update = (now as i64 - updated_ms).max(0) as f64 / 1000.0;
+        let position_seconds = if playing && updated_ms > 0 { reported + since_update } else { reported };
         Ok(MediaData {
             title,
             artist,
             album,
             artwork: self.artwork.clone(),
-            position_seconds: ticks(timeline.Position()?),
+            position_seconds,
             duration_seconds: ticks(timeline.EndTime()?),
-            sampled_at_ms: unix_ms(),
-            playing: info.PlaybackStatus()? == Status::Playing,
+            sampled_at_ms: now,
+            playing,
             can_seek: controls.IsPlaybackPositionEnabled()?,
             can_next: controls.IsNextEnabled()?,
             can_prev: controls.IsPreviousEnabled()?,
@@ -183,6 +213,15 @@ mod tests {
             can_prev: true,
             can_play_pause: true,
         }
+    }
+
+    #[test]
+    fn seeks_count_as_drift_but_normal_playback_does_not() {
+        let a = MediaData { position_seconds: 10.0, sampled_at_ms: 1_000, ..sample() };
+        let on_time = MediaData { position_seconds: 15.1, sampled_at_ms: 6_000, ..sample() };
+        let seeked = MediaData { position_seconds: 90.0, sampled_at_ms: 6_000, ..sample() };
+        assert!(!a.clock_drifted(&on_time));
+        assert!(a.clock_drifted(&seeked));
     }
 
     #[test]

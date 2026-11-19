@@ -13,4 +13,4 @@ sysinfo = { version = "0.40", default-features = false, features = ["system", "d
 thiserror = "2"
 base64 = "0.23"
 ureq = { version = "3", features = ["json"] }
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Power", "Win32_System_Registry", "Foundation", "Media_Control", "Storage_Streams"] }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Power", "Win32_System_Registry", "Foundation", "Media_Control", "Storage_Streams", "Win32_System_Com", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }

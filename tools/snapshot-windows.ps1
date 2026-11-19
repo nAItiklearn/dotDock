@@ -14,6 +14,12 @@ if ((Test-Path $path) -and -not $Force) {
     Write-Output "Snapshot already exists, keeping it: $path"
     exit 0
 }
+if (Test-Path $path) {
+    # -Force never destroys the true original: keep it as a timestamped backup.
+    $backup = "$path.$(Get-Date -Format 'yyyyMMdd-HHmmss').bak"
+    Copy-Item -LiteralPath $path -Destination $backup
+    Write-Output "Previous snapshot kept as $backup"
+}
 
 $wallpaperCopy = $null
 $wallpaper = Get-RegValue $DesktopKey 'WallPaper'

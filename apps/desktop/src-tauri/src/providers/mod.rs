@@ -16,10 +16,8 @@ pub const EVENT_ISSUE: &str = "provider://issue";
 const FAST_TICK: Duration = Duration::from_secs(1);
 /// Disk usage changes slowly and enumerating volumes is comparatively costly.
 const DISK_EVERY: Duration = Duration::from_secs(30);
-/// Media state is sampled at this rate but only sent when it changes...
+/// Media state is sampled at this rate but only sent when it changes or the clock drifts (a seek).
 const MEDIA_TICK: Duration = Duration::from_millis(500);
-/// ...plus a periodic resync so the UI's extrapolated progress never drifts far.
-const MEDIA_RESYNC: Duration = Duration::from_secs(5);
 /// Open-Meteo updates its model hourly; 30 min keeps the widget fresh without waste.
 const WEATHER_REFRESH: Duration = Duration::from_secs(30 * 60);
 /// After a failed fetch (offline, timeout), retry sooner than the normal refresh.
@@ -127,27 +125,25 @@ fn run_loop(app: &AppHandle) {
 
 fn media_loop(app: &AppHandle) {
     let mut provider = MediaProvider::new();
-    let mut last: Option<media::MediaData> = None;
-    let mut last_sent = Instant::now();
+    let mut last_sent: Option<media::MediaData> = None;
     let mut idle_reported = false;
     loop {
         let started = Instant::now();
         match provider.read() {
             media::Reading::Playing(data) => {
-                let changed = last.as_ref().is_none_or(|l| !l.same_track_state(&data));
-                if changed || last_sent.elapsed() >= MEDIA_RESYNC {
+                let changed = last_sent.as_ref().is_none_or(|l| !l.same_track_state(&data) || l.clock_drifted(&data));
+                if changed {
                     emit(app, "media", data.clone());
-                    last_sent = Instant::now();
+                    last_sent = Some(data);
                 }
-                last = Some(data);
                 idle_reported = false;
             }
             media::Reading::Nothing if !idle_reported => {
                 issue(app, "media", "idle");
-                last = None;
+                last_sent = None;
                 idle_reported = true;
             }
-            media::Reading::Nothing => {}
+            media::Reading::Nothing | media::Reading::Transient => {}
             media::Reading::Unavailable => {
                 issue(app, "media", "unsupported");
                 // The session manager never appears later in a running process; stop polling.

@@ -17,6 +17,7 @@ fn main() {
             d.can_seek
         ),
         Reading::Nothing => println!("no active media session"),
+        Reading::Transient => println!("session present, read failed this time (retry)"),
         Reading::Unavailable => println!("media session manager unavailable"),
     }
 }

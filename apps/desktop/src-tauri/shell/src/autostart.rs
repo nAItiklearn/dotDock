@@ -1,8 +1,9 @@
 //! Launch at sign-in, as early as Windows allows, and fully reversible.
 //!
 //! Primary: a per-user logon task (fires at sign-in, independent of Explorer's
-//! startup-app delay) at normal priority. Fallback: the HKCU Run key.
-//! Both paths also set Explorer's StartupDelayInMSec to 0.
+//! startup-app delay) at normal priority. Fallback: the HKCU Run key, which Explorer
+//! delays; only on that path is StartupDelayInMSec set to 0. Setting it alongside the
+//! task would only speed up every other Run-key app, which then competes with us.
 
 use crate::{registry, snapshot, AUTOSTART_NAME, RUN_KEY, SERIALIZE_KEY, STARTUP_DELAY_VALUE};
 use std::os::windows::process::CommandExt;
@@ -27,6 +28,8 @@ pub enum AutostartError {
     Registry(#[from] registry::RegistryError),
     #[error("cannot locate the running executable: {0}")]
     Exe(std::io::Error),
+    #[error("the logon task exists but could not be removed")]
+    TaskStillPresent,
 }
 
 fn xml_escape(s: &str) -> String {
@@ -81,6 +84,10 @@ fn schtasks(args: &[&str]) -> bool {
         .unwrap_or(false)
 }
 
+fn task_exists() -> bool {
+    schtasks(&["/Query", "/TN", AUTOSTART_NAME])
+}
+
 fn register_task(exe: &str) -> bool {
     let (Some(user), Some(dir)) = (current_user(), crate::app_data_dir()) else { return false };
     // schtasks wants the XML as UTF-16 LE with a BOM.
@@ -96,32 +103,47 @@ fn register_task(exe: &str) -> bool {
     ok
 }
 
-/// Turns launch-at-sign-in on. Snapshots the original state first.
+/// Restores StartupDelayInMSec to its snapshotted original.
+fn restore_startup_delay(snapshot: &snapshot::Snapshot) -> Result<(), AutostartError> {
+    match snapshot.startup_delay_in_m_sec {
+        Some(original) => registry::set_dword(SERIALIZE_KEY, STARTUP_DELAY_VALUE, original)?,
+        None => registry::delete_value(SERIALIZE_KEY, STARTUP_DELAY_VALUE)?,
+    }
+    Ok(())
+}
+
+/// Turns launch-at-sign-in on. Idempotent, and re-registers the current exe path, so a moved
+/// or updated install is picked up. Snapshots the original state first.
 pub fn enable() -> Result<Method, AutostartError> {
-    snapshot::ensure()?;
+    snapshot::ensure(task_exists())?;
     let exe = std::env::current_exe().map_err(AutostartError::Exe)?;
     let exe = exe.to_string_lossy();
-    registry::set_dword(SERIALIZE_KEY, STARTUP_DELAY_VALUE, 0)?;
     if register_task(&exe) {
-        // Never both: one launch path keeps sign-in clean.
+        // Exactly one launch path, and no delay tweak that would only help other apps.
         registry::delete_value(RUN_KEY, AUTOSTART_NAME)?;
+        if let Some(s) = snapshot::load()? {
+            restore_startup_delay(&s)?;
+        }
         return Ok(Method::LogonTask);
     }
     registry::set_string(RUN_KEY, AUTOSTART_NAME, &format!("\"{exe}\" {AUTOSTART_ARG}"))?;
+    // Run-key entries wait for Explorer's startup delay; this path needs it removed.
+    registry::set_dword(SERIALIZE_KEY, STARTUP_DELAY_VALUE, 0)?;
     Ok(Method::RunKey)
 }
 
 /// Turns launch-at-sign-in off and restores the original startup delay from the snapshot.
 pub fn disable() -> Result<(), AutostartError> {
-    // Deleting a task that does not exist fails harmlessly.
-    schtasks(&["/Delete", "/TN", AUTOSTART_NAME, "/F"]);
-    registry::delete_value(RUN_KEY, AUTOSTART_NAME)?;
-    // No snapshot means we never changed the delay, so there is nothing to restore.
-    if let Some(s) = snapshot::load() {
-        match s.startup_delay_in_m_sec {
-            Some(original) => registry::set_dword(SERIALIZE_KEY, STARTUP_DELAY_VALUE, original)?,
-            None => registry::delete_value(SERIALIZE_KEY, STARTUP_DELAY_VALUE)?,
+    if task_exists() {
+        schtasks(&["/Delete", "/TN", AUTOSTART_NAME, "/F"]);
+        if task_exists() {
+            return Err(AutostartError::TaskStillPresent);
         }
+    }
+    registry::delete_value(RUN_KEY, AUTOSTART_NAME)?;
+    // No snapshot means we never changed the delay. A corrupt one is an error, not a skip.
+    if let Some(s) = snapshot::load()? {
+        restore_startup_delay(&s)?;
     }
     Ok(())
 }
