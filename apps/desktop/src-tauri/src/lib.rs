@@ -167,6 +167,8 @@ fn create_overlay(app: &AppHandle) -> tauri::Result<WebviewWindow> {
             "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required",
         )
         .always_on_bottom(true)
+        // Lets a photo dragged from Explorer reach the page (the photo widget's drop zone).
+        .disable_drag_drop_handler()
         .build()?;
     desktop_host::configure(Hwnd::from_raw(window.hwnd()?.0));
     Ok(window)

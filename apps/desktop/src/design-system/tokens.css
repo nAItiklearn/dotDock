@@ -73,6 +73,15 @@
   --drop-shadow: rgb(0 0 0 / 0.28);
   --press: 0.94;
   --hover-edge: 0.4;
+
+  /* Controls laid over a user's photo: a dark glass pill that reads on any image, in any theme. */
+  --media-scrim: rgb(0 0 0 / 0.42);
+  --media-ink: #f3f1ee;
+  --media-blur: 12px;
+  /* Black-and-white photos get a touch of contrast back after the colour is taken out. */
+  --mono-contrast: 1.06;
+  /* Photo mat: warm paper, the same in every theme. */
+  --photo-mat: #efede9;
 }
 
 @media (prefers-reduced-motion: reduce) {

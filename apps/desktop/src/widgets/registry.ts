@@ -7,6 +7,7 @@ import type { WidgetDefinition } from "./definition";
 import { funFactWidget } from "./FunFactWidget";
 import { musicWidget } from "./MusicWidget";
 import { notesWidget } from "./NotesWidget";
+import { photoWidget } from "./photo/PhotoWidget";
 import { quoteWidget } from "./QuoteWidget";
 import type { SizeId, SizeSpec } from "./sizes";
 import { systemWidget } from "./SystemWidgets";
@@ -30,6 +31,7 @@ export const WIDGETS: readonly AnyWidgetDefinition[] = [
   batteryWidget,
   systemWidget,
   musicWidget,
+  photoWidget,
   quoteWidget,
   funFactWidget,
   notesWidget,

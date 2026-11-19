@@ -3,7 +3,7 @@ import { fieldsForSize, normalizeConfig, schemaDefaults, type ConfigSchema } fro
 import { LEGACY_KINDS, WIDGETS, defaultSize, getWidget, resolveConfig, resolveSize } from "./registry";
 
 describe("registry", () => {
-  it("has the thirteen widgets of the spec, each with a unique id", () => {
+  it("has the thirteen widgets of the spec plus the photo widget, each with a unique id", () => {
     const ids = WIDGETS.map((w) => w.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toEqual([
@@ -14,6 +14,7 @@ describe("registry", () => {
       "battery",
       "system",
       "music",
+      "photo",
       "quote",
       "fun-fact",
       "notes",

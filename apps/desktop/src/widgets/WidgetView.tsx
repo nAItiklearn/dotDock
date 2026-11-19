@@ -49,10 +49,12 @@ export interface WidgetViewProps {
   readonly size?: string;
   /** Stored config; anything invalid is replaced by the widget's defaults. */
   readonly config?: unknown;
+  /** The placement id, passed through to widgets that keep data per copy. */
+  readonly instanceId?: string | undefined;
 }
 
 /** Renders any registered widget at a size with a validated config, isolated from failures. */
-export function WidgetView({ id, size, config }: WidgetViewProps) {
+export function WidgetView({ id, size, config, instanceId }: WidgetViewProps) {
   const def = getWidget(id);
   const spec = def ? resolveSize(def, size) : null;
   const resolved = useMemo(() => (def ? resolveConfig(def, config) : null), [def, config]);
@@ -66,7 +68,7 @@ export function WidgetView({ id, size, config }: WidgetViewProps) {
   const Body = def.component;
   return (
     <WidgetBoundary def={def} w={spec.w} h={spec.h} resetKey={`${def.id}:${spec.id}:${JSON.stringify(resolved)}`}>
-      <Body size={spec.id} config={resolved} />
+      <Body size={spec.id} config={resolved} instanceId={instanceId} />
     </WidgetBoundary>
   );
 }

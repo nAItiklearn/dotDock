@@ -8,14 +8,14 @@ import { useEditUi } from "./editUi";
 
 const SlotChrome = lazy(() => import("./edit/SlotChrome").then((m) => ({ default: m.SlotChrome })));
 
-type WidgetContentProps = Pick<Placement, "widget" | "size" | "config">;
+type WidgetContentProps = Pick<Placement, "id" | "widget" | "size" | "config">;
 
 /**
  * Re-renders only when the widget's own identity, size or config change, never because it moved.
  * `WidgetView` validates the stored config against the widget's schema and isolates a crashing widget.
  */
-const WidgetContent = memo(function WidgetContent({ widget, size, config }: WidgetContentProps) {
-  return <WidgetView id={widget} size={size} config={config} />;
+const WidgetContent = memo(function WidgetContent({ id, widget, size, config }: WidgetContentProps) {
+  return <WidgetView id={widget} size={size} config={config} instanceId={id} />;
 });
 
 export interface WidgetSlotProps {
@@ -64,7 +64,7 @@ export const WidgetSlot = memo(function WidgetSlot({ placement, metrics, editing
     >
       <div className="overlay__content" aria-hidden={editing ? true : undefined}>
         {meta ? (
-          <WidgetContent widget={live.widget} size={live.size} config={live.config} />
+          <WidgetContent id={placement.id} widget={live.widget} size={live.size} config={live.config} />
         ) : (
           <div className="overlay__missing">
             <span className="caps">Unavailable</span>

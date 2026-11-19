@@ -1,0 +1,189 @@
+/*
+ * Photo widget. The image is laid out at its final pixel size (see frame.ts), so nothing here
+ * scales it: filters and blending change colour only, never resolution.
+ */
+.photo {
+  --photo-inset: 0px;
+  --photo-radius: var(--radius-lg);
+}
+/* A mat is a pale paper border in every theme, like a print mounted for a frame. */
+.photo--mat {
+  --photo-inset: var(--space-3);
+  --photo-radius: var(--radius-sm);
+  background: var(--photo-mat);
+  border-color: transparent;
+}
+
+.photo__frame {
+  position: absolute;
+  inset: var(--photo-inset);
+  overflow: hidden;
+  border-radius: calc(var(--photo-radius) - var(--hairline));
+  outline: none;
+  isolation: isolate;
+}
+.photo--mat.has-photo .photo__frame {
+  background: var(--surface-2);
+}
+
+.photo__img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  display: block;
+  image-rendering: auto;
+  animation: photo-in var(--dur-slow) var(--ease-out);
+  will-change: transform;
+}
+@keyframes photo-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Black and white, and the duotone: shadows stay ink, highlights take the theme's accent. */
+.photo--mono .photo__img,
+.photo--duotone .photo__img {
+  filter: grayscale(1) contrast(var(--mono-contrast));
+}
+.photo--duotone.has-photo .photo__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* Adjusting: the frame takes the pointer, and an accent ring says so. */
+.photo.is-adjusting .photo__frame {
+  cursor: grab;
+  touch-action: none;
+  box-shadow: inset 0 0 0 var(--focus-ring) var(--accent);
+}
+.photo.is-adjusting .photo__frame:active {
+  cursor: grabbing;
+}
+.photo.is-adjusting .photo__img {
+  will-change: transform, width, height;
+}
+
+.photo.is-dropping .photo__frame {
+  box-shadow: inset 0 0 0 var(--focus-ring) var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* Controls fade in on hover or keyboard focus and sit on a dark pill so they read on any photo. */
+.photo__controls {
+  position: absolute;
+  right: calc(var(--photo-inset) + var(--space-2));
+  bottom: calc(var(--photo-inset) + var(--space-2));
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--media-scrim);
+  color: var(--media-ink);
+  -webkit-backdrop-filter: blur(var(--media-blur));
+  backdrop-filter: blur(var(--media-blur));
+  opacity: 0;
+  transform: translateY(var(--space-1));
+  transition:
+    opacity var(--dur-med) var(--ease-out),
+    transform var(--dur-med) var(--ease-out);
+  pointer-events: none;
+}
+.photo:hover .photo__controls,
+.photo:focus-within .photo__controls,
+.photo.is-adjusting .photo__controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.photo__controls .icon-button--plain {
+  background: transparent;
+  color: inherit;
+}
+.photo__hint {
+  padding: 0 var(--space-2);
+  color: inherit;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.photo__problem {
+  position: absolute;
+  left: calc(var(--photo-inset) + var(--space-3));
+  bottom: calc(var(--photo-inset) + var(--space-3));
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--media-scrim);
+  color: var(--media-ink);
+}
+
+.photo-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--text-dim);
+}
+.photo-empty__icon {
+  height: var(--control-lg);
+  width: auto;
+  opacity: 0.7;
+}
+.photo-empty__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.photo-empty__text {
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--text);
+}
+.photo-empty__action {
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.photo-empty__action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+@media (hover: hover) {
+  .photo-empty__action:not(:disabled):hover {
+    transform: scale(1.05);
+  }
+}
+.photo-empty__action:active {
+  transform: scale(var(--press));
+}
+.photo.is-dropping .photo-empty {
+  color: var(--accent);
+}
+
+.photo__input {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo__img {
+    animation: none;
+  }
+}

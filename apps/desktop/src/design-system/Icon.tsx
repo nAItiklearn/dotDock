@@ -52,6 +52,14 @@ const SHAPES = {
     </>
   ),
   bolt: <path d="M13 3.5 6 14h5.5L10.5 20.5 18 10h-5.5Z" fill="currentColor" />,
+  image: (
+    <>
+      <rect x="4" y="5.5" width="16" height="13" rx="2.5" />
+      <circle cx="15.5" cy="9.5" r="1.4" fill="currentColor" stroke="none" />
+      <path d="M4.5 16.5l5-5 4.5 4.5 2-2 3.5 3.5" />
+    </>
+  ),
+  move: <path d="M12 4v16M4 12h16M12 4l-2.5 2.5M12 4l2.5 2.5M12 20l-2.5-2.5M12 20l2.5-2.5M4 12l2.5-2.5M4 12l2.5 2.5M20 12l-2.5-2.5M20 12l-2.5 2.5" />,
 } as const satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof SHAPES;

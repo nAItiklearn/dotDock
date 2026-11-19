@@ -8,6 +8,11 @@ export type WidgetCategory = "time" | "system" | "media" | "productivity" | "inf
 export interface WidgetProps<C> {
   readonly size: SizeId;
   readonly config: C;
+  /**
+   * The placement's id on the desktop, for widgets that keep data per copy (each photo widget
+   * shows its own photo). Absent in previews and the gallery, which show the widget's empty state.
+   */
+  readonly instanceId?: string | undefined;
 }
 
 /**
