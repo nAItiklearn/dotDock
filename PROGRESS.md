@@ -45,6 +45,11 @@
 ## v2 plan (next)
 - Dock and launcher replacing the taskbar, with an App Library that groups apps by category (productivity, social, coding, AI, and more). Study the owner's dock videos and images, launchmeapp.com and cooldock.app first; build originals only.
 
+### D0: taskbar restore guarantees (safety track)
+- Marker file, `dock_guard` (the only path that hides the taskbar), `dotdock-sentinel` watchdog, recovery at start and in the panic hook: D-017, `docs/DOCK_SPEC.md` section 3.
+- Real hard-kill test against the real taskbar: `tools/test-taskbar-restore.cmd` (build with `-Build -Toolchain stable-x86_64-pc-windows-gnu`); results in `docs/QA/DOCK_D0_RESTORE.md`.
+- Nothing in the app hides the taskbar yet: that is D4, behind `replaceTaskbar`.
+
 ## Machine notes that affect boot time
 - 22 apps autostart from `HKCU\Run` and compete at sign-in.
 - Wallpaper Engine autostarts and paints over the Windows wallpaper; the overlay must coexist.
