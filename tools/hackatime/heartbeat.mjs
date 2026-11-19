@@ -8,7 +8,7 @@
  * Reads the hook JSON from stdin. Always exits 0 so it can never block Claude.
  */
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 
@@ -16,6 +16,8 @@ const PROJECT = "dotDock";
 const PLUGIN = "claude-code/1 dotdock-heartbeat/1";
 const WRITE_TOOLS = new Set(["Edit", "Write", "MultiEdit", "NotebookEdit"]);
 const FILE_TOOLS = new Set([...WRITE_TOOLS, "Read"]);
+/** The CLI normally finishes in about a second; past this it is stuck and is stopped. */
+const CLI_TIMEOUT_MS = 20_000;
 
 function cliPath() {
   const dir = join(homedir(), ".wakatime");
@@ -62,12 +64,35 @@ async function main() {
   ];
   if (WRITE_TOOLS.has(event.tool_name)) args.push("--write");
 
-  // NOT detached: on Windows a detached child gets its own console window and Node ignores
-  // windowsHide for it, which flashed a terminal on every tool call. A non-detached child
-  // shares our hidden console and still outlives us after unref().
-  const child = spawn(cli, args, { stdio: "ignore", windowsHide: true });
-  child.on("error", () => undefined);
-  child.unref();
+  // Wait for the CLI instead of firing and forgetting: the hook's process tree is torn down when
+  // the hook exits, which killed an unref'd child before it could send. The hook is registered as
+  // async, so Claude Code never waits for it. Not detached, so no console window flashes.
+  const code = await new Promise((done) => {
+    const child = spawn(cli, args, { stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
+    let stderr = "";
+    child.stderr.on("data", (d) => (stderr += d));
+    const timer = setTimeout(() => child.kill(), CLI_TIMEOUT_MS);
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      done(`spawn failed: ${err.message}`);
+    });
+    child.on("close", (exit) => {
+      clearTimeout(timer);
+      done(stderr.trim() ? `${exit} ${stderr.trim().slice(0, 200)}` : String(exit));
+    });
+  });
+  trace(`${event.tool_name} exit=${code}`);
+}
+
+/** One line per heartbeat attempt in the app data folder, so a silent failure can be seen. Never the key. */
+function trace(line) {
+  try {
+    const dir = join(process.env.LOCALAPPDATA ?? homedir(), "dockDock");
+    mkdirSync(dir, { recursive: true });
+    appendFileSync(join(dir, "hackatime-hook.log"), `${new Date().toISOString()} ${line}\n`);
+  } catch {
+    // Tracing must never break the hook.
+  }
 }
 
 main().catch(() => undefined).finally(() => process.exit(0));
