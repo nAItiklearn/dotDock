@@ -57,3 +57,13 @@ Each entry: decision, alternatives, why, how to reverse.
 - **Decision:** Every start is recorded; a clean exit or 5 minutes of uptime clears the count. Three unclean starts within 5 minutes restore stock Windows and disable autostart. Holding Shift at launch is safe mode (no desktop changes).
 - **Why:** spec 1.2. Clean exits must never trip it, or ordinary restarts would undo the user's setup.
 - **Note for testing:** killing the app three times quickly (`taskkill /F`) trips the guard by design.
+
+## D-013 Widget design decisions (from the widgets branch)
+- Dot-matrix numerals are Latin digits (the glyph sets hold 0-9 and a few symbols); all other text is locale-formatted with `Intl`.
+- Controls use crisp vector icons; dot pictograms are only used large, because they blur below about 28 px.
+- Notes, to-do and timer persist with zustand `persist` (schema-versioned) and sync across overlay windows via the `storage` event. No extra dependency.
+- Deleting a note needs two presses within 2.5 s (undo-free safety).
+- The world-clock day/night dot is computed from the sun's position for a bundled list of 43 cities.
+- The timer chime is synthesised with Web Audio, so there is no audio asset to license.
+- Quotes are public domain (authors died before 1930), with the translator named.
+- Open: the weather pictograms score 3.5/5 on the rubric and must be redrawn before G1.
