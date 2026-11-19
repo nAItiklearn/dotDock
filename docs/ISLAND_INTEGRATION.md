@@ -38,7 +38,7 @@ Create it next to the overlay in `setup`. It is a separate window with its own l
 | --- | --- | --- |
 | label | `island` | capability and event targeting |
 | url | `WebviewUrl::App("island.html".into())` | Vite entry added to `rollupOptions.input` |
-| size | 520 x 208 logical px (`WINDOW_SIZE` in `protocol.ts`) | room for the island at scale 1.4 plus its shadow |
+| size | 520 x 240 logical px (`WINDOW_SIZE` in `protocol.ts`) | room for the island at scale 1.4, a 64 px top offset and its shadow |
 | position | top-centre of the monitor: `x = monitor.x + (monitor.w - window_w_physical) / 2`, `y = monitor.y` | the island body offsets itself by the `topOffset` setting inside the window |
 | flags | `transparent(true)`, `decorations(false)`, `shadow(false)`, `resizable(false)`, `skip_taskbar(true)`, `focused(false)`, `always_on_top(true)`, `visible(false)` | a floating, never-focused overlay |
 | extended styles | `WS_EX_NOACTIVATE \| WS_EX_TOOLWINDOW` | clicking the island must not take focus from the terminal; reuse the helper in `desktop_host` but do not send it to the bottom |
@@ -82,7 +82,7 @@ if let Some(dirs) = ClaudeDirs::from_env() {
 
 ### Commands the window calls
 
-All return plain serialisable values; errors are `Result<_, String>` (use `err.to_string()`).
+All return plain serialisable values; errors are `Result<_, String>` (use `err.to_string()`). The JavaScript argument keys are the Rust parameter names, so they must be exactly `id`, `regions` and `settings` as in the table. `island_connection` is available for a Settings window that opens before the island does; the island window itself gets the status from `island_state` and from the results of connect and disconnect.
 
 | Command | Arguments | Returns | Implementation |
 | --- | --- | --- | --- |
@@ -136,7 +136,7 @@ The UI reports two things through `island_set_regions`: `interactive` (where it 
 ## 5. Tray and Settings
 
 - Tray: one check item "Agent Island" that flips `settings.enabled` through `service.set_settings`. When `enabled` is false the service stays quiet (no chime, no toast) and the UI draws nothing.
-- Settings window: embed `IslandSettingsPanel` from `src/island/settings/`. It talks to the same commands, so every control is real: idle mode, size, offset, icon style, what to show, move-aside, follow cursor, Codex on/off, notification and sound with volume, how long a finished task stays. It also holds Connect / Disconnect with the status text and the path of the file it edits.
+- Settings window: embed `IslandSettingsPanel` from `src/island/settings/IslandSettingsPanel.tsx` (it imports its own CSS and connects on mount; the host window must import `design-system/tokens.css` and call `applyTheme`). It talks to the same commands, so every control is real: idle mode, size, offset, icon style, what to show, move-aside, follow cursor, Codex on/off, notification and sound with volume, how long a finished task stays. It also holds Connect / Disconnect with the status text and the path of the file it edits.
 - Settings persist in `%LOCALAPPDATA%\dev.dotdock.desktop\island-settings.json` (schema 1, values clamped on load, a corrupt file is kept as `.bak` and defaults are used).
 
 ## 6. Where things run
@@ -200,6 +200,8 @@ Claude Code writes the transcript asynchronously, so `Stop` carries `last_assist
 ## 11. Verification status
 
 - `cargo test -p dotdock-island --features watch`: unit and integration tests with synthetic fixtures (no real transcripts are committed). Connect/Disconnect run only against temp folders.
+- Frontend: `pnpm typecheck`, `pnpm test` (127 tests: icon frames, labels, selection and pinning, formatting, geometry, regions, store) and `pnpm build` pass. Every state, the tiny and hidden idle modes, the multi-session pager, the three themes, the three icon styles, scale 0.8 to 1.4, long strings, move-aside and reduced motion were checked in a plain browser through the dev-only fixture panel, which is absent from the production bundle (searched `dist` for its strings: none).
+- The transcript readers were run over a real 17 MB transcript (read only): token total and context size match an independent computation exactly, and a 300 KB incremental read takes about 4 ms.
 - The hook was run by the real Claude Code 2.1.316 against a temp config dir (`CLAUDE_CONFIG_DIR`): a blocked `UserPromptSubmit` (no model request) fired the exec-form entry, with and without `async`, and wrote a correct state file.
 - Not verified here: a live island showing a real working session (needs the core wiring above), the toast path, Windows Terminal tab selection, Codex phases that this laptop's logs do not contain (`turn_aborted`, approval requests and `error` are implemented from the Codex protocol and covered by synthetic tests only).
 

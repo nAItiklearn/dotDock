@@ -1,0 +1,277 @@
+/*
+ * Island window. Sizes come from the custom properties Island.tsx derives from geometry.ts, so this file
+ * never repeats a pixel value of the layout. --k is the user's scale.
+ */
+.island-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--text);
+}
+
+.island-slide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  will-change: transform;
+}
+
+.island {
+  position: relative;
+  flex: none;
+  pointer-events: auto;
+  cursor: default;
+  outline: none;
+}
+.island--off,
+.island--hidden,
+.island--tiny,
+.island--aside {
+  pointer-events: none;
+}
+.island--compact:focus-visible,
+.island--island:focus-visible {
+  outline: calc(2px * var(--k)) solid var(--accent);
+  outline-offset: calc(3px * var(--k));
+  border-radius: var(--radius-md);
+}
+
+/* The plate is laid out at its final size and squashed by transforms while it grows (see Plate.tsx). */
+.island__plate {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform-origin: 50% 0;
+  background: var(--surface);
+  will-change: transform;
+}
+.island__texture {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--dot-off) 60%, transparent) 0.85px, transparent 1.15px);
+  background-size: calc(6px * var(--k)) calc(6px * var(--k));
+  background-position: center;
+}
+
+/* A 12 px pill has no room for the lattice texture. */
+.island--tiny .island__texture,
+.island--hidden .island__texture {
+  visibility: hidden;
+}
+
+/* Idle: a dim dot, a breathing accent dot, a dim dot. */
+.island__standby {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--tiny-dot) * 1.7);
+  pointer-events: none;
+}
+.island__standby i {
+  width: var(--tiny-dot);
+  height: var(--tiny-dot);
+  border-radius: 50%;
+  background: var(--text-dim);
+  opacity: 0.45;
+}
+.island__standby .island__standby-lit {
+  background: var(--accent);
+  opacity: 1;
+  animation: standby-breathe 3.2s ease-in-out infinite;
+}
+@keyframes standby-breathe {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island__standby .island__standby-lit {
+    animation: none;
+  }
+}
+
+.island__active {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--active-w);
+  height: var(--active-h);
+  margin-left: calc(var(--active-w) / -2);
+  pointer-events: none;
+}
+
+.content {
+  --tone: var(--text);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--row-gap);
+  padding: var(--pad);
+}
+.content[data-tone="accent"] {
+  --tone: var(--accent);
+}
+.content[data-tone="success"] {
+  --tone: var(--success);
+}
+.content[data-tone="danger"] {
+  --tone: var(--danger);
+}
+.content[data-tone="dim"],
+.content[data-flash="true"] {
+  --tone: var(--text-dim);
+}
+
+.content__head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pad) * 0.9);
+  height: var(--icon);
+}
+.content__head canvas {
+  display: block;
+  flex: none;
+}
+.content__word {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-dot);
+  font-size: calc(var(--text-lg) * var(--k));
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.content__detail {
+  position: relative;
+  height: var(--detail-row);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-sm) * var(--k));
+  line-height: var(--detail-row);
+  color: var(--text-dim);
+}
+.content__line {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pad) * 0.9);
+  height: var(--foot-row);
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-xs) * var(--k));
+  color: var(--text-dim);
+}
+.foot__tokens {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(4px * var(--k));
+  min-width: calc(5ch + 12px * var(--k));
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.foot__arrow {
+  width: calc(8px * var(--k));
+  height: calc(8px * var(--k));
+  color: var(--accent);
+}
+.foot__elapsed {
+  display: inline-flex;
+  align-items: center;
+  min-width: calc(38px * var(--k));
+  height: var(--foot-row);
+  color: var(--text-dim);
+}
+.foot__elapsed svg {
+  display: block;
+}
+.foot__project {
+  display: inline-flex;
+  align-items: baseline;
+  gap: calc(6px * var(--k));
+  min-width: 0;
+  margin-left: auto;
+}
+.foot__agent {
+  flex: none;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.foot__name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+.pager__hit {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: calc(6px * var(--k)) calc(2.5px * var(--k));
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.pager__dot {
+  --pager-tone: var(--text);
+  display: block;
+  width: calc(5px * var(--k));
+  height: calc(5px * var(--k));
+  border-radius: var(--radius-pill);
+  background: var(--pager-tone);
+  opacity: 0.55;
+}
+.pager__dot[data-tone="accent"] {
+  --pager-tone: var(--accent);
+}
+.pager__dot[data-tone="success"] {
+  --pager-tone: var(--success);
+}
+.pager__dot[data-tone="danger"] {
+  --pager-tone: var(--danger);
+}
+.pager__dot[data-tone="dim"] {
+  --pager-tone: var(--text-dim);
+}
+.pager__dot--active {
+  width: calc(14px * var(--k));
+  background: var(--accent);
+  opacity: 1;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

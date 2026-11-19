@@ -19,7 +19,7 @@ export default defineConfig({
     cssCodeSplit: true,
     modulePreload: { polyfill: false },
     rollupOptions: {
-      input: { overlay: resolve(here, "overlay.html") },
+      input: { overlay: resolve(here, "overlay.html"), island: resolve(here, "island.html") },
     },
   },
 });
