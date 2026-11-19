@@ -4,9 +4,12 @@
 
 pub mod autostart;
 pub mod boot_log;
+pub mod crash_guard;
 pub mod providers;
 mod registry;
+pub mod restore;
 pub mod snapshot;
+pub mod wallpaper;
 
 use std::path::PathBuf;
 

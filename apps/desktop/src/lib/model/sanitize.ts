@@ -181,14 +181,14 @@ function sanitizePlacement(raw: unknown, r: Repairs): Placement | null {
     r.note("placement", "not an object");
     return null;
   }
-  const kind = typeof raw["kind"] === "string" ? raw["kind"].trim().slice(0, 64) : "";
-  if (kind === "") {
-    r.note("placement", "missing widget kind");
+  const widget = typeof raw["widget"] === "string" ? raw["widget"].trim().slice(0, 64) : "";
+  if (widget === "") {
+    r.note("placement", "missing widget id");
     return null;
   }
   return {
-    id: textOr(raw["id"], 64, kind),
-    kind,
+    id: textOr(raw["id"], 64, widget),
+    widget,
     size: textOr(raw["size"], 32, "m"),
     x: intInRange(raw["x"], 0, MAX_COORDINATE, 0),
     y: intInRange(raw["y"], 0, MAX_COORDINATE, 0),

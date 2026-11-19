@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { GridMetrics } from "../../lib/layout/grid";
 import type { JsonValue } from "../../lib/model/json";
-import type { WidgetMeta } from "../../lib/model/types";
+import type { WidgetInfo } from "../../lib/model/types";
+import { fieldsForSize, normalizeConfig } from "../../widgets/configSchema";
 import { getApp } from "../../lib/state/app";
 import { useLayoutStore, useSettingsStore } from "../../lib/state/hooks";
 import { Button, IconButton, Segmented } from "../../lib/ui/controls";
 import { ConfigForm } from "../../lib/ui/ConfigForm";
-import { widgetCatalog } from "../catalog";
+import { sizesByArea, widgetCatalog } from "../catalog";
 import { announce, editUi, useEditUi, type DrawerTab } from "../editUi";
 import { WidgetPreview } from "../WidgetPreview";
 
@@ -18,10 +19,10 @@ const TABS: readonly { value: DrawerTab; label: string }[] = [
   { value: "selected", label: "Selected" },
 ];
 
-function GalleryCard({ meta, metrics }: { readonly meta: WidgetMeta; readonly metrics: GridMetrics }) {
-  const [sizeId, setSizeId] = useState(meta.defaultSize);
+function GalleryCard({ meta, metrics }: { readonly meta: WidgetInfo; readonly metrics: GridMetrics }) {
+  const [sizeId, setSizeId] = useState(meta.sizes[0]?.id ?? "m");
   const add = (): void => {
-    const result = getApp().layout.getState().addWidget(meta.kind, sizeId);
+    const result = getApp().layout.getState().addWidget(meta.id, sizeId);
     if (result.ok) announce(`${meta.name} added`);
   };
   return (
@@ -39,7 +40,7 @@ function GalleryCard({ meta, metrics }: { readonly meta: WidgetMeta; readonly me
             <Segmented
               label={`${meta.name} size`}
               value={sizeId}
-              options={meta.sizes.map((s) => ({ value: s.id, label: s.label }))}
+              options={sizesByArea(meta.sizes).map((s) => ({ value: s.id, label: s.name }))}
               onChange={setSizeId}
             />
           ) : (
@@ -58,7 +59,7 @@ function AddTab({ metrics }: { readonly metrics: GridMetrics }) {
   return (
     <ul className="gallery" aria-label="Widgets you can add">
       {widgetCatalog.list().map((meta) => (
-        <GalleryCard key={meta.kind} meta={meta} metrics={metrics} />
+        <GalleryCard key={meta.id} meta={meta} metrics={metrics} />
       ))}
     </ul>
   );
@@ -67,7 +68,7 @@ function AddTab({ metrics }: { readonly metrics: GridMetrics }) {
 function SelectedTab() {
   const layout = getApp().layout;
   const selected = useLayoutStore((s) => s.placements.find((p) => p.id === s.selectedId));
-  const meta = selected ? widgetCatalog.get(selected.kind) : undefined;
+  const meta = selected ? widgetCatalog.get(selected.widget) : undefined;
   if (!selected || !meta) {
     return (
       <div className="drawer__empty">
@@ -76,7 +77,9 @@ function SelectedTab() {
       </div>
     );
   }
-  const config = { ...meta.defaultConfig, ...selected.config };
+  const sizeId = (meta.sizes.find((s) => s.id === selected.size) ?? meta.sizes[0])?.id ?? "m";
+  const config = normalizeConfig(meta.settingsSchema, selected.config);
+  const fields = fieldsForSize(meta.settingsSchema, sizeId);
   return (
     <div className="selected">
       <div className="selected__head">
@@ -88,20 +91,21 @@ function SelectedTab() {
           <span className="ui-form__label">Size</span>
           <Segmented
             label="Size"
-            value={meta.sizes.some((s) => s.id === selected.size) ? selected.size : meta.defaultSize}
-            options={meta.sizes.map((s) => ({ value: s.id, label: s.label }))}
+            value={sizeId}
+            options={sizesByArea(meta.sizes).map((s) => ({ value: s.id, label: s.name }))}
             onChange={(next) => layout.getState().resizeTo(selected.id, next)}
           />
         </div>
       ) : null}
-      {meta.fields.length > 0 ? (
+      {fields.length > 0 ? (
         <ConfigForm
-          fields={meta.fields}
+          schema={meta.settingsSchema}
+          size={sizeId}
           config={config}
           onChange={(key: string, value: JsonValue) => layout.getState().patchConfig(selected.id, { [key]: value })}
         />
       ) : null}
-      {meta.sizes.length < 2 && meta.fields.length === 0 ? <p className="drawer__note">This widget has nothing to adjust.</p> : null}
+      {meta.sizes.length < 2 && fields.length === 0 ? <p className="drawer__note">This widget has nothing to adjust.</p> : null}
       <div className="selected__actions">
         <Button icon="duplicate" onClick={() => layout.getState().duplicate(selected.id)}>
           Duplicate

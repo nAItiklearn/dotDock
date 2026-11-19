@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { WidgetSize } from "../model/types";
+import type { SizeSpec } from "../../widgets/sizes";
 import { DRAG_THRESHOLD_PX, dragTarget, passedDragThreshold, sizesByProximity } from "./gesture";
 import type { GridMetrics } from "./grid";
 
@@ -25,10 +25,10 @@ describe("drag snapping", () => {
 });
 
 describe("resize snapping", () => {
-  const sizes: WidgetSize[] = [
-    { id: "s", label: "Small", w: 2, h: 1 },
-    { id: "m", label: "Medium", w: 6, h: 2 },
-    { id: "l", label: "Large", w: 9, h: 3 },
+  const sizes: SizeSpec[] = [
+    { id: "s", name: "Small", w: 2, h: 1 },
+    { id: "m", name: "Medium", w: 6, h: 2 },
+    { id: "l", name: "Large", w: 9, h: 3 },
   ];
 
   it("orders declared sizes by distance to the pointer's corner", () => {
@@ -39,7 +39,7 @@ describe("resize snapping", () => {
   });
 
   it("is stable for a single size", () => {
-    expect(sizesByProximity([sizes[0] as WidgetSize], 9999, 9999, M)).toHaveLength(1);
+    expect(sizesByProximity([sizes[0] as SizeSpec], 9999, 9999, M)).toHaveLength(1);
   });
 
   it("does not modify the declared list", () => {

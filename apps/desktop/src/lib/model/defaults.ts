@@ -53,37 +53,34 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shortcuts: DEFAULT_SHORTCUTS,
 };
 
-function p(
-  id: string,
-  kind: string,
-  size: string,
-  x: number,
-  y: number,
-  config: Placement["config"] = {},
-): Placement {
-  return { id, kind, size, x, y, config };
+function p(id: string, widget: string, size: string, x: number, y: number, config: Placement["config"] = {}): Placement {
+  return { id, widget, size, x, y, config };
 }
 
-const CLOCK_CONFIG = { matrixStyle: "blocks", hour24: true, showSeconds: false, blinkColon: false } as const;
-
-/** Placements of the built-in profiles, modelled on the reference desktop: clock top-left, widgets below. */
+/**
+ * Placements of the built-in profiles, by registry widget id and size. The Work layout is modelled on the
+ * reference desktop (a stacked clock top-left, cards beside it) and stays inside 12 columns by 6 rows,
+ * so it fits a 1280x720 screen without being rearranged. Config is empty wherever the defaults are wanted.
+ */
 const BUILTIN_PLACEMENTS: Readonly<Record<string, readonly Placement[]>> = {
   work: [
-    p("clock-1", "clock", "m", 0, 0, CLOCK_CONFIG),
-    p("battery-ring-1", "battery-ring", "m", 0, 2),
-    p("calendar-1", "calendar", "m", 2, 2),
-    p("date-circle-1", "date-circle", "m", 5, 2),
-    p("ram-1", "ram", "m", 0, 4),
-    p("disk-1", "disk", "m", 2, 4),
-    p("weather-1", "weather", "m", 4, 4),
-    p("battery-grid-1", "battery-grid", "m", 4, 5),
+    p("clock-1", "clock", "l", 0, 0),
+    p("calendar-1", "calendar", "m", 4, 0),
+    p("date-1", "date", "s", 7, 0),
+    p("battery-1", "battery", "m", 9, 0),
+    p("weather-1", "weather", "l", 4, 2),
+    p("system-1", "system", "m", 8, 2),
+    p("system-2", "system", "m", 10, 2, { metric: "disk" }),
+    p("todo-1", "todo", "m", 0, 4),
+    p("music-1", "music", "m", 4, 4),
   ],
   focus: [
-    p("clock-1", "clock", "m", 0, 0, CLOCK_CONFIG),
-    p("calendar-1", "calendar", "m", 0, 2),
-    p("battery-ring-1", "battery-ring", "m", 3, 2),
+    p("clock-1", "clock", "m", 0, 0),
+    p("timer-1", "timer", "m", 0, 2),
+    p("todo-1", "todo", "l", 4, 0),
+    p("music-1", "music", "s", 0, 4),
   ],
-  minimal: [p("clock-1", "clock", "s", 0, 0, { ...CLOCK_CONFIG, matrixStyle: "dots" })],
+  minimal: [p("clock-1", "clock", "m", 0, 0, { matrixStyle: "dots" })],
 };
 
 export function defaultLayoutDoc(profileId: string): LayoutDoc {

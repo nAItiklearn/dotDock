@@ -18,16 +18,16 @@ class NoRoom extends Error {}
 /** Adds a widget to one display of a profile without the overlay being involved. */
 export async function addWidgetToProfile(
   app: AppContext,
-  options: { profileId: string; monitorId: MonitorId; isPrimary: boolean; kind: string; sizeId: string | undefined; metrics: GridMetrics },
+  options: { profileId: string; monitorId: MonitorId; isPrimary: boolean; widget: string; sizeId: string | undefined; metrics: GridMetrics },
 ): Promise<AddOutcome> {
   const collision = app.settings.getState().settings.layout.collision;
   const ctx: LayoutContext = { bounds: guessBounds(options.metrics), collision, catalog: app.catalog };
-  if (!app.catalog.get(options.kind)) return { ok: false, reason: "unknown-widget" };
+  if (!app.catalog.get(options.widget)) return { ok: false, reason: "unknown-widget" };
   let placementId = "";
   try {
     const doc = await app.repo.update(options.profileId, (current) => {
       const existing = normalizePlacements(monitorLayoutOf(current, options.monitorId, options.isPrimary).placements, ctx);
-      const added = addWidget(existing, options.kind, options.sizeId, ctx);
+      const added = addWidget(existing, options.widget, options.sizeId, ctx);
       if (!added) throw new NoRoom();
       placementId = added.id;
       return { ...current, monitors: { ...current.monitors, [options.monitorId]: { placements: added.placements } } };

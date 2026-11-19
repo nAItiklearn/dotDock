@@ -43,3 +43,27 @@ Each entry: decision, alternatives, why, how to reverse.
 ## D-008 Show the window on DOM commit, not on animation frames
 - **Decision:** The UI calls `overlay_ready` right after React commits (fonts loaded first). The core also shows the window after a 3 s fallback.
 - **Why:** a hidden WebView2 window receives no `requestAnimationFrame` callbacks, so waiting for frames before showing deadlocks until the fallback (measured: shown at 4.1 s via fallback).
+
+## D-010 One guard thread owns the overlay's Win32 state
+- **Decision:** `desktop_host::spawn_guard` toggles only `WS_EX_TRANSPARENT` for click-through (`WS_EX_LAYERED` stays set), re-asserts `WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE` and bottom-most z-order every 500 ms, and re-fits the window to the primary monitor on display or DPI changes. The window is shown with `SW_SHOWNOACTIVATE`.
+- **Why:** QA found (confirmed in tao's source) that the windowing library rewrites `GWL_EXSTYLE` from its own model on every `set_ignore_cursor_events`, dropping our tool-window bits, so a click could raise the full-screen overlay over the user's apps and it showed in Alt+Tab.
+- **Reverse:** return to `set_ignore_cursor_events` once tao preserves foreign extended styles.
+
+## D-011 StartupDelayInMSec only on the Run-key fallback
+- **Decision:** With the logon task (the normal path) the startup delay is left at its original value.
+- **Why:** the delay only applies to Run-key apps. Zeroing it with the task would only make the owner's other 22 startup apps launch sooner and compete with us at sign-in.
+
+## D-012 Crash-loop guard counts unclean starts only
+- **Decision:** Every start is recorded; a clean exit or 5 minutes of uptime clears the count. Three unclean starts within 5 minutes restore stock Windows and disable autostart. Holding Shift at launch is safe mode (no desktop changes).
+- **Why:** spec 1.2. Clean exits must never trip it, or ordinary restarts would undo the user's setup.
+- **Note for testing:** killing the app three times quickly (`taskkill /F`) trips the guard by design.
+
+## D-013 Widget design decisions (from the widgets branch)
+- Dot-matrix numerals are Latin digits (the glyph sets hold 0-9 and a few symbols); all other text is locale-formatted with `Intl`.
+- Controls use crisp vector icons; dot pictograms are only used large, because they blur below about 28 px.
+- Notes, to-do and timer persist with zustand `persist` (schema-versioned) and sync across overlay windows via the `storage` event. No extra dependency.
+- Deleting a note needs two presses within 2.5 s (undo-free safety).
+- The world-clock day/night dot is computed from the sun's position for a bundled list of 43 cities.
+- The timer chime is synthesised with Web Audio, so there is no audio asset to license.
+- Quotes are public domain (authors died before 1930), with the translator named.
+- Open: the weather pictograms score 3.5/5 on the rubric and must be redrawn before G1.

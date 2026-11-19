@@ -1,12 +1,12 @@
 import type { CSSProperties } from "react";
 import { spanPx, type GridMetrics } from "../lib/layout/grid";
 import type { JsonObject } from "../lib/model/json";
-import type { WidgetMeta } from "../lib/model/types";
-import { renderWidget } from "./catalog";
+import type { WidgetInfo } from "../lib/model/types";
+import { WidgetView } from "../widgets/WidgetView";
 import "./WidgetPreview.css";
 
 export interface WidgetPreviewProps {
-  readonly meta: WidgetMeta;
+  readonly meta: WidgetInfo;
   readonly sizeId: string;
   readonly config?: JsonObject;
   readonly metrics: GridMetrics;
@@ -17,7 +17,7 @@ export interface WidgetPreviewProps {
 
 /** The real widget, live, scaled down into a card. Inert: it can be looked at, not clicked. */
 export function WidgetPreview({ meta, sizeId, config, metrics, maxWidth, maxHeight }: WidgetPreviewProps) {
-  const size = meta.sizes.find((s) => s.id === sizeId) ?? meta.sizes.find((s) => s.id === meta.defaultSize) ?? meta.sizes[0];
+  const size = meta.sizes.find((s) => s.id === sizeId) ?? meta.sizes[0];
   if (!size) return null;
   const width = spanPx(size.w, metrics);
   const height = spanPx(size.h, metrics);
@@ -29,7 +29,7 @@ export function WidgetPreview({ meta, sizeId, config, metrics, maxWidth, maxHeig
         style={{ width, height, transform: `scale(${scale})`, "--w": size.w, "--h": size.h } as CSSProperties}
         inert
       >
-        {renderWidget({ kind: meta.kind, size: size.id, config: config ?? meta.defaultConfig })}
+        <WidgetView id={meta.id} size={size.id} config={config} />
       </div>
     </div>
   );

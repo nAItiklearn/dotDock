@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUILT_IN_WIDGET_META } from "../../overlay/widgetMeta";
+import { widgetCatalog } from "../../overlay/catalog";
 import { defaultLayoutDoc } from "../model/defaults";
 import type { CollisionMode, Placement } from "../model/types";
 import { rectsOverlap } from "./grid";
@@ -36,10 +36,10 @@ describe.each<CollisionMode>(["push", "swap"])("random editing sessions (%s)", (
   for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
     it(`never lose, duplicate, overlap or push off-grid a widget (seed ${seed})`, () => {
       const random = mulberry32(seed * 7919);
-      const ctx: LayoutContext = { bounds: { cols: 14, rows: 8 }, collision, catalog: BUILT_IN_WIDGET_META };
+      const ctx: LayoutContext = { bounds: { cols: 14, rows: 8 }, collision, catalog: widgetCatalog };
       let ps: readonly Placement[] = normalizePlacements(defaultLayoutDoc("work").monitors["primary"]?.placements ?? [], ctx);
       const ids = new Set(ps.map((p) => p.id));
-      const kinds = BUILT_IN_WIDGET_META.list().map((m) => m.kind);
+      const kinds = widgetCatalog.list().map((m) => m.id);
       const pick = <T,>(items: readonly T[]): T => items[Math.floor(random() * items.length)] as T;
 
       for (let step = 0; step < 400; step++) {
@@ -49,8 +49,8 @@ describe.each<CollisionMode>(["push", "swap"])("random editing sessions (%s)", (
         if (roll < 0.6) {
           next = moveTo(ps, id, { x: Math.floor(random() * 18) - 2, y: Math.floor(random() * 10) - 2 }, ctx);
         } else if (roll < 0.75) {
-          const kind = ps.find((p) => p.id === id)?.kind ?? "clock";
-          const sizes = BUILT_IN_WIDGET_META.get(kind)?.sizes ?? [];
+          const kind = ps.find((p) => p.id === id)?.widget ?? "clock";
+          const sizes = widgetCatalog.get(kind)?.sizes ?? [];
           next = sizes.length > 0 ? resizeTo(ps, id, pick(sizes).id, ctx) : null;
         } else if (roll < 0.85 && ids.size < 14) {
           const added = addWidget(ps, pick(kinds), undefined, ctx);

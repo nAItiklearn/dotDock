@@ -1,5 +1,6 @@
 import type { JsonObject } from "../model/json";
-import type { Bounds, Cell, CollisionMode, Placement, Rect, WidgetCatalogMeta, WidgetSize } from "../model/types";
+import type { Bounds, Cell, CollisionMode, Placement, Rect, WidgetCatalog } from "../model/types";
+import type { SizeSpec } from "../../widgets/sizes";
 import { normalizeArrangement, resolveMove, resolvePush, type Arrangement, type Item } from "./collision";
 import { clampRect, firstFreeSpot, nearestFreeSpot } from "./grid";
 
@@ -7,7 +8,7 @@ import { clampRect, firstFreeSpot, nearestFreeSpot } from "./grid";
 export interface LayoutContext {
   readonly bounds: Bounds;
   readonly collision: CollisionMode;
-  readonly catalog: WidgetCatalogMeta;
+  readonly catalog: WidgetCatalog;
 }
 
 export interface Footprint {
@@ -18,18 +19,18 @@ export interface Footprint {
 /** A widget the catalog does not know still occupies a cell, so it cannot be silently built over. */
 const UNKNOWN_FOOTPRINT: Footprint = { w: 1, h: 1 };
 
-function resolveSize(catalog: WidgetCatalogMeta, p: Pick<Placement, "kind" | "size">): WidgetSize | null {
-  const meta = catalog.get(p.kind);
+function resolveSize(catalog: WidgetCatalog, p: Pick<Placement, "widget" | "size">): SizeSpec | null {
+  const meta = catalog.get(p.widget);
   if (!meta) return null;
-  return meta.sizes.find((s) => s.id === p.size) ?? meta.sizes.find((s) => s.id === meta.defaultSize) ?? meta.sizes[0] ?? null;
+  return meta.sizes.find((s) => s.id === p.size) ?? meta.sizes[0] ?? null;
 }
 
-export function footprintOf(catalog: WidgetCatalogMeta, p: Pick<Placement, "kind" | "size">): Footprint {
+export function footprintOf(catalog: WidgetCatalog, p: Pick<Placement, "widget" | "size">): Footprint {
   const size = resolveSize(catalog, p);
   return size ? { w: size.w, h: size.h } : UNKNOWN_FOOTPRINT;
 }
 
-export function rectOf(catalog: WidgetCatalogMeta, p: Placement): Rect {
+export function rectOf(catalog: WidgetCatalog, p: Placement): Rect {
   return { x: p.x, y: p.y, ...footprintOf(catalog, p) };
 }
 
@@ -80,7 +81,7 @@ export function moveTo(ps: readonly Placement[], id: string, cell: Cell, ctx: La
 export function resizeTo(ps: readonly Placement[], id: string, sizeId: string, ctx: LayoutContext): readonly Placement[] | null {
   const current = ps.find((p) => p.id === id);
   if (!current) return null;
-  const meta = ctx.catalog.get(current.kind);
+  const meta = ctx.catalog.get(current.widget);
   const size = meta?.sizes.find((s) => s.id === sizeId);
   if (!size) return null;
   if (current.size === size.id) return ps;
@@ -93,7 +94,7 @@ export function resizeTo(ps: readonly Placement[], id: string, sizeId: string, c
 /** The size reached by stepping through the widget's declared sizes from smallest to largest. */
 export function neighbourSize(ps: readonly Placement[], id: string, direction: 1 | -1, ctx: LayoutContext): string | null {
   const p = ps.find((x) => x.id === id);
-  const meta = p ? ctx.catalog.get(p.kind) : undefined;
+  const meta = p ? ctx.catalog.get(p.widget) : undefined;
   if (!p || !meta || meta.sizes.length < 2) return null;
   const ordered = [...meta.sizes].sort((a, b) => a.w * a.h - b.w * b.h);
   const index = ordered.findIndex((s) => s.id === (resolveSize(ctx.catalog, p)?.id ?? p.size));
@@ -101,10 +102,10 @@ export function neighbourSize(ps: readonly Placement[], id: string, direction: 1
 }
 
 /** Id like "clock-2": readable in files and diffs, unique within the layout. */
-export function nextId(kind: string, taken: ReadonlySet<string>): string {
+export function nextId(widget: string, taken: ReadonlySet<string>): string {
   let n = 1;
-  while (taken.has(`${kind}-${n}`)) n++;
-  return `${kind}-${n}`;
+  while (taken.has(`${widget}-${n}`)) n++;
+  return `${widget}-${n}`;
 }
 
 export interface Added {
@@ -114,18 +115,18 @@ export interface Added {
 
 export function addWidget(
   ps: readonly Placement[],
-  kind: string,
+  widget: string,
   requestedSize: string | undefined,
   ctx: LayoutContext,
 ): Added | null {
-  const meta = ctx.catalog.get(kind);
+  const meta = ctx.catalog.get(widget);
   if (!meta) return null;
-  const size = meta.sizes.find((s) => s.id === requestedSize) ?? meta.sizes.find((s) => s.id === meta.defaultSize) ?? meta.sizes[0];
+  const size = meta.sizes.find((s) => s.id === requestedSize) ?? meta.sizes[0];
   if (!size) return null;
   const spot = firstFreeSpot(itemsOf(ps, ctx), size.w, size.h, ctx.bounds);
   if (!spot) return null;
-  const id = nextId(kind, new Set(ps.map((p) => p.id)));
-  const placement: Placement = { id, kind, size: size.id, x: spot.x, y: spot.y, config: meta.defaultConfig };
+  const id = nextId(widget, new Set(ps.map((p) => p.id)));
+  const placement: Placement = { id, widget, size: size.id, x: spot.x, y: spot.y, config: {} };
   return { placements: [...ps, placement], id };
 }
 
@@ -136,7 +137,7 @@ export function duplicateWidget(ps: readonly Placement[], id: string, ctx: Layou
   const { w, h } = footprintOf(ctx.catalog, original);
   const spot = nearestFreeSpot(itemsOf(ps, ctx), w, h, ctx.bounds, { x: original.x + 1, y: original.y + 1 });
   if (!spot) return null;
-  const copyId = nextId(original.kind, new Set(ps.map((p) => p.id)));
+  const copyId = nextId(original.widget, new Set(ps.map((p) => p.id)));
   return { placements: [...ps, { ...original, id: copyId, x: spot.x, y: spot.y }], id: copyId };
 }
 

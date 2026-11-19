@@ -99,7 +99,7 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
       }
       const id = state.selectedId;
       if (inControl || !id || e.altKey) return;
-      const name = widgetCatalog.get(state.placements.find((p) => p.id === id)?.kind ?? "")?.name ?? "Widget";
+      const name = widgetCatalog.get(state.placements.find((p) => p.id === id)?.widget ?? "")?.name ?? "Widget";
 
       if (mod && e.code === "KeyD") {
         e.preventDefault();

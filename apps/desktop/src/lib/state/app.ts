@@ -1,5 +1,5 @@
 import { createCommandBus, type CommandBus } from "../bus";
-import { PRIMARY_MONITOR, type Bounds, type MonitorId, type WidgetCatalogMeta } from "../model/types";
+import { PRIMARY_MONITOR, type Bounds, type MonitorId, type WidgetCatalog } from "../model/types";
 import { createDefaultBackend, type StorageBackend } from "../storage/backend";
 import { createLayoutStore, type LayoutStore } from "./layoutStore";
 import { LayoutRepository } from "./layoutRepo";
@@ -10,7 +10,7 @@ import { createSettingsStore, type SettingsStore } from "./settingsStore";
 const UNMEASURED_BOUNDS: Bounds = { cols: 64, rows: 64 };
 
 export interface AppOptions {
-  readonly catalog: WidgetCatalogMeta;
+  readonly catalog: WidgetCatalog;
   readonly monitorId?: MonitorId;
   readonly isPrimary?: boolean;
   readonly backend?: StorageBackend;
@@ -20,7 +20,7 @@ export interface AppOptions {
 
 export interface AppContext {
   readonly backend: StorageBackend;
-  readonly catalog: WidgetCatalogMeta;
+  readonly catalog: WidgetCatalog;
   readonly monitorId: MonitorId;
   readonly isPrimary: boolean;
   readonly notices: NoticeStore;

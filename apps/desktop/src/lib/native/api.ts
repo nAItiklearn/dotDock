@@ -123,7 +123,7 @@ export interface NativeApi {
     get(): Promise<StartupState>;
     /** `startup_set` { setting: StartupToggle, value: boolean } → StartupState */
     set(setting: StartupToggle, value: boolean): Promise<StartupState>;
-    /** `startup_restore_windows` () → RestoreReport. Runs the full panic routine. */
+    /** `restore_windows` () → void | RestoreReport. Runs the full panic routine; the core's reply shape is read tolerantly. */
     restoreWindows(): Promise<RestoreReport>;
   };
 
@@ -133,7 +133,7 @@ export interface NativeApi {
   };
 
   wallpapers: {
-    /** `wallpapers_list` () → WallpaperItem[] */
+    /** `wallpapers_list` () → [{ id, name, style, mode, accent, path, thumb }]; `thumb` becomes `thumbnailUrl`. */
     list(): Promise<readonly WallpaperItem[]>;
     /** `wallpapers_assignments` () → WallpaperAssignment[] */
     assignments(): Promise<readonly WallpaperAssignment[]>;
@@ -208,16 +208,46 @@ export const unavailableNativeApi: NativeApi = {
 
 const call = <T>(command: string, args?: Record<string, unknown>): Promise<T> => invoke<T>(command, args);
 
+/** Shape of one `wallpapers_list` entry as the core returns it. */
+interface CoreWallpaper {
+  readonly id: string;
+  readonly name: string;
+  readonly style: string;
+  readonly mode: string;
+  readonly accent: string;
+  readonly path: string;
+  /** Web path such as `/wallpaper-thumbs/x.jpg`. */
+  readonly thumb: string;
+}
+
+function toWallpaperItem(w: CoreWallpaper): WallpaperItem {
+  return { id: w.id, name: w.name, source: "bundled", thumbnailUrl: w.thumb };
+}
+
+/** `restore_windows` has no documented reply; whatever flags it returns are shown, and a bare success means every step ran. */
+function toRestoreReport(raw: unknown): RestoreReport {
+  const flag = (key: keyof RestoreReport): boolean => {
+    const value = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>)[key] : undefined;
+    return typeof value === "boolean" ? value : true;
+  };
+  return {
+    wallpaperRestored: flag("wallpaperRestored"),
+    desktopIconsShown: flag("desktopIconsShown"),
+    autostartRemoved: flag("autostartRemoved"),
+    startupDelayRestored: flag("startupDelayRestored"),
+  };
+}
+
 export const tauriNativeApi: NativeApi = {
   available: true,
   startup: {
     get: () => call("startup_get"),
     set: (setting, value) => call("startup_set", { setting, value }),
-    restoreWindows: () => call("startup_restore_windows"),
+    restoreWindows: async () => toRestoreReport(await call<unknown>("restore_windows")),
   },
   displays: { list: () => call("displays_list") },
   wallpapers: {
-    list: () => call("wallpapers_list"),
+    list: async () => (await call<readonly CoreWallpaper[]>("wallpapers_list")).map(toWallpaperItem),
     assignments: () => call("wallpapers_assignments"),
     assign: (monitorId, wallpaperId, fit) => call("wallpapers_assign", { monitorId, wallpaperId, fit }),
     importFile: () => call("wallpapers_import"),

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "settings",
+  "description": "The Settings window: standard window, event and path APIs for its own UI.",
+  "windows": ["settings"],
+  "permissions": ["core:default"]
+}

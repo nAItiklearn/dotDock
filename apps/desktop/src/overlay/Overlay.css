@@ -61,7 +61,7 @@
   overflow: hidden;
   text-align: center;
 }
-.overlay__missing-kind {
+.overlay__missing-id {
   overflow: hidden;
   color: var(--text-dim);
   font-family: var(--font-mono);

@@ -2,14 +2,20 @@ import { lazy, memo, Suspense, type CSSProperties, type MouseEvent } from "react
 import { cellStartPx, type GridMetrics } from "../lib/layout/grid";
 import { footprintOf } from "../lib/layout/ops";
 import type { Placement } from "../lib/model/types";
-import { renderWidget, widgetCatalog, type WidgetInstance } from "./catalog";
+import { WidgetView } from "../widgets/WidgetView";
+import { widgetCatalog } from "./catalog";
 import { useEditUi } from "./editUi";
 
 const SlotChrome = lazy(() => import("./edit/SlotChrome").then((m) => ({ default: m.SlotChrome })));
 
-/** Re-renders only when the widget's own identity, size or config change, never because it moved. */
-const WidgetContent = memo(function WidgetContent({ kind, size, config }: WidgetInstance) {
-  return <>{renderWidget({ kind, size, config })}</>;
+type WidgetContentProps = Pick<Placement, "widget" | "size" | "config">;
+
+/**
+ * Re-renders only when the widget's own identity, size or config change, never because it moved.
+ * `WidgetView` validates the stored config against the widget's schema and isolates a crashing widget.
+ */
+const WidgetContent = memo(function WidgetContent({ widget, size, config }: WidgetContentProps) {
+  return <WidgetView id={widget} size={size} config={config} />;
 });
 
 export interface WidgetSlotProps {
@@ -30,7 +36,7 @@ export const WidgetSlot = memo(function WidgetSlot({ placement, metrics, editing
   // stored position and only the preview of *other* widgets applies.
   const live = useEditUi((s) => s.preview?.get(placement.id)) ?? placement;
   const gesture = useEditUi((s) => (s.activeId === placement.id ? s.gesture : null));
-  const meta = widgetCatalog.get(live.kind);
+  const meta = widgetCatalog.get(live.widget);
   if (!meta && !editing) return null;
 
   const { w, h } = footprintOf(widgetCatalog, live);
@@ -58,11 +64,11 @@ export const WidgetSlot = memo(function WidgetSlot({ placement, metrics, editing
     >
       <div className="overlay__content" aria-hidden={editing ? true : undefined}>
         {meta ? (
-          <WidgetContent kind={live.kind} size={live.size} config={live.config} />
+          <WidgetContent widget={live.widget} size={live.size} config={live.config} />
         ) : (
           <div className="overlay__missing">
             <span className="caps">Unavailable</span>
-            <span className="overlay__missing-kind">{live.kind}</span>
+            <span className="overlay__missing-id">{live.widget}</span>
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ import { applyCurrentAppearance } from "../lib/theme/useAppearance";
 import { connectProviders, isTauri } from "../providers/bridge";
 import { widgetCatalog } from "./catalog";
 import { Overlay } from "./Overlay";
+import { syncTypingFocus } from "./typingFocus";
 
 const params = new URLSearchParams(location.search);
 // `?theme=<id>` pins a theme for design previews and screenshots; normal runs follow Settings.
@@ -26,4 +27,5 @@ void Promise.all([document.fonts.ready, app.start()]).then(() => {
     </StrictMode>,
   );
   connectProviders().catch((err: unknown) => console.error("providers failed to connect", err));
+  syncTypingFocus();
 });

@@ -1,4 +1,5 @@
-import type { Cell, WidgetSize } from "../model/types";
+import type { SizeSpec } from "../../widgets/sizes";
+import type { Cell } from "../model/types";
 import { roundToCell, spanPx, type GridMetrics } from "./grid";
 
 /** Pointer travel (px) before a press becomes a drag; below it the press is just a click that selects. */
@@ -19,12 +20,12 @@ export function dragTarget(origin: Cell, dx: number, dy: number, metrics: GridMe
  * on an impossible size just because it is the closest.
  */
 export function sizesByProximity(
-  sizes: readonly WidgetSize[],
+  sizes: readonly SizeSpec[],
   desiredWidthPx: number,
   desiredHeightPx: number,
   metrics: GridMetrics,
-): readonly WidgetSize[] {
-  const distance = (s: WidgetSize): number =>
+): readonly SizeSpec[] {
+  const distance = (s: SizeSpec): number =>
     Math.abs(spanPx(s.w, metrics) - desiredWidthPx) + Math.abs(spanPx(s.h, metrics) - desiredHeightPx);
   return [...sizes].sort((a, b) => distance(a) - distance(b));
 }

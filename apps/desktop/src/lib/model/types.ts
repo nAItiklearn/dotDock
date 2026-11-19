@@ -1,8 +1,10 @@
+import type { ConfigSchema } from "../../widgets/configSchema";
+import type { SizeSpec } from "../../widgets/sizes";
 import type { JsonObject } from "./json";
 
 /** Each persisted document carries its own schema number; they evolve independently. */
 export const SETTINGS_SCHEMA = 1;
-export const LAYOUT_SCHEMA = 2;
+export const LAYOUT_SCHEMA = 3;
 export const THEME_SCHEMA = 1;
 export const BACKUP_SCHEMA = 1;
 
@@ -14,13 +16,14 @@ export const PRIMARY_MONITOR: MonitorId = "primary";
 
 export interface Placement {
   readonly id: string;
-  /** Widget kind, resolved through the widget catalog. Unknown kinds are kept, never dropped. */
-  readonly kind: string;
-  /** Id of one of the widget's declared sizes. */
+  /** Widget id, resolved through the registry. Ids this build does not know are kept, never dropped. */
+  readonly widget: string;
+  /** Id of one of the widget's declared sizes; anything else renders at the widget's default size. */
   readonly size: string;
   /** Top-left position in grid cells. */
   readonly x: number;
   readonly y: number;
+  /** Only what the user changed; fields not listed here follow the widget's defaults. */
   readonly config: JsonObject;
 }
 
@@ -99,49 +102,25 @@ export interface AppSettings {
   readonly shortcuts: Readonly<Record<ShortcutAction, string>>;
 }
 
-// ---------------------------------------------------------- widget meta
+// -------------------------------------------------------------- catalog
 
-export interface WidgetSize {
+/**
+ * What layout and Settings need to know about a widget, without rendering it. A registry
+ * `WidgetDefinition` satisfies this shape, so the app passes the registry in and tests pass a small fake.
+ */
+export interface WidgetInfo {
   readonly id: string;
-  readonly label: string;
-  /** Footprint in grid cells. */
-  readonly w: number;
-  readonly h: number;
-}
-
-/** Generated settings form field; the same shape the widget manifest's settingsSchema compiles to. */
-export type ConfigField =
-  | { readonly type: "toggle"; readonly key: string; readonly label: string }
-  | {
-      readonly type: "choice";
-      readonly key: string;
-      readonly label: string;
-      readonly options: readonly { readonly value: string; readonly label: string }[];
-    }
-  | {
-      readonly type: "range";
-      readonly key: string;
-      readonly label: string;
-      readonly min: number;
-      readonly max: number;
-      readonly step: number;
-      readonly unit?: string;
-    };
-
-/** Pure-data description of a widget kind: everything layout and Settings need without rendering it. */
-export interface WidgetMeta {
-  readonly kind: string;
   readonly name: string;
   readonly description: string;
-  readonly sizes: readonly WidgetSize[];
-  readonly defaultSize: string;
-  readonly defaultConfig: JsonObject;
-  readonly fields: readonly ConfigField[];
+  readonly category: string;
+  /** Footprints in cells. The first is the default size. */
+  readonly sizes: readonly SizeSpec[];
+  readonly settingsSchema: ConfigSchema;
 }
 
-export interface WidgetCatalogMeta {
-  list(): readonly WidgetMeta[];
-  get(kind: string): WidgetMeta | undefined;
+export interface WidgetCatalog {
+  list(): readonly WidgetInfo[];
+  get(id: string): WidgetInfo | undefined;
 }
 
 export interface Cell {

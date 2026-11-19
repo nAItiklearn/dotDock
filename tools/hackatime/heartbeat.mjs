@@ -62,8 +62,10 @@ async function main() {
   ];
   if (WRITE_TOOLS.has(event.tool_name)) args.push("--write");
 
-  // Detached: the CLI handles rate limiting, offline queueing and retries itself.
-  const child = spawn(cli, args, { detached: true, stdio: "ignore", windowsHide: true });
+  // NOT detached: on Windows a detached child gets its own console window and Node ignores
+  // windowsHide for it, which flashed a terminal on every tool call. A non-detached child
+  // shares our hidden console and still outlives us after unref().
+  const child = spawn(cli, args, { stdio: "ignore", windowsHide: true });
   child.on("error", () => undefined);
   child.unref();
 }

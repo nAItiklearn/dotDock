@@ -106,27 +106,27 @@ describe("sanitizeSettings", () => {
 
 describe("sanitizePlacements", () => {
   it("coerces coordinates to non-negative integers and strips non-JSON config values", () => {
-    const [p] = sanitizePlacements([{ id: "c", kind: "clock", size: "m", x: 2.7, y: -4, config: { a: 1, bad: () => 1, nested: { ok: true } } }]);
+    const [p] = sanitizePlacements([{ id: "c", widget: "clock", size: "m", x: 2.7, y: -4, config: { a: 1, bad: () => 1, nested: { ok: true } } }]);
     expect(p).toMatchObject({ x: 3, y: 0 });
     expect(p?.config).toEqual({ a: 1, nested: { ok: true } });
   });
 
-  it("drops entries without a widget kind and renames duplicate ids", () => {
+  it("drops entries without a widget id and renames duplicate ids", () => {
     const result = sanitizePlacements([
-      { id: "a", kind: "clock" },
-      { id: "a", kind: "clock" },
+      { id: "a", widget: "clock" },
+      { id: "a", widget: "clock" },
       { id: "b" },
       "nonsense",
     ]);
     expect(result.map((p) => p.id)).toEqual(["a", "a-2"]);
   });
 
-  it("keeps widgets of unknown kinds so they survive an app downgrade", () => {
-    expect(sanitizePlacements([{ id: "z", kind: "from-the-future", size: "q", x: 1, y: 1 }])).toHaveLength(1);
+  it("keeps widgets this build does not know so they survive an app downgrade", () => {
+    expect(sanitizePlacements([{ id: "z", widget: "from-the-future", size: "q", x: 1, y: 1 }])).toHaveLength(1);
   });
 
   it("caps the number of widgets", () => {
-    const many = Array.from({ length: 500 }, (_, i) => ({ id: `w${i}`, kind: "clock" }));
+    const many = Array.from({ length: 500 }, (_, i) => ({ id: `w${i}`, widget: "clock" }));
     expect(sanitizePlacements(many)).toHaveLength(64);
   });
 });
@@ -143,7 +143,7 @@ describe("layout documents", () => {
 
   it("keeps each monitor's placements separate", () => {
     const { value } = sanitizeLayoutDoc(
-      { monitors: { left: { placements: [{ id: "a", kind: "clock" }] }, right: { placements: [{ id: "b", kind: "ram" }] } } },
+      { monitors: { left: { placements: [{ id: "a", widget: "clock" }] }, right: { placements: [{ id: "b", widget: "system" }] } } },
       "work",
     );
     expect(value.monitors["left"]?.placements[0]?.id).toBe("a");
@@ -162,22 +162,53 @@ describe("migrations", () => {
     ],
   };
 
-  it("upgrades a v1 layout to v2 on the primary monitor, with sizes instead of pixel heights", () => {
+  it("upgrades a v1 layout to the registry model on the primary monitor", () => {
     const result = migrateDocument(v1, LAYOUT_SCHEMA, LAYOUT_MIGRATIONS);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.from).toBe(1);
-    expect(result.doc["schema"]).toBe(2);
+    expect(result.doc["schema"]).toBe(3);
     const { value } = sanitizeLayoutDoc(result.doc, "work");
     const placements = value.monitors["primary"]?.placements ?? [];
-    expect(placements.map((p) => [p.id, p.size])).toEqual([
-      ["clock-1", "m"],
-      ["battery-ring-1", "m"],
-      ["clock-2", "s"],
-      ["clock-3", "l"],
+    expect(placements.map((p) => [p.id, p.widget, p.size])).toEqual([
+      ["clock-1", "clock", "m"],
+      ["battery-ring-1", "battery", "m"],
+      ["clock-2", "clock", "m"],
+      ["clock-3", "clock", "xl"],
     ]);
+    // The old clock's private pixel height is gone; options the new clock still has are kept.
     expect(placements[0]?.config).toEqual({ matrixStyle: "blocks", hour24: true, showSeconds: false, blinkColon: false });
     expect(placements[0]).toMatchObject({ x: 0, y: 0 });
+  });
+
+  it("maps every kind of the first overlay onto a registry widget, keeping unknown kinds", () => {
+    const doc = {
+      schema: 2,
+      monitors: {
+        primary: {
+          placements: [
+            { id: "d", kind: "date-circle", size: "m", x: 0, y: 0, config: {} },
+            { id: "r", kind: "ram", size: "m", x: 2, y: 0, config: { stale: true } },
+            { id: "k", kind: "disk", size: "m", x: 4, y: 0, config: {} },
+            { id: "g", kind: "battery-grid", size: "m", x: 6, y: 0, config: {} },
+            { id: "f", kind: "from-the-future", size: "q", x: 8, y: 0, config: {} },
+          ],
+        },
+      },
+    };
+    const result = migrateDocument(doc, LAYOUT_SCHEMA, LAYOUT_MIGRATIONS);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const placements = sanitizeLayoutDoc(result.doc, "work").value.monitors["primary"]?.placements ?? [];
+    expect(placements.map((p) => [p.widget, p.size])).toEqual([
+      ["date", "s"],
+      ["system", "m"],
+      ["system", "m"],
+      ["battery", "l"],
+      ["from-the-future", "q"],
+    ]);
+    expect(placements[1]?.config).toEqual({ metric: "ram" });
+    expect(placements[2]?.config).toEqual({ metric: "disk" });
   });
 
   it("does not modify the document it was given", () => {
@@ -195,9 +226,9 @@ describe("migrations", () => {
   });
 
   it("passes a current-schema document through untouched", () => {
-    const doc = { schema: 2, monitors: {} };
+    const doc = { schema: 3, monitors: {} };
     const result = migrateDocument(doc, LAYOUT_SCHEMA, LAYOUT_MIGRATIONS);
-    expect(result).toEqual({ ok: true, doc, from: 2 });
+    expect(result).toEqual({ ok: true, doc, from: 3 });
   });
 
   it("refuses documents from a newer app instead of downgrading them", () => {

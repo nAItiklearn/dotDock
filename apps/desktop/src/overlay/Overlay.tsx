@@ -115,6 +115,27 @@ export function Overlay({ forceThemeId }: { readonly forceThemeId?: string | nul
     [app],
   );
 
+  // The tray's "Edit layout" item emits `overlay://toggle-edit` (no payload) to this window.
+  useEffect(() => {
+    if (!isTauri()) return undefined;
+    let unlisten: (() => void) | null = null;
+    let disposed = false;
+    void import("@tauri-apps/api/event").then(({ listen }) =>
+      listen("overlay://toggle-edit", () => {
+        const layout = app.layout.getState();
+        if (layout.editing) void layout.exitEdit();
+        else layout.enterEdit();
+      }).then((off) => {
+        if (disposed) off();
+        else unlisten = off;
+      }),
+    );
+    return () => {
+      disposed = true;
+      unlisten?.();
+    };
+  }, [app]);
+
   // In the desktop app the core registers global hotkeys; in a plain browser the page listens itself.
   useEffect(() => {
     if (isTauri()) return undefined;

@@ -38,22 +38,36 @@ pub enum SnapshotError {
     Json(#[from] serde_json::Error),
     #[error("LOCALAPPDATA is not set")]
     NoAppData,
+    #[error("refusing to take a first snapshot while dotDock autostart is already active: the current state is not the original")]
+    AlreadyModified,
 }
 
 pub fn path() -> Option<PathBuf> {
     app_data_dir().map(|d| d.join(FILE_NAME))
 }
 
-pub fn load() -> Option<Snapshot> {
-    let text = std::fs::read_to_string(path()?).ok()?;
-    serde_json::from_str(text.trim_start_matches('\u{feff}')).ok()
+/// Ok(None) only when no snapshot exists. One that exists but cannot be read is an error,
+/// never "nothing to restore": silently skipping would leave the user's system changed.
+pub fn load() -> Result<Option<Snapshot>, SnapshotError> {
+    let path = path().ok_or(SnapshotError::NoAppData)?;
+    let text = match std::fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(e) => return Err(e.into()),
+    };
+    // The PowerShell writer adds a UTF-8 byte-order mark.
+    Ok(Some(serde_json::from_str(text.trim_start_matches('\u{feff}'))?))
 }
 
 /// Writes the snapshot if none exists. Never overwrites: the first one is the true original.
-pub fn ensure() -> Result<(), SnapshotError> {
+/// `autostart_active` guards against recording an already-modified state as the original.
+pub fn ensure(autostart_active: bool) -> Result<(), SnapshotError> {
     let path = path().ok_or(SnapshotError::NoAppData)?;
     if path.exists() {
         return Ok(());
+    }
+    if autostart_active || registry::get_string(RUN_KEY, AUTOSTART_NAME)?.is_some() {
+        return Err(SnapshotError::AlreadyModified);
     }
     let wallpaper = registry::get_string(DESKTOP_KEY, "WallPaper")?.filter(|w| !w.is_empty());
     let wallpaper_copy = wallpaper.as_deref().and_then(|w| copy_wallpaper(w, &path));
@@ -79,8 +93,13 @@ pub fn ensure() -> Result<(), SnapshotError> {
 /// Private copy so a restore still works if the user later deletes the original image.
 fn copy_wallpaper(original: &str, snapshot_path: &std::path::Path) -> Option<String> {
     let src = PathBuf::from(original);
-    let ext = src.extension()?.to_string_lossy().into_owned();
-    let dest = snapshot_path.with_file_name(format!("original-wallpaper.{ext}"));
+    // Extensionless sources exist (Spotlight and slideshow write `TranscodedWallpaper`), and they
+    // are exactly the files Windows overwrites later, so they need the private copy most.
+    let name = match src.extension() {
+        Some(ext) => format!("original-wallpaper.{}", ext.to_string_lossy()),
+        None => "original-wallpaper".to_owned(),
+    };
+    let dest = snapshot_path.with_file_name(name);
     std::fs::copy(&src, &dest).ok()?;
     Some(dest.to_string_lossy().into_owned())
 }

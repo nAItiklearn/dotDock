@@ -186,10 +186,10 @@ describe("DocumentStore: saving", () => {
     const store = new DocumentStore<LayoutDoc>(backend, "layouts/work", layoutCodec("work"), "the Work layout", (n) => notices.push(n));
     const loaded = await store.load();
     expect(loaded.source).toBe("primary");
-    expect(loaded.value.monitors["primary"]?.placements[0]).toMatchObject({ id: "clock-1", size: "m" });
+    expect(loaded.value.monitors["primary"]?.placements[0]).toMatchObject({ id: "clock-1", widget: "clock", size: "m" });
     expect(await backend.read("layouts/work.v1")).toBe(v1);
     await store.save(loaded.value);
-    expect(JSON.parse((await backend.read("layouts/work")) ?? "{}").schema).toBe(2);
+    expect(JSON.parse((await backend.read("layouts/work")) ?? "{}").schema).toBe(3);
     expect(notices).toEqual([]);
   });
 

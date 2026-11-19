@@ -1,3 +1,4 @@
+import { LEGACY_KINDS, getWidget } from "../../widgets/registry";
 import { isRecord } from "./json";
 
 /** Upgrades a document from schema N to N + 1. Must be pure and must not assume the input is clean. */
@@ -59,7 +60,45 @@ function layoutV1ToV2(doc: Record<string, unknown>): Record<string, unknown> {
   return { monitors: { primary: { placements } } };
 }
 
-export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = { 1: layoutV1ToV2 };
+/**
+ * v2 named a placement's widget `kind`, from the set the first overlay shipped. v3 uses the widget registry:
+ * `{ kind }` becomes `{ widget, size, config }` through the registry's `LEGACY_KINDS` table. A kind the
+ * table does not know is kept under its own name, so a layout from another build is never thinned out.
+ */
+function layoutV2Placement(entry: unknown): unknown {
+  if (!isRecord(entry)) return entry;
+  const { kind, ...rest } = entry;
+  if (typeof kind !== "string") return entry;
+  const target = Object.hasOwn(LEGACY_KINDS, kind) ? LEGACY_KINDS[kind] : undefined;
+  if (!target) return { ...rest, widget: kind };
+
+  // Only the options the new widget still has survive; the rest were the old clock's private knobs.
+  const known = getWidget(target.widget)?.settingsSchema.properties ?? {};
+  const kept: Record<string, unknown> = {};
+  if (isRecord(entry["config"])) {
+    for (const [key, value] of Object.entries(entry["config"])) {
+      if (Object.hasOwn(known, key)) kept[key] = value;
+    }
+  }
+  // The old clock had a small, a medium and a large size; the new one has two big ones.
+  const size = kind === "clock" && entry["size"] === "l" ? "xl" : target.size;
+  return { ...rest, widget: target.widget, size, config: { ...kept, ...target.config } };
+}
+
+function layoutV2ToV3(doc: Record<string, unknown>): Record<string, unknown> {
+  const monitors = isRecord(doc["monitors"]) ? doc["monitors"] : {};
+  const migrated: Record<string, unknown> = {};
+  for (const [id, layout] of Object.entries(monitors)) {
+    if (!isRecord(layout) || !Array.isArray(layout["placements"])) {
+      migrated[id] = layout;
+      continue;
+    }
+    migrated[id] = { ...layout, placements: layout["placements"].map(layoutV2Placement) };
+  }
+  return { ...doc, monitors: migrated };
+}
+
+export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = { 1: layoutV1ToV2, 2: layoutV2ToV3 };
 
 /** Settings have never changed shape yet; the table exists so the first change is a one-line addition. */
 export const SETTINGS_MIGRATIONS: Readonly<Record<number, Migration>> = {};

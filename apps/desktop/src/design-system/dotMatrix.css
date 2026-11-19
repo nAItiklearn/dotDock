@@ -1,0 +1,25 @@
+.dotmatrix,
+.doticon,
+.icon {
+  display: block;
+  flex: none;
+}
+/* Beads of the circles style overhang the glyph box on purpose. */
+.dotmatrix {
+  overflow: visible;
+}
+.dotmatrix--fit {
+  width: 100%;
+  height: 100%;
+}
+
+/* Colon blink: opacity only, stepped like a real display. */
+@keyframes colon-blink {
+  50% {
+    opacity: 0.12;
+  }
+}
+.dotmatrix--blink .dotmatrix__colon {
+  animation: colon-blink 1s steps(1, end) infinite;
+  animation-delay: var(--blink-offset, 0ms);
+}

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import type { GridMetrics } from "../../lib/layout/grid";
-import type { MonitorId, WidgetMeta } from "../../lib/model/types";
+import type { MonitorId, WidgetInfo } from "../../lib/model/types";
 import { getApp } from "../../lib/state/app";
 import { useSettingsStore } from "../../lib/state/hooks";
 import { useGridMetrics } from "../../lib/state/useGridMetrics";
 import { Button, Segmented, SelectField } from "../../lib/ui/controls";
+import { sizesByArea } from "../../overlay/catalog";
 import { WidgetPreview } from "../../overlay/WidgetPreview";
 import { addWidgetToProfile, removeWidgetFromProfile } from "../layoutActions";
 import { PageHeader, Section } from "../ui/layout";
@@ -16,7 +17,7 @@ const PREVIEW_MAX_WIDTH = 300;
 const PREVIEW_MAX_HEIGHT = 140;
 
 interface CardProps {
-  readonly meta: WidgetMeta;
+  readonly meta: WidgetInfo;
   readonly metrics: GridMetrics;
   readonly profileId: string;
   readonly profileName: string;
@@ -25,14 +26,14 @@ interface CardProps {
 
 function WidgetCard({ meta, metrics, profileId, profileName, display }: CardProps) {
   const app = getApp();
-  const [sizeId, setSizeId] = useState(meta.defaultSize);
+  const [sizeId, setSizeId] = useState(meta.sizes[0]?.id ?? "m");
   const [busy, setBusy] = useState(false);
 
   const add = (): void => {
     if (!display || busy) return;
     setBusy(true);
     const target = { profileId, monitorId: display.id as MonitorId, isPrimary: display.isPrimary };
-    void addWidgetToProfile(app, { ...target, kind: meta.kind, sizeId, metrics })
+    void addWidgetToProfile(app, { ...target, widget: meta.id, sizeId, metrics })
       .then((outcome) => {
         if (outcome.ok) {
           offerUndo(`${meta.name} added to ${profileName}.`, () => void removeWidgetFromProfile(app, { ...target, placementId: outcome.placementId }));
@@ -61,7 +62,7 @@ function WidgetCard({ meta, metrics, profileId, profileName, display }: CardProp
           <Segmented
             label={`${meta.name} size`}
             value={sizeId}
-            options={meta.sizes.map((s) => ({ value: s.id, label: s.label }))}
+            options={sizesByArea(meta.sizes).map((s) => ({ value: s.id, label: s.name }))}
             onChange={setSizeId}
           />
         ) : (
@@ -106,7 +107,7 @@ export function WidgetsPage() {
         <div className="row row--block" data-setting-id="gallery">
           <ul className="gallery-grid" aria-label="Widgets you can add">
             {app.catalog.list().map((meta) => (
-              <WidgetCard key={meta.kind} meta={meta} metrics={metrics} profileId={activeId} profileName={profileName} display={display} />
+              <WidgetCard key={meta.id} meta={meta} metrics={metrics} profileId={activeId} profileName={profileName} display={display} />
             ))}
           </ul>
         </div>

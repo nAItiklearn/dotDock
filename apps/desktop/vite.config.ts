@@ -11,7 +11,8 @@ const pkg = JSON.parse(readFileSync(resolve(here, "package.json"), "utf8")) as {
 // and the on-demand settings window.
 export default defineConfig({
   plugins: [react()],
-  publicDir: resolve(here, "../../assets"),
+  // Only web assets are served/embedded; wallpapers ship as installer resources, not in the exe.
+  publicDir: resolve(here, "../../assets/web"),
   clearScreen: false,
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   // Pre-bundle the Tauri API so dev never serves a stale optimised copy (504 "Outdated Optimize Dep").

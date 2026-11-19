@@ -129,7 +129,7 @@ function LayoutWidgetsSection() {
     if (!display) return;
     const target = { profileId: activeId, monitorId: display.id, isPrimary: display.isPrimary };
     void removeWidgetFromProfile(app, { ...target, placementId: p.id }).then((removed) => {
-      if (removed) offerUndo(`${app.catalog.get(p.kind)?.name ?? "Widget"} removed from ${profileName}.`, () => restoreWidgetToProfile(app, { ...target, placement: removed }));
+      if (removed) offerUndo(`${app.catalog.get(p.widget)?.name ?? "Widget"} removed from ${profileName}.`, () => restoreWidgetToProfile(app, { ...target, placement: removed }));
     });
   };
 
@@ -163,7 +163,7 @@ function LayoutWidgetsSection() {
         ) : (
           <ul className="list" aria-label={`Widgets in ${profileName}`}>
             {placements.map((p) => {
-              const meta = app.catalog.get(p.kind);
+              const meta = app.catalog.get(p.widget);
               const size = meta?.sizes.find((s) => s.id === p.size);
               return (
                 <li key={p.id} className="list__row">
@@ -173,11 +173,11 @@ function LayoutWidgetsSection() {
                   <div className="list__main">
                     <span className="list__title">{meta?.name ?? "Unavailable widget"}</span>
                     <span className="caps">
-                      {meta ? `${size?.label ?? p.size} · column ${p.x + 1}, row ${p.y + 1}` : p.kind}
+                      {meta ? `${size?.name ?? p.size} · column ${p.x + 1}, row ${p.y + 1}` : p.widget}
                     </span>
                   </div>
                   <div className="list__actions">
-                    <IconButton icon="trash" tone="danger" label={`Remove ${meta?.name ?? p.kind}`} onClick={() => remove(p)} />
+                    <IconButton icon="trash" tone="danger" label={`Remove ${meta?.name ?? p.widget}`} onClick={() => remove(p)} />
                   </div>
                 </li>
               );

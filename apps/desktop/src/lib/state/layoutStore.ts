@@ -1,7 +1,7 @@
 import { createStore, type StoreApi } from "zustand/vanilla";
 import { layoutName } from "../model/codecs";
 import type { JsonObject } from "../model/json";
-import type { AppSettings, Bounds, Cell, MonitorId, Placement, WidgetCatalogMeta } from "../model/types";
+import type { AppSettings, Bounds, Cell, MonitorId, Placement, WidgetCatalog } from "../model/types";
 import type { StorageBackend } from "../storage/backend";
 import type { NoticeSink } from "../storage/notice";
 import { canRedo, canUndo, createHistory, pushHistory, redoHistory, undoHistory, type History } from "../layout/history";
@@ -53,7 +53,7 @@ export interface LayoutState {
   nudge(id: string, dx: number, dy: number): EditResult;
   resizeTo(id: string, sizeId: string): EditResult;
   stepSize(id: string, direction: 1 | -1): EditResult;
-  addWidget(kind: string, sizeId?: string): EditResult;
+  addWidget(widget: string, sizeId?: string): EditResult;
   duplicate(id: string): EditResult;
   remove(id: string): EditResult;
   patchConfig(id: string, patch: JsonObject): EditResult;
@@ -66,7 +66,7 @@ export type LayoutStore = StoreApi<LayoutState>;
 export interface LayoutDeps {
   readonly backend: StorageBackend;
   readonly repo: LayoutRepository;
-  readonly catalog: WidgetCatalogMeta;
+  readonly catalog: WidgetCatalog;
   readonly getSettings: () => AppSettings;
   readonly notify: NoticeSink;
   readonly monitorId: MonitorId;
@@ -244,9 +244,9 @@ export function createLayoutStore(deps: LayoutDeps): LayoutStore {
         return sizeId ? get().resizeTo(id, sizeId) : { ok: false, reason: "unknown" };
       },
 
-      addWidget: (kind, sizeId) =>
+      addWidget: (widget, sizeId) =>
         guarded(() => {
-          const added = addWidget(present(), kind, sizeId, context());
+          const added = addWidget(present(), widget, sizeId, context());
           if (!added) {
             notify(NO_ROOM_NOTICE);
             return { ok: false, reason: "no-room" };

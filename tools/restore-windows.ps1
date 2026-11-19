@@ -2,27 +2,34 @@
 .SYNOPSIS
   Panic button: returns the desktop to stock Windows using the saved snapshot.
 .DESCRIPTION
-  Stops dotDock, removes its autostart entries, restores the startup-delay key,
-  wallpaper and desktop-icon visibility. Safe to run any number of times.
+  Stops dotDock, removes its autostart entries, restores the startup-delay value, wallpaper
+  and desktop-icon visibility. Safe to run any number of times. Exits 1 if any step failed.
   Use -DryRun to print the plan without changing anything.
+  The installed app does the same with `dotdock.exe --restore-windows`.
 #>
 param([switch]$DryRun)
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'lib\WinShell.psm1') -Force
 
+$script:Failures = 0
 function Step([string]$What, [scriptblock]$Action) {
     if ($DryRun) { Write-Output "[dry-run] $What"; return }
     try { & $Action; Write-Output "[ok] $What" }
-    catch { Write-Output "[failed] $What :: $($_.Exception.Message)" }
+    catch { $script:Failures++; Write-Output "[failed] $What :: $($_.Exception.Message)" }
 }
 
 $snapshotPath = Get-SnapshotPath
 $snap = $null
-if (Test-Path $snapshotPath) { $snap = Get-Content -LiteralPath $snapshotPath -Raw | ConvertFrom-Json }
-else { Write-Output "No snapshot at $snapshotPath. Only removing dotDock autostart and processes." }
+if (Test-Path $snapshotPath) {
+    # Explicit UTF-8: Windows PowerShell 5.1 would read the BOM-less Rust-written file as ANSI
+    # and garble non-ASCII paths.
+    $snap = Get-Content -LiteralPath $snapshotPath -Raw -Encoding UTF8 | ConvertFrom-Json
+} else {
+    Write-Output "No snapshot at $snapshotPath. Only removing dotDock autostart and processes."
+}
 
 Step "Stop $AppName processes" {
-    Get-Process -Name $AppName, "$AppName-launcher" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Get-Process -Name $AppName -ErrorAction SilentlyContinue | Stop-Process -Force
 }
 
 Step 'Remove autostart Run entry' {
@@ -39,16 +46,17 @@ if ($snap) {
         if ($null -ne $snap.startupDelayInMSec) {
             New-Item -Path $SerializeKey -Force | Out-Null
             Set-ItemProperty -Path $SerializeKey -Name StartupDelayInMSec -Value $snap.startupDelayInMSec -Type DWord
-        } elseif ($snap.serializeKeyExisted) {
+        } else {
+            # Only our value: other software may have added values to this key since the snapshot.
             Remove-ItemProperty -Path $SerializeKey -Name StartupDelayInMSec -ErrorAction SilentlyContinue
-        } elseif (Test-Path $SerializeKey) {
-            Remove-Item -Path $SerializeKey -Recurse -Force
         }
     }
 
     Step 'Restore wallpaper' {
-        $source = $snap.wallpaper
-        if (-not ($source -and (Test-Path -LiteralPath $source))) { $source = $snap.wallpaperCopy }
+        # Prefer the private copy: the original path may be a file Windows has since overwritten
+        # (Spotlight and slideshow write to TranscodedWallpaper).
+        $source = $snap.wallpaperCopy
+        if (-not ($source -and (Test-Path -LiteralPath $source))) { $source = $snap.wallpaper }
         Set-Wallpaper -Path $source -Style $snap.wallpaperStyle -Tile $snap.tileWallpaper
     }
 
@@ -57,4 +65,8 @@ if ($snap) {
     }
 }
 
+if ($script:Failures -gt 0) {
+    Write-Output "Restore finished with $script:Failures failed step(s)."
+    exit 1
+}
 Write-Output 'Restore finished.'

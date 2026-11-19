@@ -172,7 +172,7 @@ export class GestureController {
 
   private previewResize(a: Active): void {
     const metrics = this.env.getMetrics();
-    const meta = widgetCatalog.get(a.origin.kind);
+    const meta = widgetCatalog.get(a.origin.widget);
     if (!meta) return;
     const wantW = a.pointerX - cellStartPx(a.origin.x, metrics);
     const wantH = a.pointerY - cellStartPx(a.origin.y, metrics);
@@ -217,7 +217,7 @@ export class GestureController {
     if (result) {
       this.env.layout.getState().commit(result);
       const done = result.find((p) => p.id === a.id);
-      const name = widgetCatalog.get(a.origin.kind)?.name ?? "Widget";
+      const name = widgetCatalog.get(a.origin.widget)?.name ?? "Widget";
       const changed = done && (a.kind === "move" ? done.x !== a.origin.x || done.y !== a.origin.y : done.size !== a.origin.size);
       if (done && changed) {
         const { w, h } = footprintOf(widgetCatalog, done);

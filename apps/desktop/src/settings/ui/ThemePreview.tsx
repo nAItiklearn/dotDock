@@ -6,9 +6,9 @@ import type { GridMetrics } from "../../lib/layout/grid";
 import { toRuntimeTheme, type ThemeDoc } from "../../lib/theme/schema";
 
 const PREVIEW_WIDGETS = [
-  { kind: "clock", size: "s", max: 268 },
-  { kind: "date-circle", size: "m", max: 126 },
-  { kind: "battery-ring", size: "m", max: 126 },
+  { id: "clock", size: "m", max: 268 },
+  { id: "date", size: "s", max: 126 },
+  { id: "battery", size: "m", max: 126 },
 ] as const;
 
 /**
@@ -22,10 +22,10 @@ export function ThemePreview({ theme, metrics }: { readonly theme: ThemeDoc; rea
   }, [theme]);
   return (
     <div className="theme-preview" ref={box} role="img" aria-label={`Preview of the ${theme.name} theme`}>
-      {PREVIEW_WIDGETS.map(({ kind, size, max }) => {
-        const meta = widgetCatalog.get(kind);
+      {PREVIEW_WIDGETS.map(({ id, size, max }) => {
+        const meta = widgetCatalog.get(id);
         return meta ? (
-          <WidgetPreview key={kind} meta={meta} sizeId={size} metrics={metrics} maxWidth={max} maxHeight={max} />
+          <WidgetPreview key={id} meta={meta} sizeId={size} metrics={metrics} maxWidth={max} maxHeight={max} />
         ) : null;
       })}
     </div>
