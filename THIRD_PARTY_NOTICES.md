@@ -100,6 +100,18 @@ Not reused from Agent Island: its cat and orb artwork, its sounds (UI SFX, CC0) 
 
 `serde`, `serde_json`, `thiserror` and `windows` are already used by the shell crate and are unchanged. `serde_json` is built with its `preserve_order` feature so Connect keeps the key order of the user's `settings.json`.
 
+## Dock backend (`apps/desktop/src-tauri/dock/`)
+
+| Crate | Used for | Licence |
+| --- | --- | --- |
+| `png` 0.18 (and its `fdeflate`, `miniz_oxide`, `crc32fast`, `bitflags`) | encoding the 256 px icon cache and decoding the logo files of Store packages; already in the tree through `tauri` | MIT OR Apache-2.0 |
+| `notify` 8, `tempfile` (dev), `serde`, `serde_json`, `thiserror`, `windows` | as listed above | as listed above |
+
+No icon, art, code or table is taken from another dock, launcher or Start menu replacement. The bundled table of well-known apps
+(`dock/src/classify/known.rs`) lists app names, executable names and AppUserModelID prefixes, which are facts, written by hand for this
+project. The icons shown in the dock are extracted at run time from the user's own installed apps and stay on the user's machine
+(`%LOCALAPPDATA%\dev.dotdock.desktop\dock-icons`); none is shipped or committed.
+
 
 ## Website (`website/`)
 The showcase site is a static Astro project. These packages are build-time only; the published site is plain HTML, CSS and one small script bundle. It loads no third-party scripts, fonts, analytics or CDNs.

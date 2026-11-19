@@ -41,6 +41,7 @@
 
 ## In progress
 - Desktop wallpapers from the owner's mood images (louvre and soft-mono reworked, four new styles). Generated from code only.
+- **Dock backend (milestones D1 and D2), branch `worktree-agent-a175321c268719d26`:** crate `dotdock-dock` with the app catalogue (214 apps on this machine), classifier (98.1 % on the first judged run, `docs/spikes/DOCK_CLASSIFIER.md`), 256 px icon cache, push-driven window list, launch, DWM thumbnails, the app-bar spike and the `DockService` facade. Idle CPU 0.08 to 0.13 %, warm start 140 to 240 ms with nothing scanned or extracted (`docs/spikes/DOCK_D1.md`, D-019). Not wired into the app yet; the host (`dock_host.rs`) and UI are the other tracks.
 
 ## v2 plan (next)
 - Dock and launcher replacing the taskbar, with an App Library that groups apps by category (productivity, social, coding, AI, and more). Study the owner's dock videos and images, launchmeapp.com and cooldock.app first; build originals only.
