@@ -52,3 +52,8 @@ Each entry: decision, alternatives, why, how to reverse.
 ## D-011 StartupDelayInMSec only on the Run-key fallback
 - **Decision:** With the logon task (the normal path) the startup delay is left at its original value.
 - **Why:** the delay only applies to Run-key apps. Zeroing it with the task would only make the owner's other 22 startup apps launch sooner and compete with us at sign-in.
+
+## D-012 Crash-loop guard counts unclean starts only
+- **Decision:** Every start is recorded; a clean exit or 5 minutes of uptime clears the count. Three unclean starts within 5 minutes restore stock Windows and disable autostart. Holding Shift at launch is safe mode (no desktop changes).
+- **Why:** spec 1.2. Clean exits must never trip it, or ordinary restarts would undo the user's setup.
+- **Note for testing:** killing the app three times quickly (`taskkill /F`) trips the guard by design.
