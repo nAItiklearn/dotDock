@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_SCHEMA, fieldsForSize, normalizeConfig, schemaDefaults, type ConfigSchema } from "./configSchema";
+import { fieldsForSize, normalizeConfig, schemaDefaults, type ConfigSchema } from "./configSchema";
 import { LEGACY_KINDS, WIDGETS, defaultSize, getWidget, resolveConfig, resolveSize } from "./registry";
 
 describe("registry", () => {
@@ -173,9 +173,5 @@ describe("fieldsForSize", () => {
   it("hides fields that do not apply to a size", () => {
     expect(fieldsForSize(SCHEMA, "m").map(([key]) => key)).not.toContain("only");
     expect(fieldsForSize(SCHEMA, "l").map(([key]) => key)).toContain("only");
-  });
-
-  it("is empty for a widget with nothing to configure", () => {
-    expect(fieldsForSize(EMPTY_SCHEMA, "m")).toEqual([]);
   });
 });

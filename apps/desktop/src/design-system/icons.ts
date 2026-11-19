@@ -183,17 +183,7 @@ const PATTERNS = {
     ".........",
     ".........",
   ],
-  empty: [
-    ".........",
-    ".........",
-    ".........",
-    ".........",
-    ".#.#.#.#.",
-    ".........",
-    ".........",
-    ".........",
-    ".........",
-  ],
+  empty: raster(GRID, minus(disc(5.5, 5.5, 4.9), disc(5.5, 5.5, 3.5))),
 } as const satisfies Record<string, readonly string[]>;
 
 export type DotIconName = keyof typeof PATTERNS;

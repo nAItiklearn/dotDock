@@ -15,7 +15,7 @@ export interface SystemConfig {
   readonly metric: SystemMetric;
 }
 
-export const SYSTEM_SIZES: readonly SizeSpec[] = [
+const SYSTEM_SIZES: readonly SizeSpec[] = [
   { id: "m", name: "Dot grid", w: 2, h: 2 },
   { id: "s", name: "Half circle", w: 2, h: 1 },
   { id: "l", name: "Overview", w: 4, h: 2 },
@@ -90,7 +90,7 @@ const percentLabel = (r: Reading): string => `${r.label} ${r.percent} percent`;
 
 function Unavailable({ title, compact = false }: { readonly title: string; readonly compact?: boolean }) {
   const { issue } = useProvider("system");
-  return <WidgetNotice title={title} issue={issue} compact={compact} />;
+  return <WidgetNotice title={title} issue={issue} message={compact && issue === "unsupported" ? "Unavailable" : undefined} compact={compact} />;
 }
 
 /** S pill: a half-circle of dots, the number and the label. */

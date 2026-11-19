@@ -16,7 +16,7 @@ export interface BatteryConfig {
   readonly showTimeLeft: boolean;
 }
 
-export const BATTERY_SIZES: readonly SizeSpec[] = [
+const BATTERY_SIZES: readonly SizeSpec[] = [
   { id: "m", name: "Ring", w: 2, h: 2 },
   { id: "s", name: "Pill", w: 3, h: 1 },
   { id: "l", name: "Dot grid", w: 4, h: 2 },
@@ -47,7 +47,7 @@ const PILL_METER = { count: 12, dot: 6, gap: 4 } as const;
 const RING_DIGITS = 34;
 const GRID_DIGITS = 36;
 const PILL_DIGITS = 26;
-const RING_BOLT = 30;
+const RING_BOLT = 38;
 const FULL = 100;
 
 function isLow(data: BatteryData, config: BatteryConfig): boolean {

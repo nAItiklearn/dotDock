@@ -19,7 +19,7 @@ export interface QuoteConfig {
   readonly customQuotes: readonly string[];
 }
 
-export const QUOTE_SIZES: readonly SizeSpec[] = [
+const QUOTE_SIZES: readonly SizeSpec[] = [
   { id: "m", name: "Card", w: 4, h: 2 },
   { id: "s", name: "Circle", w: 2, h: 2 },
 ];

@@ -20,6 +20,13 @@
 .music__title--lg {
   font-size: var(--text-lg);
 }
+/* The card has room for a second line of title. */
+.music-card .music__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
 .music__titles > .caps {
   max-width: 100%;
   white-space: nowrap;

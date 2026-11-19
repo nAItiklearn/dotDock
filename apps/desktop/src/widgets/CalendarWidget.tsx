@@ -24,7 +24,7 @@ export interface CalendarConfig {
   readonly showWeekNumbers: boolean;
 }
 
-export const CALENDAR_SIZES: readonly SizeSpec[] = [
+const CALENDAR_SIZES: readonly SizeSpec[] = [
   { id: "m", name: "Month", w: 3, h: 2 },
   { id: "s", name: "Week", w: 2, h: 2 },
   { id: "l", name: "Browser", w: 4, h: 4 },
@@ -93,12 +93,12 @@ function DayGrid({
   readonly numbers: boolean;
 }) {
   return (
-    <div className={`calendar__grid${numbers ? " calendar__grid--numbered" : ""}`} role="grid">
+    <div className={`calendar__grid${numbers ? " calendar__grid--numbered" : ""}`}>
       {labels ? (
         <>
           {numbers ? <span aria-hidden="true" /> : null}
           {labels.map((label, i) => (
-            <span key={i} className="calendar__weekday" role="columnheader">
+            <span key={i} className="calendar__weekday" aria-hidden="true">
               {label}
             </span>
           ))}
@@ -106,9 +106,13 @@ function DayGrid({
       ) : null}
       {Array.from({ length: model.weekCount }, (_, w) => (
         <Fragment key={w}>
-          {numbers ? <span className="calendar__week tabular">{model.weekNumbers[w]}</span> : null}
+          {numbers ? (
+            <span className="calendar__week tabular" aria-label={`Week ${model.weekNumbers[w]}`}>
+              {model.weekNumbers[w]}
+            </span>
+          ) : null}
           {model.cells.slice(w * DAYS_PER_WEEK, (w + 1) * DAYS_PER_WEEK).map((day, i) => (
-            <span key={i} className="calendar__slot" role={day === null ? "presentation" : "gridcell"}>
+            <span key={i} className="calendar__slot">
               {day === null ? null : (
                 <span
                   aria-current={day === today ? "date" : undefined}

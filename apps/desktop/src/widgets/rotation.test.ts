@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FACTS } from "./data/facts";
-import { QUOTES, SHORT_QUOTES, parseCustomQuote } from "./data/quotes";
+import { QUOTES, SHORT_QUOTE_LIMIT, parseCustomQuote } from "./data/quotes";
 import { pickRotated, rotationIndex, rotationTick } from "./rotation";
 
 describe("rotationIndex", () => {
@@ -73,7 +73,7 @@ describe("bundled content", () => {
   });
 
   it("keeps enough short quotes for the circle to rotate", () => {
-    expect(SHORT_QUOTES.length).toBeGreaterThanOrEqual(10);
+    expect(QUOTES.filter((q) => q.text.length <= SHORT_QUOTE_LIMIT).length).toBeGreaterThanOrEqual(10);
   });
 
   it("gives every fact a source note", () => {

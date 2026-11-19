@@ -15,7 +15,7 @@ export interface WeatherConfig {
   readonly showPlace: boolean;
 }
 
-export const WEATHER_SIZES: readonly SizeSpec[] = [
+const WEATHER_SIZES: readonly SizeSpec[] = [
   { id: "s", name: "Pill", w: 3, h: 1 },
   { id: "m", name: "Range circle", w: 2, h: 2 },
   { id: "l", name: "Today", w: 4, h: 2 },
@@ -43,7 +43,7 @@ const WEATHER_SCHEMA: ConfigSchema = {
 const PILL_DIGITS = 28;
 const RING_DIGITS = 38;
 const TODAY_DIGITS = 56;
-const PILL_ICON = 36;
+const PILL_ICON = 30;
 const RING_ICON = 28;
 const TODAY_ICON = 54;
 const RANGE_METER = { count: 16, dot: 6, gap: 4 } as const;

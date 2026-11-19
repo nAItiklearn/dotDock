@@ -65,9 +65,6 @@ export interface ConfigSchema {
 export type ConfigValue = boolean | string | number | readonly string[];
 export type RawConfig = Readonly<Record<string, unknown>>;
 
-/** The schema with no fields: widgets that have nothing to configure. */
-export const EMPTY_SCHEMA: ConfigSchema = { type: "object", properties: {}, additionalProperties: false };
-
 export function isEnumField(field: ConfigField): field is EnumField {
   return field.type === "string" && "oneOf" in field;
 }

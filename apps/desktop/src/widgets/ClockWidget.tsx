@@ -27,7 +27,7 @@ export interface ClockConfig {
   readonly height?: number;
 }
 
-export const CLOCK_SIZES: readonly SizeSpec[] = [
+const CLOCK_SIZES: readonly SizeSpec[] = [
   { id: "m", name: "Compact", w: 4, h: 2 },
   { id: "l", name: "Stacked", w: 4, h: 4 },
   { id: "xl", name: "Wide", w: 8, h: 4 },
@@ -41,7 +41,7 @@ const CLOCK_STYLES = [
   { const: "pill", title: "Pill" },
 ] as const;
 
-export const CLOCK_SCHEMA: ConfigSchema = {
+const CLOCK_SCHEMA: ConfigSchema = {
   type: "object",
   additionalProperties: false,
   properties: {

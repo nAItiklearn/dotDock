@@ -11,7 +11,7 @@ export interface DateConfig {
   readonly showLabels: boolean;
 }
 
-export const DATE_SIZES: readonly SizeSpec[] = [
+const DATE_SIZES: readonly SizeSpec[] = [
   { id: "s", name: "Circle", w: 2, h: 2 },
   { id: "m", name: "Pill", w: 3, h: 1 },
 ];

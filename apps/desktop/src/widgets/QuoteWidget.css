@@ -10,6 +10,7 @@
 }
 .quote__mark {
   flex: none;
+  align-self: flex-start;
   color: var(--accent);
 }
 .quote__text {
@@ -48,6 +49,7 @@
   text-align: center;
 }
 .quote--s .quote__mark {
+  align-self: center;
   height: var(--space-5);
   width: auto;
 }

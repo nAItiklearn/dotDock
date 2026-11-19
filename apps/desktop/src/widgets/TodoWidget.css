@@ -158,7 +158,7 @@
 
 .todo__text {
   position: relative;
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: var(--text-md);
   line-height: var(--leading-tight);
@@ -167,7 +167,10 @@
   text-overflow: ellipsis;
   transition: opacity var(--dur-med) var(--ease-out);
 }
-/* The strike-through draws itself left to right. */
+.todo__spacer {
+  flex: 1;
+}
+/* The strike-through draws itself left to right, across the text only. */
 .todo__text::after {
   content: "";
   position: absolute;

@@ -18,7 +18,7 @@ export interface MusicConfig {
   readonly accentFromArtwork: boolean;
 }
 
-export const MUSIC_SIZES: readonly SizeSpec[] = [
+const MUSIC_SIZES: readonly SizeSpec[] = [
   { id: "s", name: "Pill", w: 3, h: 1 },
   { id: "m", name: "Card", w: 4, h: 2 },
   { id: "l", name: "Player", w: 4, h: 4 },

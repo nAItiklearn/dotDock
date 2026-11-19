@@ -74,8 +74,6 @@ export const QUOTES: readonly Quote[] = [
 /** Longest text that still reads well in the circular widget. */
 export const SHORT_QUOTE_LIMIT = 56;
 
-export const SHORT_QUOTES: readonly Quote[] = QUOTES.filter((q) => q.text.length <= SHORT_QUOTE_LIMIT);
-
 /**
  * Parses one line of a user's own list: `text | author`. Without a bar the whole line is the text.
  * Returns null for a blank line.

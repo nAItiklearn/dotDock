@@ -1,4 +1,5 @@
 .calendar {
+  --day-size: 16px;
   position: absolute;
   inset: 0;
   display: flex;
@@ -91,8 +92,8 @@
 .calendar__day {
   display: grid;
   place-items: center;
-  width: var(--day-size, 16px);
-  height: var(--day-size, 16px);
+  width: var(--day-size);
+  height: var(--day-size);
   border-radius: 50%;
 }
 .calendar--browser .calendar__day {

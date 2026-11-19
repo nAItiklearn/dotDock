@@ -13,7 +13,7 @@ export interface FunFactConfig {
   readonly rotation: RotationPeriod;
 }
 
-export const FUN_FACT_SIZES: readonly SizeSpec[] = [
+const FUN_FACT_SIZES: readonly SizeSpec[] = [
   { id: "m", name: "Card", w: 4, h: 2 },
   { id: "l", name: "Poster", w: 4, h: 4 },
 ];

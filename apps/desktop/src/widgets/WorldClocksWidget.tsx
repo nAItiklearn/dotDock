@@ -17,7 +17,7 @@ export interface WorldClocksConfig {
   readonly hour24: boolean;
 }
 
-export const WORLD_CLOCK_SIZES: readonly SizeSpec[] = [{ id: "m", name: "Four cities", w: 4, h: 2 }];
+const WORLD_CLOCK_SIZES: readonly SizeSpec[] = [{ id: "m", name: "Four cities", w: 4, h: 2 }];
 
 const MAX_CITIES = 4;
 const TIME_DIGITS = 24;

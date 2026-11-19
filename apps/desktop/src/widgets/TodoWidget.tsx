@@ -15,7 +15,7 @@ export interface TodoConfig {
   readonly showDueDates: boolean;
 }
 
-export const TODO_SIZES: readonly SizeSpec[] = [
+const TODO_SIZES: readonly SizeSpec[] = [
   { id: "m", name: "Compact", w: 4, h: 2 },
   { id: "l", name: "List", w: 4, h: 4 },
 ];
@@ -133,6 +133,7 @@ function Row({ item, index, openCount, now, showDue, drag, target, rowHeight, on
         <Icon name="check" className="todo__check-mark" />
       </button>
       <span className="todo__text">{item.text}</span>
+      <span className="todo__spacer" aria-hidden="true" />
       {showDue ? <DueChip item={item} now={now} /> : null}
       <button type="button" className="todo__remove" aria-label={`Delete ${item.text}`} onClick={() => remove(item.id)}>
         <Icon name="cross" />

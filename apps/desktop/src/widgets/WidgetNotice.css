@@ -39,7 +39,7 @@
   text-align: left;
 }
 
-/* Waits before showing, so the one-second hop from cache to live data never flashes a label. */
+/* Waits before showing, so the one-second hop from cache to live data never flashes a mark. */
 @keyframes freshness-in {
   from {
     opacity: 0;
@@ -47,12 +47,12 @@
 }
 .freshness {
   position: absolute;
-  animation: freshness-in var(--dur-med) var(--ease-out) var(--delay-notice) both;
   top: var(--space-3);
   right: var(--space-4);
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  animation: freshness-in var(--dur-med) var(--ease-out) var(--delay-notice) both;
   pointer-events: none;
 }
 .freshness__dot {
@@ -60,6 +60,22 @@
   height: var(--marker);
   border-radius: 50%;
   border: var(--hairline) solid var(--text-dim);
+}
+.freshness__label {
+  display: none;
+}
+.surface--card .freshness__label {
+  display: inline;
+}
+.surface--pill .freshness {
+  top: 50%;
+  right: var(--space-4);
+  margin-top: calc(var(--marker) / -2);
+}
+/* On a circle the mark sits in the gap outside the ring, at about one o'clock. */
+.surface--circle .freshness {
+  top: 16%;
+  right: 16%;
 }
 
 @media (prefers-reduced-motion: reduce) {

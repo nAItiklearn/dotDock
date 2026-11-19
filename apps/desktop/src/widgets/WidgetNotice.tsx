@@ -18,7 +18,7 @@ const COPY: Record<ProviderIssue, IssueCopy> = {
 };
 
 const LOADING: IssueCopy = { icon: "empty", text: "Loading" };
-const ICON_SIZE = 27;
+const ICON_SIZE = 32;
 
 export interface WidgetNoticeProps {
   readonly title: string;
@@ -43,15 +43,20 @@ export function WidgetNotice({ title, issue, message, compact = false }: WidgetN
   );
 }
 
-/** Small corner mark for last-known data: tells the truth without hiding the value. */
+/**
+ * Small mark for last-known data: tells the truth without hiding the value. Cards spell it out;
+ * pills and circles show only the dot (the label is its tooltip) so it never crowds the content.
+ */
 export function Freshness({ state }: { readonly state: ProviderState<unknown> }) {
   if (state.data === null) return null;
   const label = state.issue === "offline" ? "Offline" : state.issue !== null ? "Last known" : state.stale ? "Cached" : null;
   if (label === null) return null;
   return (
-    <span className="freshness" role="status">
+    <span className="freshness" role="status" title={label}>
       <span className="freshness__dot" aria-hidden="true" />
-      <Caps>{label}</Caps>
+      <span className="freshness__label">
+        <Caps>{label}</Caps>
+      </span>
     </span>
   );
 }

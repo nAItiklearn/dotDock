@@ -14,7 +14,7 @@ export interface NotesConfig {
   readonly textSize: NoteTextSize;
 }
 
-export const NOTES_SIZES: readonly SizeSpec[] = [
+const NOTES_SIZES: readonly SizeSpec[] = [
   { id: "m", name: "Note", w: 4, h: 2 },
   { id: "l", name: "Notebook", w: 4, h: 4 },
 ];
