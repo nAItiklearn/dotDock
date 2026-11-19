@@ -35,66 +35,118 @@
   }
 }
 
-/* Island: the notch-style status pill at the top centre. */
+/*
+ * Island: the notch hanging from the top edge, with concave ears where it meets the screen.
+ * --u is one px of the product's island (apps/desktop/src/island/geometry.ts, 328 px wide), so
+ * every size below is the app's own number. The island is dark in every theme, so it carries
+ * its own text tones; the accent follows the theme.
+ */
 .desk__island {
+  --u: calc(26cqw / 328);
+  --ear: calc(14 * var(--u));
+  --text: #e8e6e3;
+  --text-dim: #8a8a86;
+  --dot-off: rgba(232, 230, 227, 0.14);
+  --success: #9eae96;
+  --danger: #f16d70;
+  --tone: var(--text);
   position: absolute;
   z-index: 2;
-  top: 1.4cqw;
+  top: 0;
   left: 50%;
+  width: calc(328 * var(--u));
+  padding: calc(12 * var(--u)) calc(12 * var(--u)) calc(8 * var(--u));
+  display: grid;
+  justify-items: center;
+  gap: calc(4 * var(--u));
+  border-radius: 0 0 calc(22 * var(--u)) calc(22 * var(--u));
+  background: var(--island);
+  color: var(--text);
+  transform: translateX(-50%);
+  box-shadow: 0 calc(10 * var(--u)) calc(28 * var(--u)) rgba(0, 0, 0, 0.35);
+}
+.desk__island::before,
+.desk__island::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: var(--ear);
+  height: var(--ear);
+}
+.desk__island::before {
+  right: 100%;
+  background: radial-gradient(circle at 0 100%, transparent calc(var(--ear) - 0.5px), var(--island) var(--ear));
+}
+.desk__island::after {
+  left: 100%;
+  background: radial-gradient(circle at 100% 100%, transparent calc(var(--ear) - 0.5px), var(--island) var(--ear));
+}
+.desk__island[data-tone="success"] {
+  --tone: var(--success);
+}
+.desk__island[data-tone="accent"] {
+  --tone: var(--accent);
+}
+.desk__island[data-tone="danger"] {
+  --tone: var(--danger);
+}
+.desk__island-sub {
+  max-width: 100%;
+  min-height: calc(14 * var(--u));
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: calc(11 * var(--u));
+  line-height: calc(14 * var(--u));
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-dim);
+}
+.desk__island-state {
   display: flex;
   align-items: center;
-  gap: 1.2cqw;
-  min-width: 15cqw;
-  padding: 0.9cqw 2cqw;
-  border-radius: 999px;
-  background: var(--island);
-  color: #e8e6e3;
-  transform: translateX(-50%);
+  justify-content: center;
+  gap: calc(8 * var(--u));
+  height: calc(22 * var(--u));
+  max-width: 100%;
 }
-.desk__island .caps {
-  color: #a3a19d;
-  font-size: max(9px, 1cqw);
-}
-.desk__island-dots {
-  display: inline-flex;
-  gap: 0.5cqw;
-}
-.desk__island-dots i {
+.desk__island-orb {
+  flex: none;
   display: block;
-  width: max(5px, 0.7cqw);
-  height: max(5px, 0.7cqw);
-  border-radius: 50%;
-  background: var(--accent);
+  width: calc(20 * var(--u));
+  height: calc(20 * var(--u));
+}
+.desk__island-word {
+  overflow: hidden;
+  font-family: var(--font-dot);
+  font-weight: 700;
+  font-size: calc(17 * var(--u));
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--tone);
+  transition: color 0.3s ease;
+}
+.desk__island-tokens {
+  flex: none;
+  display: inline-flex;
+  gap: calc(3 * var(--u));
+  font-family: var(--font-mono);
+  font-size: calc(11 * var(--u));
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.desk__island-arrow {
+  opacity: 0.7;
+}
+.desk__island-scene {
+  display: block;
+  width: calc(304 * var(--u));
+  height: calc(28 * var(--u));
+  margin-top: calc(2 * var(--u));
 }
 @media (max-width: 959px) {
   .desk__island {
-    top: 10px;
-    padding: 6px 14px;
-    gap: 8px;
-  }
-  .desk__island-dots i {
-    width: 6px;
-    height: 6px;
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .desk__island-dots i {
-    animation: island-dot 1.5s ease-in-out infinite;
-  }
-  .desk__island-dots i:nth-child(2) {
-    animation-delay: 0.18s;
-  }
-  .desk__island-dots i:nth-child(3) {
-    animation-delay: 0.36s;
-  }
-}
-@keyframes island-dot {
-  0%,
-  100% {
-    opacity: 0.25;
-  }
-  40% {
-    opacity: 1;
+    --u: calc(64cqw / 328);
   }
 }
 
@@ -210,5 +262,13 @@
   .desk--tilt .desk__bezel {
     transform: perspective(2400px) rotateX(3.5deg);
     transform-origin: 50% 100%;
+  }
+}
+
+/* In the shot the clock fits its grid box, so the top centre stays clear for the island. */
+@media (min-width: 960px) {
+  .desk .w-clock__digits {
+    width: 100%;
+    height: auto;
   }
 }

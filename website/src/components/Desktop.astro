@@ -1,9 +1,10 @@
 ---
 /**
  * A desktop shot drawn in code: the theme's wallpaper, real widget components, the notch-style
- * island at the top and the dock at the bottom, in a screen frame. The island and dock are the
- * design for upcoming parts of the product, so they are illustrations; the widgets are the same
- * ones the rest of the page uses (live where the browser can supply the data, labelled otherwise).
+ * island at the top and the dock at the bottom, in a screen frame. The island plays a scripted
+ * session with the product's own beetle, landscape and state icons (scripts/island.ts); the dock
+ * is the design for an upcoming part, so it is an illustration. The widgets are the same ones the
+ * rest of the page uses (live where the browser can supply the data, labelled otherwise).
  */
 import Widget from "./Widget.astro";
 import type { WidgetKind } from "../lib/widgets";
@@ -22,7 +23,7 @@ const { layout = "a", objects = false, class: className = "" } = Astro.props;
 const COLS = 12;
 /** x, y, w, h on the 12-column desktop grid; `small` is the [x, y, w, h] on narrow screens, or null to hide. */
 const items: { kind: WidgetKind; x: number; y: number; w: number; h: number; small: [number, number, number, number] | null }[] = [
-  { kind: "clock", x: 0, y: 0, w: 6, h: 2, small: [0, 0, 4, 2] },
+  { kind: "clock", x: 0, y: 0, w: 4, h: 2, small: [0, 0, 4, 2] },
   { kind: "ring", x: 0, y: 2, w: 2, h: 2, small: [0, 2, 2, 2] },
   { kind: "calendar", x: 2, y: 2, w: 3, h: 2, small: null },
   { kind: "date", x: 5, y: 2, w: 2, h: 2, small: [2, 2, 2, 2] },
@@ -98,9 +99,14 @@ const sphereUrl = `url(${base}/art/sphere.svg)`;
         ))
       }
 
-      <div class="desk__island" aria-hidden="true">
-        <span class="desk__island-dots"><i /><i /><i /></span>
-        <span class="caps">Working</span>
+      <div class="desk__island" data-island aria-hidden="true">
+        <p class="desk__island-sub" data-island-sub></p>
+        <div class="desk__island-state">
+          <canvas class="desk__island-orb" data-island-orb></canvas>
+          <span class="desk__island-word" data-island-word>Thinking</span>
+          <span class="desk__island-tokens"><span class="desk__island-arrow">↑</span><span data-island-tokens>0</span></span>
+        </div>
+        <canvas class="desk__island-scene" data-island-scene></canvas>
       </div>
 
       <div class="stage__grid">

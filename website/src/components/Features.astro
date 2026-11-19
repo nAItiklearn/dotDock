@@ -64,7 +64,7 @@ function dots(list: readonly Cell[], r: number): string {
 const parts = [
   { name: "Home screen", line: "Widgets, wallpapers and themes that live on the desktop.", status: "In development", live: true, own: cells(HOME), context: [] as Cell[] },
   { name: "Dock", line: "Replaces the taskbar, with a launcher built in.", status: "Coming", live: false, own: cells(DOCK), context: cells(HOME) },
-  { name: "Agent island", line: "Shows your AI coding work live, at the top of the screen.", status: "Coming", live: false, own: cells(ISLAND), context: [...cells(HOME), ...cells(DOCK)] },
+  { name: "Agent island", line: "Shows your AI coding work live, at the top of the screen.", status: "In development", live: true, own: cells(ISLAND), context: [...cells(HOME), ...cells(DOCK)] },
 ];
 ---
 
