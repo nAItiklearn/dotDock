@@ -120,6 +120,7 @@ describe("DocumentStore: loading", () => {
       remove: () => Promise.reject(new Error("disk on fire")),
       list: () => Promise.reject(new Error("disk on fire")),
       watch: () => () => undefined,
+      withLock: (_name, fn) => fn(),
     };
     const { store, notices } = setup(broken);
     expect((await store.load()).source).toBe("defaults");

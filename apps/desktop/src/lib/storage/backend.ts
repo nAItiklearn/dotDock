@@ -14,6 +14,23 @@ export interface StorageBackend {
   /** Names starting with `prefix`, without any bookkeeping copies (".bak", ".corrupt", ".v1"…). */
   list(prefix: string): Promise<readonly string[]>;
   watch(handler: (name: string) => void): () => void;
+  /**
+   * Runs `fn` while holding a lock on `name`, across every window sharing this storage. Read-modify-write
+   * on a document must happen inside it, or two windows saving different parts can erase each other.
+   */
+  withLock<T>(name: string, fn: () => Promise<T>): Promise<T>;
+}
+
+/** Serialises async work per key within one JS context. */
+class KeyedQueue {
+  private readonly tails = new Map<string, Promise<unknown>>();
+
+  run<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    const previous = this.tails.get(key) ?? Promise.resolve();
+    const result = previous.catch(() => undefined).then(fn);
+    this.tails.set(key, result);
+    return result;
+  }
 }
 
 /** Bookkeeping suffixes the document layer adds next to a document; `list` hides them. */
@@ -55,6 +72,11 @@ export class MemoryBackend implements StorageBackend {
   watch(handler: (name: string) => void): () => void {
     this.watchers.add(handler);
     return () => this.watchers.delete(handler);
+  }
+  /** Every user of one MemoryBackend shares this queue, standing in for the cross-window lock. */
+  private readonly queue = new KeyedQueue();
+  withLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+    return this.queue.run(name, fn);
   }
 }
 
@@ -108,6 +130,13 @@ export class LocalStorageBackend implements StorageBackend {
     };
     target.addEventListener("storage", listener);
     return () => target.removeEventListener("storage", listener);
+  }
+  private readonly queue = new KeyedQueue();
+  /** Web Locks give a real cross-window mutex; without them (old engines) fall back to in-window ordering. */
+  withLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+    const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+    if (!locks) return this.queue.run(name, fn);
+    return locks.request(`dotdock:${name}`, fn);
   }
 }
 
