@@ -16,3 +16,6 @@ with serde `rename_all = "camelCase"` in crate `dotdock-dock`. Change both toget
 - `replaceTaskbar` defaults to false. Nothing hides the taskbar for real use until D4 passes and the owner reviews it.
 - No network calls, no telemetry. Originals only: no icons, art or code from CoolDock, LaunchMe or macOS.
 - Each track commits in its own worktree branch; integration merges them.
+
+## Changes
+- 2026-11-20: added `dock://frozen` (`FrozenState { locked, displayOff, fullscreen }`), emitted by `DockService` (`dotdock-dock::frozen`). The UI freezes animation loops while any field is true.

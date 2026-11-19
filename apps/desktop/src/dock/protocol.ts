@@ -115,9 +115,20 @@ export interface DockCommands {
 
 export type CommandResult = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 
+/**
+ * When the dock should stop rendering: the session is locked, the display is off, or a fullscreen app
+ * (a game, a presentation) has the foreground. Any true means freeze all animation loops.
+ */
+export interface FrozenState {
+  readonly locked: boolean;
+  readonly displayOff: boolean;
+  readonly fullscreen: boolean;
+}
+
 /** Events the core emits to the dock window. */
 export interface DockEvents {
   "dock://apps": readonly DockApp[];
   "dock://windows": readonly DockWindow[];
   "dock://settings": DockSettings;
+  "dock://frozen": FrozenState;
 }
