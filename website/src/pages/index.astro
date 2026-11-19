@@ -2,37 +2,36 @@
 import Base from "../layouts/Base.astro";
 import Nav from "../components/Nav.astro";
 import Hero from "../components/Hero.astro";
-import WhatItIs from "../components/WhatItIs.astro";
-import Widgets from "../components/Widgets.astro";
-import Themes from "../components/Themes.astro";
+import Features from "../components/Features.astro";
+import WidgetCards from "../components/WidgetCards.astro";
+import Customize from "../components/Customize.astro";
+import Wall from "../components/Wall.astro";
 import Boot from "../components/Boot.astro";
 import Safety from "../components/Safety.astro";
-import OpenSource from "../components/OpenSource.astro";
-import Download from "../components/Download.astro";
+import FaqSection from "../components/FaqSection.astro";
+import Cta from "../components/Cta.astro";
 import Footer from "../components/Footer.astro";
 import { LICENSE_SPDX, PRODUCT_NAME, TAGLINE } from "../brand";
 
 const title = `${PRODUCT_NAME}: ${TAGLINE}`;
-const description = `${PRODUCT_NAME} is a free, open-source desktop for Windows: a dot-matrix clock and widgets over an original wallpaper, and one click back to stock Windows. ${LICENSE_SPDX}.`;
+const description = `${PRODUCT_NAME} is a free, open-source desktop environment for Windows: a living home screen, a dock (coming) and an agent island, on a native Rust core with no telemetry. ${LICENSE_SPDX}.`;
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description} structuredData>
   <Nav />
   <main id="main">
     <Hero />
-    <WhatItIs />
-    <Widgets />
-    <Themes />
+    <Features />
+    <WidgetCards />
+    <Customize />
+    <Wall />
     <Boot />
     <Safety />
-    <OpenSource />
-    <Download />
+    <FaqSection />
+    <Cta />
   </main>
   <Footer />
 
-  <script>
-    import "../scripts/hero-field";
-  </script>
   <script>
     import "../scripts/chrome";
     import "../scripts/theme";

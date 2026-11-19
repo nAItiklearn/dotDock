@@ -1,0 +1,104 @@
+---
+import Page from "../layouts/Page.astro";
+import { Content as Notices } from "../content/THIRD_PARTY_NOTICES.md";
+import {
+  DISCLAIMER,
+  GPL_URL,
+  LICENSE_SPDX,
+  LICENSE_URL,
+  NOTICES_URL,
+  OPEN_METEO_URL,
+  PRODUCT_NAME,
+  REPO_URL,
+} from "../brand";
+
+const fonts = [
+  { name: "Doto", holder: "The Doto Project Authors", file: "/licenses/Doto-OFL.txt" },
+  { name: "Geist", holder: "The Geist Project Authors", file: "/licenses/Geist-OFL.txt" },
+  { name: "Geist Mono", holder: "The Geist Project Authors", file: "/licenses/GeistMono-OFL.txt" },
+];
+---
+
+<Page
+  title={`Licence and notices: ${PRODUCT_NAME}`}
+  description={`${PRODUCT_NAME} is free software under ${LICENSE_SPDX}. What that lets you do, plus the licences and attributions for fonts, weather data and other third-party material.`}
+  label="Licence"
+  heading="Free software, in full."
+>
+  <Fragment slot="lede">
+    {PRODUCT_NAME} is licensed {LICENSE_SPDX}. This page explains what that means and lists everything else it uses, with its licence.
+  </Fragment>
+
+  <section class="block reveal" aria-labelledby="lc-gpl">
+    <h2 class="block__title" id="lc-gpl">{LICENSE_SPDX}</h2>
+    <div class="block__content">
+      <ul class="ticks">
+        <li><strong>Use it</strong> for any purpose, on any number of PCs, for free.</li>
+        <li><strong>Study and change it.</strong> The complete source is public.</li>
+        <li><strong>Share it,</strong> changed or not. If you distribute a modified version, you share its source under the same licence, so it cannot be turned into closed software.</li>
+        <li><strong>No warranty.</strong> It is provided as is.</li>
+      </ul>
+      <p>
+        This is a plain-language summary, not the licence. The binding text is the
+        <a href={LICENSE_URL} rel="noopener">LICENSE file</a> in the repository, also published by the
+        <a href={GPL_URL} rel="noopener">Free Software Foundation</a>. This website&rsquo;s code is part of the same repository and
+        has the same licence.
+      </p>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="lc-fonts">
+    <h2 class="block__title" id="lc-fonts">Fonts</h2>
+    <div class="block__content table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th scope="col">Font</th><th scope="col">Copyright</th><th scope="col">Licence</th></tr>
+        </thead>
+        <tbody>
+          {
+            fonts.map((f) => (
+              <tr>
+                <th scope="row">{f.name}</th>
+                <td>{f.holder}</td>
+                <td><a href={f.file}>SIL Open Font License 1.1</a></td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+      <p>All three are served from this site; none are loaded from a third party.</p>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="lc-data">
+    <h2 class="block__title" id="lc-data">Weather data</h2>
+    <div class="block__content">
+      <p>
+        <strong>Weather data by <a href={OPEN_METEO_URL} rel="noopener">Open-Meteo.com</a></strong>, licensed
+        <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>. The app shows this attribution
+        in About and in the weather widget details.
+      </p>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="lc-notices">
+    <h2 class="block__title" id="lc-notices">All third-party notices</h2>
+    <div class="block__content">
+      <p>
+        The list below is the project&rsquo;s <a href={NOTICES_URL} rel="noopener">THIRD_PARTY_NOTICES.md</a>, as of this build.
+        The repository copy is the source of truth.
+      </p>
+      <div class="prose">
+        <Notices />
+      </div>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="lc-disclaimer">
+    <h2 class="block__title" id="lc-disclaimer">Independence</h2>
+    <div class="block__content">
+      <p>{DISCLAIMER}</p>
+      <p>The source and issue tracker are at <a href={REPO_URL} rel="noopener">{REPO_URL.replace("https://", "")}</a>.</p>
+    </div>
+  </section>
+</Page>

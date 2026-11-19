@@ -1,0 +1,44 @@
+---
+import SectionHead from "./SectionHead.astro";
+import Desktop from "./Desktop.astro";
+import { THEMES } from "../lib/themes";
+import { WALLPAPERS } from "../lib/wallpapers";
+---
+
+<section class="section" id="themes" aria-labelledby="themes-title">
+  <div class="wrap">
+    <SectionHead label="Make it yours" titleId="themes-title">
+      <Fragment slot="title">Yours, <span class="dim">down to the dot.</span></Fragment>
+      <Fragment slot="lede">
+        Three themes, each with its own wallpaper. Pick one and this whole page follows.
+      </Fragment>
+    </SectionHead>
+
+    <div class="picker needs-js reveal" role="radiogroup" aria-label="Colour theme" data-theme-cards>
+      {
+        THEMES.map((t) => (
+          <div class="picker__slot" data-theme={t.id}>
+            <button type="button" class="picker__btn" role="radio" aria-checked="false" tabindex="-1" data-theme-set={t.id}>
+              <span class="picker__thumb" aria-hidden="true">
+                <img src={WALLPAPERS[t.id].small} width="640" height="360" alt="" loading="lazy" decoding="async" />
+              </span>
+              <span class="picker__text">
+                <span class="picker__name">{t.name}</span>
+                <span class="caps">{WALLPAPERS[t.id].name}</span>
+              </span>
+              <span class="picker__swatches" aria-hidden="true">
+                <i style={`background:${t.colors.bg}`} />
+                <i style={`background:${t.colors.text}`} />
+                <i style={`background:${t.colors.accent}`} />
+              </span>
+            </button>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="customize__shot reveal">
+      <Desktop layout="b" />
+    </div>
+  </div>
+</section>

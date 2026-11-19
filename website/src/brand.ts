@@ -5,15 +5,28 @@
 export const PRODUCT_NAME = "dotDock";
 
 /** One line, used in the page title and social previews. The last word is drawn in dot-matrix type. */
-export const TAGLINE_LEAD = "Your Windows desktop, redrawn in ";
+export const TAGLINE_FIRST = "Windows,";
+export const TAGLINE_SECOND = "reimagined in";
 export const TAGLINE_DOTS = "dots";
-export const TAGLINE = `${TAGLINE_LEAD}${TAGLINE_DOTS}.`;
+export const TAGLINE = `${TAGLINE_FIRST} ${TAGLINE_SECOND} ${TAGLINE_DOTS}.`;
 
 export const REPO_URL = "https://github.com/nAItiklearn/dotDock";
 export const RELEASES_URL = `${REPO_URL}/releases`;
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 export const NOTICES_URL = `${REPO_URL}/blob/main/THIRD_PARTY_NOTICES.md`;
 export const ISSUES_URL = `${REPO_URL}/issues`;
+export const OPEN_METEO_URL = "https://open-meteo.com/";
+export const WEBVIEW2_URL = "https://developer.microsoft.com/microsoft-edge/webview2/";
+export const GPL_URL = "https://www.gnu.org/licenses/gpl-3.0.html";
+
+/** In-site routes. Every page, the nav and the footer link through these. */
+export const ROUTES = {
+  home: "/",
+  download: "/download",
+  faq: "/faq",
+  privacy: "/privacy",
+  license: "/license",
+} as const;
 
 export const LICENSE_SPDX = "GPL-3.0-or-later";
 

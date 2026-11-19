@@ -1,0 +1,289 @@
+---
+/**
+ * One widget, drawn in code. The live kinds (clock, date, calendar, ring, batpill, timer) are
+ * filled in by src/scripts/live.ts from this device; the others show sample values and say so.
+ * Sizes are in grid cells, like the product's grid. Visuals follow apps/desktop/src/widgets.
+ */
+import DotMatrix from "./DotMatrix.astro";
+
+import type { WidgetKind } from "../lib/widgets";
+
+interface Props {
+  kind: WidgetKind;
+  /** Extra inline custom properties, for example the stage placement `--x:0;--y:2`. */
+  place?: string;
+  /** Clock digits style. */
+  clockStyle?: "dots" | "blocks" | "stripes";
+}
+const { kind, place = "", clockStyle = "blocks" } = Astro.props;
+
+const SIZE: Record<WidgetKind, [number, number]> = {
+  clock: [6, 2],
+  date: [2, 2],
+  calendar: [3, 2],
+  ring: [2, 2],
+  batpill: [3, 1],
+  ram: [2, 2],
+  disk: [2, 2],
+  weather: [3, 1],
+  forecast: [4, 2],
+  music: [4, 1],
+  timer: [3, 1],
+  todo: [3, 2],
+};
+const [w, h] = SIZE[kind];
+const style = `--w:${w};--h:${h};${place}`;
+
+// Sample values for what a web page cannot measure. They are labelled as samples on screen.
+const SAMPLE = {
+  ramPercent: 58,
+  diskPercent: 61,
+  diskUsedGb: 312,
+  diskTotalGb: 512,
+  weatherTemp: 17,
+  weatherHigh: 19,
+  weatherLow: 11,
+  weatherText: "Overcast",
+  days: [
+    { day: "Mon", high: 19, low: 11 },
+    { day: "Tue", high: 17, low: 10 },
+    { day: "Wed", high: 16, low: 9 },
+    { day: "Thu", high: 18, low: 10 },
+    { day: "Fri", high: 21, low: 12 },
+  ],
+  todos: ["Pick a wallpaper", "Set up the dock", "Try the dark theme"],
+};
+
+/** Dot-grid gauge as two SVG paths (lit and unlit), one unit per dot pitch. */
+function dotGrid(cols: number, rows: number, fraction: number): { on: string; off: string } {
+  const lit = Math.round(fraction * cols * rows);
+  let on = "";
+  let off = "";
+  for (let i = 0; i < cols * rows; i++) {
+    const cx = (i % cols) + 0.5;
+    const cy = Math.floor(i / cols) + 0.5;
+    const d = `M${cx - 0.34} ${cy}a0.34 0.34 0 1 0 0.68 0a0.34 0.34 0 1 0 -0.68 0Z`;
+    if (i < lit) on += d;
+    else off += d;
+  }
+  return { on, off };
+}
+const ram = dotGrid(6, 4, SAMPLE.ramPercent / 100);
+const art = dotGrid(3, 3, 0.55);
+
+const RING_R = 44;
+const RING_LEN = 2 * Math.PI * RING_R;
+const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
+---
+
+{
+  kind === "clock" && (
+    <div class="w w--clock" style={style} data-style={clockStyle}>
+      <svg class="dm w-clock__digits" data-live-clock-svg={clockStyle} viewBox="0 0 17 5" role="img" aria-label="Current time">
+        <path fill="currentColor" />
+      </svg>
+      <p class="w-clock__meta">
+        <span class="dot" aria-hidden="true" />
+        <span class="caps" data-live-weekday>Today</span>
+      </p>
+    </div>
+  )
+}
+
+{
+  kind === "ring" && (
+    <section class="w w--circle" style={style} aria-label="Battery" data-battery-ring>
+      <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="ring__track" cx="50" cy="50" r={RING_R} />
+        <circle class="ring__value" cx="50" cy="50" r={RING_R} stroke-dasharray={RING_LEN} stroke-dashoffset={RING_LEN} data-ring-value />
+      </svg>
+      <div class="w__center">
+        <span class="bolt" data-bolt aria-hidden="true" />
+        <span class="w-pct">
+          <svg class="dm w-ring__pct" data-battery-pct viewBox="0 0 11 5" role="img" aria-label="Battery level">
+            <path fill="currentColor" />
+          </svg>
+          <span class="w-pct__sign" aria-hidden="true">%</span>
+        </span>
+        <span class="caps" data-battery-caption>Battery</span>
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "calendar" && (
+    <section class="w w--card" style={style} aria-label="Calendar" data-calendar>
+      <div class="w-cal">
+        <div class="w-cal__head">
+          <span class="w-cal__today tabular" data-cal-today />
+          <span class="w-cal__month" data-cal-month />
+        </div>
+        <ol class="w-cal__grid" data-cal-grid />
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "date" && (
+    <section class="w w--circle" style={style} aria-label="Date" data-date>
+      <div class="w__center w__center--date">
+        <span class="caps" data-date-month />
+        <svg class="dm w-date__day" data-date-day viewBox="0 0 7 5" role="img" aria-label="Day of the month">
+          <path fill="currentColor" />
+        </svg>
+        <span class="caps caps--accent" data-date-weekday />
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "ram" && (
+    <section class="w w--card w--sample" style={style} aria-label={`Memory, sample value ${SAMPLE.ramPercent} percent`}>
+      <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+      <div class="w-ram">
+        <div class="w-ram__head">
+          <span class="w-ram__pct tabular">{SAMPLE.ramPercent}%</span>
+          <span class="caps">RAM</span>
+        </div>
+        <svg class="w-ram__grid" viewBox="0 0 6 4" aria-hidden="true">
+          <path d={ram.off} fill="var(--dot-off)" />
+          <path d={ram.on} fill="var(--accent)" />
+        </svg>
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "disk" && (
+    <section class="w w--circle w--sample" style={style} aria-label={`Disk, sample value ${SAMPLE.diskPercent} percent used`}>
+      <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="ring__track" cx="50" cy="50" r={RING_R} />
+        <circle class="ring__value" cx="50" cy="50" r={RING_R} stroke-dasharray={RING_LEN} stroke-dashoffset={diskDash} />
+      </svg>
+      <div class="w__center">
+        <span class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+        <span class="w-pct">
+          <DotMatrix class="dm w-ring__pct" text={String(SAMPLE.diskPercent)} matrixStyle="blocks" height={26} label={`${SAMPLE.diskPercent} percent used`} />
+          <span class="w-pct__sign" aria-hidden="true">%</span>
+        </span>
+        <span class="w-disk__size tabular">C: {SAMPLE.diskUsedGb}/{SAMPLE.diskTotalGb} GB</span>
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "weather" && (
+    <section class="w w--pill w--sample" style={style} aria-label={`Weather, sample value ${SAMPLE.weatherTemp} degrees`}>
+      <div class="w-weather">
+        <DotMatrix class="dm w-weather__temp" text={`${SAMPLE.weatherTemp}°`} matrixStyle="dots" height={28} label={`${SAMPLE.weatherTemp} degrees`} />
+        <div class="w-weather__text">
+          <span class="w-weather__cond">
+            {SAMPLE.weatherText} <span class="w-weather__range tabular">{SAMPLE.weatherHigh}&deg; / {SAMPLE.weatherLow}&deg;</span>
+          </span>
+          <span class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "forecast" && (
+    <section class="w w--card w--sample" style={style} aria-label="Five-day forecast, sample values">
+      <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+      <div class="w-fc">
+        <span class="caps w-fc__title">5 days</span>
+        <ul class="w-fc__days">
+          {
+            SAMPLE.days.map((d) => (
+              <li class="w-fc__day">
+                <span class="caps">{d.day}</span>
+                <span class="w-fc__hi tabular">{d.high}&deg;</span>
+                <span class="w-fc__lo tabular">{d.low}&deg;</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "batpill" && (
+    <section class="w w--pill" style={style} aria-label="Battery" data-battery-pill>
+      <div class="w-bat">
+        <span class="w-bat__pct tabular" data-pill-pct>--</span>
+        <span class="w-bat__state" data-pill-state>Reading battery</span>
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "music" && (
+    <section class="w w--pill" style={style} aria-label="Music, nothing playing">
+      <div class="w-music">
+        <svg class="w-music__art" viewBox="0 0 3 3" aria-hidden="true">
+          <path d={art.off} fill="var(--dot-off)" />
+          <path d={art.on} fill="var(--text)" />
+        </svg>
+        <div class="w-music__text">
+          <span class="w-music__title">Nothing playing</span>
+          <span class="caps">Media</span>
+        </div>
+        <div class="w-music__controls" aria-hidden="true">
+          <svg class="w-music__skip w-music__skip--prev" viewBox="0 0 12 10"><path d="M0 0l6 5-6 5zM6 0l6 5-6 5z" /></svg>
+          <span class="w-music__play" />
+          <svg class="w-music__skip" viewBox="0 0 12 10"><path d="M0 0l6 5-6 5zM6 0l6 5-6 5z" /></svg>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "timer" && (
+    <section class="w w--pill" style={style} aria-label="Timer" data-timer>
+      <div class="w-timer">
+        <div class="w-timer__text">
+          <span class="caps">Focus</span>
+          <span class="w-timer__time tabular" data-timer-display>25:00</span>
+        </div>
+        <div class="w-timer__buttons needs-js">
+          <button type="button" class="w-timer__reset caps" data-timer-reset aria-label="Reset the timer">Reset</button>
+          <button type="button" class="w-timer__go" data-timer-toggle aria-label="Start the timer" />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+{
+  kind === "todo" && (
+    <section class="w w--card w--sample" style={style} aria-label="To-do list, sample items">
+      <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+      <div class="w-todo">
+        <span class="caps w-todo__title">To-do</span>
+        <ul class="w-todo__list">
+          {
+            SAMPLE.todos.map((t, i) => (
+              <li>
+                <label class="w-todo__item">
+                  <input type="checkbox" checked={i === 0} />
+                  <span class="w-todo__box" aria-hidden="true" />
+                  <span class="w-todo__text">{t}</span>
+                </label>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+  )
+}

@@ -1,0 +1,107 @@
+---
+import Page from "../layouts/Page.astro";
+import {
+  LATEST_RELEASE,
+  PRODUCT_NAME,
+  RELEASES_URL,
+  REPO_URL,
+  ROUTES,
+  WEBVIEW2_URL,
+} from "../brand";
+
+const CLONE = `git clone ${REPO_URL}.git`;
+const arrow = "M3.5 10.5l7-7M4.5 3.5h6v6";
+---
+
+<Page
+  title={`Download ${PRODUCT_NAME} for Windows`}
+  description={`How to get ${PRODUCT_NAME}, the desktop environment for Windows: what it needs, how it installs, and how to remove it and get your original desktop back. Releases are published on GitHub.`}
+  label="Download"
+  heading={LATEST_RELEASE ? `${PRODUCT_NAME} ${LATEST_RELEASE.tag}` : "Not released yet."}
+>
+  <Fragment slot="lede">
+    {
+      LATEST_RELEASE
+        ? <>The latest release is on GitHub Releases, as an installer and a portable build.</>
+        : <>There is nothing to download today, and this page will not pretend otherwise. The first release will be published on GitHub Releases.</>
+    }
+  </Fragment>
+
+  <section class="block reveal" aria-labelledby="dl-status">
+    <h2 class="block__title" id="dl-status">{LATEST_RELEASE ? "Get it" : "Status"}</h2>
+    <div class="block__content">
+      <p class="caps caps-row caps--text">
+        <span class={LATEST_RELEASE ? "dot" : "dot dot--hollow"} aria-hidden="true"></span>
+        {LATEST_RELEASE ? `Latest release ${LATEST_RELEASE.tag}` : "In development, no release yet"}
+      </p>
+      <p>
+        {
+          LATEST_RELEASE
+            ? <>Choose the per-user installer, or the portable zip if you prefer not to install.</>
+            : <>The first release will come as a per-user installer (no admin rights) and a portable zip. To be told when it lands, open the repository on GitHub and choose <strong>Watch</strong>, then <strong>Custom</strong>, then <strong>Releases</strong>.</>
+        }
+      </p>
+      <div class="cta__actions">
+        <a class="btn btn--primary" href={LATEST_RELEASE ? LATEST_RELEASE.url : RELEASES_URL} rel="noopener">
+          {LATEST_RELEASE ? "Open the release" : "Open GitHub Releases"}
+          <svg class="btn__arrow" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d={arrow} stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </a>
+        <a class="btn" href={REPO_URL} rel="noopener">Watch the repository</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="dl-req">
+    <h2 class="block__title" id="dl-req">What it needs</h2>
+    <div class="block__content table-wrap">
+      <table class="table">
+        <tbody>
+          <tr><th scope="row">Windows</th><td>Windows 10 22H2, or Windows 11</td></tr>
+          <tr><th scope="row">Runtime</th><td>Microsoft Edge WebView2. It comes with Windows 11 and with Microsoft Edge on current Windows 10. If it is missing, install the Evergreen runtime from <a href={WEBVIEW2_URL} rel="noopener">Microsoft</a>.</td></tr>
+          <tr><th scope="row">Rights</th><td>None beyond your own account. The install is per-user and does not ask for administrator rights.</td></tr>
+          <tr><th scope="row">Price</th><td>Free</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="dl-install">
+    <h2 class="block__title" id="dl-install">Installing</h2>
+    <div class="block__content">
+      <ol class="steps">
+        <li>Download the installer from <a href={RELEASES_URL} rel="noopener">GitHub Releases</a>, or unzip the portable build anywhere you like.</li>
+        <li>Run it. Setup takes a minute: pick a theme and wallpaper, then confirm once that {PRODUCT_NAME} should be your desktop.</li>
+        <li>That is all. Your wallpaper is already in place at sign-in and the widgets follow. Settings opens from the tray icon.</li>
+      </ol>
+      <div class="note">
+        <p><strong>SmartScreen.</strong> Early builds may not be code-signed, so Windows can show &ldquo;Windows protected your PC&rdquo;. If you downloaded the file from the official Releases page above, choose <strong>More info</strong>, then <strong>Run anyway</strong>. If you got it from anywhere else, do not run it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="dl-remove">
+    <h2 class="block__title" id="dl-remove">Removing it</h2>
+    <div class="block__content">
+      <p>
+        In Settings, switch to <strong>Use Windows desktop</strong>. Your original wallpaper and desktop icons come back, the
+        autostart entry and the startup-delay change are removed, and your {PRODUCT_NAME} settings are kept in case you return.
+      </p>
+      <p>
+        <strong>Uninstalling runs the same restore</strong>, so you end up with the desktop you started with. If the app
+        will not start, the repository includes a standalone script that does the same; see the
+        <a href={`${ROUTES.faq}#restore`}>FAQ</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="dl-source">
+    <h2 class="block__title" id="dl-source">Build it yourself</h2>
+    <div class="block__content">
+      <p>The source is public. Clone it, then follow the project README.</p>
+      <div class="code code--wide">
+        <code class="code__text"><span class="code__prompt" aria-hidden="true">$</span> {CLONE}</code>
+        <button type="button" class="code__copy needs-js" data-copy={CLONE}>Copy</button>
+      </div>
+    </div>
+  </section>
+</Page>

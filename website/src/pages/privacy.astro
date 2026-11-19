@@ -1,0 +1,75 @@
+---
+import Page from "../layouts/Page.astro";
+import { ISSUES_URL, OPEN_METEO_URL, PRODUCT_NAME } from "../brand";
+---
+
+<Page
+  title={`Privacy: ${PRODUCT_NAME} keeps everything on your PC`}
+  description={`${PRODUCT_NAME} is local-first: no account, no telemetry. The only network calls are the weather forecast and an update check you can turn off.`}
+  label="Privacy"
+  heading="Local first. Nothing phones home."
+>
+  <Fragment slot="lede">
+    {PRODUCT_NAME} has no account and no telemetry. This page lists the only two things that ever leave your PC, and what this website does.
+  </Fragment>
+
+  <section class="block reveal" aria-labelledby="pv-out">
+    <h2 class="block__title" id="pv-out">What leaves your PC</h2>
+    <div class="block__content table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th scope="col">Call</th><th scope="col">When</th><th scope="col">What is sent</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><a href={OPEN_METEO_URL} rel="noopener">Open-Meteo</a> forecast and place search</th>
+            <td>Only if you add a weather widget, and only after you pick a place.</td>
+            <td>The place you searched for, then its coordinates. You can search by name instead of sharing your location.</td>
+          </tr>
+          <tr>
+            <th scope="row">Update check</th>
+            <td>Periodically, in the background. You can turn it off in Settings.</td>
+            <td>A request for the latest version information. As with any web request, the server sees your IP address.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Nothing else. No analytics, no crash upload, no advertising identifiers.</p>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="pv-local">
+    <h2 class="block__title" id="pv-local">What stays on your PC</h2>
+    <div class="block__content">
+      <ul class="ticks">
+        <li>Your layout, themes, imported wallpapers and settings, in your user profile.</li>
+        <li>A snapshot of your original wallpaper and desktop settings, kept so that switching back can restore them.</li>
+        <li>The last weather and system readings, cached so widgets can appear instantly.</li>
+      </ul>
+      <p>
+        If something goes wrong, <strong>Copy diagnostics</strong> builds a plain text bundle on your PC. It goes nowhere
+        unless you paste it into an <a href={ISSUES_URL} rel="noopener">issue</a> yourself.
+      </p>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="pv-site">
+    <h2 class="block__title" id="pv-site">This website</h2>
+    <div class="block__content">
+      <ul class="ticks">
+        <li>No cookies, no analytics, no tracking pixels, no third-party scripts, fonts or CDNs. Everything is served from this site.</li>
+        <li>Your theme choice is kept in your browser&rsquo;s local storage and never sent anywhere.</li>
+        <li>The live widgets on the home page read your clock and, if your browser offers it, your battery level. That happens in the page on your device; nothing is sent.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block reveal" aria-labelledby="pv-dev">
+    <h2 class="block__title" id="pv-dev">Not part of the product</h2>
+    <div class="block__content">
+      <p>
+        Development time tracking (Hackatime) was used while building the project. It is a developer tool, not a part of
+        {PRODUCT_NAME}: the app does not include it or contact it.
+      </p>
+    </div>
+  </section>
+</Page>

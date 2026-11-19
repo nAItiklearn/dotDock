@@ -51,6 +51,46 @@ function initCopy(): void {
   }
 }
 
+/** The video poster animates only while it is on screen. */
+function initVideo(): void {
+  const video = document.querySelector<HTMLElement>("[data-product-video]");
+  if (!video || !("IntersectionObserver" in window)) return;
+  new IntersectionObserver((entries) => {
+    for (const entry of entries) video.classList.toggle("is-live", entry.isIntersecting);
+  }).observe(video);
+}
+
+/** Opens the FAQ answer that the URL fragment points at, so links like /faq#restore land open. */
+function initFaqLinks(): void {
+  const open = (): void => {
+    const target = location.hash ? document.getElementById(location.hash.slice(1)) : null;
+    if (target instanceof HTMLDetailsElement) {
+      target.open = true;
+      target.scrollIntoView();
+    }
+  };
+  open();
+  window.addEventListener("hashchange", open);
+}
+
+/** The dark gallery keeps a dark palette: the current theme if it is dark, otherwise Obsidian. */
+function initWall(): void {
+  const wall = document.querySelector<HTMLElement>("[data-wall]");
+  if (!wall) return;
+  const sync = (): void => {
+    wall.dataset["theme"] = document.documentElement.dataset["theme"] === "aurum" ? "aurum" : "obsidian";
+  };
+  sync();
+  new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  if (!("IntersectionObserver" in window)) return;
+  new IntersectionObserver((entries) => {
+    for (const entry of entries) wall.classList.toggle("is-live", entry.isIntersecting);
+  }).observe(wall);
+}
+
 initNav();
 initReveal();
 initCopy();
+initVideo();
+initFaqLinks();
+initWall();

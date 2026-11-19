@@ -1,0 +1,37 @@
+---
+/** Shared shell for the text pages: nav, a headed main area, footer and the page scripts. */
+import Base from "./Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  /** Short label above the heading, for example "Download". */
+  label: string;
+  heading: string;
+}
+const { title, description, label, heading } = Astro.props;
+---
+
+<Base title={title} description={description}>
+  <Nav current={Astro.url.pathname} />
+  <main id="main" class="page">
+    <div class="wrap">
+      <header class="page__head">
+        <p class="caps caps-row caps--text"><span class="dot" aria-hidden="true"></span>{label}</p>
+        <h1 class="page__title">{heading}</h1>
+        <p class="lede"><slot name="lede" /></p>
+      </header>
+      <div class="page__body">
+        <slot />
+      </div>
+    </div>
+  </main>
+  <Footer />
+
+  <script>
+    import "../scripts/chrome";
+    import "../scripts/theme";
+  </script>
+</Base>

@@ -1,0 +1,19 @@
+---
+import { LATEST_RELEASE, PRODUCT_NAME, REPO_URL, ROUTES } from "../brand";
+---
+
+<section class="section" id="get" aria-labelledby="get-title">
+  <div class="wrap">
+    <div class="cta reveal">
+      <h2 class="cta__title" id="get-title">Make Windows <span class="hero__dots">yours</span>.</h2>
+      <div class="cta__actions">
+        <a class="btn btn--accent btn--lg" href={ROUTES.download}>Download for Windows</a>
+        <a class="btn btn--lg btn--quiet" href={REPO_URL} rel="noopener">View on GitHub</a>
+      </div>
+      <p class="caps caps-row cta__status">
+        <span class={LATEST_RELEASE ? "dot" : "dot dot--hollow"} aria-hidden="true"></span>
+        {LATEST_RELEASE ? `${PRODUCT_NAME} ${LATEST_RELEASE.tag}` : "In development. Free and open source."}
+      </p>
+    </div>
+  </div>
+</section>

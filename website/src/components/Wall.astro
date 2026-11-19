@@ -1,0 +1,61 @@
+---
+import Widget from "./Widget.astro";
+import type { WidgetKind } from "../lib/widgets";
+
+type Tile = { kind: WidgetKind; style?: "dots" | "blocks" | "stripes"; place?: string };
+
+// Three rows of tiles; each row is shown twice so the loop has no seam. Interactive widgets are
+// left out: this wall is for looking at.
+const rows: Tile[][] = [
+  [
+    { kind: "clock", style: "dots", place: "--w:4" },
+    { kind: "ring" },
+    { kind: "weather" },
+    { kind: "date" },
+    { kind: "clock", style: "stripes", place: "--w:4" },
+    { kind: "ram" },
+  ],
+  [
+    { kind: "calendar" },
+    { kind: "music" },
+    { kind: "clock", style: "blocks", place: "--w:4" },
+    { kind: "disk" },
+    { kind: "forecast" },
+  ],
+  [
+    { kind: "batpill" },
+    { kind: "date" },
+    { kind: "clock", style: "dots", place: "--w:4" },
+    { kind: "ring" },
+    { kind: "weather" },
+    { kind: "calendar" },
+  ],
+];
+const copies = [0, 1];
+---
+
+<section class="section wall-section" aria-labelledby="wall-title">
+  <div class="wrap">
+    <div class="wall" data-wall data-theme="obsidian">
+      <div class="wall__head">
+        <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>The wall</p>
+        <h2 class="h2" id="wall-title">Every clock, ring and grid.</h2>
+      </div>
+      <div class="wall__rows" aria-hidden="true">
+        {
+          rows.map((tiles, r) => (
+            <div class={`wall__row${r % 2 ? " wall__row--rev" : ""}`} style={`--s:${[78, 96, 86][r]}s`}>
+              {
+                copies.map((copy) => (
+                  <div class={`cluster wall__track${copy ? " wall__dup" : ""}`}>
+                    {tiles.map((t) => <Widget kind={t.kind} place={t.place ?? ""} clockStyle={t.style ?? "blocks"} />)}
+                  </div>
+                ))
+              }
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>

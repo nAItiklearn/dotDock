@@ -1,18 +1,13 @@
 ---
 interface Props {
-  /** "01" ... shown right-aligned in the label row. */
-  index: string;
   label: string;
   titleId: string;
 }
-const { index, label, titleId } = Astro.props;
+const { label, titleId } = Astro.props;
 ---
 
 <div class="section__head reveal">
-  <div class="section__label">
-    <p class="caps caps-row caps--text"><span class="dot" aria-hidden="true"></span>{label}</p>
-    <p class="index tabular" aria-hidden="true">{index} / 07</p>
-  </div>
+  <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>{label}</p>
   <h2 class="h2" id={titleId}><slot name="title" /></h2>
   <p class="lede"><slot name="lede" /></p>
 </div>

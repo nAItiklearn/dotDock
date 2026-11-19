@@ -1,27 +1,37 @@
 ---
-import { PRODUCT_NAME, REPO_URL } from "../brand";
+import { PRODUCT_NAME, ROUTES } from "../brand";
 import { THEMES } from "../lib/themes";
 
+interface Props {
+  /** Pathname of the page being rendered, to mark the current link. */
+  current?: string;
+}
+const { current = ROUTES.home } = Astro.props;
+
 const links = [
-  { href: "#widgets", label: "Widgets" },
-  { href: "#themes", label: "Themes" },
-  { href: "#startup", label: "Startup" },
-  { href: "#safety", label: "Safety" },
-  { href: "#source", label: "Source" },
-  { href: "#download", label: "Download" },
+  { href: "/#widgets", label: "Widgets" },
+  { href: "/#themes", label: "Themes" },
+  { href: "/#startup", label: "Startup" },
+  { href: ROUTES.faq, label: "FAQ" },
 ];
 ---
 
 <header class="nav" data-nav>
-  <div class="wrap nav__inner">
-    <a class="wordmark" href="#top" aria-label={`${PRODUCT_NAME}, back to top`}>
+  <div class="nav__inner">
+    <a class="wordmark" href={ROUTES.home} aria-label={`${PRODUCT_NAME}, home`}>
       <span class="dot" aria-hidden="true"></span>
       <span class="wordmark__text">{PRODUCT_NAME}</span>
     </a>
 
-    <nav aria-label="Sections">
+    <nav aria-label="Main">
       <ul class="nav__links caps">
-        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} aria-current={l.href === current ? "page" : undefined}>{l.label}</a>
+            </li>
+          ))
+        }
       </ul>
     </nav>
 
@@ -44,12 +54,7 @@ const links = [
           ))
         }
       </div>
-      <a class="btn nav__github" href={REPO_URL} rel="noopener">
-        GitHub
-        <svg class="btn__arrow" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <path d="M3.5 10.5l7-7M4.5 3.5h6v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </a>
+      <a class="btn btn--accent nav__cta" href={ROUTES.download} aria-current={current === ROUTES.download ? "page" : undefined}>Download</a>
     </div>
   </div>
 </header>

@@ -1,10 +1,9 @@
 ---
 import SectionHead from "./SectionHead.astro";
-import { PRODUCT_NAME } from "../brand";
+import { PRODUCT_NAME, ROUTES } from "../brand";
 import { THEMES } from "../lib/themes";
 import { WALLPAPERS } from "../lib/wallpapers";
 
-const RESTORE_COMMAND = ".\\tools\\restore-windows.ps1 -DryRun";
 
 const cardDots = (() => {
   let on = "";
@@ -34,11 +33,10 @@ const icons = [
 
 <section class="section" id="safety" aria-labelledby="safety-title">
   <div class="wrap">
-    <SectionHead index="05" label="Safety" titleId="safety-title">
-      <Fragment slot="title">One click back <span class="dim">to stock Windows.</span></Fragment>
+    <SectionHead label="Safety" titleId="safety-title">
+      <Fragment slot="title">Back to stock Windows <span class="dim">in one click.</span></Fragment>
       <Fragment slot="lede">
-        {PRODUCT_NAME} is built to be undone. A single switch in Settings returns the desktop to how you left it,
-        and keeps your settings so switching back on is instant.
+        Built to be undone. One switch in Settings returns the desktop to how you left it.
       </Fragment>
     </SectionHead>
 
@@ -92,19 +90,11 @@ const icons = [
             ))
           }
         </ol>
-        <p class="safety__keep reveal">Your {PRODUCT_NAME} settings are kept, so turning it back on takes no setup.</p>
+        <p class="safety__keep reveal">Your settings are kept, so switching back on takes no setup.</p>
 
-        <div class="script reveal">
-          <p class="caps caps--text">If the app will not start</p>
-          <p class="script__body">
-            The repository includes a standalone script that does the same restore without the app. Run it from a
-            checkout with <code>-DryRun</code> first and it only prints what it would change.
-          </p>
-          <div class="code">
-            <code class="code__text">{RESTORE_COMMAND}</code>
-            <button type="button" class="code__copy needs-js" data-copy={RESTORE_COMMAND}>Copy</button>
-          </div>
-        </div>
+        <p class="safety__keep reveal">
+          App will not start? <a href={`${ROUTES.faq}#restore`}>A standalone script restores everything.</a>
+        </p>
       </div>
     </div>
   </div>

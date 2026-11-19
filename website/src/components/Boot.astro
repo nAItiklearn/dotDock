@@ -34,26 +34,25 @@ function track(n: number): string {
 const promises = [
   {
     title: "Your wallpaper is Windows's own",
-    body: "It is set through Windows itself, per monitor, so it is already on screen when Windows draws the desktop. No app has to be running for it.",
+    body: "Set through Windows itself, so it is on screen the moment the desktop is drawn.",
   },
   {
     title: "No ten-second wait",
-    body: "Windows normally holds startup apps back for around ten seconds. dotDock turns that delay off for your user account only, with no admin rights, and puts it back when you switch back.",
+    body: "Windows holds startup apps back for around ten seconds. The app switches that delay off, for your account only.",
   },
   {
-    title: "No spinners on the desktop",
-    body: "A small launcher starts first and shows the widget layer the moment it is ready, from the last data it saved. The refresh happens behind the scenes.",
+    title: "Small and native",
+    body: "A Rust core of about 4.7 MB starts first and shows widgets from the last data they saved. No telemetry, no spinners.",
   },
 ];
 ---
 
 <section class="section" id="startup" aria-labelledby="startup-title">
   <div class="wrap">
-    <SectionHead index="04" label="Startup" titleId="startup-title">
-      <Fragment slot="title">Wallpaper first. <span class="dim">Widgets in about a second.</span></Fragment>
+    <SectionHead label="Startup and weight" titleId="startup-title">
+      <Fragment slot="title">Built to stay <span class="dim">out of your way.</span></Fragment>
       <Fragment slot="lede">
-        The goal is that you sign in and your desktop is already yours, with nothing to launch. Here is what that
-        promise is, and what it is not. The app is still in development; the numbers come from a development build.
+        Sign in and your desktop is already yours. The app is in development; these numbers come from a development build.
       </Fragment>
     </SectionHead>
 

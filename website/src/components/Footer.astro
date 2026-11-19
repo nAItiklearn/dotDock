@@ -1,63 +1,91 @@
 ---
-import { DISCLAIMER, LICENSE_SPDX, LICENSE_URL, NOTICES_URL, PRODUCT_NAME, REPO_URL } from "../brand";
+import {
+  DISCLAIMER,
+  ISSUES_URL,
+  LICENSE_SPDX,
+  OPEN_METEO_URL,
+  PRODUCT_NAME,
+  RELEASES_URL,
+  REPO_URL,
+  ROUTES,
+} from "../brand";
+import { THEMES } from "../lib/themes";
+import { WALLPAPERS } from "../lib/wallpapers";
 
 const year = new Date().getFullYear();
 
-const licences = [
-  { name: PRODUCT_NAME, licence: LICENSE_SPDX, href: LICENSE_URL },
-  { name: "Doto (display type)", licence: "SIL OFL 1.1", href: "/licenses/Doto-OFL.txt" },
-  { name: "Geist (text)", licence: "SIL OFL 1.1", href: "/licenses/Geist-OFL.txt" },
-  { name: "Geist Mono (labels)", licence: "SIL OFL 1.1", href: "/licenses/GeistMono-OFL.txt" },
-];
+const columns = [
+  {
+    title: "Product",
+    links: [
+      { href: `${ROUTES.home}#widgets`, label: "Widgets" },
+      { href: `${ROUTES.home}#themes`, label: "Themes" },
+      { href: `${ROUTES.home}#startup`, label: "Startup" },
+      { href: ROUTES.download, label: "Download" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { href: ROUTES.faq, label: "FAQ" },
+      { href: REPO_URL, label: "GitHub", external: true },
+      { href: RELEASES_URL, label: "Releases", external: true },
+      { href: ISSUES_URL, label: "Issues", external: true },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { href: ROUTES.privacy, label: "Privacy" },
+      { href: ROUTES.license, label: "Licence and notices" },
+    ],
+  },
+] as const;
 ---
 
 <footer class="footer">
   <div class="wrap">
     <div class="footer__grid">
-      <div>
-        <h2 class="caps caps--text">{PRODUCT_NAME}</h2>
-        <p class="footer__about">
-          A free, open-source dot-matrix desktop for Windows. Wallpapers and widgets today; a dock and an agent
-          island next. No account, no analytics, no cookies on this site.
-        </p>
+      <div class="footer__about">
+        <p class="footer__brand">{PRODUCT_NAME}</p>
+        <p>A free, open-source desktop environment for Windows, drawn in dots. No account, no telemetry, no cookies on this site.</p>
       </div>
-
-      <div>
-        <h2 class="caps caps--text">Licences</h2>
-        <ul class="footer__list">
-          {
-            licences.map((l) => (
-              <li>
-                <a href={l.href}>{l.name}</a>
-                <span class="muted">{l.licence}</span>
-              </li>
-            ))
-          }
-          <li>
-            <a href={NOTICES_URL} rel="noopener">All third-party notices</a>
-            <span class="muted">On GitHub</span>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <h2 class="caps caps--text">Elsewhere</h2>
-        <ul class="footer__list">
-          <li><a href={REPO_URL} rel="noopener">Source code</a><span class="muted">GitHub</span></li>
-          <li><a href={`${REPO_URL}/issues`} rel="noopener">Issues</a><span class="muted">GitHub</span></li>
-          <li>
-            <a href="https://open-meteo.com/" rel="noopener">Weather data by Open-Meteo</a>
-            <span class="muted">In the app</span>
-          </li>
-        </ul>
-      </div>
+      {
+        columns.map((col) => (
+          <nav aria-label={col.title}>
+            <h2 class="caps caps--text">{col.title}</h2>
+            <ul class="footer__list">
+              {
+                col.links.map((l) => (
+                  <li>
+                    <a href={l.href} rel={"external" in l ? "noopener" : undefined}>{l.label}</a>
+                  </li>
+                ))
+              }
+            </ul>
+          </nav>
+        ))
+      }
     </div>
+  </div>
 
-    <div class="footer__disclaimer">
+  <div class="footer__stage" aria-hidden="true">
+    {
+      THEMES.map((t) => (
+        <img class="footer__wp" data-for={t.id} src={WALLPAPERS[t.id].large} width="1920" height="1080" alt="" loading="lazy" decoding="async" />
+      ))
+    }
+    <span class="footer__mark">{PRODUCT_NAME}</span>
+  </div>
+
+  <div class="wrap">
+    <div class="footer__legal">
       <p class="caps">{DISCLAIMER}</p>
+      <p class="caps">
+        {LICENSE_SPDX} &middot; Fonts SIL OFL 1.1 &middot; Weather data by
+        <a href={OPEN_METEO_URL} rel="noopener">Open-Meteo</a> (CC BY 4.0)
+      </p>
       <p class="caps tabular">&copy; {year} {PRODUCT_NAME} contributors</p>
     </div>
-
-    <span class="footer__mark" aria-hidden="true">{PRODUCT_NAME}</span>
   </div>
 </footer>
