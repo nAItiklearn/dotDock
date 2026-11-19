@@ -2,6 +2,8 @@
 
 Refines `MASTER_SPEC.md` section 11 at the P2 gate (section 15). Research: `docs/design/DOCK_RESEARCH.md`.
 Every feature passes the double-check protocol and scores 4.5 or more before it is offered.
+From D3 on, every milestone is also measured against the macOS Dock and CoolDock in
+`docs/design/DOCK_BENCHMARK.md`; a "behind" on feel or performance blocks the milestone.
 
 ## 1. Goal
 A dock that replaces the Windows taskbar and is the centre of the environment: apps filed into
