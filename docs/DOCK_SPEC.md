@@ -89,4 +89,4 @@ history (respects "exclude from history"), file shelf, downloads, screenshots, n
 | D4 | Running windows, thumbnails, window menu, taskbar hidden | Restore guarantees re-tested |
 | D5 | App Library with search | Rubric 4.5 |
 | D6 | Live tiles, first wave | Each 4.5 |
-| D7 | Settings pages, website section, release | Owner review, then tag `v2.0.0` |
+| D7 | Settings pages, website section, logo everywhere, launch video (`docs/design/LAUNCH_VIDEO.md`), release | Owner review, then tag `v2.0.0` |
