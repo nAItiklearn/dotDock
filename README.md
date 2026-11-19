@@ -1,5 +1,7 @@
 # dotDock
 
+![dotDock](brand/img/hero.png)
+
 A free, open-source desktop environment for Windows in a dot-matrix, monochrome-and-red style: wallpapers, home-screen widgets and (later) a dock and a status island.
 
 Status: early development. See `PROGRESS.md`.
