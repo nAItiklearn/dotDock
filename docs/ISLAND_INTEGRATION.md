@@ -187,13 +187,23 @@ Measured on this laptop (Windows 11, Defender on, many autostart apps, release G
 
 Claude Code writes the transcript asynchronously, so `Stop` carries `last_assistant_message` and the island uses that for the summary.
 
-## 10. Verification status
+## 10. Decisions taken (to copy into `docs/DECISIONS.md` with the next free numbers)
+
+- **Hook registration uses exec form and `async`.** No Git Bash or PowerShell starts per event, and Claude Code never waits for the hook. Alternative: a shell-form command, which depends on which shell Claude Code finds and on quoting. Reverse: write a shell-form entry in `connect.rs::desired_entry`.
+- **The hook is copied to the app data folder under a content hash.** Registered paths survive updates, moves and portable runs, and the copy in use is never overwritten. Alternative: register the install path directly.
+- **No idle-pause guessing.** The reference marks a turn "paused" when nothing is written for a few seconds. That shows a wrong state during long thinking, so the island relies on explicit signals instead: the interruption marker in the transcript, `PostToolUseFailure` with `is_interrupt`, the `idle_prompt` notification, and process liveness. A silent cancel therefore shows "thinking" until Claude Code's own idle notification, about a minute later.
+- **Token counts are only ever real.** No estimate fills the gap between transcript writes; the UI tweens between real values.
+- **A `waiting` state exists** (permission prompt, question, plan approval) with its own icon and chime. The reference has none; it is the moment people most often miss.
+- **Chimes are synthesised**, not shipped, so there is no audio licence to track.
+- **Session ownership by process id plus creation time**, so a reused id is never mistaken for a live session, and a protected (elevated) process that cannot be opened counts as alive.
+
+## 11. Verification status
 
 - `cargo test -p dotdock-island --features watch`: unit and integration tests with synthetic fixtures (no real transcripts are committed). Connect/Disconnect run only against temp folders.
 - The hook was run by the real Claude Code 2.1.316 against a temp config dir (`CLAUDE_CONFIG_DIR`): a blocked `UserPromptSubmit` (no model request) fired the exec-form entry, with and without `async`, and wrote a correct state file.
 - Not verified here: a live island showing a real working session (needs the core wiring above), the toast path, Windows Terminal tab selection, Codex phases that this laptop's logs do not contain (`turn_aborted`, approval requests and `error` are implemented from the Codex protocol and covered by synthetic tests only).
 
-## 11. Open risks
+## 12. Open risks
 
 - `args` exec form needs a Claude Code new enough to support it (2.1.316 does). On an older one the entry would be run as a shell command and fail quietly.
 - `StopFailure`, `PostToolUseFailure` and the `agent_needs_input` Notification matcher are in the current hooks documentation; a much older Claude Code might reject unknown events in `settings.json`.
