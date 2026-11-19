@@ -111,6 +111,11 @@ export interface DockCommands {
   dock_set_regions(args: { rects: readonly { x: number; y: number; w: number; h: number }[] }): void;
   /** Show or hide live DWM thumbnails of an app's windows above a rect of the dock window. */
   dock_preview(args: { hwnds: readonly string[]; anchor: { x: number; y: number; w: number; h: number } } | { hwnds: [] }): void;
+  /**
+   * The dock window never activates on its own. While a text field, a popover or edit mode needs keys the UI asks
+   * for the foreground with `active: true` and hands it back with `false` (same idea as the overlay's `overlay_set_typing`).
+   */
+  dock_set_focus(args: { active: boolean }): void;
 }
 
 export type CommandResult = { readonly ok: true } | { readonly ok: false; readonly reason: string };
@@ -120,4 +125,11 @@ export interface DockEvents {
   "dock://apps": readonly DockApp[];
   "dock://windows": readonly DockWindow[];
   "dock://settings": DockSettings;
+  /** The global App Library shortcut was pressed. */
+  "dock://library": "toggle" | "open" | "close";
+  /**
+   * The cursor entered or left the rectangles from `dock_set_regions`. A click-through window gets no `pointerleave`
+   * from the WebView, so the core, which already polls the cursor, reports it.
+   */
+  "dock://pointer": { readonly inside: boolean };
 }
