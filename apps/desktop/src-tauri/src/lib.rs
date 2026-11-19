@@ -2,6 +2,7 @@
 
 mod desktop_host;
 mod providers;
+mod tray;
 
 use desktop_host::{HitRect, HitRegions, Hwnd};
 use dotdock_shell::crash_guard::{self, StartDecision};
@@ -12,7 +13,7 @@ use providers::{ProvidersReady, WeatherWake};
 use std::time::Duration;
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
-const OVERLAY_LABEL: &str = "overlay";
+pub(crate) const OVERLAY_LABEL: &str = "overlay";
 /// If the UI never reports its first frame, show the window anyway rather than stay invisible.
 const SHOW_FALLBACK: Duration = Duration::from_secs(3);
 
@@ -231,9 +232,8 @@ pub fn run() {
     let ready = ProvidersReady::default();
     let regions = HitRegions::default();
     let result = tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {
-            // A second launch is a no-op until the Settings window exists.
-        }))
+        // A second launch opens Settings in the running instance (MASTER_SPEC 7.4).
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| tray::open_settings(app)))
         .manage(ready.clone())
         .manage(regions.clone())
         .invoke_handler(tauri::generate_handler![
@@ -255,6 +255,7 @@ pub fn run() {
             let handle = app.handle().clone();
             let window = create_overlay(&handle)?;
             boot::mark("window-created");
+            tray::install(&handle)?;
             let wake = providers::spawn(handle.clone(), ready)?;
             app.manage(wake);
             desktop_host::spawn_guard(Hwnd::from_raw(window.hwnd()?.0), regions)?;
