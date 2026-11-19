@@ -23,6 +23,8 @@ pub mod phase;
 pub mod pointer;
 pub mod problem;
 pub mod process;
+#[cfg(feature = "watch")]
+pub mod service;
 pub mod settings;
 pub mod sound;
 pub mod state;
