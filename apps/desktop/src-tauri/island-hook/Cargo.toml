@@ -11,4 +11,4 @@ name = "dotdock-island-hook"
 path = "src/main.rs"
 
 [dependencies]
-dotdock-island = { path = "../island" }
+dotdock-island = { path = "../island", default-features = false }

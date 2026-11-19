@@ -40,6 +40,8 @@ pub struct IslandSettings {
     pub show_tokens: bool,
     pub show_elapsed: bool,
     pub show_project: bool,
+    /// The creature and landscape strip along the bottom of the island.
+    pub show_scene: bool,
     pub move_aside: bool,
     pub follow_cursor: bool,
     pub codex: bool,
@@ -60,8 +62,9 @@ impl Default for IslandSettings {
             icon_style: IconStyle::Dots,
             show_detail: true,
             show_tokens: true,
-            show_elapsed: true,
-            show_project: true,
+            show_elapsed: false,
+            show_project: false,
+            show_scene: true,
             move_aside: true,
             follow_cursor: true,
             codex: true,
@@ -134,6 +137,7 @@ mod tests {
         assert_eq!(json["iconStyle"], "dots");
         assert_eq!(json["topOffset"], 10);
         assert_eq!(json["doneLingerSecs"], 6);
+        assert_eq!(json["showScene"], true);
         assert_eq!(json["volume"], 0.5);
         assert_eq!(json["schema"], 1);
     }

@@ -7,7 +7,7 @@ description = "Agent Island core: session states, transcript parsing and Connect
 publish = false
 
 [features]
-default = []
+default = ["watch"]
 # The folder/log watcher and its event loop. The hook binary leaves this off to stay tiny.
 watch = ["dep:notify"]
 
