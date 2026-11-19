@@ -9,7 +9,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 // and the on-demand settings window.
 export default defineConfig({
   plugins: [react()],
-  publicDir: resolve(here, "../../assets"),
+  // Only web assets are served/embedded; wallpapers ship as installer resources, not in the exe.
+  publicDir: resolve(here, "../../assets/web"),
   clearScreen: false,
   // Pre-bundle the Tauri API so dev never serves a stale optimised copy (504 "Outdated Optimize Dep").
   optimizeDeps: { include: ["@tauri-apps/api/core", "@tauri-apps/api/event"] },

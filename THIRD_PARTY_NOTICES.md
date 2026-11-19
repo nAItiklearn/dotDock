@@ -2,12 +2,12 @@
 
 Every dependency, font, sound, image and data source is listed here with its licence. Nothing is added without an entry.
 
-## Fonts (shipped in `assets/fonts`, subset to Latin, WOFF2)
+## Fonts (shipped in `assets/web/fonts`, subset to Latin, WOFF2)
 | Font | Copyright | Licence |
 |---|---|---|
-| Doto | The Doto Project Authors (github.com/oliverlalan/Doto) | SIL Open Font License 1.1 (`assets/fonts/Doto-OFL.txt`) |
-| Geist | The Geist Project Authors (github.com/vercel/geist-font) | SIL Open Font License 1.1 (`assets/fonts/Geist-OFL.txt`) |
-| Geist Mono | The Geist Project Authors (github.com/vercel/geist-font) | SIL Open Font License 1.1 (`assets/fonts/GeistMono-OFL.txt`) |
+| Doto | The Doto Project Authors (github.com/oliverlalan/Doto) | SIL Open Font License 1.1 (`assets/web/fonts/Doto-OFL.txt`) |
+| Geist | The Geist Project Authors (github.com/vercel/geist-font) | SIL Open Font License 1.1 (`assets/web/fonts/Geist-OFL.txt`) |
+| Geist Mono | The Geist Project Authors (github.com/vercel/geist-font) | SIL Open Font License 1.1 (`assets/web/fonts/GeistMono-OFL.txt`) |
 
 ## Data
 - **Weather data by [Open-Meteo.com](https://open-meteo.com/)**, licensed CC BY 4.0. Forecast and geocoding APIs, used only after the user picks a place.
