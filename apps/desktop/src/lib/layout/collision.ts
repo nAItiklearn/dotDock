@@ -21,48 +21,63 @@ function toMap(items: readonly Item[]): Map<string, Rect> {
   return new Map(items.map((i) => [i.id, { x: i.x, y: i.y, w: i.w, h: i.h }] as const));
 }
 
-/** The first two rectangles that overlap, in the map's order, or null when the arrangement is clean. */
-function firstClash(rects: ReadonlyMap<string, Rect>): readonly [string, string] | null {
-  const entries = [...rects];
-  for (let i = 0; i < entries.length; i++) {
-    for (let j = i + 1; j < entries.length; j++) {
-      const a = entries[i];
-      const b = entries[j];
-      if (a && b && rectsOverlap(a[1], b[1])) return [a[0], b[0]];
-    }
-  }
-  return null;
-}
-
-/** A neighbour never moves further than this many widgets away from the drop; beyond it the drop is refused. */
+/** A drop may move at most this many neighbours; beyond it the drop is refused rather than reshuffling the desktop. */
 const MAX_PUSHED_WIDGETS = 3;
-/** Search budget. Layouts hold a handful of widgets, so this is only ever a guard against pathological input. */
-const MAX_SEARCH_NODES = 600;
+/** Search budget. Layouts hold a handful of widgets, so this only ever guards against pathological input. */
+const MAX_SEARCH_NODES = 120;
 
 interface SearchState {
-  readonly rects: ReadonlyMap<string, Rect>;
+  /** Only the neighbours that have been moved, by id. Everything else is where it started. */
+  readonly shifted: ReadonlyMap<string, Rect>;
+  /** Widgets whose overlaps still need checking; moving one puts it back on the list. */
+  readonly pending: readonly string[];
   readonly cost: number;
-  readonly pushed: number;
   readonly order: number;
 }
 
-/** How far, and how many, neighbours have been moved from where they started. */
-function displacement(
-  rects: ReadonlyMap<string, Rect>,
-  origin: ReadonlyMap<string, Rect>,
-  movedId: string,
-): { readonly cost: number; readonly pushed: number; readonly signature: string } {
-  let cost = 0;
-  let pushed = 0;
-  const signature: string[] = [];
-  for (const [id, r] of rects) {
-    const o = origin.get(id);
-    if (id === movedId || !o || (o.x === r.x && o.y === r.y)) continue;
-    cost += Math.abs(r.x - o.x) + Math.abs(r.y - o.y);
-    pushed++;
-    signature.push(`${id}:${r.x},${r.y}`);
+const cheaper = (a: SearchState, b: SearchState): boolean => a.cost < b.cost || (a.cost === b.cost && a.order < b.order);
+
+/** Minimal binary heap over search states: the cheapest, earliest-found state comes out first. */
+class StateQueue {
+  private readonly heap: SearchState[] = [];
+
+  get size(): number {
+    return this.heap.length;
   }
-  return { cost, pushed, signature: signature.sort().join("|") };
+
+  push(state: SearchState): void {
+    const heap = this.heap;
+    let i = heap.length;
+    heap.push(state);
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      const p = heap[parent];
+      if (!p || !cheaper(state, p)) break;
+      heap[i] = p;
+      i = parent;
+    }
+    heap[i] = state;
+  }
+
+  pop(): SearchState | undefined {
+    const heap = this.heap;
+    const top = heap[0];
+    const last = heap.pop();
+    if (top === undefined || last === undefined || heap.length === 0) return top;
+    let i = 0;
+    for (;;) {
+      const left = heap[2 * i + 1];
+      if (!left) break;
+      const right = heap[2 * i + 2];
+      const childIndex = right && cheaper(right, left) ? 2 * i + 2 : 2 * i + 1;
+      const child = heap[childIndex];
+      if (!child || !cheaper(child, last)) break;
+      heap[i] = child;
+      i = childIndex;
+    }
+    heap[i] = last;
+    return top;
+  }
 }
 
 /**
@@ -77,32 +92,74 @@ export function resolvePush(items: readonly Item[], movedId: string, target: Rec
   const fixed = clampRect(target, bounds);
   if (!fitsBounds(fixed, bounds)) return null;
   const origin = toMap(items);
-  const start = new Map(origin);
-  start.set(movedId, fixed);
+  const ids = [...origin.keys()];
 
-  const open: SearchState[] = [{ rects: start, cost: 0, pushed: 0, order: 0 }];
+  // Every widget under the drop has to move, so a drop on more than the allowance can never work.
+  let underDrop = 0;
+  for (const [id, r] of origin) if (id !== movedId && rectsOverlap(fixed, r)) underDrop++;
+  if (underDrop > MAX_PUSHED_WIDGETS) return null;
+
+  const rectOf = (shifted: ReadonlyMap<string, Rect>, id: string): Rect | undefined =>
+    id === movedId ? fixed : (shifted.get(id) ?? origin.get(id));
+  const travelled = (id: string, rect: Rect): number => {
+    const o = origin.get(id);
+    return o ? Math.abs(rect.x - o.x) + Math.abs(rect.y - o.y) : 0;
+  };
+  const firstOverlap = (shifted: ReadonlyMap<string, Rect>, id: string): string | undefined => {
+    const rect = rectOf(shifted, id);
+    if (!rect) return undefined;
+    return ids.find((other) => {
+      if (other === id) return false;
+      const r = rectOf(shifted, other);
+      return r !== undefined && rectsOverlap(rect, r);
+    });
+  };
+
+  const open = new StateQueue();
+  open.push({ shifted: new Map(), pending: [movedId], cost: 0, order: 0 });
   const seen = new Set<string>();
   let order = 1;
-  for (let nodes = 0; open.length > 0 && nodes < MAX_SEARCH_NODES; nodes++) {
-    open.sort((a, b) => a.cost - b.cost || a.order - b.order);
-    const state = open.shift();
+  for (let nodes = 0; open.size > 0 && nodes < MAX_SEARCH_NODES; nodes++) {
+    const state = open.pop();
     if (!state) break;
-    const clash = firstClash(state.rects);
-    if (!clash) return state.rects;
+
+    // Only widgets that changed can have new overlaps, so look at those, not at every pair.
+    const pending = [...state.pending];
+    let clash: readonly [string, string] | null = null;
+    while (pending.length > 0 && !clash) {
+      const p = pending[0] ?? movedId;
+      const hit = firstOverlap(state.shifted, p);
+      if (hit === undefined) pending.shift();
+      else clash = [p, hit];
+    }
+    if (!clash) {
+      const result = new Map(origin);
+      result.set(movedId, fixed);
+      for (const [id, r] of state.shifted) result.set(id, r);
+      return result;
+    }
+
     // Either member of the clash may be the one to give way, except the dropped widget.
     for (const id of clash) {
       if (id === movedId) continue;
-      const other = state.rects.get(id === clash[0] ? clash[1] : clash[0]);
-      const current = state.rects.get(id);
+      const otherId = id === clash[0] ? clash[1] : clash[0];
+      const other = rectOf(state.shifted, otherId);
+      const current = rectOf(state.shifted, id);
       if (!other || !current) continue;
       for (const rect of pushedPositions(current, other)) {
         if (!fitsBounds(rect, bounds) || rectsOverlap(rect, fixed)) continue;
-        const rects = new Map(state.rects);
-        rects.set(id, rect);
-        const { cost, pushed, signature } = displacement(rects, origin, movedId);
-        if (pushed > MAX_PUSHED_WIDGETS || seen.has(signature)) continue;
+        const shifted = new Map(state.shifted);
+        if (travelled(id, rect) === 0) shifted.delete(id);
+        else shifted.set(id, rect);
+        if (shifted.size > MAX_PUSHED_WIDGETS) continue;
+        const signature = [...shifted]
+          .map(([key, r]) => `${key}:${r.x},${r.y}`)
+          .sort()
+          .join("|");
+        if (seen.has(signature)) continue;
         seen.add(signature);
-        open.push({ rects, cost, pushed, order: order++ });
+        const cost = state.cost - travelled(id, current) + travelled(id, rect);
+        open.push({ shifted, pending: [id, ...pending.filter((p) => p !== id)], cost, order: order++ });
       }
     }
   }
@@ -153,7 +210,6 @@ export function resolveMove(
 /**
  * Makes an arbitrary set of rectangles valid for these bounds: inside the edges and overlap-free.
  * Items keep their position whenever possible; the rest move to the nearest free spot.
- * Returns the very same map contents when nothing needed to change.
  */
 export function normalizeArrangement(items: readonly Item[], bounds: Bounds): Arrangement {
   const ordered = [...items].sort((a, b) => a.y - b.y || a.x - b.x);

@@ -218,7 +218,8 @@ export class GestureController {
       this.env.layout.getState().commit(result);
       const done = result.find((p) => p.id === a.id);
       const name = widgetCatalog.get(a.origin.kind)?.name ?? "Widget";
-      if (done) {
+      const changed = done && (a.kind === "move" ? done.x !== a.origin.x || done.y !== a.origin.y : done.size !== a.origin.size);
+      if (done && changed) {
         const { w, h } = footprintOf(widgetCatalog, done);
         announce(
           a.kind === "move"
