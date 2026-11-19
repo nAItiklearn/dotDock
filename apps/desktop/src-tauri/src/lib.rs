@@ -27,6 +27,17 @@ fn overlay_ready(app: AppHandle) {
     show_overlay(&app);
 }
 
+/// Transport controls for the music widget. Runs off the UI thread (async command).
+#[tauri::command]
+async fn media_command(command: dotdock_shell::providers::media::MediaCommand) -> bool {
+    dotdock_shell::providers::media::MediaProvider::new().command(command)
+}
+
+#[tauri::command]
+async fn media_seek(seconds: f64) -> bool {
+    dotdock_shell::providers::media::MediaProvider::new().seek(seconds)
+}
+
 #[tauri::command]
 fn set_hit_regions(rects: Vec<HitRect>, regions: State<'_, HitRegions>) {
     regions.replace(rects);
@@ -93,7 +104,13 @@ pub fn run() {
         }))
         .manage(ready.clone())
         .manage(regions.clone())
-        .invoke_handler(tauri::generate_handler![providers_ready, overlay_ready, set_hit_regions])
+        .invoke_handler(tauri::generate_handler![
+            providers_ready,
+            overlay_ready,
+            set_hit_regions,
+            media_command,
+            media_seek
+        ])
         .setup(move |app| {
             boot::mark("setup");
             let handle = app.handle().clone();

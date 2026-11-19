@@ -1,5 +1,6 @@
 //! System data providers. Each pushes typed payloads to the overlay; the UI never polls.
 
+use dotdock_shell::providers::media::{self, MediaProvider};
 use dotdock_shell::providers::{battery, system};
 use serde::Serialize;
 use std::sync::{Arc, Condvar, Mutex, PoisonError};
@@ -14,6 +15,10 @@ pub const EVENT_ISSUE: &str = "provider://issue";
 const FAST_TICK: Duration = Duration::from_secs(1);
 /// Disk usage changes slowly and enumerating volumes is comparatively costly.
 const DISK_EVERY: Duration = Duration::from_secs(30);
+/// Media state is sampled at this rate but only sent when it changes...
+const MEDIA_TICK: Duration = Duration::from_millis(500);
+/// ...plus a periodic resync so the UI's extrapolated progress never drifts far.
+const MEDIA_RESYNC: Duration = Duration::from_secs(5);
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -52,9 +57,16 @@ impl ProvidersReady {
 
 /// Starts the provider thread. It sleeps until the overlay is listening.
 pub fn spawn(app: AppHandle, ready: ProvidersReady) -> std::io::Result<()> {
+    let media_app = app.clone();
+    let media_ready = ready.clone();
     thread::Builder::new().name("providers".into()).spawn(move || {
         ready.wait();
         run_loop(&app);
+    })?;
+    // Separate thread: a slow media app must never delay battery or RAM updates.
+    thread::Builder::new().name("media".into()).spawn(move || {
+        media_ready.wait();
+        media_loop(&media_app);
     })?;
     Ok(())
 }
@@ -85,6 +97,39 @@ fn run_loop(app: &AppHandle) {
         }
 
         thread::sleep(FAST_TICK.saturating_sub(started.elapsed()));
+    }
+}
+
+fn media_loop(app: &AppHandle) {
+    let mut provider = MediaProvider::new();
+    let mut last: Option<media::MediaData> = None;
+    let mut last_sent = Instant::now();
+    let mut idle_reported = false;
+    loop {
+        let started = Instant::now();
+        match provider.read() {
+            media::Reading::Playing(data) => {
+                let changed = last.as_ref().is_none_or(|l| !l.same_track_state(&data));
+                if changed || last_sent.elapsed() >= MEDIA_RESYNC {
+                    emit(app, "media", data.clone());
+                    last_sent = Instant::now();
+                }
+                last = Some(data);
+                idle_reported = false;
+            }
+            media::Reading::Nothing if !idle_reported => {
+                issue(app, "media", "idle");
+                last = None;
+                idle_reported = true;
+            }
+            media::Reading::Nothing => {}
+            media::Reading::Unavailable => {
+                issue(app, "media", "unsupported");
+                // The session manager never appears later in a running process; stop polling.
+                return;
+            }
+        }
+        thread::sleep(MEDIA_TICK.saturating_sub(started.elapsed()));
     }
 }
 
