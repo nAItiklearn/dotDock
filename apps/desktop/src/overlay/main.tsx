@@ -1,24 +1,29 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "../design-system/tokens.css";
-import { applyTheme, themeById } from "../design-system/themes";
+import { displayFromLocation, initApp } from "../lib/state/app";
+import { applyCurrentAppearance } from "../lib/theme/useAppearance";
 import { connectProviders, isTauri } from "../providers/bridge";
+import { widgetCatalog } from "./catalog";
 import { Overlay } from "./Overlay";
-import { DEFAULT_LAYOUT } from "./layout";
 import { syncTypingFocus } from "./typingFocus";
 
 const params = new URLSearchParams(location.search);
-applyTheme(themeById(params.get("theme") ?? "obsidian"));
+// `?theme=<id>` pins a theme for design previews and screenshots; normal runs follow Settings.
+const pinnedTheme = params.get("theme");
+const app = initApp({ catalog: widgetCatalog, ...displayFromLocation(location.search) });
 
 const root = document.getElementById("root");
 if (!root) throw new Error("overlay.html is missing #root");
 
-// Paint only once the fonts are in, so the first frame is final (no text reflow on boot).
-void document.fonts.ready.then(() => {
+// Paint only once fonts and the saved settings are in, so the first frame is final: right theme,
+// right layout, no text reflow and no flash of the wrong state on boot.
+void Promise.all([document.fonts.ready, app.start()]).then(() => {
+  applyCurrentAppearance(pinnedTheme);
   createRoot(root).render(
     <StrictMode>
       {isTauri() ? null : <div className="preview-backdrop" />}
-      <Overlay layout={DEFAULT_LAYOUT} />
+      <Overlay forceThemeId={pinnedTheme} />
     </StrictMode>,
   );
   connectProviders().catch((err: unknown) => console.error("providers failed to connect", err));

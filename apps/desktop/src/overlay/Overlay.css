@@ -1,13 +1,112 @@
 .overlay {
   position: fixed;
   inset: 0;
+  outline: none;
   animation: overlay-in var(--dur-slow) var(--ease-out) both;
 }
+
+/*
+ * Slots are placed with an inline transform only. data-tx / data-ty carry the final pixel position (they
+ * feed the core's click map), and `translate` / `scale` are free for the edit-mode drag so React never fights it.
+ */
 .overlay__slot {
+  --sw: calc(var(--w) * var(--cell) + (var(--w) - 1) * var(--gap));
+  --sh: calc(var(--h) * var(--cell) + (var(--h) - 1) * var(--gap));
   position: absolute;
-  left: calc(var(--edge) + var(--x) * (var(--cell) + var(--gap)));
-  top: calc(var(--edge) + var(--y) * (var(--cell) + var(--gap)));
+  top: 0;
+  left: 0;
+  width: var(--sw);
+  height: var(--sh);
+  outline: none;
+  transition:
+    transform var(--dur-med) var(--ease-out),
+    translate var(--dur-med) var(--ease-out),
+    scale var(--dur-fast) var(--ease-out);
 }
+.overlay__content {
+  width: 100%;
+  height: 100%;
+}
+
+.overlay__slot.is-editing {
+  cursor: grab;
+  touch-action: none;
+  /* Own compositor layer while arranging: following the pointer is then a pure layer move, never a repaint. */
+  will-change: transform, translate, scale;
+}
+.overlay__slot.is-selected {
+  z-index: 2;
+}
+.overlay__slot.is-dragging {
+  z-index: 6;
+  cursor: grabbing;
+  scale: 1.025;
+  /* Follows the pointer exactly: only the lift eases. */
+  transition: scale var(--dur-fast) var(--ease-out);
+}
+/* Edit mode: a widget is a thing to arrange, not a thing to click, and it does not lift on hover. */
+.overlay--editing .overlay__content {
+  pointer-events: none;
+}
+
+.overlay__missing {
+  display: grid;
+  align-content: center;
+  gap: var(--space-1);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-2);
+  border: var(--hairline) dashed var(--text-dim);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  text-align: center;
+}
+.overlay__missing-id {
+  overflow: hidden;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- notices */
+.toasts {
+  position: absolute;
+  top: var(--edge);
+  left: 50%;
+  display: grid;
+  gap: var(--space-2);
+  width: min(480px, calc(100vw - 2 * var(--edge)));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateX(-50%);
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: var(--text-sm);
+  animation: toast-in var(--dur-med) var(--ease-out) both;
+}
+.toast--warning svg,
+.toast--error svg {
+  color: var(--danger);
+}
+.toast__text {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2) 0;
+  line-height: 1.35;
+}
+
 
 /* Opacity only: composited, never triggers layout. */
 @keyframes overlay-in {
@@ -16,6 +115,16 @@
   }
   to {
     opacity: 1;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--space-2)));
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
