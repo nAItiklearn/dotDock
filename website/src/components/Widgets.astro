@@ -1,0 +1,197 @@
+---
+import SectionHead from "./SectionHead.astro";
+import DotMatrix from "./DotMatrix.astro";
+import { THEMES } from "../lib/themes";
+import { WALLPAPERS } from "../lib/wallpapers";
+
+// Sample values for the three widgets a browser cannot measure. They are labelled as samples on
+// the page; the app reads the real system.
+const SAMPLE = {
+  ramPercent: 58,
+  ramGrid: { cols: 6, rows: 4 },
+  diskPercent: 61,
+  diskUsedGb: 312,
+  diskTotalGb: 512,
+  weatherTemp: 17,
+  weatherHigh: 19,
+  weatherLow: 11,
+  weatherText: "Overcast",
+};
+
+/** Dot-grid gauge as two SVG paths (lit and unlit), in a viewBox of one unit per dot pitch. */
+function dotGrid(cols: number, rows: number, fraction: number): { on: string; off: string } {
+  const lit = Math.round(fraction * cols * rows);
+  let on = "";
+  let off = "";
+  for (let i = 0; i < cols * rows; i++) {
+    const cx = (i % cols) + 0.5;
+    const cy = Math.floor(i / cols) + 0.5;
+    const d = `M${cx - 0.34} ${cy}a0.34 0.34 0 1 0 0.68 0a0.34 0.34 0 1 0 -0.68 0Z`;
+    if (i < lit) on += d;
+    else off += d;
+  }
+  return { on, off };
+}
+const ram = dotGrid(SAMPLE.ramGrid.cols, SAMPLE.ramGrid.rows, SAMPLE.ramPercent / 100);
+
+const RING_R = 44;
+const RING_LEN = 2 * Math.PI * RING_R;
+const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
+
+const styles = [
+  { id: "dots", label: "Dots" },
+  { id: "blocks", label: "Blocks" },
+  { id: "stripes", label: "Stripes" },
+] as const;
+---
+
+<section class="section" id="widgets" aria-labelledby="widgets-title">
+  <div class="wrap">
+    <SectionHead index="02" label="Widgets" titleId="widgets-title">
+      <Fragment slot="title">Widgets that <span class="dim">tell the truth.</span></Fragment>
+      <Fragment slot="lede">
+        The clock, date, calendar and battery below are live: they read <strong>this device</strong>, in your
+        browser, and send nothing anywhere. RAM, disk and weather show sample values here, because a web page
+        cannot measure them. In the app they read your real system.
+      </Fragment>
+    </SectionHead>
+
+    <div class="stage-controls needs-js reveal" role="group" aria-label="Widget options">
+      <div class="seg" role="radiogroup" aria-label="Clock style" data-clock-style-group>
+        <span class="caps seg__label" aria-hidden="true">Clock style</span>
+        {
+          styles.map((s) => (
+            <button type="button" class="seg__opt" role="radio" aria-checked={s.id === "blocks" ? "true" : "false"} tabindex={s.id === "blocks" ? 0 : -1} data-clock-style={s.id}>
+              {s.label}
+            </button>
+          ))
+        }
+      </div>
+      <button type="button" class="seg__opt seg__toggle" role="switch" aria-checked="true" data-clock-24h>
+        <span class="seg__tick" aria-hidden="true"></span>24-hour
+      </button>
+    </div>
+
+    <div class="stage reveal" data-stage>
+      {
+        THEMES.map((t) => (
+          <img
+            class="stage__wp"
+            data-for={t.id}
+            src={WALLPAPERS[t.id].large}
+            width="1920"
+            height="1080"
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+        ))
+      }
+
+      <div class="stage__grid">
+        <div class="w w--clock" style="--x:0;--y:0;--w:6;--h:2;--mx:0;--my:0;--mw:4;--mh:2">
+          <svg class="dm w-clock__digits" data-live-clock-svg viewBox="0 0 17 5" role="img" aria-label="Current time">
+            <path fill="currentColor"></path>
+          </svg>
+          <p class="w-clock__meta">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="caps" data-live-weekday>Today</span>
+          </p>
+        </div>
+
+        <section class="w w--circle" style="--x:0;--y:2;--w:2;--h:2;--mx:0;--my:2;--mw:2;--mh:2" aria-label="Battery" data-battery-ring>
+          <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="ring__track" cx="50" cy="50" r={RING_R} />
+            <circle class="ring__value" cx="50" cy="50" r={RING_R} stroke-dasharray={RING_LEN} stroke-dashoffset={RING_LEN} data-ring-value />
+          </svg>
+          <div class="w__center">
+            <span class="bolt" data-bolt aria-hidden="true"></span>
+            <span class="w-pct">
+              <svg class="dm w-ring__pct" data-battery-pct viewBox="0 0 11 5" role="img" aria-label="Battery level">
+                <path fill="currentColor"></path>
+              </svg>
+              <span class="w-pct__sign" aria-hidden="true">%</span>
+            </span>
+            <span class="caps" data-battery-caption>Battery</span>
+          </div>
+        </section>
+
+        <section class="w w--card" style="--x:2;--y:2;--w:3;--h:2;--mx:0;--my:4;--mw:4;--mh:2" aria-label="Calendar" data-calendar>
+          <div class="w-cal">
+            <div class="w-cal__head">
+              <span class="w-cal__today tabular" data-cal-today></span>
+              <span class="w-cal__month" data-cal-month></span>
+            </div>
+            <div class="w-cal__grid" role="grid" data-cal-grid></div>
+          </div>
+        </section>
+
+        <section class="w w--circle" style="--x:5;--y:2;--w:2;--h:2;--mx:2;--my:2;--mw:2;--mh:2" aria-label="Date" data-date>
+          <div class="w__center w__center--date">
+            <span class="caps" data-date-month></span>
+            <svg class="dm w-date__day" data-date-day viewBox="0 0 7 5" role="img" aria-label="Day of the month">
+              <path fill="currentColor"></path>
+            </svg>
+            <span class="caps caps--accent" data-date-weekday></span>
+          </div>
+        </section>
+
+        <section class="w w--card w--sample" style="--x:0;--y:4;--w:2;--h:2;--mx:0;--my:6;--mw:2;--mh:2" aria-label={`Memory, sample value ${SAMPLE.ramPercent} percent`}>
+          <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true"></span>Sample</span>
+          <div class="w-ram">
+            <div class="w-ram__head">
+              <span class="w-ram__pct tabular">{SAMPLE.ramPercent}%</span>
+              <span class="caps">RAM</span>
+            </div>
+            <svg class="w-ram__grid" viewBox={`0 0 ${SAMPLE.ramGrid.cols} ${SAMPLE.ramGrid.rows}`} aria-hidden="true">
+              <path d={ram.off} fill="var(--dot-off)"></path>
+              <path d={ram.on} fill="var(--accent)"></path>
+            </svg>
+          </div>
+        </section>
+
+        <section class="w w--circle w--sample" style="--x:2;--y:4;--w:2;--h:2;--mx:2;--my:6;--mw:2;--mh:2" aria-label={`Disk, sample value ${SAMPLE.diskPercent} percent used`}>
+          <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="ring__track" cx="50" cy="50" r={RING_R} />
+            <circle class="ring__value" cx="50" cy="50" r={RING_R} stroke-dasharray={RING_LEN} stroke-dashoffset={diskDash} />
+          </svg>
+          <div class="w__center">
+            <span class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true"></span>Sample</span>
+            <span class="w-pct">
+              <DotMatrix class="dm w-ring__pct" text={String(SAMPLE.diskPercent)} matrixStyle="blocks" height={26} label={`${SAMPLE.diskPercent} percent used`} />
+              <span class="w-pct__sign" aria-hidden="true">%</span>
+            </span>
+            <span class="w-disk__size tabular">C: {SAMPLE.diskUsedGb}/{SAMPLE.diskTotalGb} GB</span>
+          </div>
+        </section>
+
+        <section class="w w--pill w--sample" style="--x:4;--y:4;--w:3;--h:1;--mx:0;--my:8;--mw:4;--mh:1" aria-label={`Weather, sample value ${SAMPLE.weatherTemp} degrees`}>
+          <div class="w-weather">
+            <DotMatrix class="dm w-weather__temp" text={`${SAMPLE.weatherTemp}°`} matrixStyle="dots" height={28} label={`${SAMPLE.weatherTemp} degrees`} />
+            <div class="w-weather__text">
+              <span class="w-weather__cond">{SAMPLE.weatherText} <span class="w-weather__range tabular">{SAMPLE.weatherHigh}&deg; / {SAMPLE.weatherLow}&deg;</span></span>
+              <span class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true"></span>Sample</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="w w--pill" style="--x:4;--y:5;--w:3;--h:1;--mx:0;--my:9;--mw:4;--mh:1" aria-label="Battery" data-battery-pill>
+          <div class="w-bat">
+            <span class="w-bat__pct tabular" data-pill-pct>--</span>
+            <span class="w-bat__state" data-pill-state>Reading battery</span>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <p class="legend caps reveal">
+      <span class="caps-row"><span class="dot" aria-hidden="true"></span>Live: read from this device</span>
+      <span class="caps-row"><span class="dot dot--hollow" aria-hidden="true"></span>Sample: example value</span>
+      <span class="caps-row">
+        Wallpaper:&nbsp;
+        {THEMES.map((t) => <span class="wp-name" data-for={t.id}>{WALLPAPERS[t.id].name}</span>)}
+      </span>
+    </p>
+    <noscript><p class="caps">The live widgets need JavaScript. The app does not.</p></noscript>
+  </div>
+</section>

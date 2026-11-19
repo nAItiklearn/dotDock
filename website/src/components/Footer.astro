@@ -1,0 +1,63 @@
+---
+import { DISCLAIMER, LICENSE_SPDX, LICENSE_URL, NOTICES_URL, PRODUCT_NAME, REPO_URL } from "../brand";
+
+const year = new Date().getFullYear();
+
+const licences = [
+  { name: PRODUCT_NAME, licence: LICENSE_SPDX, href: LICENSE_URL },
+  { name: "Doto (display type)", licence: "SIL OFL 1.1", href: "/licenses/Doto-OFL.txt" },
+  { name: "Geist (text)", licence: "SIL OFL 1.1", href: "/licenses/Geist-OFL.txt" },
+  { name: "Geist Mono (labels)", licence: "SIL OFL 1.1", href: "/licenses/GeistMono-OFL.txt" },
+];
+---
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <h2 class="caps caps--text">{PRODUCT_NAME}</h2>
+        <p class="footer__about">
+          A free, open-source dot-matrix desktop for Windows. Wallpapers and widgets today; a dock and an agent
+          island next. No account, no analytics, no cookies on this site.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="caps caps--text">Licences</h2>
+        <ul class="footer__list">
+          {
+            licences.map((l) => (
+              <li>
+                <a href={l.href}>{l.name}</a>
+                <span class="muted">{l.licence}</span>
+              </li>
+            ))
+          }
+          <li>
+            <a href={NOTICES_URL} rel="noopener">All third-party notices</a>
+            <span class="muted">On GitHub</span>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="caps caps--text">Elsewhere</h2>
+        <ul class="footer__list">
+          <li><a href={REPO_URL} rel="noopener">Source code</a><span class="muted">GitHub</span></li>
+          <li><a href={`${REPO_URL}/issues`} rel="noopener">Issues</a><span class="muted">GitHub</span></li>
+          <li>
+            <a href="https://open-meteo.com/" rel="noopener">Weather data by Open-Meteo</a>
+            <span class="muted">In the app</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__disclaimer">
+      <p class="caps">{DISCLAIMER}</p>
+      <p class="caps tabular">&copy; {year} {PRODUCT_NAME} contributors</p>
+    </div>
+
+    <span class="footer__mark" aria-hidden="true">{PRODUCT_NAME}</span>
+  </div>
+</footer>

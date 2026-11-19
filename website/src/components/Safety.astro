@@ -1,0 +1,111 @@
+---
+import SectionHead from "./SectionHead.astro";
+import { PRODUCT_NAME } from "../brand";
+import { THEMES } from "../lib/themes";
+import { WALLPAPERS } from "../lib/wallpapers";
+
+const RESTORE_COMMAND = ".\\tools\\restore-windows.ps1 -DryRun";
+
+const cardDots = (() => {
+  let on = "";
+  let off = "";
+  for (let i = 0; i < 24; i++) {
+    const cx = (i % 6) + 0.5;
+    const cy = Math.floor(i / 6) + 0.5;
+    const d = `M${cx - 0.34} ${cy}a0.34 0.34 0 1 0 0.68 0a0.34 0.34 0 1 0 -0.68 0Z`;
+    if (i < 14) on += d;
+    else off += d;
+  }
+  return { on, off };
+})();
+
+const steps = [
+  "Your wallpaper comes back from the snapshot taken at setup",
+  "Desktop icons are shown again",
+  "The autostart entry is removed",
+  "The startup-delay setting is put back",
+];
+const icons = [
+  { label: "Recycle Bin", glyph: "M11 8h18v3H11zM13 13h14l-1.4 19H14.4z" },
+  { label: "This PC", glyph: "M7 8h26v18H7zM10 11v12h20V11zM16 28h8v2.5h-8zM13 31h14v2H13z" },
+  { label: "Projects", glyph: "M6 12a2 2 0 0 1 2-2h8l3 3h13a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z" },
+];
+---
+
+<section class="section" id="safety" aria-labelledby="safety-title">
+  <div class="wrap">
+    <SectionHead index="05" label="Safety" titleId="safety-title">
+      <Fragment slot="title">One click back <span class="dim">to stock Windows.</span></Fragment>
+      <Fragment slot="lede">
+        {PRODUCT_NAME} is built to be undone. A single switch in Settings returns the desktop to how you left it,
+        and keeps your settings so switching back on is instant.
+      </Fragment>
+    </SectionHead>
+
+    <div class="safety" data-safety data-state="on" data-product={PRODUCT_NAME}>
+      <div class="safety__demo reveal">
+        <div class="safety__screen" aria-hidden="true">
+          {
+            THEMES.map((t) => (
+              <img class="safety__wp" data-for={t.id} src={WALLPAPERS[t.id].large} width="1920" height="1080" alt="" loading="lazy" decoding="async" />
+            ))
+          }
+          <div class="safety__stock">
+            <ul class="stock-icons">
+              {icons.map(({ label, glyph }) => (
+                <li class="stock-icon">
+                  <svg class="stock-icon__tile" viewBox="0 0 40 40">
+                    <path d={glyph} fill-rule="evenodd" />
+                  </svg>
+                  <span class="stock-icon__label">{label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div class="safety__widgets">
+            <svg class="dm safety__clock" data-live-clock-svg="blocks" viewBox="0 0 17 5">
+              <path fill="currentColor"></path>
+            </svg>
+            <span class="safety__ring"></span>
+            <span class="safety__card">
+              <svg viewBox="0 0 6 4" aria-hidden="true"><path d={cardDots.on} fill="var(--accent)" /><path d={cardDots.off} fill="var(--dot-off)" /></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="safety__switch needs-js" role="radiogroup" aria-label="Which desktop to use">
+          <button type="button" class="seg__opt" role="radio" aria-checked="true" tabindex="0" data-safety-set="on">Use {PRODUCT_NAME} desktop</button>
+          <button type="button" class="seg__opt" role="radio" aria-checked="false" tabindex="-1" data-safety-set="stock">Use Windows desktop</button>
+        </div>
+        <p class="sr-only" role="status" aria-live="polite" data-safety-status></p>
+      </div>
+
+      <div class="safety__side">
+        <h3 class="safety__list-title caps caps--text reveal">Switching back does this</h3>
+        <ol class="safety__list">
+          {
+            steps.map((s, i) => (
+              <li class="safety__step reveal" style={`--i:${i}`}>
+                <span class="safety__check" aria-hidden="true"></span>
+                <span>{s}</span>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="safety__keep reveal">Your {PRODUCT_NAME} settings are kept, so turning it back on takes no setup.</p>
+
+        <div class="script reveal">
+          <p class="caps caps--text">If the app will not start</p>
+          <p class="script__body">
+            The repository includes a standalone script that does the same restore without the app. Run it from a
+            checkout with <code>-DryRun</code> first and it only prints what it would change.
+          </p>
+          <div class="code">
+            <code class="code__text">{RESTORE_COMMAND}</code>
+            <button type="button" class="code__copy needs-js" data-copy={RESTORE_COMMAND}>Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

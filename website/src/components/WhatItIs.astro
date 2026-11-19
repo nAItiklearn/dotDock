@@ -1,0 +1,134 @@
+---
+import SectionHead from "./SectionHead.astro";
+import { PRODUCT_NAME } from "../brand";
+
+// Each phase is a miniature screen on a 20 x 11 dot lattice. "#" marks the cells that phase owns,
+// so the roadmap reads as a map of where on the screen each part lives.
+const HOME = [
+  "....................",
+  ".######.............",
+  ".######.............",
+  "....................",
+  ".###.#####..........",
+  ".###.#####..........",
+  ".###.#####..........",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+];
+const DOCK = [
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  ".....##########.....",
+  "....................",
+];
+const ISLAND = [
+  "........####........",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+];
+
+const COLS = 20;
+const ROWS = 11;
+
+/** One SVG path holding a circle of radius r at the centre of every given cell. */
+function dots(list: readonly { x: number; y: number }[], r: number): string {
+  return list
+    .map((c) => `M${c.x + 0.5 - r} ${c.y + 0.5}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`)
+    .join("");
+}
+
+function cells(map: readonly string[]): { x: number; y: number }[] {
+  const out: { x: number; y: number }[] = [];
+  map.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && out.push({ x, y })));
+  return out;
+}
+
+const phases = [
+  {
+    when: "Now",
+    name: "Home screen",
+    status: "In development",
+    body: `An original wallpaper and widgets that sit on the desktop itself, under your windows: clock, date, calendar, weather, battery and system gauges.`,
+    own: cells(HOME),
+    context: [] as { x: number; y: number }[],
+  },
+  {
+    when: "Next",
+    name: "Dock",
+    status: "Planned",
+    body: `A taskbar replacement with hover magnification, running-app indicators and a built-in launcher.`,
+    own: cells(DOCK),
+    context: cells(HOME),
+  },
+  {
+    when: "Later",
+    name: "Agent island",
+    status: "Planned",
+    body: `A pill at the top of the screen that shows what your coding agents are doing: thinking, editing, running, done. It reads local files only and makes no network calls.`,
+    own: cells(ISLAND),
+    context: [...cells(HOME), ...cells(DOCK)],
+  },
+];
+---
+
+<section class="section" id="what" aria-labelledby="what-title">
+  <div class="wrap">
+    <SectionHead index="01" label="What it is" titleId="what-title">
+      <Fragment slot="title">A home screen for the PC you already have.</Fragment>
+      <Fragment slot="lede">
+        <strong>{PRODUCT_NAME}</strong> turns the Windows desktop into a calm, dot-matrix home screen. It runs
+        next to Windows, not instead of it, and one click takes it away again.
+      </Fragment>
+    </SectionHead>
+
+    <ol class="phases">
+      {
+        phases.map((p, i) => (
+          <li class="phase reveal" style={`--i:${i + 1}`}>
+            <svg
+              class="phase__screen"
+              viewBox={`0 0 ${COLS} ${ROWS}`}
+              role="img"
+              aria-label={`${p.name}: the part of the screen it occupies, highlighted`}
+            >
+              <defs>
+                <pattern id={`lattice-${i}`} width="1" height="1" patternUnits="userSpaceOnUse">
+                  <circle cx="0.5" cy="0.5" r="0.1" class="phase__off" />
+                </pattern>
+              </defs>
+              <rect width={COLS} height={ROWS} fill={`url(#lattice-${i})`} />
+              <path class="phase__context" d={dots(p.context, 0.34)} />
+              <path class="phase__own" d={dots(p.own, 0.4)} />
+            </svg>
+            <div class="phase__meta">
+              <p class="caps caps--text">{p.when}</p>
+              <p class="caps caps-row">
+                <span class={i === 0 ? "dot" : "dot dot--hollow"} aria-hidden="true" />
+                {p.status}
+              </p>
+            </div>
+            <h3 class="phase__name">{p.name}</h3>
+            <p class="phase__body">{p.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
