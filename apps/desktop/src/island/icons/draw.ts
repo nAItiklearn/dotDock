@@ -10,19 +10,19 @@ export interface Layer {
 }
 
 /** Proportions inside one lattice cell, in cell units. */
-const DOT_RADIUS = 0.4;
+const DOT_RADIUS = 0.46;
 const BLOCK_SIDE = 0.8;
 const BLOCK_RADIUS = 0.2;
 const STRIPE_WIDTH = 0.92;
 const STRIPE_HEIGHT = 0.42;
 /** Dim cells shrink a little so brightness reads as both opacity and size. */
-const SIZE_FLOOR = 0.62;
+const SIZE_FLOOR = 0.7;
 /** Unlit lattice dots sit well back so the lit shape stays the first thing the eye finds. */
-const GHOST_ALPHA = 0.5;
+const GHOST_ALPHA = 0.28;
 /** Cells dimmer than this are not worth a draw call. */
 const VISIBLE = 0.03;
 
-function drawShape(ctx: CanvasRenderingContext2D, style: IconStyle, cx: number, cy: number, cell: number, v: number): void {
+export function drawShape(ctx: CanvasRenderingContext2D, style: IconStyle, cx: number, cy: number, cell: number, v: number): void {
   const size = SIZE_FLOOR + (1 - SIZE_FLOOR) * v;
   ctx.beginPath();
   if (style === "dots") {

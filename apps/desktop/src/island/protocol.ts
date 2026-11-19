@@ -86,6 +86,8 @@ export interface IslandSettings {
   readonly showTokens: boolean;
   readonly showElapsed: boolean;
   readonly showProject: boolean;
+  /** The beetle and its landscape strip along the bottom edge. */
+  readonly showScene: boolean;
   /** Slide out of the way while the cursor is over the island. */
   readonly moveAside: boolean;
   /** Move to another monitor when the cursor touches its top edge. */
@@ -109,8 +111,9 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   iconStyle: "dots",
   showDetail: true,
   showTokens: true,
-  showElapsed: true,
-  showProject: true,
+  showElapsed: false,
+  showProject: false,
+  showScene: true,
   moveAside: true,
   followCursor: true,
   codex: true,

@@ -17,7 +17,7 @@ describe("computeRegions", () => {
   });
 
   it("does not watch for hover when moving aside is off", () => {
-    const regions = computeRegions({ rest: REST, mode: "compact", moveAside: false, aside: false });
+    const regions = computeRegions({ rest: REST, mode: "island", moveAside: false, aside: false });
     expect(regions.hover).toBeNull();
     expect(regions.interactive).toHaveLength(1);
   });

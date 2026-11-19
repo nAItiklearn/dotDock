@@ -14,7 +14,7 @@ export interface RegionInput {
   readonly aside: boolean;
 }
 
-const isActive = (mode: Mode): boolean => mode === "compact" || mode === "island";
+const isActive = (mode: Mode): boolean => mode === "island";
 
 /**
  * What the core needs to know to make the window click-through everywhere except the island.

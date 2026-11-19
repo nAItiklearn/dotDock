@@ -11,7 +11,7 @@ export function installDevBackend(): void {
   setBackend(devBackend);
 }
 
-/** Frames #root as the real 520 x 208 window and mounts the panel next to it. `window.island` exposes the store to devtools. */
+/** Frames #root as the real 520 x 240 window and mounts the panel next to it. `window.island` exposes the store to devtools. */
 export function mountDevPanel(): void {
   document.getElementById("root")?.classList.add("dev-frame");
   const host = document.createElement("div");

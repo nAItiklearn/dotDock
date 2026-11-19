@@ -6,7 +6,7 @@ The island is finished as three self-contained pieces. The core only creates one
 | --- | --- | --- |
 | `dotdock-island` | `apps/desktop/src-tauri/island/` | Library, no Tauri dependency. Reads hook state files, transcripts and Codex logs, merges them into snapshots, edits `settings.json` on Connect/Disconnect, finds the terminal window, tracks the cursor, plays chimes. |
 | `dotdock-island-hook` | `apps/desktop/src-tauri/island-hook/` | The small executable Claude Code runs on each hook event. Records the event, exits 0. |
-| Island window UI | `apps/desktop/island.html`, `apps/desktop/src/island/**` | The pill and the island, plus `IslandSettingsPanel` for the Settings window. Contract: `src/island/protocol.ts`. |
+| Island window UI | `apps/desktop/island.html`, `apps/desktop/src/island/**` | The tiny pill and the island (optional subtitle, state row with a dot-matrix orb, and a strip where an original beetle walks a dotted landscape whose pose follows the state), plus `IslandSettingsPanel` for the Settings window. Contract: `src/island/protocol.ts`. |
 
 Everything is local files only: no network, no AI calls, no tokens.
 
@@ -136,7 +136,7 @@ The UI reports two things through `island_set_regions`: `interactive` (where it 
 ## 5. Tray and Settings
 
 - Tray: one check item "Agent Island" that flips `settings.enabled` through `service.set_settings`. When `enabled` is false the service stays quiet (no chime, no toast) and the UI draws nothing.
-- Settings window: embed `IslandSettingsPanel` from `src/island/settings/IslandSettingsPanel.tsx` (it imports its own CSS and connects on mount; the host window must import `design-system/tokens.css` and call `applyTheme`). It talks to the same commands, so every control is real: idle mode, size, offset, icon style, what to show, move-aside, follow cursor, Codex on/off, notification and sound with volume, how long a finished task stays. It also holds Connect / Disconnect with the status text and the path of the file it edits.
+- Settings window: embed `IslandSettingsPanel` from `src/island/settings/IslandSettingsPanel.tsx` (it imports its own CSS and connects on mount; the host window must import `design-system/tokens.css` and call `applyTheme`). It talks to the same commands, so every control is real: idle mode, size, offset, icon style, what to show (file or command, tokens, elapsed time, project, the creature and landscape strip), move-aside, follow cursor, Codex on/off, notification and sound with volume, how long a finished task stays. It also holds Connect / Disconnect with the status text and the path of the file it edits.
 - Settings persist in `%LOCALAPPDATA%\dev.dotdock.desktop\island-settings.json` (schema 1, values clamped on load, a corrupt file is kept as `.bak` and defaults are used).
 
 ## 6. Where things run
@@ -200,7 +200,7 @@ Claude Code writes the transcript asynchronously, so `Stop` carries `last_assist
 ## 11. Verification status
 
 - `cargo test -p dotdock-island --features watch`: unit and integration tests with synthetic fixtures (no real transcripts are committed). Connect/Disconnect run only against temp folders.
-- Frontend: `pnpm typecheck`, `pnpm test` (127 tests: icon frames, labels, selection and pinning, formatting, geometry, regions, store) and `pnpm build` pass. Every state, the tiny and hidden idle modes, the multi-session pager, the three themes, the three icon styles, scale 0.8 to 1.4, long strings, move-aside and reduced motion were checked in a plain browser through the dev-only fixture panel, which is absent from the production bundle (searched `dist` for its strings: none).
+- Frontend: `pnpm typecheck`, `pnpm test` (175 tests: icon frames, creature poses and landscape, walk motion, labels, selection and pinning, formatting, geometry, regions, store) and `pnpm build` pass. Every state, the tiny and hidden idle modes, the multi-session pager, the three themes, the three icon styles, scale 0.8 to 1.4, long strings, move-aside and reduced motion were checked in a plain browser through the dev-only fixture panel, which is absent from the production bundle (searched `dist` for its strings: none).
 - The transcript readers were run over a real 17 MB transcript (read only): token total and context size match an independent computation exactly, and a 300 KB incremental read takes about 4 ms.
 - The hook was run by the real Claude Code 2.1.316 against a temp config dir (`CLAUDE_CONFIG_DIR`): a blocked `UserPromptSubmit` (no model request) fired the exec-form entry, with and without `async`, and wrote a correct state file.
 - Not verified here: a live island showing a real working session (needs the core wiring above), the toast path, Windows Terminal tab selection, Codex phases that this laptop's logs do not contain (`turn_aborted`, approval requests and `error` are implemented from the Codex protocol and covered by synthetic tests only).

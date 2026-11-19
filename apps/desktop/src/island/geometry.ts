@@ -1,4 +1,5 @@
-import { WINDOW_SIZE, type IslandSettings, type SessionView } from "./protocol";
+import { SCENE_CELL, SCENE_ROWS } from "./scene/layout";
+import type { IslandSettings, SessionView } from "./protocol";
 
 /**
  * Island layout, in px at scale 1. Every on-screen size derives from these named numbers:
@@ -7,41 +8,38 @@ import { WINDOW_SIZE, type IslandSettings, type SessionView } from "./protocol";
 export const BASE = {
   tinyWidth: 44,
   tinyHeight: 12,
-  compactWidth: 276,
   islandWidth: 328,
   padding: 12,
-  /** Lattice cell pitch of the state icon; the icon is 7 cells square. */
-  cell: 5,
-  detailRow: 14,
-  footerRow: 14,
-  /** Height of the dot-matrix elapsed timer inside the footer row. */
-  digitHeight: 11,
-  rowGap: 7,
+  /** Diameter of the state orb; one lattice cell is a seventh of it. */
+  orb: 20,
+  stateRow: 22,
+  subtitleRow: 14,
+  subtitleGap: 4,
+  sceneGap: 6,
+  sceneBottom: 8,
   /** Visible strip left on screen while the island is moved aside. */
   sliver: 6,
   /** Room kept below the plate for its shadow so it is never clipped by the window. */
   shadowRoom: 28,
 } as const;
 
-export const ICON_CELLS = 7;
+/** Height of the scene strip in px at scale 1. */
+export const SCENE_HEIGHT = SCENE_ROWS * SCENE_CELL;
 
-export type Mode = "off" | "hidden" | "tiny" | "compact" | "island";
+export type Mode = "off" | "hidden" | "tiny" | "island";
 
 export interface Rows {
-  readonly detail: boolean;
-  readonly footer: boolean;
+  /** The dim line above the state row. */
+  readonly subtitle: boolean;
+  /** The beetle and landscape strip along the bottom edge. */
+  readonly scene: boolean;
 }
 
-export function rowsFor(settings: IslandSettings): Rows {
-  return { detail: settings.showDetail, footer: settings.showTokens || settings.showElapsed || settings.showProject };
-}
-
-/** Which of the four looks the island has right now. */
+/** Which of the looks the island has right now. */
 export function modeFor(settings: IslandSettings, session: SessionView | null): Mode {
   if (!settings.enabled) return "off";
   if (!session) return settings.idle === "hidden" ? "hidden" : "tiny";
-  const rows = rowsFor(settings);
-  return rows.detail || rows.footer ? "island" : "compact";
+  return "island";
 }
 
 export interface Size {
@@ -49,25 +47,33 @@ export interface Size {
   readonly h: number;
 }
 
-/** Plate size in px at the given scale. Width is fixed per mode so changing text never moves anything. */
-export function plateSize(mode: Mode, rows: Rows, scale: number): Size {
-  if (mode === "off" || mode === "hidden" || mode === "tiny") {
-    return { w: BASE.tinyWidth * scale, h: BASE.tinyHeight * scale };
-  }
-  const header = BASE.cell * ICON_CELLS;
-  let h = BASE.padding * 2 + header;
-  if (mode === "island") {
-    if (rows.detail) h += BASE.rowGap + BASE.detailRow;
-    if (rows.footer) h += BASE.rowGap + BASE.footerRow;
-  }
-  return { w: (mode === "island" ? BASE.islandWidth : BASE.compactWidth) * scale, h: h * scale };
+/** Resting position of every row inside the island, from the top edge of the plate, plus the plate's size. */
+export interface Layout extends Size {
+  readonly subtitleTop: number;
+  readonly rowTop: number;
+  readonly sceneTop: number;
 }
 
-/**
- * The window is fixed in size, so the distance from the top edge is limited by what still fits
- * beneath the plate. At the largest size this can be less than the setting asks for.
- */
-export function effectiveTopOffset(topOffset: number, plateHeight: number, scale: number): number {
-  const room = WINDOW_SIZE.height - plateHeight - BASE.shadowRoom * scale;
-  return Math.max(0, Math.min(topOffset, room));
+/** Lays the rows out in px at the given scale. Width is fixed so changing text never moves anything sideways. */
+export function layoutFor(rows: Rows, scale: number): Layout {
+  const subtitle = rows.subtitle ? BASE.subtitleRow + BASE.subtitleGap : 0;
+  const rowTop = BASE.padding + subtitle;
+  const sceneTop = rowTop + BASE.stateRow + BASE.sceneGap;
+  const bottom = rows.scene ? sceneTop + SCENE_HEIGHT + BASE.sceneBottom : rowTop + BASE.stateRow + BASE.padding;
+  return {
+    w: BASE.islandWidth * scale,
+    h: bottom * scale,
+    subtitleTop: BASE.padding * scale,
+    rowTop: rowTop * scale,
+    sceneTop: sceneTop * scale,
+  };
+}
+
+/** Plate size for a mode. Off, hidden and tiny share one size so nothing jumps between them. */
+export function plateSize(mode: Mode, rows: Rows, scale: number): Size {
+  if (mode === "island") {
+    const { w, h } = layoutFor(rows, scale);
+    return { w, h };
+  }
+  return { w: BASE.tinyWidth * scale, h: BASE.tinyHeight * scale };
 }

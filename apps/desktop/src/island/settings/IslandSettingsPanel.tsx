@@ -122,6 +122,7 @@ export function IslandSettingsPanel() {
         <Row label={t("settings.showTokens")}>{({ id }) => <Switch id={id} checked={settings.showTokens} onChange={(showTokens) => set({ showTokens })} />}</Row>
         <Row label={t("settings.showElapsed")}>{({ id }) => <Switch id={id} checked={settings.showElapsed} onChange={(showElapsed) => set({ showElapsed })} />}</Row>
         <Row label={t("settings.showProject")}>{({ id }) => <Switch id={id} checked={settings.showProject} onChange={(showProject) => set({ showProject })} />}</Row>
+        <Row label={t("settings.showScene")}>{({ id }) => <Switch id={id} checked={settings.showScene} onChange={(showScene) => set({ showScene })} />}</Row>
       </Group>
 
       <Group title={t("settings.section.behaviour")}>

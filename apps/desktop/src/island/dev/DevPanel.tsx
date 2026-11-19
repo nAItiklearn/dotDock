@@ -12,6 +12,8 @@ const RAMP_MS = 450;
 const RAMP_STEP = 40;
 const FOCUS_OUTCOMES: readonly FocusOutcome[] = ["focused", "window-not-found", "session-ended"];
 const MIX: readonly Exclude<Phase, "idle">[] = ["running", "thinking", "reading", "waiting"];
+const RAPID: readonly Exclude<Phase, "idle">[] = ["thinking", "reading", "running", "thinking", "searching", "editing"];
+const RAPID_MS = 300;
 
 function Check({ label, checked, onChange }: { readonly label: string; readonly checked: boolean; readonly onChange: (v: boolean) => void }) {
   return (
@@ -36,6 +38,7 @@ function RegionsOverlay({ regions }: { readonly regions: Regions }) {
 export function DevPanel() {
   const [scenario, setScenario] = useState<Scenario>(DEFAULT_SCENARIO);
   const [ramping, setRamping] = useState(false);
+  const [rapid, setRapid] = useState(false);
   const [open, setOpen] = useState(true);
   const [regions, setRegions] = useState<Regions>({ interactive: [], hover: null });
   const [showRegions, setShowRegions] = useState(false);
@@ -52,6 +55,16 @@ export function DevPanel() {
     const timer = setInterval(() => setScenario((s) => ({ ...s, tokens: s.tokens + Math.round(Math.random() * RAMP_STEP * 3) + RAMP_STEP })), RAMP_MS);
     return () => clearInterval(timer);
   }, [ramping]);
+
+  useEffect(() => {
+    if (!rapid) return undefined;
+    let step = 0;
+    const timer = setInterval(() => {
+      step = (step + 1) % RAPID.length;
+      setScenario((s) => ({ ...s, phases: [RAPID[step] as Exclude<Phase, "idle">] }));
+    }, RAPID_MS);
+    return () => clearInterval(timer);
+  }, [rapid]);
 
   const start = (phases: readonly Exclude<Phase, "idle">[]): void => setScenario((s) => ({ ...s, phases, epoch: Date.now() }));
   const patch = (next: Partial<Scenario>): void => setScenario((s) => ({ ...s, ...next }));
@@ -99,6 +112,9 @@ export function DevPanel() {
                     {n} sessions
                   </button>
                 ))}
+                <button type="button" onClick={() => setRapid(!rapid)} data-on={rapid}>
+                  rapid (300 ms)
+                </button>
                 <button type="button" onClick={() => start(["done", "thinking", "error"])}>
                   done + working + error
                 </button>

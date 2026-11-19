@@ -66,13 +66,18 @@ describe("icon frames", () => {
     expect(ICONS.thinking.tone).toBe("neutral");
   });
 
-  it("draws the check mark dot by dot and then holds it", () => {
+  it("sweeps the ring round clockwise, then pops the check inside it, and holds", () => {
     const lit = (t: number): number => frame("done", t).filter((v) => v > 0.05).length;
+    const ring = 16;
+    const check = 4;
     expect(lit(0)).toBe(0);
     expect(lit(0.2)).toBeGreaterThan(0);
-    expect(lit(0.2)).toBeLessThan(7);
-    expect(lit(ICONS.done.staticT)).toBe(7);
-    expect(lit(60)).toBe(7);
+    expect(lit(0.2)).toBeLessThan(ring);
+    expect(lit(ICONS.done.staticT)).toBe(ring + check);
+    expect(lit(60)).toBe(ring + check);
+    expect(ICONS.done.cell(0.2, 3, 0)).toBeGreaterThan(0.9);
+    expect(ICONS.done.cell(0.2, 3, 6)).toBe(0);
+    expect(ICONS.done.cell(0.2, 3, 4)).toBe(0);
   });
 
   it("drains the limit gauge from the top and leaves the bottom row blinking", () => {

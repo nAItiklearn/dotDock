@@ -32,7 +32,6 @@
 .island--aside {
   pointer-events: none;
 }
-.island--compact:focus-visible,
 .island--island:focus-visible {
   outline: calc(2px * var(--k)) solid var(--accent);
   outline-offset: calc(3px * var(--k));
@@ -52,11 +51,10 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--dot-off) 60%, transparent) 0.85px, transparent 1.15px);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--dot-off) 38%, transparent) 0.85px, transparent 1.15px);
   background-size: calc(6px * var(--k)) calc(6px * var(--k));
   background-position: center;
 }
-
 /* A 12 px pill has no room for the lattice texture. */
 .island--tiny .island__texture,
 .island--hidden .island__texture {
@@ -100,6 +98,7 @@
   }
 }
 
+/* Rows are placed at their resting position (top) and slid by the plate's growth (y), so they ride its bottom edge. */
 .island__active {
   position: absolute;
   top: 0;
@@ -114,10 +113,6 @@
   --tone: var(--text);
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--row-gap);
-  padding: var(--pad);
 }
 .content[data-tone="accent"] {
   --tone: var(--accent);
@@ -133,18 +128,68 @@
   --tone: var(--text-dim);
 }
 
-.content__head {
+.sub {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  height: var(--sub-h);
   display: flex;
   align-items: center;
-  gap: calc(var(--pad) * 0.9);
-  height: var(--icon);
+  justify-content: center;
+  gap: calc(6px * var(--k));
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-sm) * var(--k));
+  line-height: var(--sub-h);
+  white-space: nowrap;
+  color: var(--text-dim);
 }
-.content__head canvas {
+.sub__line {
   display: block;
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.content__word {
-  flex: 1;
+.sub__time {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.sub__project {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub__dot {
+  flex: none;
+  opacity: 0.6;
+}
+
+.state {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--state-h);
+  padding: 0 var(--pad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8px * var(--k));
+}
+.state__orb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--orb);
+  height: var(--orb);
+}
+.state__orb canvas {
+  display: block;
+}
+.state__word {
+  display: block;
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -156,85 +201,64 @@
   text-transform: uppercase;
   color: var(--tone);
 }
-
-.content__detail {
-  position: relative;
-  height: var(--detail-row);
-  overflow: hidden;
-  font-family: var(--font-mono);
-  font-size: calc(var(--text-sm) * var(--k));
-  line-height: var(--detail-row);
-  color: var(--text-dim);
-}
-.content__line {
-  display: block;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.state__tokens {
+  flex: none;
 }
 
-.foot {
-  display: flex;
+/* Reserved width: the word keeps its place whether the counter shows "↑ 9" or "↑ 12.4k". */
+.tokens {
+  display: inline-flex;
   align-items: center;
-  gap: calc(var(--pad) * 0.9);
-  height: var(--foot-row);
+  gap: calc(3px * var(--k));
+  min-width: calc(5ch + 11px * var(--k));
   font-family: var(--font-mono);
   font-size: calc(var(--text-xs) * var(--k));
+  font-variant-numeric: tabular-nums;
   color: var(--text-dim);
 }
-.foot__tokens {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(4px * var(--k));
-  min-width: calc(5ch + 12px * var(--k));
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
+.tokens[data-empty="true"] {
+  visibility: hidden;
 }
-.foot__arrow {
+.tokens__arrow {
+  flex: none;
   width: calc(8px * var(--k));
   height: calc(8px * var(--k));
-  color: var(--accent);
-}
-.foot__elapsed {
-  display: inline-flex;
-  align-items: center;
-  min-width: calc(38px * var(--k));
-  height: var(--foot-row);
-  color: var(--text-dim);
-}
-.foot__elapsed svg {
-  display: block;
-}
-.foot__project {
-  display: inline-flex;
-  align-items: baseline;
-  gap: calc(6px * var(--k));
-  min-width: 0;
-  margin-left: auto;
-}
-.foot__agent {
-  flex: none;
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
-  opacity: 0.7;
-}
-.foot__name {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: var(--text);
 }
 
+/* The strip along the bottom edge. The glow is a plain gradient: static, so it costs no frames. */
+.scene {
+  position: absolute;
+  left: var(--pad);
+  width: var(--scene-w);
+  height: var(--scene-h);
+}
+.scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 100% at 50% 100%, color-mix(in srgb, var(--text) 9%, transparent), transparent 72%);
+  mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
+}
+.scene canvas {
+  position: relative;
+  display: block;
+}
+
+.pager-slot {
+  position: absolute;
+  right: var(--pad);
+  display: flex;
+  align-items: center;
+}
 .pager {
   display: flex;
   align-items: center;
-  margin-left: auto;
 }
 .pager__hit {
   display: grid;
   place-items: center;
   margin: 0;
-  padding: calc(6px * var(--k)) calc(2.5px * var(--k));
+  padding: calc(5px * var(--k)) calc(2.5px * var(--k));
   border: 0;
   background: none;
   cursor: pointer;

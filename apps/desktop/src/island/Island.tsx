@@ -1,13 +1,16 @@
-import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type WheelEvent } from "react";
-import { motion, useReducedMotion, useSpring } from "motion/react";
+import { useEffect, useLayoutEffect, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type WheelEvent } from "react";
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { actions } from "./bridge";
-import { Content } from "./Content";
-import { BASE, effectiveTopOffset, modeFor, plateSize, rowsFor } from "./geometry";
-import { Plate } from "./Plate";
-import { plateRadius } from "./squash";
+import { Content, SUBTITLE_HOLD_MS, useHeldLine } from "./Content";
+import { BASE, SCENE_HEIGHT, layoutFor, modeFor, plateSize } from "./geometry";
+import { Pager } from "./Pager";
+import { Plate, usePlateMotion } from "./Plate";
 import type { SessionView } from "./protocol";
+import { SceneCanvas } from "./scene/SceneCanvas";
+import { SCENE_CELL } from "./scene/layout";
+import { plateRadius } from "./squash";
 import { useCurrentSession, useIslandStore } from "./store";
-import { t } from "./strings";
+import { detailLine, t } from "./strings";
 import { useRegions } from "./useRegions";
 import "./Island.css";
 
@@ -37,21 +40,31 @@ export function Island() {
   }, [current]);
   const shown = current ?? lastShown.current;
 
+  const flashKind = flash && shown && flash.sessionId === shown.id ? flash.kind : null;
+  const rawSubtitle = shown === null ? null : flashKind ? t(`flash.${flashKind}.hint`) : settings.showDetail ? detailLine(shown) : null;
+  const subtitle = useHeldLine(rawSubtitle, shown?.id ?? "", SUBTITLE_HOLD_MS);
+  const extras = shown !== null && ((settings.showElapsed && shown.turnStartedAt !== null) || (settings.showProject && shown.project !== ""));
+
   const mode = modeFor(settings, current);
-  const rows = rowsFor(settings);
+  const rows = { subtitle: subtitle !== null || extras, scene: settings.showScene };
   const { scale } = settings;
-  const active = mode === "compact" || mode === "island";
-  const activeSize = plateSize(rows.detail || rows.footer ? "island" : "compact", rows, scale);
+  const active = mode === "island";
+  const layout = layoutFor(rows, scale);
   const size = plateSize(mode, rows, scale);
-  const top = effectiveTopOffset(settings.topOffset, activeSize.h, scale);
+  const top = settings.topOffset;
   const aside = active && settings.moveAside && pointerInside;
+
+  const plate = usePlateMotion(size, plateRadius(mode !== "island", size.h, tokenRadius(), scale));
+  const layoutHeight = useMotionValue(layout.h);
+  useLayoutEffect(() => layoutHeight.set(layout.h), [layout.h, layoutHeight]);
+  const follow = useTransform(() => plate.height.get() - layoutHeight.get());
 
   const slide = useSpring(0, SLIDE_SPRING);
   useEffect(() => {
-    const target = aside ? -(top + activeSize.h - BASE.sliver * scale) : 0;
+    const target = aside ? -(top + layout.h - BASE.sliver * scale) : 0;
     if (reduced) slide.jump(target);
     else slide.set(target);
-  }, [aside, top, activeSize.h, scale, reduced, slide]);
+  }, [aside, top, layout.h, scale, reduced, slide]);
 
   const slideRef = useRef<HTMLDivElement>(null);
   const restRef = useRef<HTMLDivElement>(null);
@@ -67,7 +80,6 @@ export function Island() {
   const swipe = useRef({ travel: 0, at: 0 });
   if (mode === "off") return null;
 
-  const radius = plateRadius(mode !== "island", size.h, tokenRadius(), scale);
   const focusCurrent = (): void => {
     if (current) void actions.focus(current.id);
   };
@@ -95,14 +107,16 @@ export function Island() {
   const vars = {
     "--k": scale,
     "--pad": `${BASE.padding * scale}px`,
-    "--row-gap": `${BASE.rowGap * scale}px`,
-    "--detail-row": `${BASE.detailRow * scale}px`,
-    "--foot-row": `${BASE.footerRow * scale}px`,
-    "--icon": `${BASE.cell * 7 * scale}px`,
-    "--active-w": `${activeSize.w}px`,
-    "--active-h": `${activeSize.h}px`,
+    "--sub-h": `${BASE.subtitleRow * scale}px`,
+    "--state-h": `${BASE.stateRow * scale}px`,
+    "--orb": `${BASE.orb * scale}px`,
+    "--scene-w": `${BASE.islandWidth * scale - 2 * BASE.padding * scale}px`,
+    "--scene-h": `${SCENE_HEIGHT * scale}px`,
+    "--active-w": `${layout.w}px`,
+    "--active-h": `${layout.h}px`,
     "--tiny-dot": `${3 * scale}px`,
   } as CSSProperties;
+  const pagerTop = settings.showScene ? layout.sceneTop + 4 * scale : layout.rowTop;
 
   return (
     <main className="island-root" style={vars}>
@@ -119,7 +133,7 @@ export function Island() {
           onKeyDown={onKeyDown}
           onWheel={onWheel}
         >
-          <Plate size={size} radius={radius} visible={mode !== "hidden"} />
+          <Plate motion={plate} visible={mode !== "hidden"} />
           <motion.div
             className="island__standby"
             aria-hidden="true"
@@ -138,16 +152,27 @@ export function Island() {
             transition={{ duration: reduced ? 0 : active ? 0.18 : 0.08, delay: active && !reduced ? 0.12 : 0 }}
           >
             {shown ? (
-              <Content
-                session={shown}
-                sessions={sessions}
-                settings={settings}
-                rows={rows}
-                flash={flash}
-                direction={direction}
-                live={active}
-                onPick={(id) => useIslandStore.getState().pin(id)}
-              />
+              <>
+                <Content
+                  session={shown}
+                  settings={settings}
+                  rows={rows}
+                  layout={layout}
+                  subtitle={subtitle}
+                  flash={flash}
+                  direction={direction}
+                  live={active}
+                  follow={follow}
+                />
+                {settings.showScene ? (
+                  <motion.div className="scene" style={{ top: layout.sceneTop, y: follow }}>
+                    <SceneCanvas phase={shown.phase} iconStyle={settings.iconStyle} cell={SCENE_CELL * scale} live={active} />
+                  </motion.div>
+                ) : null}
+                <motion.div className="pager-slot" style={{ top: pagerTop, y: follow }}>
+                  <Pager sessions={sessions} currentId={shown.id} onPick={(id) => useIslandStore.getState().pin(id)} />
+                </motion.div>
+              </>
             ) : null}
           </motion.div>
         </div>

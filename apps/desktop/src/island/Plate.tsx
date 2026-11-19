@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform, type MotionValue } from "motion/react";
 import type { Size } from "./geometry";
-import { parseShadow, settledAmount, squashedChrome, type ShadowSpec } from "./squash";
 import { watchTheme } from "./icons/palette";
+import { parseShadow, settledAmount, squashedChrome, type ShadowSpec } from "./squash";
 
 /** Slightly underdamped: the plate overshoots by a hair and settles, like a drop of liquid. */
 const SPRING = { stiffness: 460, damping: 32, mass: 1 } as const;
@@ -19,27 +19,25 @@ function readChrome(): Chrome {
   return { shadow: parseShadow(style.getPropertyValue("--shadow")), hairline: parseFloat(style.getPropertyValue("--hairline")) || 1 };
 }
 
-export interface PlateProps {
-  /** Final size of the plate for the current mode, in px. */
-  readonly size: Size;
-  /** Corner radius at that final size, in px. */
-  readonly radius: number;
-  readonly visible: boolean;
+export interface PlateMotion {
+  /** The size the plate is laid out at: its final size for the current mode. */
+  readonly finalW: MotionValue<number>;
+  readonly finalH: MotionValue<number>;
+  /** The size it visibly has right now, springing toward the final size. */
+  readonly width: MotionValue<number>;
+  readonly height: MotionValue<number>;
+  readonly radius: MotionValue<number>;
 }
 
 /**
- * The glass plate behind the island. It is always laid out at its final size and grows by springing
- * scaleX and scaleY, so nothing but transforms moves on the compositor. Radius, hairline and shadow
- * are divided by the current squash so they never look stretched.
+ * Springs for the plate's visible size and corner radius. They are plain numbers: the plate turns them
+ * into scale transforms, and rows that must stay glued to its bottom edge read `height` directly.
  */
-export function Plate({ size, radius, visible }: PlateProps) {
+export function usePlateMotion(size: Size, radius: number): PlateMotion {
   const reduced = useReducedMotion() ?? false;
-  const chrome = useRef<Chrome>(readChrome());
-  useEffect(() => watchTheme(() => (chrome.current = readChrome())), []);
-
-  const w = useSpring(size.w, SPRING);
-  const h = useSpring(size.h, SPRING);
-  const r = useSpring(radius, SPRING);
+  const width = useSpring(size.w, SPRING);
+  const height = useSpring(size.h, SPRING);
+  const round = useSpring(radius, SPRING);
   const finalW = useMotionValue(size.w);
   const finalH = useMotionValue(size.h);
   const lastArea = useRef(size.w * size.h);
@@ -52,13 +50,13 @@ export function Plate({ size, radius, visible }: PlateProps) {
     lastArea.current = area;
     const apply = (): void => {
       if (reduced) {
-        w.jump(size.w);
-        h.jump(size.h);
-        r.jump(radius);
+        width.jump(size.w);
+        height.jump(size.h);
+        round.jump(radius);
       } else {
-        w.set(size.w);
-        h.set(size.h);
-        r.set(radius);
+        width.set(size.w);
+        height.set(size.h);
+        round.set(radius);
       }
     };
     if (!shrinking || reduced) {
@@ -67,18 +65,36 @@ export function Plate({ size, radius, visible }: PlateProps) {
     }
     const timer = setTimeout(apply, SHRINK_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [size.w, size.h, radius, reduced, finalW, finalH, w, h, r]);
+  }, [size.w, size.h, radius, reduced, finalW, finalH, width, height, round]);
 
-  const scaleX = useTransform(() => w.get() / finalW.get());
-  const scaleY = useTransform(() => h.get() / finalH.get());
-  const borderRadius = useTransform(() => squashedChrome(scaleX.get(), scaleY.get(), r.get(), chrome.current.hairline, chrome.current.shadow).borderRadius);
-  const boxShadow = useTransform(() => squashedChrome(scaleX.get(), scaleY.get(), r.get(), chrome.current.hairline, chrome.current.shadow).boxShadow);
+  return { finalW, finalH, width, height, radius: round };
+}
+
+export interface PlateProps {
+  readonly motion: PlateMotion;
+  readonly visible: boolean;
+}
+
+/**
+ * The glass plate behind the island. It is always laid out at its final size and grows by springing
+ * scaleX and scaleY, so nothing but transforms moves on the compositor. Radius, hairline and shadow
+ * are divided by the current squash so they never look stretched.
+ */
+export function Plate({ motion: m, visible }: PlateProps) {
+  const reduced = useReducedMotion() ?? false;
+  const chrome = useRef<Chrome>(readChrome());
+  useEffect(() => watchTheme(() => (chrome.current = readChrome())), []);
+
+  const scaleX = useTransform(() => m.width.get() / m.finalW.get());
+  const scaleY = useTransform(() => m.height.get() / m.finalH.get());
+  const borderRadius = useTransform(() => squashedChrome(scaleX.get(), scaleY.get(), m.radius.get(), chrome.current.hairline, chrome.current.shadow).borderRadius);
+  const boxShadow = useTransform(() => squashedChrome(scaleX.get(), scaleY.get(), m.radius.get(), chrome.current.hairline, chrome.current.shadow).boxShadow);
   const texture = useTransform(() => settledAmount(scaleX.get(), scaleY.get()));
 
   return (
     <motion.div
       className="island__plate"
-      style={{ width: finalW, height: finalH, x: "-50%", scaleX, scaleY, borderRadius, boxShadow }}
+      style={{ width: m.finalW, height: m.finalH, x: "-50%", scaleX, scaleY, borderRadius, boxShadow }}
       initial={false}
       animate={{ opacity: visible ? 1 : 0 }}
       transition={{ duration: reduced ? 0 : 0.2 }}

@@ -1,3 +1,4 @@
+import { hash } from "../hash";
 import type { Phase } from "../protocol";
 
 /** Every state icon lives on a 7 by 7 lattice. Pure functions, so frames can be tested without a canvas. */
@@ -42,14 +43,6 @@ export interface IconSpec {
 const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
 const wrap = (t: number, period: number): number => ((t % period) + period) % period;
 const smooth = (phase: number): number => 0.5 - 0.5 * Math.cos(TAU * phase);
-
-/** Small deterministic integer hash, so "random" patterns repeat identically every cycle. */
-function hash(n: number): number {
-  let x = Math.imul(n | 0, 0x9e3779b1) ^ 0x85ebca6b;
-  x = Math.imul(x ^ (x >>> 15), 0x2c1b3c6d);
-  x = Math.imul(x ^ (x >>> 12), 0x297a2d39);
-  return (x ^ (x >>> 15)) >>> 0;
-}
 
 const none = (): null => null;
 
@@ -187,26 +180,36 @@ const waiting: IconSpec = {
   },
 };
 
+/** Cells of the ring, in the order a clockwise sweep from twelve o'clock would reach them. */
+const RING: readonly (readonly [number, number])[] = Array.from({ length: LATTICE * LATTICE }, (_, i) => [i % LATTICE, Math.floor(i / LATTICE)] as const)
+  .filter(([c, r]) => {
+    const dist = Math.hypot(c - MID, r - MID);
+    return dist >= 2.6 && dist <= 3.4;
+  })
+  .sort(([ac, ar], [bc, br]) => clockwise(ac, ar) - clockwise(bc, br));
+function clockwise(c: number, r: number): number {
+  return wrap(Math.atan2(c - MID, MID - r), TAU);
+}
 const CHECK: readonly (readonly [number, number])[] = [
-  [0, 3],
-  [1, 4],
-  [2, 5],
+  [2, 3],
   [3, 4],
   [4, 3],
   [5, 2],
-  [6, 1],
 ];
-const CHECK_STEP = 0.09;
-const CHECK_DONE = CHECK_STEP * CHECK.length;
+const RING_STEP = 0.035;
+const CHECK_STEP = 0.07;
+const CHECK_START = RING_STEP * RING.length;
+const CHECK_DONE = CHECK_START + CHECK_STEP * CHECK.length;
 const CHECK_BREATH = 3;
 const done: IconSpec = {
   tone: "success",
   period: null,
   staticT: CHECK_DONE,
   cell: (t, c, r) => {
-    const index = CHECK.findIndex(([cc, rr]) => cc === c && rr === r);
-    if (index < 0) return 0;
-    const drawn = clamp01((t - index * CHECK_STEP) / CHECK_STEP);
+    const ring = RING.findIndex(([cc, rr]) => cc === c && rr === r);
+    const check = CHECK.findIndex(([cc, rr]) => cc === c && rr === r);
+    if (ring < 0 && check < 0) return 0;
+    const drawn = ring >= 0 ? clamp01((t - ring * RING_STEP) / RING_STEP) : clamp01((t - CHECK_START - check * CHECK_STEP) / CHECK_STEP);
     const hold = t > CHECK_DONE ? 1 - 0.18 * smooth((t - CHECK_DONE) / CHECK_BREATH) : 1;
     return drawn * hold;
   },

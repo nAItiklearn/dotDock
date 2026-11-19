@@ -41,8 +41,6 @@ const EN = {
   "flash.session-ended": "Session ended",
   "flash.session-ended.hint": "Nothing to switch to",
 
-  "agent.claude": "Claude",
-  "agent.codex": "Codex",
 
   "aria.focus": "Show the terminal for {project}",
   "aria.standby": "No agent is running",
@@ -71,6 +69,7 @@ const EN = {
   "settings.showTokens": "Tokens this turn",
   "settings.showElapsed": "Elapsed time",
   "settings.showProject": "Project name",
+  "settings.showScene": "Creature and landscape",
   "settings.moveAside": "Move aside when the cursor is over it",
   "settings.followCursor": "Follow the cursor to other monitors",
   "settings.codex": "Also show Codex tasks",
