@@ -6,7 +6,7 @@
 mod imp {
     use std::ffi::c_void;
     use windows::Wdk::System::Threading::{NtQueryInformationProcess, ProcessBasicInformation};
-    use windows::Win32::Foundation::{CloseHandle, FILETIME, HANDLE, STILL_ACTIVE};
+    use windows::Win32::Foundation::{CloseHandle, ERROR_ACCESS_DENIED, FILETIME, HANDLE, STILL_ACTIVE};
     use windows::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
     };
@@ -27,9 +27,9 @@ mod imp {
         }
     }
 
-    fn open(pid: u32) -> Option<Owned> {
+    fn open(pid: u32) -> windows::core::Result<Owned> {
         // SAFETY: plain FFI call; the returned handle is owned by `Owned`.
-        unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok().map(Owned) }
+        unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).map(Owned) }
     }
 
     fn filetime_to_u64(ft: FILETIME) -> u64 {
@@ -65,11 +65,16 @@ mod imp {
     }
 
     pub fn creation_time(pid: u32) -> Option<u64> {
-        times(&open(pid)?).map(|(created, _)| created)
+        times(&open(pid).ok()?).map(|(created, _)| created)
     }
 
     pub fn is_alive(pid: u32, start: Option<u64>) -> bool {
-        let Some(handle) = open(pid) else { return false };
+        let handle = match open(pid) {
+            Ok(handle) => handle,
+            // A process of an elevated user cannot be opened but certainly exists; only "no such process"
+            // (invalid parameter) means it is gone.
+            Err(err) => return err.code() == ERROR_ACCESS_DENIED.to_hresult(),
+        };
         let mut code = 0u32;
         // SAFETY: `code` is a live u32 on this stack frame.
         if unsafe { GetExitCodeProcess(handle.0, &mut code) }.is_err() || code != STILL_ACTIVE.0 as u32 {
@@ -196,5 +201,12 @@ mod tests {
     #[test]
     fn a_pid_that_does_not_exist_is_not_alive() {
         assert!(!is_alive(u32::MAX - 3, None));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_protected_process_that_cannot_be_opened_still_counts_as_alive() {
+        // PID 4 is the System process: opening it is denied, which must not read as "gone".
+        assert!(is_alive(4, None));
     }
 }
