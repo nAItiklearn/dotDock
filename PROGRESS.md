@@ -1,28 +1,55 @@
 # Progress
 
-**Phase:** P0 Foundations
-**Milestone:** M0
+**Version:** v1 (home screen, Agent Island, Settings, website). Tagged `v1.0.0` locally, not released.
+**Next:** v2, the dock and launcher. The owner's rule: no public release until the dock ships.
 
-## Done
-- Reference inventory and palette (`docs/design/REFERENCE_INVENTORY.md`).
-- Safety net: `tools/snapshot-windows.ps1` and `tools/restore-windows.ps1`, tested on the real machine (dry-run + real run, snapshot never overwritten without `-Force`).
-- Original Windows state snapshotted to `%LOCALAPPDATA%\dev.dotdock.desktop\windows-original.json` (moved there by D-009).
-- Desktop window probe (`tools/probe-desktop.ps1`): this machine (build 26300) uses the classic `Progman > SHELLDLL_DefView > SysListView32` layout. Icons are currently hidden by the user.
-- Hackatime read-only check passed.
-- Rust core (Tauri 2): overlay window at desktop level (S2), hidden until the UI reports it is ready, cursor-driven click-through, providers for RAM/CPU/disk/battery pushed at 1 Hz, boot stage timing in `%LOCALAPPDATA%\dev.dotdock.desktop\boot.log`.
-- Measured release cold start (local GNU build, 3 runs): window shown at 1003 / 856 / 721 ms after process start. WebView2 creation is ~600 ms of that.
-- Live data verified in the release build: RAM 68 %, C: 222/236 GB, battery 32 % charging.
-- CI: `.github/workflows/ci.yml` (frontend, rust fmt/clippy/test, audit, NSIS + portable bundle) and `release.yml` (tags `v*`).
+## v1: what is done
+### Core (Rust, Tauri 2)
+- Desktop overlay at desktop level: hidden until the UI is ready, cursor-driven click-through, one guard thread owns its Win32 styles (D-010), re-fits on display and DPI changes.
+- Providers pushed to the UI: RAM, CPU, disk, battery (1 Hz), system media session with transport controls, weather from Open-Meteo.
+- Reversible launch at sign-in (logon task, Run-key fallback, D-011), crash-loop guard and Shift safe mode (D-012), panic log, boot stage timing in `boot.log`.
+- Tray menu, on-demand Settings window, second launch opens Settings.
+- Measured cold start (local release build, 3 runs): window shown 1003 / 856 / 721 ms after process start.
 
-## Next
-- First green CI run on MSVC; review its installer.
-- Autostart (Run key vs logon task, measured) + StartupDelayInMSec + crash-loop guard, all reversible by restore-windows.ps1.
-- Wallpapers (generator in progress), weather provider (Open-Meteo), multi-monitor and DPI change handling.
+### Safety
+- `tools/snapshot-windows.ps1` and `tools/restore-windows.ps1`, tested on this machine; the original state is snapshotted.
+
+### Home screen
+- Design system: tokens, three themes (Obsidian, Paper, Aurum), dot-matrix glyphs and pictograms, line icons.
+- Widgets offered (all scored 4.5 or more): clock, date, battery, system, music, fun fact, timer, world clocks, **photo** (D-015).
+- Held below the 4.5 bar, code present but not offered: weather 4.0, quote 4.2 (D-016), calendar 4.4, notes, to-do.
+- Edit mode: transform-only drag, snapping, guides, undo and redo, widget drawer, per-widget settings, profiles.
+- 24 original procedural wallpapers (12 styles, dark and light) with thumbnails; desktop versions of the owner's phone mood images are in progress (see below).
+
+### Agent Island
+- Session engine, Claude Code hook and Codex log watcher, reversible Connect (D-014).
+- Island window: notch with the 7 x 7 state icon, detail line, token count, the original beetle and landscape strip.
+
+### Settings app
+- Instant-apply pages, search, theme editor, native-backed pages (startup, wallpaper, restore, performance, shortcuts).
+
+### Website (`website/`, Astro, static)
+- Home, download, FAQ, licence and privacy pages; live widgets; the island notch plays a scripted session with the app's own scene code.
+
+### Time tracking
+- Hackatime hook fixed on 2026-11-19 after heartbeats were being killed; see `docs/HACKATIME_STATUS.md`. Nothing was back-filled.
+
+### Verification at v1
+- Desktop: `pnpm typecheck` clean, `pnpm test` 658 passed.
+- Rust: `cargo check` clean (local GNU toolchain); MSVC build and installer in CI.
+- Website: `pnpm build` (sync notices, contrast check, `astro check`, build) clean.
+
+## In progress
+- Desktop wallpapers from the owner's mood images (louvre and soft-mono reworked, four new styles). Generated from code only.
+
+## v2 plan (next)
+- Dock and launcher replacing the taskbar, with an App Library that groups apps by category (productivity, social, coding, AI, and more). Study the owner's dock videos and images, launchmeapp.com and cooldock.app first; build originals only.
 
 ## Machine notes that affect boot time
 - 22 apps autostart from `HKCU\Run` and compete at sign-in.
 - Wallpaper Engine autostarts and paints over the Windows wallpaper; the overlay must coexist.
-- Display 1920×1080 at 125 % scaling.
+- Display 1920 x 1080 at 125 % scaling.
 
 ## Known issues
 - B-001 closed by D-005: MSVC builds run in CI; local builds use the GNU toolchain.
+- A removed photo widget's file stays in IndexedDB (D-015).
