@@ -64,6 +64,8 @@ struct WallpaperItem {
     mode: String,
     accent: String,
     path: String,
+    /// Web path of the small preview, e.g. `/wallpaper-thumbs/paper-ring-dark.jpg`.
+    thumb: Option<String>,
 }
 
 fn bundled_wallpapers_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
@@ -82,6 +84,7 @@ async fn wallpapers_list(app: AppHandle) -> Result<Vec<WallpaperItem>, String> {
             style: e.style,
             mode: e.mode,
             accent: e.accent,
+            thumb: e.thumb.map(|t| format!("/{t}")),
             path: path.to_string_lossy().into_owned(),
         })
         .collect())

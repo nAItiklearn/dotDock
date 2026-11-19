@@ -4,6 +4,10 @@ Every image is computed from maths and a fixed seed. No reference artwork is rea
 traced, resampled or sampled. Needs only numpy, Pillow and opencv.
 
     python -I tools/wallpaper-gen/generate.py --out assets/wallpapers [--size 3840x2160] [--only id[,id]]
+    python -I tools/wallpaper-gen/generate.py --out assets/wallpapers --thumbs-only
+
+Picker thumbnails (640x360, Lanczos, JPEG q82) go to assets/web/wallpaper-thumbs and are
+referenced from each manifest entry as "thumb".
 """
 from __future__ import annotations
 
@@ -33,6 +37,7 @@ from wpgen.registry import all_styles  # noqa: E402
 MODES = ("dark", "light")
 REPO = HERE.parents[1]
 DEFAULT_CONTACT = REPO / ".cache" / "wallpapers-contact.jpg"
+DEFAULT_THUMBS = REPO / "assets" / "web" / "wallpaper-thumbs"
 
 
 def lower_priority() -> None:
@@ -51,13 +56,25 @@ def parse_size(text: str) -> tuple[int, int]:
         raise argparse.ArgumentTypeError("size must look like 3840x2160") from exc
 
 
-def render_one(task: tuple[str, str, int, int, str]) -> dict:
+def with_thumb(entry: dict, thumbs_dir: Path, src_dir: Path) -> tuple[dict, int, int]:
+    """Write the entry's thumbnail from its rendered JPEG; return (entry with "thumb" after "file", bytes, quality)."""
+    nbytes, quality = output.make_thumb(src_dir / entry["file"], thumbs_dir / entry["file"])
+    out: dict = {}
+    for k, v in entry.items():
+        if k != "thumb":
+            out[k] = v
+        if k == "file":
+            out["thumb"] = f"{thumbs_dir.name}/{entry['file']}"
+    return out, nbytes, quality
+
+
+def render_one(task: tuple[str, str, int, int, str, str]) -> dict:
     """Worker: render one wallpaper variant, encode it, return its manifest entry and timings."""
     import cv2
 
     lower_priority()
     cv2.setNumThreads(2)
-    style_id, mode, w, h, out_dir = task
+    style_id, mode, w, h, out_dir, thumbs_dir = task
     style = next(s for s in all_styles() if s.id == style_id)
     t0 = time.perf_counter()
     canvas = Canvas(w, h)
@@ -73,7 +90,7 @@ def render_one(task: tuple[str, str, int, int, str]) -> dict:
 
     with Image.open(path) as im:
         zones = output.zone_check(np.asarray(im.convert("RGB")), mode)
-    return {
+    entry = {
         "id": style.id,
         "name": style.name,
         "style": style.style,
@@ -84,11 +101,42 @@ def render_one(task: tuple[str, str, int, int, str]) -> dict:
         "width": w,
         "height": h,
         "bytes": nbytes,
+    }
+    entry, thumb_bytes, _q = with_thumb(entry, Path(thumbs_dir), Path(out_dir))
+    return {
+        **entry,
+        "_thumb_bytes": thumb_bytes,
         "_render_s": round(t1 - t0, 1),
         "_encode_s": round(t2 - t1, 1),
         "_enc": info,
         "_zones": zones,
     }
+
+
+def build_thumbs_only(styles, wanted: list[str], mode: str | None, out_dir: Path, thumbs_dir: Path) -> int:
+    """Rebuild thumbnails from the rendered JPEGs and refresh the manifest; no wallpaper is re-rendered."""
+    mpath = out_dir / "manifest.json"
+    if not mpath.exists():
+        print(f"no manifest at {mpath}: render the wallpapers first", file=sys.stderr)
+        return 2
+    t0 = time.perf_counter()
+    entries = json.loads(mpath.read_text(encoding="utf-8"))["wallpapers"]
+    done, total = [], 0
+    for i, e in enumerate(entries):
+        if (wanted and e["id"] not in wanted) or (mode and e["mode"] != mode):
+            continue
+        if not (out_dir / e["file"]).exists():
+            print(f"missing {e['file']}", file=sys.stderr)
+            return 2
+        entries[i], nbytes, q = with_thumb(e, thumbs_dir, out_dir)
+        total += nbytes
+        done.append((e["file"], nbytes, q))
+        print(f"  {e['file']:26s} {nbytes/1e3:5.1f} KB  q{q}", flush=True)
+    output.write_manifest(entries, mpath)
+    over = [d for d in done if d[1] > output.THUMB_BUDGET_BYTES]
+    print(f"{len(done)} thumbnail(s) in {time.perf_counter() - t0:.1f}s, {total/1e3:.0f} KB total, "
+          f"max {max(d[1] for d in done)/1e3:.1f} KB, {len(over)} over {output.THUMB_BUDGET_BYTES//1000} KB")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -99,6 +147,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--mode", choices=MODES, help="render only one variant")
     ap.add_argument("--jobs", type=int, default=3, help="parallel workers (each needs ~1.5 GB at 4K)")
     ap.add_argument("--contact", default=str(DEFAULT_CONTACT), help="contact sheet path ('' to skip)")
+    ap.add_argument("--thumbs-dir", default=str(DEFAULT_THUMBS),
+                    help="where the 640x360 picker thumbnails go (the manifest stores '<dir name>/<file>')")
+    ap.add_argument("--thumbs-only", action="store_true",
+                    help="do not render: (re)build thumbnails from the JPEGs already in --out and update the manifest")
     ap.add_argument("--list", action="store_true", help="list wallpaper ids and exit")
     args = ap.parse_args(argv)
     lower_priority()
@@ -119,8 +171,11 @@ def main(argv: list[str] | None = None) -> int:
 
     out_dir = Path(args.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+    thumbs_dir = Path(args.thumbs_dir).resolve()
+    if args.thumbs_only:
+        return build_thumbs_only(styles, wanted, args.mode, out_dir, thumbs_dir)
     w, h = args.size
-    tasks = [(s.id, m, w, h, str(out_dir)) for s in styles if not wanted or s.id in wanted
+    tasks = [(s.id, m, w, h, str(out_dir), str(thumbs_dir)) for s in styles if not wanted or s.id in wanted
              for m in MODES if not args.mode or m == args.mode]
 
     t0 = time.perf_counter()
@@ -162,6 +217,8 @@ def main(argv: list[str] | None = None) -> int:
 
     total = sum((out_dir / e["file"]).stat().st_size for e in entries)
     print(f"{len(tasks)} image(s) in {elapsed:.1f}s; {len(entries)} in manifest, {total/1e6:.1f} MB total")
+    thumb_total = sum(r["_thumb_bytes"] for r in results.values())
+    print(f"    thumbnails: {len(results)} written to {thumbs_dir}, {thumb_total/1e3:.0f} KB")
     for r in results.values():
         z = r["_zones"]
         print(f"    {r['id']:14s} {r['mode']:5s} left40 contrast {z['left40']['contrast']:>5} busy {z['left40']['busy']:>5} | "

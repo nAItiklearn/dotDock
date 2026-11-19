@@ -8,7 +8,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from .core import F32, smoothstep
 
@@ -64,6 +64,32 @@ def save_jpeg_budget(img: np.ndarray, path: Path, seed: int, grain: float, comme
             break
     path.write_bytes(data)
     return len(data), info
+
+
+THUMB_SIZE = (640, 360)
+THUMB_QUALITY = 82
+THUMB_BUDGET_BYTES = 40_000
+
+
+def make_thumb(src: Path, dest: Path, size: tuple[int, int] = THUMB_SIZE, quality: int = THUMB_QUALITY,
+               budget: int = THUMB_BUDGET_BYTES) -> tuple[int, int]:
+    """Lanczos downscale of a rendered wallpaper to a picker thumbnail. Returns (bytes, quality used).
+
+    Starts at ``quality`` and only steps the quality down (in 4s, never below 66) if the file would
+    exceed ``budget``. Non-16:9 sources are centre-cropped to the thumbnail aspect.
+    """
+    with Image.open(src) as im:
+        thumb = ImageOps.fit(im.convert("RGB"), size, Image.LANCZOS, centering=(0.5, 0.5))
+    q = quality
+    while True:
+        buf = io.BytesIO()
+        thumb.save(buf, "JPEG", quality=q, subsampling=2, optimize=True)
+        if buf.tell() <= budget or q <= 66:
+            break
+        q -= 4
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(buf.getvalue())
+    return buf.tell(), q
 
 
 # ---------------------------------------------------------------------------

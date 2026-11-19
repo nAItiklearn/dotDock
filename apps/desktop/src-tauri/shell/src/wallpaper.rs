@@ -47,6 +47,9 @@ pub struct ManifestEntry {
     pub style: String,
     pub mode: String,
     pub file: String,
+    /// 640x360 preview served by the UI (under assets/web), so pickers never decode 4K files.
+    #[serde(default)]
+    pub thumb: Option<String>,
     pub accent: String,
 }
 
