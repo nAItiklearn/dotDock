@@ -177,20 +177,22 @@ def render_silver(c: Canvas, mode: str, seed: int) -> np.ndarray:
     xw = x + 0.014 * eval_waves_pointwise(x, y_eff, wv)
     s1, s2 = _crease_frame(xw, y_eff, 0.86, 0.70, 0.62, 0.74)
     m = np.minimum(s1, s2)
-    inside = smoothstep(-0.035, 0.075, m)
-    lip = _gauss(m, 0.005)
-    shadow = _gauss(m + 0.06, 0.07) * (1.0 - inside)
+    inside = smoothstep(-0.004, 0.010, m)                    # a crisp fold between the two sheets
+    lip = _gauss(m - 0.004, 0.0035)                          # the lit edge of the upper sheet
+    shadow = (_gauss(m + 0.028, 0.034) + 0.45 * _gauss(m + 0.10, 0.09)) * (1.0 - inside)
     # broad studio light pool behind the sheet and a darker floor
     pool = _gauss(x - 1.15, 0.65) * _gauss(y_eff - 0.12, 0.55)
     # thin bright arcs sweeping across the slats, drawn in true pixel space so they cross the lips smoothly
     y = c.y
-    arc1 = _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.0030, 0.14)
-    arc2 = _curve_arc(x, y, 1.30, 0.74, -0.30, 0.28, 1.02, 0.0030, 0.14)
-    haze = 0.20 * _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.020, 0.20) + 0.08 * _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.085, 0.25)
-    haze += 0.44 * _curve_arc(x, y, 1.36, 0.74, -0.30, 0.28, 1.02, 0.12, 0.25)
+    arc1 = _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.0020, 0.14)
+    arc2 = _curve_arc(x, y, 1.30, 0.74, -0.30, 0.28, 1.02, 0.0020, 0.14)
+    bloom1 = 0.34 * _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.008, 0.16) + 0.14 * _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.032, 0.20)
+    bloom1 += 0.06 * _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.09, 0.25)
+    bloom2 = 0.12 * _curve_arc(x, y, 1.30, 0.74, -0.30, 0.28, 1.02, 0.008, 0.16)
+    haze = bloom1 + bloom2 + 0.44 * _curve_arc(x, y, 1.36, 0.74, -0.30, 0.28, 1.02, 0.12, 0.25)
 
     gate = 1.0 - smoothstep(0.72, 1.0, np.abs(s))            # arcs dim into the seams between slats
-    glint = (1.00 * arc1 + 0.45 * arc2) * (0.55 + 0.45 * gate)[:, None] * (0.20 + 0.80 * quiet)
+    glint = (1.25 * arc1 + 0.55 * arc2) * (0.55 + 0.45 * gate)[:, None] * (0.20 + 0.80 * quiet)
 
     # brushed grain: very fine horizontal streaks that catch a little more light where the sheet is lit
     nn = rng.standard_normal((H // 2, W // 2)).astype(F32)
@@ -199,9 +201,9 @@ def render_silver(c: Canvas, mode: str, seed: int) -> np.ndarray:
     nn = cv2.resize(nn, (W, H), interpolation=cv2.INTER_CUBIC)
 
     if dark:
-        tone = 0.24 + 0.28 * inside + 0.34 * pool * (0.35 + 0.65 * inside) - 0.10 * shadow
+        tone = 0.29 + 0.32 * inside + 0.34 * pool * (0.35 + 0.65 * inside) - 0.12 * shadow
         tone += 0.14 * smoothstep(0.0, 1.0, x / a) * (1.0 - y) * inside
-        tone = tone * (0.46 + 0.54 * quiet) + haze * quiet + 0.16 * lip * quiet + glint
+        tone = tone * (0.46 + 0.54 * quiet) + haze * quiet + 0.30 * lip * quiet + glint
         tone *= 1.0 - 0.62 * corner
         tone *= 1.0 + nn * (0.024 + 0.030 * clamp01(tone))
         stops = [(0.0, "#050506"), (0.12, "#111214"), (0.30, "#26272a"), (0.52, "#5a5c60"), (0.74, "#a4a6aa"),
@@ -209,19 +211,20 @@ def render_silver(c: Canvas, mode: str, seed: int) -> np.ndarray:
         profile = 0.40 + 0.60 * _gauss(s + 0.45, 0.66)       # lit upper body, shaded lower lip
         seam_dark, lip_lit = 0.86, 0.20
     else:
-        tone = 0.40 + 0.26 * inside + 0.18 * pool * (0.35 + 0.65 * inside) - 0.12 * shadow
+        tone = 0.40 + 0.30 * inside + 0.18 * pool * (0.35 + 0.65 * inside) - 0.14 * shadow
         tone -= 0.12 * smoothstep(0.3, 1.0, y) * (1.0 - inside)
-        tone = 0.72 + (tone - 0.72) * (0.30 + 0.70 * quiet) * (1.0 - 0.6 * corner) + 0.6 * haze * quiet + 0.06 * lip * quiet + 0.80 * glint
+        tone = 0.82 + (tone - 0.82) * (0.16 + 0.84 * quiet) * (1.0 - 0.6 * corner) + 0.6 * haze * quiet + 0.10 * lip * quiet + 0.80 * glint
         tone *= 1.0 + nn * (0.014 + 0.020 * clamp01(tone))
         stops = [(0.0, "#4c4e52"), (0.26, "#7e8084"), (0.48, "#b2b4b7"), (0.70, "#d9dadb"), (0.88, "#f0efed"),
                  (1.05, "#ffffff")]
         profile = 0.72 + 0.28 * _gauss(s + 0.45, 0.66)
-        seam_dark, lip_lit = 0.26, 0.32
+        seam_dark, lip_lit = 0.30, 0.32
     col = ramp(tone, stops)
-    col *= profile[:, None, None]
-    # slat edges: a dark lap line on the lower lip, a thin lit lip on the upper edge
+    # slat shading and the dark lap line on each lower lip; on the clock side of the light variant both stay gentle
+    soften = (0.45 + 0.55 * quiet) * (1.0 - 0.55 * corner) if not dark else 1.0
     seam = smoothstep(0.74, 1.0, s) * seam_dark
-    col *= (1.0 - seam)[:, None, None]
+    col *= (1.0 - (1.0 - profile[:, None]) * soften)[..., None]
+    col *= (1.0 - seam[:, None] * soften)[..., None]
     lit = _gauss(s + 0.95, 0.06) * lip_lit
     col += lit[:, None, None] * (1.0 - col)
     return clamp01(col)
