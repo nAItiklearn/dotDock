@@ -1,8 +1,11 @@
 .battery__icon {
-  height: var(--text-lg);
-  width: auto;
   color: var(--dot-off);
   transition: opacity var(--dur-med) var(--ease-out);
+}
+/* The line-icon variant is sized by CSS; the dotted one by its size attribute. */
+.battery__icon.icon {
+  height: var(--text-lg);
+  width: auto;
 }
 .battery__icon--on {
   color: var(--accent);

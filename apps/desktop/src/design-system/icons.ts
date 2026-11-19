@@ -48,16 +48,16 @@ function raster(size: number, test: Test): readonly string[] {
 const GRID = 11;
 
 /** Cloud silhouette: three lobes on a flat base. `scale` and the offsets place it on the grid. */
-function cloud(offsetX: number, offsetY: number, scale = 1): Test {
+function cloud(offsetX: number, offsetY: number, scale = 1, grow = 0): Test {
   const at = (x: number, y: number): [number, number] => [offsetX + x * scale, offsetY + y * scale];
   const [lx, ly] = at(3.4, 4.7);
   const [mx, my] = at(6.2, 3.1);
   const [rx, ry] = at(8.6, 4.9);
   return union(
-    disc(lx, ly, 2.3 * scale),
-    disc(mx, my, 3.1 * scale),
-    disc(rx, ry, 2.1 * scale),
-    rect(at(3.4, 0)[0], at(0, 4.4)[1], at(8.6, 0)[0], at(0, 7.1)[1]),
+    disc(lx, ly, 2.3 * scale + grow),
+    disc(mx, my, 3.1 * scale + grow),
+    disc(rx, ry, 2.1 * scale + grow),
+    rect(at(3.4, 0)[0], at(0, 4.4)[1] - grow, at(8.6, 0)[0], at(0, 7.1)[1] + grow),
   );
 }
 
@@ -99,7 +99,10 @@ const PATTERNS = {
   cloud: raster(GRID, cloud(0.4, 2.2)),
   "cloud-sun": raster(
     GRID,
-    union(minus(union(disc(3.6, 3.6, 1.6), sunRays(3.6, 3.6, 3.1, 0.5)), cloud(3, 3.6, 0.85)), cloud(3, 3.6, 0.85)),
+    union(
+      minus(union(disc(7.3, 3.5, 2.4), sunRays(7.3, 3.5, 4.1, 0.5)), cloud(0.2, 4.6, 0.72, 0.8)),
+      cloud(0.2, 4.6, 0.72),
+    ),
   ),
   rain: raster(
     GRID,
