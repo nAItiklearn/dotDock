@@ -14,7 +14,8 @@ Every dependency, font, sound, image and data source is listed here with its lic
 
 ## Wallpapers and icons
 - All wallpapers in `assets/wallpapers` are original, generated from code and fixed seeds by `tools/wallpaper-gen` (GPL-3.0-or-later, part of this project). No third-party images; where a style was inspired by an owner-supplied mood image, that image was only looked at and never used as input (see `docs/DECISIONS.md` D-015).
-- The app icon is original, drawn by `tools/icon-gen/make_icon.py`.
+- The logo mark, app icon, favicon and social preview are original, drawn from code by `tools/brand-gen` (GPL-3.0-or-later, part of this project). The mark is a dot and a pill; it copies no existing logo, glyph set or typeface.
+- The wordmark is the product name set in Doto (SIL OFL 1.1, above), cut into one SVG circle per dot so it needs no font. Tagline and captions on the brand artwork are Geist and Geist Mono (SIL OFL 1.1, above) outlined to paths. The OFL allows this; the outlines are not a font.
 
 ## Rust crates (direct dependencies)
 | Crate | Licence |
@@ -41,7 +42,8 @@ Transitive crate licences are checked by `cargo audit` in CI; a full generated l
 | @types/react, @types/react-dom, @types/node | MIT |
 
 ## Build-time tools (not shipped)
-- Python packages used by `tools/wallpaper-gen` and `tools/icon-gen`: numpy (BSD-3-Clause), Pillow (MIT-CMU / HPND), opencv-python (Apache-2.0).
+- Python packages used by `tools/wallpaper-gen`: numpy (BSD-3-Clause), Pillow (MIT-CMU / HPND), opencv-python (Apache-2.0).
+- Python packages used by `tools/brand-gen`: Pillow (MIT-CMU / HPND), resvg-py (MIT, wraps the resvg renderer, MPL-2.0), fontTools (MIT), Brotli (MIT), uharfbuzz (Apache-2.0, wraps HarfBuzz, MIT).
 - fontTools (MIT) for font subsetting.
 
 ## Design references (not shipped, not in the repository)

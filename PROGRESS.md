@@ -31,6 +31,9 @@
 ### Website (`website/`, Astro, static)
 - Home, download, FAQ, licence and privacy pages; live widgets; the island notch plays a scripted session with the app's own scene code.
 
+### Brand (`brand/`, `tools/brand-gen`)
+- New logo: a dot docked in a pill, reading as a `d` (D-019). One master drawing generates the Tauri icons (multi-size `.ico` with hand-redrawn 16 to 32 px), favicon, apple-touch icon, the website nav mark, SVG logos, a Doto wordmark and the 1280 x 640 social preview. The tray now loads the small-icon size. Usage guide in `brand/README.md`; QA in `docs/QA/brand-logo.md` (4.62 on the rubric).
+
 ### Time tracking
 - Hackatime hook fixed on 2026-11-19 after heartbeats were being killed; see `docs/HACKATIME_STATUS.md`. Nothing was back-filled.
 
