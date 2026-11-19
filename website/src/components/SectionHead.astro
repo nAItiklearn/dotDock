@@ -1,0 +1,13 @@
+---
+interface Props {
+  label: string;
+  titleId: string;
+}
+const { label, titleId } = Astro.props;
+---
+
+<div class="section__head reveal">
+  <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>{label}</p>
+  <h2 class="h2" id={titleId}><slot name="title" /></h2>
+  <p class="lede"><slot name="lede" /></p>
+</div>

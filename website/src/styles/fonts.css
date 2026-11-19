@@ -1,0 +1,51 @@
+/*
+ * Self-hosted fonts (all SIL OFL 1.1, see THIRD_PARTY_NOTICES.md). Copied from assets/fonts.
+ * font-display: swap, preloaded in the layout, plus metric-matched fallbacks (size-adjust and the
+ * ascent/descent overrides below) so the swap does not move any text. Overrides were computed
+ * from each font's hhea/OS-2 tables against Arial (Geist) and Courier New (Geist Mono, Doto):
+ *   Geist     avg advance 0.528 em vs Arial 0.488 em -> size-adjust 108.2 %
+ *   Geist Mono / Doto  0.600 em, same as Courier New  -> size-adjust 100 %
+ */
+@font-face {
+  font-family: "Geist";
+  src: url("../assets/fonts/Geist.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../assets/fonts/GeistMono.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Doto";
+  src: url("../assets/fonts/Doto.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans");
+  size-adjust: 108.2%;
+  ascent-override: 92.9%;
+  descent-override: 27.3%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Geist Mono Fallback";
+  src: local("Courier New"), local("Liberation Mono"), local("Menlo");
+  size-adjust: 100%;
+  ascent-override: 100.5%;
+  descent-override: 29.5%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Doto Fallback";
+  src: local("Courier New"), local("Liberation Mono"), local("Menlo");
+  size-adjust: 100%;
+  ascent-override: 95%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+}

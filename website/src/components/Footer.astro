@@ -1,0 +1,91 @@
+---
+import {
+  DISCLAIMER,
+  ISSUES_URL,
+  LICENSE_SPDX,
+  OPEN_METEO_URL,
+  PRODUCT_NAME,
+  RELEASES_URL,
+  REPO_URL,
+  ROUTES,
+} from "../brand";
+import { THEMES } from "../lib/themes";
+import { WALLPAPERS } from "../lib/wallpapers";
+
+const year = new Date().getFullYear();
+
+const columns = [
+  {
+    title: "Product",
+    links: [
+      { href: `${ROUTES.home}#widgets`, label: "Widgets" },
+      { href: `${ROUTES.home}#themes`, label: "Themes" },
+      { href: `${ROUTES.home}#startup`, label: "Startup" },
+      { href: ROUTES.download, label: "Download" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { href: ROUTES.faq, label: "FAQ" },
+      { href: REPO_URL, label: "GitHub", external: true },
+      { href: RELEASES_URL, label: "Releases", external: true },
+      { href: ISSUES_URL, label: "Issues", external: true },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { href: ROUTES.privacy, label: "Privacy" },
+      { href: ROUTES.license, label: "Licence and notices" },
+    ],
+  },
+] as const;
+---
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <p class="footer__brand">{PRODUCT_NAME}</p>
+        <p>A free, open-source desktop environment for Windows, drawn in dots. No account, no telemetry, no cookies on this site.</p>
+      </div>
+      {
+        columns.map((col) => (
+          <nav aria-label={col.title}>
+            <h2 class="caps caps--text">{col.title}</h2>
+            <ul class="footer__list">
+              {
+                col.links.map((l) => (
+                  <li>
+                    <a href={l.href} rel={"external" in l ? "noopener" : undefined}>{l.label}</a>
+                  </li>
+                ))
+              }
+            </ul>
+          </nav>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="footer__stage" aria-hidden="true">
+    {
+      THEMES.map((t) => (
+        <img class="footer__wp" data-for={t.id} src={WALLPAPERS[t.id].large} width="1920" height="1080" alt="" loading="lazy" decoding="async" />
+      ))
+    }
+    <span class="footer__mark">{PRODUCT_NAME}</span>
+  </div>
+
+  <div class="wrap">
+    <div class="footer__legal">
+      <p class="caps">{DISCLAIMER}</p>
+      <p class="caps">
+        {LICENSE_SPDX} &middot; Fonts SIL OFL 1.1 &middot; Weather data by
+        <a href={OPEN_METEO_URL} rel="noopener">Open-Meteo</a> (CC BY 4.0)
+      </p>
+      <p class="caps tabular">&copy; {year} {PRODUCT_NAME} contributors</p>
+    </div>
+  </div>
+</footer>

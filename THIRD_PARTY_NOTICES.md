@@ -101,5 +101,21 @@ Not reused from Agent Island: its cat and orb artwork, its sounds (UI SFX, CC0) 
 `serde`, `serde_json`, `thiserror` and `windows` are already used by the shell crate and are unchanged. `serde_json` is built with its `preserve_order` feature so Connect keeps the key order of the user's `settings.json`.
 
 
+## Website (`website/`)
+The showcase site is a static Astro project. These packages are build-time only; the published site is plain HTML, CSS and one small script bundle. It loads no third-party scripts, fonts, analytics or CDNs.
+
+| Package | Licence |
+|---|---|
+| astro | MIT |
+| @astrojs/check | MIT |
+| typescript | Apache-2.0 |
+| sharp (used by hand in `website/tools/make-wallpapers.mjs`, not at build or runtime) | Apache-2.0 (prebuilt binaries include libvips, LGPL-3.0-or-later) |
+
+Transitive package licences are pinned by `website/pnpm-lock.yaml`.
+
+- Fonts: the same Doto, Geist and Geist Mono files as above, copied to `website/src/assets/fonts`, with their OFL texts in `website/public/licenses`.
+- Wallpapers: downscaled WebP copies of three of the original wallpapers in `assets/wallpapers`, made by `website/tools/make-wallpapers.mjs`. Original, GPL-3.0-or-later like the rest of the project.
+- Theme tokens and dot-matrix glyph geometry are copied from `apps/desktop/src/design-system` (this project's own code).
+
 ---
 Inspired by Nothing OS. Not affiliated with or endorsed by Nothing Technology Limited.

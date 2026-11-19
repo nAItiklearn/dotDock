@@ -1,0 +1,22 @@
+---
+import SectionHead from "./SectionHead.astro";
+import FaqList from "./FaqList.astro";
+import { ROUTES } from "../brand";
+import { FAQ } from "../faq";
+
+const shown = FAQ.slice(0, 5);
+---
+
+<section class="section" id="faq" aria-labelledby="faq-title">
+  <div class="wrap wrap--narrow">
+    <SectionHead label="FAQ" titleId="faq-title">
+      <Fragment slot="title">Quick answers.</Fragment>
+      <Fragment slot="lede">The things people ask first.</Fragment>
+    </SectionHead>
+
+    <div class="faq-home reveal">
+      <FaqList items={shown} />
+      <p class="faq-home__more"><a class="btn btn--quiet" href={ROUTES.faq}>All questions</a></p>
+    </div>
+  </div>
+</section>

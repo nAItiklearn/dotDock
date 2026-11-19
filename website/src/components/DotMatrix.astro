@@ -1,0 +1,34 @@
+---
+/**
+ * Static dot-matrix text as inline SVG, built at build time from the product's glyph geometry
+ * (src/lib/matrixGeometry.ts). Zero client JS. Live numerals use the same geometry at runtime.
+ */
+import { buildMatrix, type MatrixStyle } from "../lib/matrixGeometry";
+
+interface Props {
+  text: string;
+  matrixStyle: MatrixStyle;
+  /** Rendered height in CSS px; width follows the glyphs. CSS may override both. */
+  height: number;
+  /** Show unlit cells (dots style only). */
+  showOff?: boolean;
+  label?: string;
+  class?: string;
+}
+const { text, matrixStyle, height, showOff = false, label, class: className } = Astro.props;
+const g = buildMatrix(text, matrixStyle);
+const width = Math.round((height / g.rows) * g.cols * 100) / 100;
+---
+
+<svg
+  class={className}
+  width={width}
+  height={height}
+  viewBox={`0 0 ${g.cols} ${g.rows}`}
+  role="img"
+  aria-label={label ?? text}
+  shape-rendering="geometricPrecision"
+>
+  {showOff && g.offPath && <path d={g.offPath} fill="var(--dot-off)" />}
+  <path d={g.litPath} fill="currentColor" />
+</svg>

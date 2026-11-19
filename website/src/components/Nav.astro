@@ -1,0 +1,60 @@
+---
+import { PRODUCT_NAME, ROUTES } from "../brand";
+import { THEMES } from "../lib/themes";
+
+interface Props {
+  /** Pathname of the page being rendered, to mark the current link. */
+  current?: string;
+}
+const { current = ROUTES.home } = Astro.props;
+
+const links = [
+  { href: "/#widgets", label: "Widgets" },
+  { href: "/#themes", label: "Themes" },
+  { href: "/#startup", label: "Startup" },
+  { href: ROUTES.faq, label: "FAQ" },
+];
+---
+
+<header class="nav" data-nav>
+  <div class="nav__inner">
+    <a class="wordmark" href={ROUTES.home} aria-label={`${PRODUCT_NAME}, home`}>
+      <span class="dot" aria-hidden="true"></span>
+      <span class="wordmark__text">{PRODUCT_NAME}</span>
+    </a>
+
+    <nav aria-label="Main">
+      <ul class="nav__links caps">
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} aria-current={l.href === current ? "page" : undefined}>{l.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="nav__tools">
+      <div class="theme-switch needs-js" role="radiogroup" aria-label="Colour theme" data-theme-switch>
+        {
+          THEMES.map((t) => (
+            <button
+              type="button"
+              class="theme-switch__opt"
+              role="radio"
+              aria-checked="false"
+              aria-label={`${t.name}, ${t.mode}`}
+              title={t.name}
+              data-theme-set={t.id}
+              tabindex="-1"
+            >
+              <span class="theme-switch__swatch" data-theme={t.id} aria-hidden="true" />
+            </button>
+          ))
+        }
+      </div>
+      <a class="btn btn--accent nav__cta" href={ROUTES.download} aria-current={current === ROUTES.download ? "page" : undefined}>Download</a>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,107 @@
+---
+import SectionHead from "./SectionHead.astro";
+import ProductVideo from "./ProductVideo.astro";
+
+// Each part is a miniature screen on a 20 x 11 dot lattice; "#" marks the cells that part owns,
+// so the row reads as a map of where on the screen each one lives.
+const HOME = [
+  "....................",
+  ".######.............",
+  ".######.............",
+  "....................",
+  ".###.#####..........",
+  ".###.#####..........",
+  ".###.#####..........",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+];
+const DOCK = [
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  ".....##########.....",
+  "....................",
+];
+const ISLAND = [
+  "........####........",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+  "....................",
+];
+const COLS = 20;
+const ROWS = 11;
+
+type Cell = { x: number; y: number };
+
+function cells(map: readonly string[]): Cell[] {
+  const out: Cell[] = [];
+  map.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && out.push({ x, y })));
+  return out;
+}
+
+/** One SVG path holding a circle of radius r at the centre of every given cell. */
+function dots(list: readonly Cell[], r: number): string {
+  return list
+    .map((c) => `M${c.x + 0.5 - r} ${c.y + 0.5}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`)
+    .join("");
+}
+
+const parts = [
+  { name: "Home screen", line: "Widgets, wallpapers and themes that live on the desktop.", status: "In development", live: true, own: cells(HOME), context: [] as Cell[] },
+  { name: "Dock", line: "Replaces the taskbar, with a launcher built in.", status: "Coming", live: false, own: cells(DOCK), context: cells(HOME) },
+  { name: "Agent island", line: "Shows your AI coding work live, at the top of the screen.", status: "Coming", live: false, own: cells(ISLAND), context: [...cells(HOME), ...cells(DOCK)] },
+];
+---
+
+<section class="section" id="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <SectionHead label="The environment" titleId="features-title">
+      <Fragment slot="title">A whole desktop, <span class="dim">not a widget.</span></Fragment>
+      <Fragment slot="lede">Three parts, designed together as one environment for Windows.</Fragment>
+    </SectionHead>
+
+    <ol class="parts">
+      {
+        parts.map((p, i) => (
+          <li class="part reveal" style={`--i:${i}`}>
+            <svg class="part__screen" viewBox={`0 0 ${COLS} ${ROWS}`} role="img" aria-label={`${p.name}: where it sits on the screen`}>
+              <defs>
+                <pattern id={`part-lattice-${i}`} width="1" height="1" patternUnits="userSpaceOnUse">
+                  <circle cx="0.5" cy="0.5" r="0.1" class="part__off" />
+                </pattern>
+              </defs>
+              <rect width={COLS} height={ROWS} fill={`url(#part-lattice-${i})`} />
+              <path class="part__context" d={dots(p.context, 0.34)} />
+              <path class="part__own" d={dots(p.own, 0.4)} />
+            </svg>
+            <div class="part__meta">
+              <h3 class="part__name">{p.name}</h3>
+              <p class="caps caps-row">
+                <span class={p.live ? "dot" : "dot dot--hollow"} aria-hidden="true" />
+                {p.status}
+              </p>
+            </div>
+            <p class="part__line">{p.line}</p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <ProductVideo />
+  </div>
+</section>

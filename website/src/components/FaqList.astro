@@ -1,0 +1,30 @@
+---
+import type { FaqItem } from "../faq";
+
+interface Props {
+  items: readonly FaqItem[];
+}
+const { items } = Astro.props;
+---
+
+<div class="faq">
+  {
+    items.map((item) => (
+      <details class="faq__item" id={item.id}>
+        <summary class="faq__q">{item.q}</summary>
+        <div class="faq__a">
+          {item.a.map((p) => <p>{p}</p>)}
+          {
+            item.code && (
+              <div class="code">
+                <code class="code__text">{item.code}</code>
+                <button type="button" class="code__copy needs-js" data-copy={item.code}>Copy</button>
+              </div>
+            )
+          }
+          {item.link && <p><a href={item.link.href}>{item.link.label}</a></p>}
+        </div>
+      </details>
+    ))
+  }
+</div>

@@ -1,0 +1,19 @@
+---
+import Page from "../layouts/Page.astro";
+import FaqList from "../components/FaqList.astro";
+import { PRODUCT_NAME } from "../brand";
+import { FAQ } from "../faq";
+---
+
+<Page
+  title={`FAQ: ${PRODUCT_NAME}`}
+  description={`Answers about ${PRODUCT_NAME}: whether it is safe to try, how to undo it, how it starts, what it needs and what it costs.`}
+  label="FAQ"
+  heading="Short answers."
+>
+  <Fragment slot="lede">The questions people ask first. For anything else, open an issue on GitHub.</Fragment>
+
+  <div class="reveal">
+    <FaqList items={FAQ} />
+  </div>
+</Page>

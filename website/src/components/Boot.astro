@@ -1,0 +1,116 @@
+---
+import SectionHead from "./SectionHead.astro";
+
+// Measured with a development build on the author's laptop: three runs, milliseconds from the
+// process starting to the widget window being shown (docs: PROGRESS.md, "Measured release cold
+// start"). These are the only timing numbers the page states.
+const RUNS_MS = [1003, 856, 721] as const;
+
+const COLS = 24;
+const MS_PER_COL = 50;
+const AXIS_MS = [0, 250, 500, 750, 1000] as const;
+
+function lit(ms: number): number {
+  return Math.round(ms / MS_PER_COL);
+}
+
+const rows = [
+  { label: "Wallpaper", note: "At the first frame", value: "0 ms", lit: 1, kind: "wallpaper" },
+  ...RUNS_MS.map((ms, i) => ({
+    label: `Widgets, run ${i + 1}`,
+    note: "",
+    value: `${ms} ms`,
+    lit: lit(ms),
+    kind: "widgets",
+  })),
+];
+
+function track(n: number): string {
+  let d = "";
+  for (let i = 0; i < n; i++) d += `M${i + 0.5 - 0.32} 0.5a0.32 0.32 0 1 0 0.64 0a0.32 0.32 0 1 0 -0.64 0Z`;
+  return d;
+}
+
+const promises = [
+  {
+    title: "Your wallpaper is Windows's own",
+    body: "Set through Windows itself, so it is on screen the moment the desktop is drawn.",
+  },
+  {
+    title: "No ten-second wait",
+    body: "Windows holds startup apps back for around ten seconds. The app switches that delay off, for your account only.",
+  },
+  {
+    title: "Small and native",
+    body: "A Rust core of about 4.7 MB starts first and shows widgets from the last data they saved. No telemetry, no spinners.",
+  },
+];
+---
+
+<section class="section" id="startup" aria-labelledby="startup-title">
+  <div class="wrap">
+    <SectionHead label="Startup and weight" titleId="startup-title">
+      <Fragment slot="title">Built to stay <span class="dim">out of your way.</span></Fragment>
+      <Fragment slot="lede">
+        Sign in and your desktop is already yours. The app is in development; these numbers come from a development build.
+      </Fragment>
+    </SectionHead>
+
+    <div class="boot">
+      <ul class="boot__points">
+        {
+          promises.map((p, i) => (
+            <li class="boot__point reveal" style={`--i:${i}`}>
+              <p class="boot__point-title">{p.title}</p>
+              <p class="boot__point-body">{p.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+
+      <figure class="boot__chart reveal" data-boot-chart>
+        <figcaption class="caps boot__caption">
+          Time from start to on screen, in milliseconds. One dot is {MS_PER_COL} ms.
+        </figcaption>
+        <div class="boot__rows" role="img" aria-label={`Wallpaper appears at the first frame, 0 milliseconds. The widgets appeared after ${RUNS_MS.join(", ")} milliseconds in three runs.`}>
+          {
+            rows.map((r) => (
+              <div class={`boot__row boot__row--${r.kind}`}>
+                <span class="caps boot__row-label">{r.label}</span>
+                <svg class="boot__track" viewBox={`0 0 ${COLS} 1`} preserveAspectRatio="xMinYMid meet" aria-hidden="true">
+                  <path class="boot__dots boot__dots--off" d={track(COLS)} />
+                  {Array.from({ length: r.lit }, (_, n) => (
+                    <path
+                      class="boot__dots boot__dots--on"
+                      style={`--n:${n}`}
+                      d={`M${n + 0.5 - 0.32} 0.5a0.32 0.32 0 1 0 0.64 0a0.32 0.32 0 1 0 -0.64 0Z`}
+                    />
+                  ))}
+                </svg>
+                <span class="boot__row-value tabular">{r.value}</span>
+              </div>
+            ))
+          }
+          <div class="boot__axis" aria-hidden="true">
+            <span></span>
+            <div class="boot__ticks">
+              {AXIS_MS.map((ms) => <span class="caps" style={`left:${(ms / MS_PER_COL / COLS) * 100}%`}>{ms === 0 ? "0" : `${ms / 1000} s`}</span>)}
+            </div>
+            <span></span>
+          </div>
+        </div>
+        <p class="boot__note">
+          Measured with a development build on the author's laptop: three runs, from the process starting to the
+          widgets being shown. Windows's own sign-in and desktop start-up are not included, and your machine will
+          differ.
+        </p>
+      </figure>
+    </div>
+
+    <ul class="limits reveal" aria-label="What this does not claim">
+      <li class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true"></span>Windows still draws its desktop first</li>
+      <li class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true"></span>The sign-in screen stays Windows's</li>
+      <li class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true"></span>Numbers are from one laptop, not a benchmark</li>
+    </ul>
+  </div>
+</section>
