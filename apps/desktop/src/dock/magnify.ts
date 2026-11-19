@@ -11,8 +11,8 @@ export interface RestItem {
   /** Start of the item's rest span along the axis, in dock-local px. */
   readonly start: number;
   readonly size: number;
-  /** Tiles, dividers and the status pill are displaced by their neighbours but never grow. */
-  readonly magnifies: boolean;
+  /** How much of the magnification this item takes: 1 for an app, less for a stack, 0 for tiles, dividers and the status pill, which only make room. */
+  readonly weight: number;
 }
 
 export interface MagnifyConfig {
@@ -42,8 +42,8 @@ export function falloff(distance: number, radius: number): number {
 }
 
 /** Scale of one item for a pivot distance. */
-export function scaleFor(distance: number, config: MagnifyConfig): number {
-  return 1 + (config.peak - 1) * config.engage * falloff(distance, config.radius);
+export function scaleFor(distance: number, config: MagnifyConfig, weight = 1): number {
+  return 1 + (config.peak - 1) * weight * config.engage * falloff(distance, config.radius);
 }
 
 /** Position of `pivot` along the drawn row, where the row's first item starts at 0. */
@@ -67,7 +67,7 @@ export function computeMagnify(items: readonly RestItem[], pivot: number, config
   const n = items.length;
   if (n === 0) return { scale: [], shift: [], rowStart: 0, rowEnd: 0, hovered: -1 };
 
-  const scale = items.map((item) => (item.magnifies ? scaleFor(Math.abs(pivot - (item.start + item.size / 2)), config) : 1));
+  const scale = items.map((item) => (item.weight > 0 ? scaleFor(Math.abs(pivot - (item.start + item.size / 2)), config, item.weight) : 1));
 
   // phiStart / phiEnd: where each span begins and ends along the drawn row, with the first item at 0.
   // The space between two items keeps its rest width.
@@ -111,8 +111,8 @@ export function maxGrowth(items: readonly RestItem[], peak: number, radius: numb
   for (let pivot = first.start; pivot <= last.start + last.size; pivot += step) {
     let total = 0;
     for (const item of items) {
-      if (!item.magnifies) continue;
-      total += item.size * (peak - 1) * falloff(Math.abs(pivot - (item.start + item.size / 2)), radius);
+      if (item.weight <= 0) continue;
+      total += item.size * (peak - 1) * item.weight * falloff(Math.abs(pivot - (item.start + item.size / 2)), radius);
     }
     widest = Math.max(widest, total);
   }

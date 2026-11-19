@@ -20,7 +20,7 @@ const settings: DockSettings = {
   reserveSpace: true,
   autoHide: false,
   iconSize: 48,
-  magnification: 1.7,
+  magnification: 1.25,
   pinned: [{ kind: "app", id: "code" }, { kind: "stack", category: "media" }],
   tiles: ["clock"],
 };

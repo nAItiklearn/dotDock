@@ -1,6 +1,6 @@
 import { computeMagnify, type MagnifyFrame, type RestItem } from "./magnify";
 import type { DockEdge } from "./protocol";
-import { isSettled, omegaForSettle, rest, stepCritical, type SpringState } from "./spring";
+import { advance, omegaForSettle, rest, type SpringState } from "./spring";
 
 /** How long each spring takes to settle (2 %). All of them are critically damped: no overshoot. */
 export const SETTLE_MS = { engage: 180, slide: 230, appear: 260 } as const;
@@ -28,12 +28,16 @@ export interface LayoutItem {
   readonly key: string;
   /** The item's face: scaled and moved by the engine. */
   readonly el: HTMLElement;
-  /** The running dots under the item: moved with it, never scaled. */
-  readonly dots: HTMLElement | null;
   /** Rest span along the axis, in dock-local px. */
   readonly start: number;
   readonly size: number;
-  readonly magnifies: boolean;
+  /** Share of the magnification the item takes (0: it only makes room). */
+  readonly weight: number;
+  /** The face is laid out this much larger than its slot and shown scaled down, so magnifying never upsamples it. */
+  readonly render: number;
+  /** The name shown on the label while the pointer is over the item, and the dim text beside it ("" for none). */
+  readonly name: string;
+  readonly sub: string;
 }
 
 export interface Layout {
@@ -57,6 +61,13 @@ export interface EngineConfig {
   readonly reduced: boolean;
 }
 
+/** The label above the hovered item: its box and the two text nodes the engine fills in. */
+export interface LabelParts {
+  readonly root: HTMLElement;
+  readonly name: HTMLElement;
+  readonly sub: HTMLElement;
+}
+
 /** The three pieces the bar is drawn from. */
 export interface PlateParts {
   readonly start: HTMLElement;
@@ -72,7 +83,6 @@ interface ItemState extends LayoutItem {
   /** Total translation last applied, in px along the axis. */
   shift: number;
   written: string;
-  writtenDots: string;
 }
 
 interface DragState {
@@ -87,6 +97,11 @@ const isVertical = (edge: DockEdge): boolean => edge === "left" || edge === "rig
 /** +1 when the screen's inside is towards larger coordinates, -1 otherwise. */
 const insideSign = (edge: DockEdge): 1 | -1 => (edge === "top" || edge === "left" ? 1 : -1);
 const px = (n: number): string => String(Math.round(n * 100) / 100);
+/** Translations land on whole device pixels, so a face is never resampled between two of them: no smear at rest or in motion. */
+const snap = (n: number): number => {
+  const scale = window.devicePixelRatio || 1;
+  return Math.round(n * scale) / scale;
+};
 
 /**
  * Drives the dock's per-frame motion with transforms only: magnification, the bar growing with it, items
@@ -106,7 +121,9 @@ export class DockEngine {
   private barDrawn = { start: 0, end: 0 };
   private plateWritten = { start: "", mid: "", end: "" };
   private frozen = false;
-  private label: HTMLElement | null = null;
+  private label: LabelParts | null = null;
+  private labelBlocked = false;
+  private previewKey: string | null = null;
   private labelWritten = "";
   private pointer: number | null = null;
   private engage: SpringState = { x: 0, v: 0 };
@@ -136,7 +153,6 @@ export class DockEngine {
       this.labelWritten = "";
       for (const item of this.items) {
         item.written = "";
-        item.writtenDots = "";
       }
     }
     this.config = config;
@@ -158,9 +174,21 @@ export class DockEngine {
     } else this.kick();
   }
 
-  attachLabel(el: HTMLElement | null): void {
-    this.label = el;
+  attachLabel(parts: LabelParts | null): void {
+    this.label = parts;
     this.labelWritten = "";
+  }
+
+  /** Hides the label while something else (a menu, a popover, edit mode) has the pointer's attention. */
+  setLabelBlocked(blocked: boolean): void {
+    this.labelBlocked = blocked;
+    this.kick();
+  }
+
+  /** The item whose window preview is open shows its title there instead of on the label. */
+  setPreviewKey(key: string | null): void {
+    this.previewKey = key;
+    this.kick();
   }
 
   destroy(): void {
@@ -190,7 +218,6 @@ export class DockEngine {
       slideTarget: 0,
       shift: 0,
       written: "",
-      writtenDots: "",
     }));
     this.origin = layout.origin;
     this.barStart = layout.barStart;
@@ -207,7 +234,6 @@ export class DockEngine {
       }
       if (old.el === item.el) {
         item.written = old.written;
-        item.writtenDots = old.writtenDots;
       }
       item.shift = old.shift;
       if (!smooth) return;
@@ -270,7 +296,7 @@ export class DockEngine {
   }
 
   private frame(items: readonly ItemState[]): MagnifyFrame {
-    const rests: RestItem[] = items.map((i) => ({ start: i.start, size: i.size, magnifies: i.magnifies }));
+    const rests: RestItem[] = items.map((i) => ({ start: i.start, size: i.size, weight: i.weight }));
     const { peak, reach, gap } = this.config;
     // With no pointer the pivot sits far outside the row, where nothing is near it.
     const pivot = this.pointer === null || this.drag !== null ? -1e6 : this.pointer - this.origin;
@@ -285,10 +311,10 @@ export class DockEngine {
     const dragging = this.drag !== null;
 
     const engageTarget = this.pointer !== null && peak > 1 && !dragging && !reduced ? 1 : 0;
+    let moving = false;
     if (reduced) rest(this.engage, 0);
-    else stepCritical(this.engage, engageTarget, OMEGA.engage, dt);
+    else moving = advance(this.engage, engageTarget, OMEGA.engage, dt, EPSILON / 10);
     this.engage.x = Math.min(1, Math.max(0, this.engage.x));
-    let moving = !isSettled(this.engage, engageTarget, EPSILON / 10);
 
     const frame = this.frame(this.items);
     this.items.forEach((item, i) => {
@@ -296,10 +322,10 @@ export class DockEngine {
         rest(item.off, item.slideTarget);
         rest(item.appear, 1);
       } else {
-        stepCritical(item.off, item.slideTarget, OMEGA.slide, dt);
-        stepCritical(item.appear, 1, OMEGA.appear, dt);
+        const sliding = advance(item.off, item.slideTarget, OMEGA.slide, dt, EPSILON);
+        const arriving = advance(item.appear, 1, OMEGA.appear, dt, EPSILON / 10);
+        if (sliding || arriving) moving = true;
       }
-      if (!isSettled(item.off, item.slideTarget, EPSILON) || !isSettled(item.appear, 1, EPSILON / 10)) moving = true;
 
       let shift = (frame.shift[i] ?? 0) + item.off.x;
       let scale = frame.scale[i] ?? 1;
@@ -316,10 +342,10 @@ export class DockEngine {
       rest(this.barOff.start, 0);
       rest(this.barOff.end, 0);
     } else {
-      stepCritical(this.barOff.start, 0, OMEGA.slide, dt);
-      stepCritical(this.barOff.end, 0, OMEGA.slide, dt);
+      const startMoving = advance(this.barOff.start, 0, OMEGA.slide, dt, EPSILON);
+      const endMoving = advance(this.barOff.end, 0, OMEGA.slide, dt, EPSILON);
+      if (startMoving || endMoving) moving = true;
     }
-    if (!isSettled(this.barOff.start, 0, EPSILON) || !isSettled(this.barOff.end, 0, EPSILON)) moving = true;
     this.writeBar(frame);
 
     const hovered = this.pointer === null || dragging ? null : (this.items[frame.hovered]?.key ?? null);
@@ -334,8 +360,9 @@ export class DockEngine {
 
   private writeItem(item: ItemState, shift: number, scale: number): void {
     const grow = APPEAR_FROM + (1 - APPEAR_FROM) * Math.min(1, Math.max(0, item.appear.x));
-    const s = scale * grow;
-    const move = isVertical(this.config.edge) ? `translate3d(0,${px(shift)}px,0)` : `translate3d(${px(shift)}px,0,0)`;
+    // The face is drawn `render` times larger than its slot, so the scale shown is relative to that.
+    const s = (scale * grow) / item.render;
+    const move = isVertical(this.config.edge) ? `translate3d(0,${px(snap(shift))}px,0)` : `translate3d(${px(snap(shift))}px,0,0)`;
     const text = Math.abs(s - 1) < SCALE_STEP ? move : `${move} scale(${s.toFixed(4)})`;
     if (text !== item.written) {
       item.written = text;
@@ -343,13 +370,6 @@ export class DockEngine {
     }
     const opacity = item.appear.x >= 1 ? "" : String(Math.min(1, Math.max(0, item.appear.x)));
     if (item.el.style.opacity !== opacity) item.el.style.opacity = opacity;
-    if (item.dots) {
-      if (move !== item.writtenDots) {
-        item.writtenDots = move;
-        item.dots.style.transform = move;
-      }
-      if (item.dots.style.opacity !== opacity) item.dots.style.opacity = opacity;
-    }
   }
 
   /** The bar grows with the row: a stretch along the axis, with the corners and hairline kept round in CSS. */
@@ -367,7 +387,7 @@ export class DockEngine {
     const drawn = this.barSize + endDelta - startDelta;
     const stretch = Math.max(drawn - 2 * this.cap + 2 * PLATE_OVERLAP, 1) / mid0;
     const v = isVertical(this.config.edge);
-    const move = (d: number): string => (v ? `translate3d(0,${px(d)}px,0)` : `translate3d(${px(d)}px,0,0)`);
+    const move = (d: number): string => (v ? `translate3d(0,${px(snap(d))}px,0)` : `translate3d(${px(snap(d))}px,0,0)`);
     const next = {
       start: move(startDelta),
       mid: `${move(startDelta)} ${v ? "scaleY" : "scaleX"}(${stretch.toFixed(4)})`,
@@ -380,19 +400,30 @@ export class DockEngine {
     }
   }
 
-  /** The name label rides on the hovered item: its drawn centre, and above its magnified top. */
+  /**
+   * The name label rides on the hovered item: its drawn centre, and above its magnified top. The engine writes its
+   * text too, so moving the pointer along the dock never goes through React.
+   */
   private writeLabel(frame: MagnifyFrame): void {
     const label = this.label;
+    if (!label) return;
     const index = this.items.findIndex((i) => i.key === this.hoveredKey);
     const item = this.items[index];
-    if (!label || !item) return;
+    const shown = item !== undefined && !this.labelBlocked && this.previewKey !== item.key && item.name !== "";
+    if (label.root.dataset.visible !== (shown ? "true" : undefined)) {
+      if (shown) label.root.dataset.visible = "true";
+      else delete label.root.dataset.visible;
+    }
+    if (!shown || !item) return;
+    if (label.name.textContent !== item.name) label.name.textContent = item.name;
+    if (label.sub.textContent !== item.sub) label.sub.textContent = item.sub;
     const centre = item.start + item.size / 2 + item.shift;
     const lift = ((frame.scale[index] ?? 1) - 1) * item.size * insideSign(this.config.edge);
     const text = isVertical(this.config.edge)
-      ? `translate3d(${px(lift)}px,${px(centre)}px,0) translateY(-50%)`
-      : `translate3d(${px(centre)}px,${px(lift)}px,0) translateX(-50%)`;
+      ? `translate3d(${px(snap(lift))}px,${px(snap(centre))}px,0) translateY(-50%)`
+      : `translate3d(${px(snap(centre))}px,${px(snap(lift))}px,0) translateX(-50%)`;
     if (text === this.labelWritten) return;
     this.labelWritten = text;
-    label.style.transform = text;
+    label.root.style.transform = text;
   }
 }

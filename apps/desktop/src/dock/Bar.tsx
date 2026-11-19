@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotion } from "./useReducedMotion";
 import { useViewport } from "./useViewport";
 import { actions } from "./bridge";
 import { DockEngine, PLATE_OVERLAP, type LayoutItem } from "./engine";
@@ -15,14 +15,15 @@ import {
   type Metrics,
   type Rect,
 } from "./geometry";
-import { entryLabel, isDraggable, Slot, type SlotHandlers } from "./items";
+import { isDraggable, Slot, type SlotHandlers } from "./items";
 import { maxGrowth } from "./magnify";
 import { activationTarget, buildEntries, lengthKind, pinKey, pinOf, reorderBy, tileKey, unpin, type AppEntry, type BarEntry, type StackEntry } from "./model";
 import type { DockEdge } from "./protocol";
+import { leavePreview, onBarHover } from "./previewIntent";
 import { dockZone, hotStrip } from "./regions";
 import { DRAG_THRESHOLD, dropIntent, moveKey, slideOffsets, type DropIntent, type LaneSpan } from "./reorder";
 import { useDockStore } from "./store";
-import { plural, t } from "./strings";
+import { t } from "./strings";
 
 export interface BarLayout {
   /** The bar at rest, in window CSS px. */
@@ -70,7 +71,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const stack = useDockStore((s) => s.stack);
   const menu = useDockStore((s) => s.menu);
   const pointerInside = useDockStore((s) => s.pointerInside);
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotion();
   const viewport = useViewport();
   const [roving, setRoving] = useState<string>("library");
 
@@ -89,10 +90,14 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const plateStart = useRef<HTMLDivElement>(null);
   const plateMid = useRef<HTMLDivElement>(null);
   const plateEnd = useRef<HTMLDivElement>(null);
+  const labelRoot = useRef<HTMLDivElement>(null);
+  const labelName = useRef<HTMLSpanElement>(null);
+  const labelSub = useRef<HTMLSpanElement>(null);
+  const previewKey = useDockStore((s) => s.previewKey);
   const frozen = useDockStore((s) => s.frozen);
   const [engine] = useState(
     () =>
-      new DockEngine({ peak, reach: metrics.reach, gap: metrics.gap, edge, reduced }, (key) => useDockStore.getState().setHovered(key)),
+      new DockEngine({ peak, reach: metrics.reach, gap: metrics.gap, edge, reduced }, onBarHover),
   );
   const items = useRef<readonly LayoutItem[]>([]);
   const origin = useRef(0);
@@ -107,13 +112,22 @@ export function Bar({ hidden, onLayout }: BarProps) {
   }, [engine, peak, metrics.reach, metrics.gap, edge, reduced]);
   useEffect(() => () => engine.destroy(), [engine]);
   useEffect(() => engine.setFrozen(frozen), [engine, frozen]);
-  const attachLabel = useCallback((el: HTMLElement | null) => engine.attachLabel(el), [engine]);
   useLayoutEffect(() => {
     const start = plateStart.current;
     const mid = plateMid.current;
     const end = plateEnd.current;
     if (start && mid && end) engine.attachPlate({ start, mid, end });
+    const root = labelRoot.current;
+    const name = labelName.current;
+    const sub = labelSub.current;
+    if (root && name && sub) engine.attachLabel({ root, name, sub });
   }, [engine]);
+  const labelBlocked = editing || stack !== null || menu !== null;
+  useEffect(() => engine.setLabelBlocked(labelBlocked), [engine, labelBlocked]);
+  useEffect(() => engine.setPreviewKey(previewKey), [engine, previewKey]);
+  useEffect(() => {
+    if (labelBlocked) leavePreview();
+  }, [labelBlocked]);
 
   const measure = useCallback(() => {
     const dock = dockRef.current;
@@ -128,10 +142,12 @@ export function Bar({ hidden, onLayout }: BarProps) {
       measured.push({
         key,
         el: face,
-        dots: slot.querySelector<HTMLElement>(":scope > .dots"),
         start: vertical ? slot.offsetTop : slot.offsetLeft,
         size: vertical ? slot.offsetHeight : slot.offsetWidth,
-        magnifies: slot.dataset.magnify === "true",
+        weight: Number(slot.dataset.weight) || 0,
+        render: Number.parseFloat(slot.style.getPropertyValue("--r")) || 1,
+        name: slot.dataset.name ?? "",
+        sub: slot.dataset.sub ?? "",
       });
     }
     const lead = vertical ? dock.offsetTop : dock.offsetLeft;
@@ -168,8 +184,8 @@ export function Bar({ hidden, onLayout }: BarProps) {
       const area = dockZone({ bar, edge, engaged: store.pointerInside, headroom, growth });
       const wake = settings.autoHide && contains(hotStrip(bar, edge, viewport), point);
       const inside = contains(area, point);
-      if (inside || wake) store.setPointerInside(true);
-      else if (store.pointerInside) store.setPointerInside(false);
+      const near = inside || wake;
+      if (near !== store.pointerInside) store.setPointerInside(near);
       engine.setPointer(inside && !latest.current.editing ? (vertical ? point.y : point.x) : null);
     };
     const onLeave = (): void => {
@@ -226,7 +242,6 @@ export function Bar({ hidden, onLayout }: BarProps) {
         p.started = true;
         engine.beginDrag(p.key, p.grab, main);
         document.documentElement.dataset.dragging = "true";
-        useDockStore.getState().setHovered(null);
       }
       engine.moveDrag(main);
       const span = p.lane.find((s) => s.key === p.key);
@@ -377,6 +392,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
 
   const vars = {
     "--d-icon": `${metrics.icon}px`,
+    "--d-base": `${metrics.icon}px`,
     "--d-gap": `${metrics.gap}px`,
     "--d-pad": `${metrics.pad}px`,
     "--d-edge": `${metrics.edge}px`,
@@ -400,30 +416,20 @@ export function Bar({ hidden, onLayout }: BarProps) {
               entry={entry}
               icon={metrics.icon}
               vertical={vertical}
+              edge={edge}
               editing={editing}
               roving={entry.key === rovingKey}
+              peak={peak}
               open={(entry.kind === "stack" && stack?.category === entry.category.id) || (entry.kind === "add" && menu?.key === entry.key)}
               handlers={handlers}
             />
           ))}
         </div>
-        <Label entries={entries} suppressed={editing || stack !== null || menu !== null} onElement={attachLabel} />
+        <div ref={labelRoot} className="dock__label" aria-hidden="true">
+          <span ref={labelName} />
+          <span ref={labelSub} className="caps" />
+        </div>
       </div>
-    </div>
-  );
-}
-
-/** The name of the item under the pointer. The engine moves it; this only supplies the words. */
-function Label({ entries, suppressed, onElement }: { readonly entries: readonly BarEntry[]; readonly suppressed: boolean; readonly onElement: (el: HTMLElement | null) => void }) {
-  const hoveredKey = useDockStore((s) => s.hoveredKey);
-  const previewKey = useDockStore((s) => s.previewKey);
-  const entry = hoveredKey === null || suppressed || previewKey === hoveredKey ? undefined : entries.find((e) => e.key === hoveredKey);
-  const name = entry ? entryLabel(entry) : "";
-  const windowCount = entry?.kind === "app" ? entry.windows.length : 0;
-  return (
-    <div ref={onElement} className="dock__label" data-visible={name !== "" ? "true" : undefined} aria-hidden="true">
-      <span>{name}</span>
-      {windowCount > 1 ? <span className="caps">{plural("item.running", windowCount)}</span> : null}
     </div>
   );
 }

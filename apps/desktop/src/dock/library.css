@@ -8,6 +8,7 @@
   align-items: center;
   padding: var(--lib-pad) 0 0;
   background: var(--scrim);
+  animation: fade-in var(--dur-quick) linear;
   backdrop-filter: var(--scrim-filter);
   color: var(--text);
   pointer-events: auto;

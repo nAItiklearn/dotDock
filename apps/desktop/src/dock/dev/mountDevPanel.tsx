@@ -4,6 +4,7 @@ import { actions, setBackend } from "../bridge";
 import { useDockStore } from "../store";
 import { DevPanel } from "./DevPanel";
 import { dev, devBackend } from "./devBackend";
+import { perf } from "./perfHarness";
 import { sampleIcon } from "./sampleIcons";
 import "./DevPanel.css";
 
@@ -50,7 +51,7 @@ export function mountDevPanel(): void {
   backdrop.style.backgroundImage = `url(/wallpaper-thumbs/${wallpaper}.jpg)`;
   document.body.prepend(backdrop);
   if (params.get("sample") !== "0") publishSampleProviders();
-  Object.assign(window, { dockDev: { dev, store: useDockStore, actions } });
+  Object.assign(window, { dockDev: { dev, store: useDockStore, actions, perf } });
   if (params.get("panel") === "0") return;
   const host = document.createElement("div");
   host.id = "dev-panel";

@@ -1,9 +1,10 @@
 import { memo, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { Icon } from "../design-system/Icon";
 import { LibraryMark } from "./DockIcons";
-import { lengthOf } from "./geometry";
-import { indicatorFor, lengthKind, magnifies, type AppEntry, type BarEntry, type StackEntry } from "./model";
-import { t } from "./strings";
+import { faceBox, lengthOf, renderScale } from "./geometry";
+import type { DockEdge } from "./protocol";
+import { indicatorFor, lengthKind, magnifyWeight, type AppEntry, type BarEntry, type StackEntry } from "./model";
+import { plural, t } from "./strings";
 import { StatusPill, Tile } from "./tiles";
 import { toneVar } from "./tones";
 
@@ -20,9 +21,12 @@ export interface SlotProps {
   readonly entry: BarEntry;
   readonly icon: number;
   readonly vertical: boolean;
+  readonly edge: DockEdge;
   readonly editing: boolean;
   /** The one item that is a tab stop; arrow keys move it. */
   readonly roving: boolean;
+  /** The dock's peak magnification: faces are drawn this much larger and shown scaled down, so magnifying never upsamples. */
+  readonly peak: number;
   /** This entry's popover is open. */
   readonly open: boolean;
   readonly handlers: SlotHandlers;
@@ -74,7 +78,6 @@ function label(entry: BarEntry): string {
   }
 }
 
-export const entryLabel = label;
 
 function StackMini({ entry }: { readonly entry: StackEntry }) {
   const cells = Array.from({ length: 4 }, (_, i) => entry.preview[i]);
@@ -87,7 +90,7 @@ function StackMini({ entry }: { readonly entry: StackEntry }) {
   );
 }
 
-function Face({ entry, editing, roving, open, handlers }: Omit<SlotProps, "icon" | "vertical">) {
+function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "icon" | "vertical" | "peak" | "edge"> & { readonly box: CSSProperties | undefined }) {
   const name = label(entry);
   const removable = editing && isRemovable(entry);
   const draggable = editing && isDraggable(entry);
@@ -98,7 +101,7 @@ function Face({ entry, editing, roving, open, handlers }: Omit<SlotProps, "icon"
 
   if (entry.kind === "divider") {
     return (
-      <div className="face face--divider" aria-hidden="true">
+      <div className="face face--divider" aria-hidden="true" style={box}>
         <i />
         <i />
         <i />
@@ -107,14 +110,14 @@ function Face({ entry, editing, roving, open, handlers }: Omit<SlotProps, "icon"
   }
   if (entry.kind === "status") {
     return (
-      <div className="face face--status">
+      <div className="face face--status" style={box}>
         <StatusPill />
       </div>
     );
   }
   if (entry.kind === "tile") {
     return (
-      <div className="face face--tile" data-editing={editing ? "true" : undefined} onPointerDown={draggable ? (e) => handlers.pointerDown(entry, e) : undefined}>
+      <div className="face face--tile" style={box} data-editing={editing ? "true" : undefined} onPointerDown={draggable ? (e) => handlers.pointerDown(entry, e) : undefined}>
         <Tile id={entry.id} />
         {removable ? <RemoveBadge name={name} onRemove={() => handlers.remove(entry)} /> : null}
       </div>
@@ -123,7 +126,7 @@ function Face({ entry, editing, roving, open, handlers }: Omit<SlotProps, "icon"
 
   const running = entry.kind === "app" && entry.windows.length > 0;
   const aria = entry.kind === "app" && running ? `${entry.name}, ${t(entry.windows.length === 1 ? "item.running.one" : "item.running.other", { count: entry.windows.length })}` : name;
-  const style = entry.kind === "stack" ? ({ "--tone": toneVar(entry.category.tone) } as CSSProperties) : undefined;
+  const style = entry.kind === "stack" ? ({ ...box, "--tone": toneVar(entry.category.tone) } as CSSProperties) : box;
   return (
     <div className="face" data-editing={editing ? "true" : undefined} data-open={open ? "true" : undefined} style={style}>
       <button
@@ -160,6 +163,12 @@ function Face({ entry, editing, roving, open, handlers }: Omit<SlotProps, "icon"
         </i>
       ) : null}
       {removable ? <RemoveBadge name={name} onRemove={() => handlers.remove(entry)} /> : null}
+      {entry.kind === "app" ? <Dots entry={entry} /> : null}
+      {entry.kind === "stack" && entry.running > 0 ? (
+        <span className="dots dots--stack" aria-hidden="true">
+          <i />
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -172,27 +181,38 @@ function RemoveBadge({ name, onRemove }: { readonly name: string; readonly onRem
   );
 }
 
-/** One place on the bar: a layout box the engine measures, holding the face it scales and the dots it only moves. */
-export const Slot = memo(function Slot({ entry, icon, vertical, editing, roving, open, handlers }: SlotProps) {
+/**
+ * One place on the bar: a layout box the engine measures, holding the face the engine moves and scales. The
+ * face is drawn `--r` times larger than the slot (its peak), so the sizes its content needs are set here, once
+ * per render, and never redeclared on the face: a face that declares custom properties makes every style
+ * recalculation of it re-resolve its whole subtree.
+ */
+export const Slot = memo(function Slot({ entry, icon, vertical, edge, editing, roving, open, peak, handlers }: SlotProps) {
   const kind = lengthKind(entry);
-  const style = { "--len": kind === "status" ? "auto" : `${lengthOf(kind, icon, vertical)}px` } as CSSProperties;
+  const weight = magnifyWeight(entry);
+  const render = renderScale(weight, peak);
+  const length = kind === "status" ? null : lengthOf(kind, icon, vertical);
+  const style = {
+    "--len": length === null ? "auto" : `${length}px`,
+    "--r": render,
+    "--d-icon": `${icon * render}px`,
+  } as CSSProperties;
+  // The face's own box is plain pixels: a declaration that uses var() is substituted again every time the engine
+  // rewrites the face's transform, and there are a dozen faces per frame.
+  const box: CSSProperties | undefined = length === null ? undefined : faceBox(edge, length * render, icon * render);
   return (
     <div
       className="slot"
       data-key={entry.key}
       data-kind={entry.kind}
       data-tile={entry.kind === "tile" ? entry.id : undefined}
-      data-magnify={magnifies(entry) ? "true" : "false"}
+      data-weight={weight}
+      data-name={label(entry)}
+      data-sub={entry.kind === "app" && entry.windows.length > 1 ? plural("item.running", entry.windows.length) : ""}
       style={style}
       role="presentation"
     >
-      <Face entry={entry} editing={editing} roving={roving} open={open} handlers={handlers} />
-      {entry.kind === "app" ? <Dots entry={entry} /> : null}
-      {entry.kind === "stack" && entry.running > 0 ? (
-        <span className="dots dots--stack" aria-hidden="true">
-          <i />
-        </span>
-      ) : null}
+      <Face entry={entry} editing={editing} roving={roving} open={open} handlers={handlers} box={box} />
     </div>
   );
 });

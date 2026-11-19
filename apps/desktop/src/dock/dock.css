@@ -43,7 +43,6 @@
   --panel-shadow: 0 18px 48px rgb(0 0 0 / 0.38);
   --scrim: color-mix(in srgb, var(--bg) 72%, transparent);
   --scrim-filter: blur(28px);
-  --art-filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.28));
 }
 .dock-root[data-effects="lite"] {
   --bar-shadow: var(--top-light), 0 1px 3px rgb(0 0 0 / 0.32);
@@ -52,7 +51,21 @@
   --panel-shadow: 0 6px 16px rgb(0 0 0 / 0.3);
   --scrim: color-mix(in srgb, var(--bg) 97%, black);
   --scrim-filter: none;
-  --art-filter: none;
+}
+
+/* Panels appear in their first frame, fully laid out; only their opacity fades in, and they close at once. */
+:root {
+  --dur-quick: 80ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-quick: 0ms;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* Frozen by the core (display off, locked, fullscreen app, auto-hidden): nothing may animate. */
@@ -228,16 +241,19 @@ body {
   flex-direction: column;
 }
 
-/* A slot is the layout box the engine measures; it holds the face (scaled) and the dots (moved only). */
+/* A slot is the layout box the engine measures; it holds the face the engine moves and scales. */
 .slot {
+  --face-hair: calc(var(--hairline) * var(--r));
+  --d-dot: calc(var(--d-icon) * 0.08);
+  --d-badge: calc(var(--d-icon) * 0.34);
   position: relative;
   flex: none;
   width: var(--len);
-  height: var(--d-icon);
+  height: var(--d-base);
   pointer-events: none;
 }
 .dock-anchor[data-axis="y"] .slot {
-  width: var(--d-icon);
+  width: var(--d-base);
   height: var(--len);
 }
 .slot[data-kind="status"] {
@@ -248,16 +264,34 @@ body {
   justify-content: center;
 }
 
+/*
+ * A face is drawn --r times larger than its slot (--r is the item's peak magnification) and shown scaled down by
+ * 1 / --r, so magnifying only ever scales it up towards its drawn size and never stretches a smaller raster. It
+ * hangs from the screen-edge side of the slot (its box is inline, in plain px). will-change stays on all
+ * the time: toggling it per hover would re-raster the face.
+ */
 .face {
   position: absolute;
-  inset: 0;
-  transform-origin: var(--origin);
+  transform: scale(calc(1 / var(--r)));
   will-change: transform;
   pointer-events: none;
 }
+/* Where magnified faces grow from: the slot edge on the screen-edge side. */
+.dock-anchor[data-edge="bottom"] .face {
+  transform-origin: 50% 100%;
+}
+.dock-anchor[data-edge="top"] .face {
+  transform-origin: 50% 0;
+}
+.dock-anchor[data-edge="left"] .face {
+  transform-origin: 0 50%;
+}
+.dock-anchor[data-edge="right"] .face {
+  transform-origin: 100% 50%;
+}
+/* The status pill sizes itself from its content and never grows. */
 .slot[data-kind="status"] .face {
   position: relative;
-  inset: auto;
 }
 
 /* Round faces: apps, stacks, the library button. */
@@ -267,7 +301,7 @@ body {
   display: grid;
   place-items: center;
   padding: 0;
-  border: var(--hairline) solid var(--disc-edge);
+  border: var(--face-hair, var(--hairline)) solid var(--disc-edge);
   border-radius: 50%;
   background: var(--disc);
   color: var(--text);
@@ -298,7 +332,6 @@ body {
   height: calc(var(--d-icon) * 0.66);
   object-fit: contain;
   pointer-events: none;
-  filter: var(--art-filter);
 }
 .art--missing {
   display: grid;
@@ -457,16 +490,17 @@ html[data-dragging="true"] * {
 
 /* Running dots sit in the bar's padding, on the screen-edge side of the item. */
 .dots {
+  --dot: var(--d-dot);
   position: absolute;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: calc(var(--d-dot) * 0.9);
+  gap: calc(var(--dot) * 0.9);
   pointer-events: none;
 }
 .dots i {
-  width: var(--d-dot);
-  height: var(--d-dot);
+  width: var(--dot);
+  height: var(--dot);
   border-radius: 50%;
   background: var(--text-dim);
 }
@@ -487,30 +521,30 @@ html[data-dragging="true"] * {
   }
 }
 .dots--stack i {
-  width: calc(var(--d-dot) * 0.7);
-  height: calc(var(--d-dot) * 0.7);
+  width: calc(var(--dot) * 0.7);
+  height: calc(var(--dot) * 0.7);
   opacity: 0.6;
 }
 .dock-anchor[data-edge="bottom"] .dots {
   left: 0;
   right: 0;
-  bottom: calc(-1 * (var(--d-pad) / 2 + var(--d-dot) / 2));
+  bottom: calc(-1 * (var(--d-pad) * var(--r) / 2 + var(--d-dot) / 2));
 }
 .dock-anchor[data-edge="top"] .dots {
   left: 0;
   right: 0;
-  top: calc(-1 * (var(--d-pad) / 2 + var(--d-dot) / 2));
+  top: calc(-1 * (var(--d-pad) * var(--r) / 2 + var(--d-dot) / 2));
 }
 .dock-anchor[data-edge="left"] .dots {
   top: 0;
   bottom: 0;
-  left: calc(-1 * (var(--d-pad) / 2 + var(--d-dot) / 2));
+  left: calc(-1 * (var(--d-pad) * var(--r) / 2 + var(--d-dot) / 2));
   flex-direction: column;
 }
 .dock-anchor[data-edge="right"] .dots {
   top: 0;
   bottom: 0;
-  right: calc(-1 * (var(--d-pad) / 2 + var(--d-dot) / 2));
+  right: calc(-1 * (var(--d-pad) * var(--r) / 2 + var(--d-dot) / 2));
   flex-direction: column;
 }
 
@@ -539,7 +573,7 @@ html[data-dragging="true"] * {
   display: flex;
   align-items: center;
   overflow: hidden;
-  border: var(--hairline) solid var(--disc-edge);
+  border: var(--face-hair, var(--hairline)) solid var(--disc-edge);
   border-radius: var(--radius-pill);
   background: var(--disc);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 7%, transparent), var(--lift-shadow);
@@ -687,7 +721,7 @@ html[data-dragging="true"] * {
   gap: calc(var(--d-icon) * 0.2);
   height: var(--d-status);
   padding: 0 calc(var(--d-icon) * 0.3);
-  border: var(--hairline) solid var(--disc-edge);
+  border: var(--face-hair, var(--hairline)) solid var(--disc-edge);
   border-radius: var(--radius-pill);
   background: var(--disc);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 7%, transparent), var(--lift-shadow);
@@ -743,6 +777,7 @@ html[data-dragging="true"] * {
 
 /* The name of the hovered item. The engine moves it; opacity only fades it. */
 .dock__label {
+  will-change: transform;
   position: absolute;
   display: flex;
   align-items: baseline;
@@ -750,8 +785,9 @@ html[data-dragging="true"] * {
   padding: var(--space-1) var(--space-3);
   border: var(--hairline) solid var(--border);
   border-radius: var(--radius-pill);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  background: var(--solid);
+  box-shadow: var(--top-light), var(--lift-shadow);
+  contain: layout paint style;
   font-size: var(--text-sm);
   font-weight: 500;
   white-space: nowrap;
@@ -841,7 +877,7 @@ html[data-dragging="true"] * {
   font-size: var(--text-sm);
   white-space: nowrap;
   pointer-events: none;
-  animation: panel-in var(--dur-med) var(--ease-out);
+  animation: fade-in var(--dur-quick) linear;
 }
 .notice[data-edge="bottom"] {
   left: var(--notice-x);
@@ -868,11 +904,5 @@ html[data-dragging="true"] * {
   height: var(--marker);
   border-radius: 50%;
   background: var(--danger);
-}
-@keyframes panel-in {
-  from {
-    opacity: 0;
-    transform: translateY(var(--space-2));
-  }
 }
 

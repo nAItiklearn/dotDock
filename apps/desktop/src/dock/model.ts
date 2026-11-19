@@ -1,5 +1,5 @@
 import type { Category, CategoryId, DockApp, DockSettings, DockWindow, PinnedItem } from "./protocol";
-import type { LengthKind } from "./geometry";
+import { MAGNIFY_WEIGHT, type LengthKind } from "./geometry";
 import { categoryLabel } from "./strings";
 
 /** Live tiles the dock knows how to draw. Ids in `DockSettings.tiles` that are not listed here are ignored. */
@@ -70,8 +70,20 @@ export function lengthKind(entry: BarEntry): LengthKind {
   }
 }
 
-/** Whether magnification grows the entry. Tiles and the status pill only make room. */
-export const magnifies = (entry: BarEntry): boolean => entry.kind === "app" || entry.kind === "stack" || entry.kind === "library" || entry.kind === "add";
+/** Share of the magnification an entry takes. Tiles and the status pill only make room. */
+export function magnifyWeight(entry: BarEntry): number {
+  switch (entry.kind) {
+    case "app":
+      return MAGNIFY_WEIGHT.app;
+    case "stack":
+      return MAGNIFY_WEIGHT.stack;
+    case "library":
+    case "add":
+      return MAGNIFY_WEIGHT.control;
+    default:
+      return 0;
+  }
+}
 
 export interface WindowGroup {
   readonly key: string;

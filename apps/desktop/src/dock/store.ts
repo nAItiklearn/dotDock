@@ -11,7 +11,7 @@ export const DEFAULT_SETTINGS: DockSettings = {
   reserveSpace: true,
   autoHide: false,
   iconSize: 48,
-  magnification: 1.7,
+  magnification: 1.25,
   pinned: [],
   tiles: [],
 };
@@ -71,8 +71,6 @@ interface DockStore {
   readonly notice: Notice | null;
   /** The cursor is inside the dock's click regions (reported by the core, or measured in a browser). */
   readonly pointerInside: boolean;
-  /** Entry key under the pointer, for the label and the window preview. */
-  readonly hoveredKey: string | null;
   /** Entry whose window preview is open. */
   readonly previewKey: string | null;
   /** The core froze the dock (display off, locked, fullscreen app, auto-hidden): no frames, no timers. */
@@ -92,7 +90,6 @@ interface DockStore {
   setMenu: (menu: MenuTarget | null) => void;
   setNotice: (text: string | null) => void;
   setPointerInside: (inside: boolean) => void;
-  setHovered: (key: string | null) => void;
   setPreviewKey: (key: string | null) => void;
   setFrozen: (frozen: boolean) => void;
   setEffectsChoice: (choice: EffectsChoice) => void;
@@ -114,7 +111,6 @@ export const useDockStore = create<DockStore>((set, get) => ({
   menu: null,
   notice: null,
   pointerInside: false,
-  hoveredKey: null,
   previewKey: null,
   frozen: false,
   effectsChoice: readChoice(),
@@ -138,7 +134,6 @@ export const useDockStore = create<DockStore>((set, get) => ({
   setMenu: (menu) => set({ menu }),
   setNotice: (text) => set({ notice: text === null ? null : { id: ++noticeId, text } }),
   setPointerInside: (pointerInside) => set({ pointerInside }),
-  setHovered: (hoveredKey) => (get().hoveredKey === hoveredKey ? undefined : set({ hoveredKey })),
   setPreviewKey: (previewKey) => (get().previewKey === previewKey ? undefined : set({ previewKey })),
   setFrozen: (frozen) => (get().frozen === frozen ? undefined : set({ frozen })),
   setEffectsChoice: (effectsChoice) => {

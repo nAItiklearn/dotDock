@@ -35,11 +35,13 @@ export function rest(state: SpringState, value: number): void {
   state.v = 0;
 }
 
-/** Settle times of the panels that grow out of the dock, in ms. */
-export const PANEL_SETTLE_MS = { open: 200, close: 150 } as const;
-
-/** A motion-library spring config for a critically damped spring that settles in `ms`. */
-export function springFor(ms: number): { readonly type: "spring"; readonly stiffness: number; readonly damping: number; readonly mass: 1 } {
-  const omega = omegaForSettle(ms);
-  return { type: "spring", stiffness: omega * omega, damping: 2 * omega, mass: 1 };
+/**
+ * Steps the spring and, once it is within `epsilon` of rest, lands it exactly on the target, so nothing is ever
+ * left a hair off a whole pixel or scale of 1. Returns true while it is still moving.
+ */
+export function advance(state: SpringState, target: number, omega: number, dt: number, epsilon: number): boolean {
+  stepCritical(state, target, omega, dt);
+  if (!isSettled(state, target, epsilon)) return true;
+  rest(state, target);
+  return false;
 }

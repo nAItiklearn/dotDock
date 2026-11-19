@@ -1,11 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { AnimatePresence } from "motion/react";
+
 import { Bar, type BarLayout } from "./Bar";
 import { EditBanner } from "./EditBanner";
 import { chooseEffects, readCapabilities } from "./effects";
 import type { Rect } from "./geometry";
 import { loadContextMenu, loadLibrary, loadPreview, loadStackPopover, prefetchPanels } from "./prefetch";
-import { usePreviewHover } from "./previewIntent";
 import { useDockStore } from "./store";
 import { useAutoHide, useKeyboardFocus, useNoticeTimeout, useRegions, type PanelRects } from "./useDockShell";
 import { useViewport } from "./useViewport";
@@ -48,7 +47,6 @@ export function Dock() {
   useRegions(layout, hidden, panels, viewport, modal);
   useKeyboardFocus(editing || modal);
   useNoticeTimeout();
-  usePreviewHover(!editing && !modal);
 
   // The panels are code-split: the first time the pointer nears the dock they start loading, before any click needs them.
   useEffect(() => {
@@ -76,22 +74,18 @@ export function Dock() {
 
   return (
     <main className="dock-root" data-effects={effects} data-frozen={frozen ? "true" : undefined} data-edge={layout?.edge} style={rootVars}>
-      <AnimatePresence>
         {libraryOpen ? (
           <Suspense key="library" fallback={null}>
             <Library />
           </Suspense>
         ) : null}
-      </AnimatePresence>
       {stack !== null || menu !== null ? <div className="scrim" onPointerDown={closeTop} onContextMenu={(e) => (e.preventDefault(), closeTop())} /> : null}
       <Bar hidden={hidden} onLayout={onLayout} />
-      <AnimatePresence>
         {stack !== null && !libraryOpen ? (
           <Suspense key={stack.category} fallback={null}>
             <StackPopover stack={stack} />
           </Suspense>
         ) : null}
-      </AnimatePresence>
       {previewKey !== null && !editing && !modal ? (
         <Suspense fallback={null}>
           <Preview onRect={rects.preview} />

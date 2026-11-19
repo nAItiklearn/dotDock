@@ -41,8 +41,8 @@ export function DevPanel() {
             <input type="range" min={32} max={80} value={settings.iconSize} onChange={(e) => set({ iconSize: Number(e.target.value) })} />
           </label>
           <label>
-            magnification {settings.magnification.toFixed(1)}
-            <input type="range" min={1} max={2.4} step={0.1} value={settings.magnification} onChange={(e) => set({ magnification: Number(e.target.value) })} />
+            magnification {settings.magnification.toFixed(2)}
+            <input type="range" min={1} max={1.6} step={0.05} value={settings.magnification} onChange={(e) => set({ magnification: Number(e.target.value) })} />
           </label>
           <label>
             effects

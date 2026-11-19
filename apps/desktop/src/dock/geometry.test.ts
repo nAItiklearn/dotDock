@@ -27,7 +27,7 @@ describe("clamps", () => {
     expect(clampIconSize(Number.NaN)).toBe(ICON_LIMITS.fallback);
     expect(clampMagnification(0.2)).toBe(MAGNIFICATION_LIMITS.min);
     expect(clampMagnification(9)).toBe(MAGNIFICATION_LIMITS.max);
-    expect(clampMagnification(Number.POSITIVE_INFINITY)).toBe(MAGNIFICATION_LIMITS.min);
+    expect(clampMagnification(Number.POSITIVE_INFINITY)).toBe(MAGNIFICATION_LIMITS.fallback);
   });
 });
 

@@ -3,28 +3,23 @@
  * chunks, only after the pointer first comes near the dock. Surfaces come from the effects tier on the root
  * (--panel-fill, --panel-filter, --panel-shadow), so lite draws them solid.
  */
-@keyframes menu-in {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-}
 
-/* Stack popover. The plate springs out of the tile; the content fades in once there is room. */
+/* Stack popover: laid out and visible from the first frame; only its opacity fades in, briefly. */
 .popover {
   position: absolute;
   z-index: 20;
   color: var(--text);
   pointer-events: auto;
+  animation: fade-in var(--dur-quick) linear;
 }
 .popover__plate {
   position: absolute;
   inset: 0;
   border: var(--hairline) solid color-mix(in srgb, var(--tone) 34%, var(--border));
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--panel-fill) 90%, var(--tone) 10%);
   backdrop-filter: var(--panel-filter);
   box-shadow: var(--top-light), var(--panel-shadow);
-  will-change: transform;
 }
 .popover__content {
   position: relative;
@@ -107,7 +102,7 @@
   color: var(--text);
   pointer-events: auto;
   transform-origin: var(--menu-origin);
-  animation: menu-in var(--dur-fast) var(--ease-out);
+  animation: fade-in var(--dur-quick) linear;
 }
 .menu[data-edge="top"] {
   --menu-origin: 50% 0;
@@ -181,7 +176,7 @@
   box-shadow: var(--top-light), var(--panel-shadow);
   color: var(--text);
   pointer-events: auto;
-  animation: panel-in var(--dur-fast) var(--ease-out);
+  animation: fade-in var(--dur-quick) linear;
 }
 .preview__head {
   display: flex;

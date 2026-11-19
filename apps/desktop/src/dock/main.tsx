@@ -27,8 +27,9 @@ function Appearance() {
 }
 
 async function boot(): Promise<void> {
-  // The fixture exists only in `vite dev` in a plain browser; the build removes this branch and the chunk.
-  const dev = import.meta.env.DEV && !isTauri() ? await import("./dev/mountDevPanel") : null;
+  // The fixture exists only in `vite dev` in a plain browser (or a build made with VITE_DOCK_FIXTURE=1 for performance
+  // measurements, which is never shipped); the release build removes this branch and the chunk.
+  const dev = (import.meta.env.DEV || import.meta.env.VITE_DOCK_FIXTURE === "1") && !isTauri() ? await import("./dev/mountDevPanel") : null;
   dev?.installDevBackend();
   await Promise.all([document.fonts.ready, app.settings.getState().init()]);
   applyCurrentAppearance(pinnedTheme);

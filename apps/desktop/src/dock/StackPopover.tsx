@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { animate, motion, useMotionValue, useReducedMotion, useTransform, usePresence } from "motion/react";
 import { AppCell } from "./AppCell";
 import { actions } from "./bridge";
 import { EmptyGlyph } from "./EmptyGlyph";
@@ -7,23 +6,16 @@ import { anchorPoint, placeBesideDock, popoverSize, POPOVER } from "./geometry";
 import { appsInCategory, freshAppIds } from "./model";
 import { filterApps, isNavKey, moveInGrid, nextQuery } from "./nav";
 import type { DockApp } from "./protocol";
-import { PANEL_SETTLE_MS, springFor } from "./spring";
 import { useDockStore, type OpenStack } from "./store";
 import { categoryLabel, plural, t } from "./strings";
 import { toneVar } from "./tones";
 import { useViewport } from "./useViewport";
 import "./panels.css";
 
-const CONTENT_FADE_FROM = 0.4;
-const CONTENT_FADE_SPAN = 0.45;
-
-function useRadius(): number {
-  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--radius-md")) || 0;
-}
-
 /**
- * The grid of a category, grown out of its tile: the plate springs from the tile's rect to its own, with its
- * corners kept round, and the content fades in once there is room. Arrow keys move, typing filters, Enter opens.
+ * The grid of a category. It opens in the same frame as the click, fully laid out: no growth animation delays
+ * the content (only a short opacity fade, see panels.css), and closing is immediate. Arrow keys move, typing
+ * filters, Enter opens, Esc clears the filter and then closes.
  */
 export function StackPopover({ stack }: { readonly stack: OpenStack }) {
   const category = useDockStore((s) => s.categories.find((c) => c.id === stack.category));
@@ -31,9 +23,6 @@ export function StackPopover({ stack }: { readonly stack: OpenStack }) {
   const windows = useDockStore((s) => s.windows);
   const edge = useDockStore((s) => s.settings.edge);
   const viewport = useViewport();
-  const reduced = useReducedMotion() ?? false;
-  const radius = useRadius();
-  const [present, safeToRemove] = usePresence();
 
   const apps = useMemo(() => appsInCategory(allApps, stack.category), [allApps, stack.category]);
   const [query, setQuery] = useState("");
@@ -49,40 +38,6 @@ export function StackPopover({ stack }: { readonly stack: OpenStack }) {
   const label = category ? categoryLabel(category) : "";
   const tone = category?.tone ?? "neutral";
 
-  // Shared-element growth: a scale and shift that carry the plate from the tile's rect to its own.
-  const from = stack.from;
-  const sx0 = Math.max(from.w / size.w, 0.01);
-  const sy0 = Math.max(from.h / size.h, 0.01);
-  const tx0 = from.x + from.w / 2 - (pos.x + size.w / 2);
-  const ty0 = from.y + from.h / 2 - (pos.y + size.h / 2);
-  const progress = useMotionValue(reduced ? 1 : 0);
-  const scaleX = useTransform(progress, (v) => sx0 + (1 - sx0) * v);
-  const scaleY = useTransform(progress, (v) => sy0 + (1 - sy0) * v);
-  const x = useTransform(progress, (v) => tx0 * (1 - v));
-  const y = useTransform(progress, (v) => ty0 * (1 - v));
-  const borderRadius = useTransform(() => `${radius / scaleX.get()}px / ${radius / scaleY.get()}px`);
-  const contentOpacity = useTransform(progress, (v) => Math.min(1, Math.max(0, (v - CONTENT_FADE_FROM) / CONTENT_FADE_SPAN)));
-
-  useEffect(() => {
-    if (reduced) {
-      progress.set(1);
-      return undefined;
-    }
-    const controls = animate(progress, 1, springFor(PANEL_SETTLE_MS.open));
-    return () => controls.stop();
-  }, [progress, reduced]);
-
-  useEffect(() => {
-    if (present) return undefined;
-    if (reduced) {
-      safeToRemove();
-      return undefined;
-    }
-    const controls = animate(progress, 0, { ...springFor(PANEL_SETTLE_MS.close), onComplete: safeToRemove });
-    return () => controls.stop();
-  }, [present, progress, reduced, safeToRemove]);
-
-  const gridRef = useRef<HTMLDivElement>(null);
   const cellRefs = useRef(new Map<string, HTMLButtonElement>());
   useEffect(() => {
     const app = shown[selected];
@@ -96,7 +51,6 @@ export function StackPopover({ stack }: { readonly stack: OpenStack }) {
   };
 
   useEffect(() => {
-    if (!present) return undefined;
     const onKey = (e: KeyboardEvent): void => {
       if (useDockStore.getState().menu !== null) return;
       if (e.key === "Escape") {
@@ -148,8 +102,8 @@ export function StackPopover({ stack }: { readonly stack: OpenStack }) {
 
   return (
     <div className="popover" role="dialog" aria-label={label} style={panelStyle} data-edge={edge}>
-      <motion.div className="popover__plate" style={{ x, y, scaleX, scaleY, borderRadius }} />
-      <motion.div className="popover__content" style={{ opacity: contentOpacity }}>
+      <div className="popover__plate" />
+      <div className="popover__content">
         <header className="popover__head">
           <i className="popover__dot" />
           <h2 className="popover__title">{label}</h2>
@@ -162,7 +116,7 @@ export function StackPopover({ stack }: { readonly stack: OpenStack }) {
           )}
         </header>
         {shown.length > 0 ? (
-          <div ref={gridRef} className="popover__grid" role="listbox" aria-label={label} style={gridStyle} data-scrolls={size.scrolls ? "true" : undefined}>
+          <div className="popover__grid" role="listbox" aria-label={label} style={gridStyle} data-scrolls={size.scrolls ? "true" : undefined}>
             {shown.map((app, i) => (
               <AppCell
                 key={app.id}
@@ -190,8 +144,7 @@ export function StackPopover({ stack }: { readonly stack: OpenStack }) {
             {apps.length === 0 ? <p className="popover__hint">{t("stack.empty.hint")}</p> : null}
           </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
-

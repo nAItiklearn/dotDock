@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { IDLE, nextPreview, previewKey, wakeupIn, type PreviewEvent, type PreviewState } from "./hoverIntent";
 import type { DockWindow } from "./protocol";
 import { useDockStore } from "./store";
@@ -45,12 +44,13 @@ function apply(event: PreviewEvent): void {
 export const enterPreview = (key: string): void => apply({ type: "enter", key, now: performance.now() });
 export const leavePreview = (): void => apply({ type: "leave", now: performance.now() });
 
-/** Feeds the machine from the hovered bar item: the preview opens after a dwell on a running app. */
-export function usePreviewHover(enabled: boolean): void {
-  const hoveredRunning = useDockStore((s) => (enabled && subjectFor(s.hoveredKey, s) !== null ? s.hoveredKey : null));
-  useEffect(() => {
-    if (hoveredRunning === null) leavePreview();
-    else enterPreview(hoveredRunning);
-  }, [hoveredRunning]);
-  useEffect(() => () => window.clearTimeout(timer), []);
+/**
+ * The engine calls this when the pointer moves onto another bar item (or off the bar). Only running apps have a
+ * preview, and only while nothing else is open. It does not touch React: sweeping along the dock re-renders nothing.
+ */
+export function onBarHover(key: string | null): void {
+  const store = useDockStore.getState();
+  const free = !store.editing && store.stack === null && store.menu === null && !store.libraryOpen;
+  if (free && key !== null && subjectFor(key, store) !== null) enterPreview(key);
+  else leavePreview();
 }

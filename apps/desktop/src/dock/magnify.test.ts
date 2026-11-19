@@ -3,12 +3,12 @@ import { computeMagnify, falloff, maxGrowth, scaleFor, type MagnifyConfig, type 
 
 const SIZE = 48;
 const GAP = 7;
-const PEAK = 1.7;
-const RADIUS = 2.4 * (SIZE + GAP);
+const PEAK = 1.25;
+const RADIUS = 1.5 * (SIZE + GAP);
 const FULL: MagnifyConfig = { peak: PEAK, radius: RADIUS, engage: 1 };
 
 function row(count: number, flags: readonly boolean[] = []): RestItem[] {
-  return Array.from({ length: count }, (_, i) => ({ start: i * (SIZE + GAP), size: SIZE, magnifies: flags[i] ?? true }));
+  return Array.from({ length: count }, (_, i) => ({ start: i * (SIZE + GAP), size: SIZE, weight: (flags[i] ?? true) ? 1 : 0 }));
 }
 const centre = (i: number): number => i * (SIZE + GAP) + SIZE / 2;
 
@@ -102,6 +102,13 @@ describe("computeMagnify", () => {
     const frame = computeMagnify(items, centre(4), FULL, GAP);
     const extra = items.reduce((sum, item, i) => sum + item.size * ((frame.scale[i] as number) - 1), 0);
     expect(frame.rowEnd - frame.rowStart).toBeCloseTo(9 * SIZE + 8 * GAP + extra, 6);
+  });
+
+  it("grows an item with a partial weight by that share of the peak", () => {
+    const items = row(5).map((item, i) => (i === 2 ? { ...item, weight: 0.3 } : item));
+    const frame = computeMagnify(items, centre(2), FULL, GAP);
+    expect(frame.scale[2]).toBeCloseTo(1 + (PEAK - 1) * 0.3);
+    expect(frame.scale[1]).toBeGreaterThan(1);
   });
 
   it("does not grow tiles but still moves them out of the way", () => {

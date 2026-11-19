@@ -84,7 +84,7 @@ export const SETTINGS: DockSettings = {
   reserveSpace: true,
   autoHide: false,
   iconSize: 48,
-  magnification: 1.7,
+  magnification: 1.25,
   pinned: [
     { kind: "app", id: appId("Atlas Browser") },
     { kind: "app", id: appId("Harbor Mail") },

@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { motion, useReducedMotion, type MotionStyle } from "motion/react";
 import { Icon } from "../design-system/Icon";
 import { AppCell } from "./AppCell";
 import { actions } from "./bridge";
@@ -15,10 +14,6 @@ import { plural, t } from "./strings";
 import { toneVar } from "./tones";
 import "./library.css";
 
-const ENTER_S = 0.18;
-const EXIT_S = 0.12;
-const SCALE_FROM = 0.985;
-const EASE = [0.22, 1, 0.36, 1] as const;
 
 const START: GridPosition = { section: 0, index: 0 };
 
@@ -31,7 +26,6 @@ export function Library() {
   const apps = useDockStore((s) => s.apps);
   const windows = useDockStore((s) => s.windows);
   const edge = useDockStore((s) => s.settings.edge);
-  const reduced = useReducedMotion() ?? false;
   const [query, setQuery] = useState("");
   const [pos, setPos] = useState<GridPosition>(START);
   const [cols, setCols] = useState(1);
@@ -110,19 +104,16 @@ export function Library() {
     "--lib-pad": `${LIBRARY.pad}px`,
     "--lib-gap": `${LIBRARY.gap}px`,
     "--lib-section-hint": `${LIBRARY.cellH * 2}px`,
-  } as MotionStyle;
+  } as CSSProperties;
 
   return (
-    <motion.div
+    <div
       className="library"
       role="dialog"
       aria-modal="true"
       aria-label={t("library.title")}
       data-edge={edge}
       style={shell}
-      initial={{ opacity: 0, scale: reduced ? 1 : SCALE_FROM }}
-      animate={{ opacity: 1, scale: 1, transition: { duration: reduced ? 0 : ENTER_S, ease: EASE } }}
-      exit={{ opacity: 0, scale: reduced ? 1 : SCALE_FROM, transition: { duration: reduced ? 0 : EXIT_S, ease: EASE } }}
     >
       <header className="library__top">
         <h1 className="library__title caps">{t("library.title")}</h1>
@@ -190,6 +181,6 @@ export function Library() {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

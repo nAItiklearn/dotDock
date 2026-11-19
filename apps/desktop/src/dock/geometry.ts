@@ -5,7 +5,42 @@ import type { DockEdge } from "./protocol";
  * ratios: the TypeScript side sets them as CSS custom properties, the stylesheet never repeats them.
  */
 export const ICON_LIMITS = { min: 32, max: 80, fallback: 48 } as const;
-export const MAGNIFICATION_LIMITS = { min: 1, max: 2.4 } as const;
+export const MAGNIFICATION_LIMITS = { min: 1, max: 1.6, fallback: 1.25 } as const;
+
+/** How much of the magnification each kind of item takes: apps grow fully, stacks a little, controls in between. */
+export const MAGNIFY_WEIGHT = { app: 1, stack: 0.3, control: 0.6 } as const;
+
+/** How large a face is drawn, in icon sizes: its peak, so magnifying only ever scales it down from there. */
+export const renderScale = (weight: number, peak: number): number => 1 + (Math.max(peak, 1) - 1) * weight;
+
+/**
+ * The box of a face inside its slot: `along` px of length on the dock's axis and `across` px across it, hanging
+ * from the slot's screen-edge side and centred on the axis. Plain numbers (px): nothing in it needs resolving
+ * again when the engine rewrites the face's transform.
+ */
+export interface FaceBox {
+  readonly width: number;
+  readonly height: number;
+  readonly left?: string | number;
+  readonly right?: number;
+  readonly top?: string | number;
+  readonly bottom?: number;
+  readonly marginLeft?: number;
+  readonly marginTop?: number;
+}
+
+export function faceBox(edge: DockEdge, along: number, across: number): FaceBox {
+  switch (edge) {
+    case "bottom":
+      return { width: along, height: across, left: "50%", marginLeft: -along / 2, bottom: 0 };
+    case "top":
+      return { width: along, height: across, left: "50%", marginLeft: -along / 2, top: 0 };
+    case "left":
+      return { width: across, height: along, top: "50%", marginTop: -along / 2, left: 0 };
+    case "right":
+      return { width: across, height: along, top: "50%", marginTop: -along / 2, right: 0 };
+  }
+}
 
 /** Ratios of the icon size, so one number scales the whole bar. */
 export const RATIO = {
@@ -14,7 +49,7 @@ export const RATIO = {
   /** The dotted divider's slot along the axis. */
   divider: 0.3,
   /** Distance from the pointer at which magnification fades out, in item pitches (icon + gap). */
-  reach: 2.4,
+  reach: 1.5,
   /** Art inside an item's disc. */
   face: 0.66,
   /** Gap between the dock and the screen edge. */
@@ -54,7 +89,7 @@ export function clampIconSize(size: number): number {
 }
 
 export function clampMagnification(peak: number): number {
-  if (!Number.isFinite(peak)) return MAGNIFICATION_LIMITS.min;
+  if (!Number.isFinite(peak)) return MAGNIFICATION_LIMITS.fallback;
   return Math.min(MAGNIFICATION_LIMITS.max, Math.max(MAGNIFICATION_LIMITS.min, peak));
 }
 
