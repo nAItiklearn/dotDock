@@ -58,7 +58,7 @@ jobs:
 
       # Cold build on purpose: release artifacts do not use the shared rust cache.
       - name: Build bundle
-        run: pnpm tauri build
+        run: cargo build -p dotdock-island-hook --release --manifest-path src-tauri/Cargo.toml && pnpm tauri build
 
       - name: Stage portable exe
         run: |

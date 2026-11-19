@@ -67,3 +67,8 @@ Each entry: decision, alternatives, why, how to reverse.
 - The timer chime is synthesised with Web Audio, so there is no audio asset to license.
 - Quotes are public domain (authors died before 1930), with the translator named.
 - Open: the weather pictograms score 3.5/5 on the rubric and must be redrawn before G1.
+
+## D-014 Agent Island integration choices
+- Island window is hosted like the overlay: Win32 owns its extended styles (tool window, never activates, click-through toggled via `WS_EX_TRANSPARENT` only), positioned top-centre, topmost.
+- System toasts are deferred: a Windows toast cannot return the user to the right terminal, so the island itself (lingering and clickable) plus its synthesised chime is the alert. Alerts are logged to boot.log meanwhile.
+- Hook registered in exec form with `async` (no shell per event; Claude Code never waits), copied to the app data folder under a content hash so registered paths survive updates. No idle-pause guessing; token counts are only ever real; a `waiting` state exists for permission prompts. (From docs/ISLAND_INTEGRATION.md section 10.)

@@ -1,6 +1,7 @@
 //! dotDock core: owns the desktop overlay window, providers and boot timing.
 
 mod desktop_host;
+mod island_host;
 mod providers;
 mod tray;
 
@@ -248,6 +249,15 @@ pub fn run() {
             overlay_ready,
             set_hit_regions,
             overlay_set_typing,
+            island_host::island_ready,
+            island_host::island_state,
+            island_host::island_set_regions,
+            island_host::island_focus,
+            island_host::island_dismiss,
+            island_host::island_connect,
+            island_host::island_disconnect,
+            island_host::island_connection,
+            island_host::island_set_settings,
             media_command,
             weather_search,
             weather_set_place,
@@ -263,6 +273,7 @@ pub fn run() {
             let window = create_overlay(&handle)?;
             boot::mark("window-created");
             tray::install(&handle)?;
+            island_host::start(&handle)?;
             let wake = providers::spawn(handle.clone(), ready)?;
             app.manage(wake);
             desktop_host::spawn_guard(Hwnd::from_raw(window.hwnd()?.0), regions)?;
