@@ -3,3 +3,4 @@
 pub mod battery;
 pub mod media;
 pub mod system;
+pub mod weather;

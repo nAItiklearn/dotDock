@@ -4,8 +4,9 @@ mod desktop_host;
 mod providers;
 
 use desktop_host::{HitRect, HitRegions};
+use dotdock_shell::providers::weather::{self, Place};
 use dotdock_shell::{autostart, boot_log as boot};
-use providers::ProvidersReady;
+use providers::{ProvidersReady, WeatherWake};
 use std::time::Duration;
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
@@ -36,6 +37,19 @@ async fn media_command(command: dotdock_shell::providers::media::MediaCommand) -
 #[tauri::command]
 async fn media_seek(seconds: f64) -> bool {
     dotdock_shell::providers::media::MediaProvider::new().seek(seconds)
+}
+
+/// City search for the weather settings. Network call to Open-Meteo geocoding.
+#[tauri::command]
+async fn weather_search(query: String, language: String) -> Result<Vec<Place>, String> {
+    weather::search(&query, &language).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn weather_set_place(place: Place, wake: State<'_, WeatherWake>) -> Result<(), String> {
+    weather::save_place(&place).map_err(|e| e.to_string())?;
+    wake.wake();
+    Ok(())
 }
 
 #[tauri::command]
@@ -109,14 +123,17 @@ pub fn run() {
             overlay_ready,
             set_hit_regions,
             media_command,
-            media_seek
+            media_seek,
+            weather_search,
+            weather_set_place
         ])
         .setup(move |app| {
             boot::mark("setup");
             let handle = app.handle().clone();
             let window = create_overlay(&handle)?;
             boot::mark("window-created");
-            providers::spawn(handle.clone(), ready)?;
+            let wake = providers::spawn(handle.clone(), ready)?;
+            app.manage(wake);
             desktop_host::spawn_hit_tester(window, regions)?;
             std::thread::spawn(move || {
                 std::thread::sleep(SHOW_FALLBACK);
