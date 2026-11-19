@@ -39,6 +39,7 @@
   --radius-lg: 28px;
   --radius-md: 20px;
   --radius-sm: 12px;
+  --radius-xs: 8px;
 
   --text-xs: 10px;
   --text-sm: 12px;
@@ -46,15 +47,32 @@
   --text-lg: 18px;
   --text-xl: 28px;
   --tracking-caps: 0.16em;
+  --leading-tight: 1.2;
+  --leading-body: 1.45;
+
+  /* Interactive controls (buttons, checkboxes, chips). */
+  --control-sm: 24px;
+  --control-md: 36px;
+  --control-lg: 52px;
+  --marker: 6px;
 
   --ring-stroke: 9px;
   --hairline: 1px;
+  --focus-ring: 2px;
 
   --dur-fast: 140ms;
   --dur-med: 260ms;
   --dur-slow: 520ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --delay-notice: 1800ms;
+
+  /* Hover and press: transform and opacity only. */
+  --lift: -2px;
+  --drop-shadow: rgb(0 0 0 / 0.28);
+  --press: 0.94;
+  --hover-edge: 0.4;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -95,4 +113,12 @@ body {
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Form controls inherit the surrounding type instead of the browser default. */
+input,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
 }

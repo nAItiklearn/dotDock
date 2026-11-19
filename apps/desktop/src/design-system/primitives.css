@@ -1,9 +1,13 @@
+/* A box that spans whole grid cells, gaps included. */
+.cellbox,
 .surface {
   --sw: calc(var(--w) * var(--cell) + (var(--w) - 1) * var(--gap));
   --sh: calc(var(--h) * var(--cell) + (var(--h) - 1) * var(--gap));
   position: relative;
   width: var(--sw);
   height: var(--sh);
+}
+.surface {
   background: var(--surface);
   border: var(--hairline) solid var(--border);
   box-shadow: var(--shadow);
@@ -11,9 +15,6 @@
   overflow: hidden;
   contain: layout paint style;
   transition: transform var(--dur-med) var(--ease-out);
-}
-.surface:hover {
-  transform: translateY(-2px);
 }
 .surface--card {
   border-radius: var(--radius-lg);
@@ -25,20 +26,50 @@
   border-radius: 50%;
 }
 
+/* Hover edge: an accent hairline that only fades in, so nothing repaints. */
+.surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 var(--hairline) var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-med) var(--ease-out);
+}
+@media (hover: hover) {
+  .surface:hover {
+    transform: translateY(var(--lift));
+  }
+  .surface:hover::after {
+    opacity: var(--hover-edge);
+  }
+}
+.surface:focus-within::after {
+  opacity: var(--hover-edge);
+}
+
+.surface :focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}
+
 .ring {
-  position: relative;
+  position: absolute;
+  inset: var(--space-2);
   display: grid;
   place-items: center;
 }
 .ring > svg {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
 }
 .ring__track {
   stroke: var(--dot-off);
 }
 .ring__value {
-  stroke: var(--accent);
   transition: stroke-dashoffset var(--dur-slow) var(--ease-out);
 }
 .ring__content {
@@ -50,4 +81,74 @@
 
 .caps--accent {
   color: var(--accent);
+}
+
+.numeral {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  color: var(--text);
+}
+.numeral__unit {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-dim);
+}
+
+.icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+.icon-button--sm {
+  width: var(--control-sm);
+  height: var(--control-sm);
+}
+.icon-button--md {
+  width: var(--control-md);
+  height: var(--control-md);
+}
+.icon-button--lg {
+  width: var(--control-lg);
+  height: var(--control-lg);
+}
+.icon-button .icon {
+  height: 56%;
+  width: auto;
+}
+.icon-button--plain {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.icon-button--accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.icon-button--ghost {
+  background: transparent;
+  color: var(--text);
+  opacity: 0.55;
+}
+@media (hover: hover) {
+  .icon-button:hover:not(:disabled) {
+    transform: scale(1.08);
+  }
+  .icon-button--ghost:hover:not(:disabled) {
+    opacity: 1;
+  }
+}
+.icon-button:active:not(:disabled) {
+  transform: scale(var(--press));
+}
+.icon-button:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
