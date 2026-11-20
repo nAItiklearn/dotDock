@@ -7,7 +7,8 @@ import { getApp } from "../../lib/state/app";
 import { useLayoutStore, useSettingsStore } from "../../lib/state/hooks";
 import { Button, IconButton, Segmented } from "../../lib/ui/controls";
 import { ConfigForm } from "../../lib/ui/ConfigForm";
-import { sizesByArea, widgetCatalog } from "../catalog";
+import { SizePicker } from "../../lib/ui/SizePicker";
+import { widgetCatalog } from "../catalog";
 import { announce, editUi, useEditUi, type DrawerTab } from "../editUi";
 import { WidgetPreview } from "../WidgetPreview";
 
@@ -20,7 +21,7 @@ const TABS: readonly { value: DrawerTab; label: string }[] = [
 ];
 
 function GalleryCard({ meta, metrics }: { readonly meta: WidgetInfo; readonly metrics: GridMetrics }) {
-  const [sizeId, setSizeId] = useState(meta.sizes[0]?.id ?? "m");
+  const [sizeId, setSizeId] = useState<string>(meta.sizes[0]?.id ?? "m");
   const add = (): void => {
     const result = getApp().layout.getState().addWidget(meta.id, sizeId);
     if (result.ok) announce(`${meta.name} added`);
@@ -37,12 +38,7 @@ function GalleryCard({ meta, metrics }: { readonly meta: WidgetInfo; readonly me
         </div>
         <div className="gallery-card__actions">
           {meta.sizes.length > 1 ? (
-            <Segmented
-              label={`${meta.name} size`}
-              value={sizeId}
-              options={sizesByArea(meta.sizes).map((s) => ({ value: s.id, label: s.name }))}
-              onChange={setSizeId}
-            />
+            <SizePicker label={`${meta.name} size`} sizes={meta.sizes} value={sizeId} onChange={setSizeId} />
           ) : (
             <span />
           )}
@@ -79,7 +75,7 @@ function SelectedTab() {
   }
   const sizeId = (meta.sizes.find((s) => s.id === selected.size) ?? meta.sizes[0])?.id ?? "m";
   const config = normalizeConfig(meta.settingsSchema, selected.config);
-  const fields = fieldsForSize(meta.settingsSchema, sizeId);
+  const fields = fieldsForSize(meta.settingsSchema, sizeId, config);
   return (
     <div className="selected">
       <div className="selected__head">
@@ -89,12 +85,7 @@ function SelectedTab() {
       {meta.sizes.length > 1 ? (
         <div className="ui-form__row">
           <span className="ui-form__label">Size</span>
-          <Segmented
-            label="Size"
-            value={sizeId}
-            options={sizesByArea(meta.sizes).map((s) => ({ value: s.id, label: s.name }))}
-            onChange={(next) => layout.getState().resizeTo(selected.id, next)}
-          />
+          <SizePicker label="Size" sizes={meta.sizes} value={sizeId} onChange={(next) => layout.getState().resizeTo(selected.id, next)} />
         </div>
       ) : null}
       {fields.length > 0 ? (
