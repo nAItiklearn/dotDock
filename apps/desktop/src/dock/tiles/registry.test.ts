@@ -54,6 +54,7 @@ describe("every live tile is wired up", () => {
         setLibrary: () => undefined,
         setEditing: () => undefined,
         openGallery: () => undefined,
+        openSettings: () => undefined,
       },
     };
     for (const id of TILE_IDS) {
@@ -80,7 +81,7 @@ describe("tile length on the dock", () => {
   });
 
   it("shrinks the whole dock to fit the screen with every tile on it", () => {
-    const kinds = ["item", "item", "item", "divider", ...TILE_IDS.map((id) => lengthKind({ kind: "tile", key: id, id })), "divider", "status"] as const;
+    const kinds = ["item", "item", "item", "divider", ...TILE_IDS.map((id) => lengthKind({ kind: "tile", key: id, id, size: "regular" })), "divider", "status"] as const;
     const fitted = fitIconSize(64, kinds, 1280, false);
     expect(fitted).toBeLessThan(64);
     const used = kinds.reduce((sum, kind) => sum + lengthOf(kind, fitted, false), 0);

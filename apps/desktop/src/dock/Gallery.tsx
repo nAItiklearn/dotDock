@@ -12,11 +12,10 @@ import {
   galleryItems,
   isAddable,
   placeTile,
-  shapeOf,
   type GalleryCategory,
   type GalleryItem,
 } from "./galleryItems";
-import { GALLERY, lengthOf, placeBesideDock, type Rect } from "./geometry";
+import { GALLERY, lengthOf, placeBesideDock, shapeOf, type Rect } from "./geometry";
 import { appsInCategory, pin, unpin } from "./model";
 import { markOpenPainted } from "./openMarks";
 import type { OpenGallery } from "./store";

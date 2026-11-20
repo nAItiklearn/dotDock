@@ -6,6 +6,7 @@ import type { DockEdge } from "./protocol";
 import { indicatorFor, lengthKind, magnifyWeight, type AppEntry, type BarEntry, type StackEntry } from "./model";
 import { plural, t } from "./strings";
 import { StatusPill, Tile } from "./tiles/Tile";
+import { canResize } from "./tiles/sizes";
 import type { TileControls } from "./tiles/shell";
 import { toneVar } from "./tones";
 
@@ -19,6 +20,8 @@ export interface SlotHandlers {
   readonly pressKey: (entry: BarEntry, face: HTMLElement, event: KeyboardEvent<HTMLElement>) => void;
   readonly context: (entry: BarEntry, event: MouseEvent | KeyboardEvent, face: HTMLElement) => void;
   readonly remove: (entry: BarEntry) => void;
+  /** Switches a tile between wide and compact (edit mode). */
+  readonly resize: (entry: BarEntry) => void;
   readonly focused: (key: string) => void;
   readonly pointerDown: (entry: BarEntry, event: ReactPointerEvent<HTMLElement>) => void;
 }
@@ -139,6 +142,7 @@ function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "
         className="face face--tile"
         style={box}
         data-editing={editing ? "true" : undefined}
+        data-size={entry.size}
         onPointerDown={draggable ? (e) => handlers.pointerDown(entry, e) : undefined}
         onContextMenu={(e) => {
           e.preventDefault();
@@ -148,6 +152,7 @@ function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "
       >
         <Tile id={entry.id} controls={controls} />
         {removable ? <RemoveBadge name={name} onRemove={() => handlers.remove(entry)} /> : null}
+        {editing && canResize(entry.id) ? <ResizeBadge name={name} compact={entry.size === "compact"} onResize={() => handlers.resize(entry)} /> : null}
       </div>
     );
   }
@@ -209,6 +214,15 @@ function RemoveBadge({ name, onRemove }: { readonly name: string; readonly onRem
   return (
     <button type="button" className="remove" aria-label={t("edit.remove", { name })} onClick={onRemove} onPointerDown={(e) => e.stopPropagation()}>
       <Icon name="minus" />
+    </button>
+  );
+}
+
+/** A tile's small size control in edit mode: wide shows words beside the mark, compact only the mark. */
+function ResizeBadge({ name, compact, onResize }: { readonly name: string; readonly compact: boolean; readonly onResize: () => void }) {
+  return (
+    <button type="button" className="resize" aria-label={t(compact ? "edit.resize.wide" : "edit.resize.compact", { name })} onClick={onResize} onPointerDown={(e) => e.stopPropagation()}>
+      <Icon name={compact ? "chevron-right" : "chevron-left"} />
     </button>
   );
 }

@@ -4,7 +4,7 @@ import { Bar, type BarLayout } from "./Bar";
 import { EditBanner } from "./EditBanner";
 import { chooseEffects, readCapabilities } from "./effects";
 import type { Rect } from "./geometry";
-import { loadContextMenu, loadGallery, loadLibrary, loadPreview, loadStackPopover, loadTilePopover, usePanel, whenIdle } from "./prefetch";
+import { loadContextMenu, loadGallery, loadLibrary, loadPrefs, loadPreview, loadStackPopover, loadTilePopover, usePanel, whenIdle } from "./prefetch";
 import { useDockStore } from "./store";
 import { isTranslucent, resolveTheme } from "./theme";
 import { useAutoHide, useKeyboardFocus, useNoticeTimeout, useRegions, type PanelRects } from "./useDockShell";
@@ -52,6 +52,7 @@ export function Dock() {
   const stack = useDockStore((s) => s.stack);
   const tile = useDockStore((s) => s.tile);
   const gallery = useDockStore((s) => s.gallery);
+  const prefs = useDockStore((s) => s.prefs);
   const pinned = useDockStore((s) => s.settings.pinned);
   const menu = useDockStore((s) => s.menu);
   const previewKey = useDockStore((s) => s.previewKey);
@@ -69,7 +70,7 @@ export function Dock() {
   const [layout, setLayout] = useState<BarLayout | null>(null);
   const [panels, setPanels] = useState<PanelRects>({});
 
-  const modal = libraryOpen || stack !== null || tile !== null || gallery !== null || menu !== null;
+  const modal = libraryOpen || stack !== null || tile !== null || gallery !== null || prefs !== null || menu !== null;
   const busy = pointerInside || editing || modal;
   const hidden = useAutoHide(autoHide && !frozen, busy);
   useRegions(layout, hidden, panels, viewport, modal);
@@ -83,6 +84,7 @@ export function Dock() {
   const libraryModule = usePanel(loadLibrary, idle || libraryOpen);
   const tileModule = usePanel(loadTilePopover, idle || tile !== null);
   const galleryModule = usePanel(loadGallery, idle || gallery !== null);
+  const prefsModule = usePanel(loadPrefs, idle || prefs !== null);
   useEffect(() => (idle ? whenIdle(() => void Promise.all([loadContextMenu(), loadPreview()]), IDLE_TIMEOUT_MS) : undefined), [idle]);
   const stackCategories = useMemo(() => pinned.flatMap((p) => (p.kind === "stack" ? [p.category] : [])), [pinned]);
   const warmStacks = useStepsWhenIdle(stackModule !== null, stackCategories.length);
@@ -107,6 +109,7 @@ export function Dock() {
     if (store.menu) store.setMenu(null);
     else if (store.tile) store.showTile(null);
     else if (store.gallery) store.showGallery(null);
+    else if (store.prefs) store.showPrefs(null);
     else store.openStack(null);
   };
   const rootVars = layout
@@ -126,11 +129,12 @@ export function Dock() {
       style={rootVars}
     >
       {libraryModule !== null && (warmLibrary || libraryOpen) ? <libraryModule.Library open={libraryOpen} /> : null}
-      {stack !== null || tile !== null || gallery !== null || menu !== null ? <div className="scrim" onPointerDown={closeTop} onContextMenu={(e) => (e.preventDefault(), closeTop())} /> : null}
+      {stack !== null || tile !== null || gallery !== null || prefs !== null || menu !== null ? <div className="scrim" onPointerDown={closeTop} onContextMenu={(e) => (e.preventDefault(), closeTop())} /> : null}
       <Bar hidden={hidden} onLayout={onLayout} />
       {stackModule !== null ? <stackModule.StackLayer categories={readyStacks} open={libraryOpen ? null : stack} /> : null}
       {tile !== null && tileModule !== null ? <tileModule.TilePopover open={tile} /> : null}
       {gallery !== null && galleryModule !== null ? <galleryModule.Gallery open={gallery} /> : null}
+      {prefs !== null && prefsModule !== null ? <prefsModule.Prefs from={layout?.bar ?? prefs.from} drawn={theme} /> : null}
       {previewKey !== null && !editing && !modal ? (
         <Suspense fallback={null}>
           <Preview onRect={rects.preview} />

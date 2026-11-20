@@ -245,13 +245,17 @@
 }
 
 .dock-anchor[data-axis="y"] .tile__text,
-.dock-anchor[data-axis="y"] .tile__action {
+.dock-anchor[data-axis="y"] .tile__action,
+.face--tile[data-size="compact"] .tile__text,
+.face--tile[data-size="compact"] .tile__action {
   display: none;
 }
-.dock-anchor[data-axis="y"] .tile {
+.dock-anchor[data-axis="y"] .tile,
+.face--tile[data-size="compact"] .tile {
   justify-content: center;
   padding: 0;
 }
-.dock-anchor[data-axis="y"] .avatars .avatar:nth-child(n + 2) {
+.dock-anchor[data-axis="y"] .avatars .avatar:nth-child(n + 2),
+.face--tile[data-size="compact"] .avatars .avatar:nth-child(n + 2) {
   display: none;
 }

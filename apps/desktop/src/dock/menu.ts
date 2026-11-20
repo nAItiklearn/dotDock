@@ -25,6 +25,8 @@ export interface MenuActions {
   readonly setEditing: (editing: boolean) => void;
   /** Opens the widget gallery, where tiles and stacks are added to the dock. */
   readonly openGallery: () => void;
+  /** Opens the dock settings popover. */
+  readonly openSettings: () => void;
 }
 
 export interface MenuContext {
@@ -40,11 +42,12 @@ const separator = (id: string): MenuItem => ({ id, label: "", kind: "separator" 
 
 function barMenu(ctx: MenuContext): MenuItem[] {
   return [
-    { id: "widgets", label: t("menu.addWidget"), kind: "item", run: () => ctx.do.openGallery() },
-    { id: "library", label: t("menu.library"), kind: "item", run: () => ctx.do.setLibrary(true) },
     ctx.editing
       ? { id: "edit", label: t("menu.doneEditing"), kind: "item", run: () => ctx.do.setEditing(false) }
       : { id: "edit", label: t("menu.editDock"), kind: "item", run: () => ctx.do.setEditing(true) },
+    { id: "widgets", label: t("menu.addWidget"), kind: "item", run: () => ctx.do.openGallery() },
+    { id: "settings", label: t("menu.settings"), kind: "item", run: () => ctx.do.openSettings() },
+    { id: "library", label: t("menu.library"), kind: "item", run: () => ctx.do.setLibrary(true) },
   ];
 }
 

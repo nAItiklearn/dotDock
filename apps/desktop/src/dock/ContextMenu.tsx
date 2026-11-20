@@ -28,6 +28,10 @@ function useMenuContext(): MenuContext {
       },
       setLibrary: store.setLibrary,
       setEditing: store.setEditing,
+      openSettings: () => {
+        const bar = document.querySelector<HTMLElement>(".dock")?.getBoundingClientRect();
+        if (bar) store.showPrefs({ from: { x: bar.left, y: bar.top, w: bar.width, h: bar.height } });
+      },
       openGallery: () => {
         const bar = document.querySelector<HTMLElement>(".dock")?.getBoundingClientRect();
         if (bar) store.showGallery({ from: { x: bar.left, y: bar.top, w: bar.width, h: bar.height } });

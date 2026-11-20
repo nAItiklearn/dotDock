@@ -542,6 +542,29 @@ html[data-dragging="true"] * {
   width: auto;
 }
 
+/* A tile's size switch in edit mode, opposite the remove badge. */
+.resize {
+  position: absolute;
+  right: calc(var(--d-badge) * -0.3);
+  bottom: calc(var(--d-badge) * -0.3);
+  display: grid;
+  place-items: center;
+  width: var(--d-badge);
+  height: var(--d-badge);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.resize .icon {
+  height: 62%;
+  width: auto;
+}
+
 /* Running dots sit in the bar's padding, on the screen-edge side of the item. */
 .dots {
   --dot: var(--d-dot);

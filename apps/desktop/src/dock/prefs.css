@@ -1,0 +1,119 @@
+/* The dock settings popover. The surface and head are the popover's (panels.css); the small controls are the tile popovers'. */
+.prefs .popover__content {
+  gap: var(--space-4);
+}
+.prefs__close {
+  margin-left: auto;
+}
+.prefs__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.prefs__group h3 {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.prefs__segments,
+.prefs__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.prefs__segments button,
+.prefs__chips button {
+  flex: 1 1 auto;
+  height: var(--control-sm);
+  padding: 0 var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.prefs__segments button[aria-checked="true"],
+.prefs__chips button[aria-checked="true"] {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+@media (hover: hover) {
+  .prefs__segments button[aria-checked="false"]:hover,
+  .prefs__chips button[aria-checked="false"]:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+}
+
+.prefs__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2) var(--space-3);
+  align-items: baseline;
+}
+.prefs__row b {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.prefs__row input {
+  grid-column: 1 / -1;
+  accent-color: var(--accent);
+}
+
+.prefs__switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  height: var(--control-sm);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-md);
+  text-align: left;
+  cursor: pointer;
+}
+.prefs__switch i {
+  position: relative;
+  flex: none;
+  width: calc(var(--control-sm) * 1.4);
+  height: calc(var(--control-sm) * 0.78);
+  border-radius: var(--radius-pill);
+  background: var(--dot-off);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.prefs__switch i::after {
+  content: "";
+  position: absolute;
+  top: 12%;
+  left: 7%;
+  width: 76%;
+  aspect-ratio: 1;
+  max-width: calc(var(--control-sm) * 0.6);
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.prefs__switch[aria-checked="true"] i {
+  background: var(--accent);
+}
+.prefs__switch[aria-checked="true"] i::after {
+  background: var(--accent-ink);
+  transform: translateX(calc(var(--control-sm) * 0.62));
+}
+.prefs__segments button:focus-visible,
+.prefs__chips button:focus-visible,
+.prefs__switch:focus-visible,
+.prefs__row input:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}

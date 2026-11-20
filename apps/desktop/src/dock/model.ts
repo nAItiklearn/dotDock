@@ -1,6 +1,7 @@
 import type { Category, CategoryId, DockApp, DockSettings, DockWindow, PinnedItem } from "./protocol";
 import { MAGNIFY_WEIGHT, type LengthKind } from "./geometry";
 import { categoryLabel } from "./strings";
+import { sizeOf, type TileSize, type TileSizes } from "./tiles/sizes";
 
 /** Live tiles the dock knows how to draw. Ids in `DockSettings.tiles` that are not listed here are ignored. */
 export const TILE_IDS = [
@@ -61,7 +62,7 @@ export type BarEntry =
   | StackEntry
   | { readonly kind: "divider"; readonly key: string }
   | { readonly kind: "library"; readonly key: string }
-  | { readonly kind: "tile"; readonly key: string; readonly id: TileId }
+  | { readonly kind: "tile"; readonly key: string; readonly id: TileId; readonly size: TileSize }
   | { readonly kind: "status"; readonly key: string }
   | { readonly kind: "add"; readonly key: string };
 
@@ -76,7 +77,7 @@ export function lengthKind(entry: BarEntry): LengthKind {
     case "divider":
       return "divider";
     case "tile":
-      return entry.id;
+      return entry.size === "compact" ? "item" : entry.id;
     case "status":
       return "status";
     default:
@@ -142,6 +143,8 @@ export interface BuildOptions {
   readonly editing: boolean;
   /** Whether the status pill is shown (it needs room on a small screen). */
   readonly status: boolean;
+  /** How long each tile is on the dock; tiles not listed are regular. */
+  readonly sizes?: TileSizes | undefined;
 }
 
 /** The ordered entries the bar shows: library, pinned apps and stacks, running apps, live tiles, status. */
@@ -178,7 +181,7 @@ export function buildEntries(input: BuildInput, options: BuildOptions): BarEntry
   const tiles: BarEntry[] = input.settings.tiles
     .filter(isTileId)
     .filter((id, i, all) => all.indexOf(id) === i)
-    .map((id) => ({ kind: "tile", key: `tile:${id}`, id }));
+    .map((id) => ({ kind: "tile", key: `tile:${id}`, id, size: sizeOf(options.sizes, id) }));
 
   const entries: BarEntry[] = [{ kind: "library", key: "library" }, ...pinned];
   if (options.editing) entries.push({ kind: "add", key: "add" });

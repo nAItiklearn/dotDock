@@ -10,6 +10,7 @@ export const loadContextMenu = (): Promise<typeof import("./ContextMenu")> => im
 export const loadLibrary = (): Promise<typeof import("./Library")> => import("./Library");
 export const loadTilePopover = (): Promise<typeof import("./tiles/popovers")> => import("./tiles/popovers");
 export const loadGallery = (): Promise<typeof import("./Gallery")> => import("./Gallery");
+export const loadPrefs = (): Promise<typeof import("./Prefs")> => import("./Prefs");
 export const loadPreview = (): Promise<typeof import("./Preview")> => import("./Preview");
 
 type Loader<M> = () => Promise<M>;

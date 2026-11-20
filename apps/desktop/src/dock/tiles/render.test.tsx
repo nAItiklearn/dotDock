@@ -20,6 +20,8 @@ vi.stubGlobal("navigator", { onLine: true });
 const { Tile } = await import("./Tile");
 const { TilePopover } = await import("./popovers");
 const { Gallery } = await import("../Gallery");
+const { Prefs, drawnAsHint } = await import("../Prefs");
+const { Slot } = await import("../items");
 const { useFeedStore } = await import("./feeds");
 const { useDockStore } = await import("../store");
 const { useTimerStore } = await import("../../widgets/timerStore");
@@ -548,5 +550,95 @@ describe("the widget gallery", () => {
     expect(html).toContain("Round");
     expect(html).toContain("Opens a panel");
     expect(html).toContain("One tap switches it");
+  });
+});
+
+describe("the dock settings popover", () => {
+  const from = { x: 500, y: 980, w: 600, h: 70 };
+  const prefs = (patch: Partial<ReturnType<typeof useDockStore.getInitialState>["settings"]> = {}, choice = "glass", drawn: Parameters<typeof Prefs>[0]["drawn"] = "glass"): string => {
+    seed(useDockStore, { settings: { ...useDockStore.getInitialState().settings, iconSize: 48, magnification: 1.25, ...patch }, themeChoice: choice as never });
+    return renderToStaticMarkup(<Prefs from={from} drawn={drawn} />);
+  };
+
+  it("is a small labelled dialog with position, size, magnification, two switches and the look", () => {
+    const html = prefs();
+    expect(html).toContain('aria-label="Dock settings"');
+    for (const words of ["Position", "Icon size", "Magnification", "Hide when not in use", "Keep windows clear of the dock", "Look"]) expect(html).toContain(words);
+  });
+
+  it("marks the current position, size, magnification and look", () => {
+    const html = prefs({ edge: "left", iconSize: 56, magnification: 1.4 }, "paper", "paper");
+    expect(button(html, "Left")).toContain('aria-checked="true"');
+    expect(button(html, "Bottom")).toContain('aria-checked="false"');
+    expect(html).toContain("56 px");
+    expect(html).toContain("1.40×");
+    expect(button(html, "Paper")).toContain('aria-checked="true"');
+    expect(button(html, "Glass")).toContain('aria-checked="false"');
+  });
+
+  it("says Off when magnification is off", () => {
+    expect(prefs({ magnification: 1 })).toContain("Off");
+  });
+
+  it("shows the switches as they are set", () => {
+    const html = prefs({ autoHide: true, reserveSpace: false });
+    expect(html).toMatch(/role="switch" class="prefs__switch" aria-checked="true"><span>Hide when not in use/);
+    expect(html).toMatch(/role="switch" class="prefs__switch" aria-checked="false"><span>Keep windows clear/);
+  });
+
+  it("offers every look the dock has", () => {
+    const html = prefs();
+    for (const words of ["Glass", "Glass lite", "Obsidian", "Paper", "Aurum", "Minimal"]) expect(button(html, words)).toBeDefined();
+  });
+
+  it("clamps a size or magnification outside the limits to what the dock really draws", () => {
+    expect(prefs({ iconSize: 500 })).toContain("80 px");
+    expect(prefs({ magnification: 9 })).toContain("1.60×");
+  });
+
+  it("says when glass is drawn as something else", () => {
+    expect(drawnAsHint("glass", "glass")).toBeNull();
+    expect(drawnAsHint("paper", "paper")).toBeNull();
+    expect(drawnAsHint("glass", "glass-lite")).toBe("Drawn as Glass lite until the blur is available.");
+    expect(prefs({}, "glass", "glass-lite")).toContain("Drawn as Glass lite until the blur is available.");
+  });
+});
+
+describe("tiles in edit mode", () => {
+  const slot = (id: TileId, size: "regular" | "compact", editing: boolean): string => {
+    const handlers = { activate: noop, press: noop, pressKey: noop, context: noop, remove: noop, resize: noop, focused: noop, pointerDown: noop };
+    return renderToStaticMarkup(
+      <Slot entry={{ kind: "tile", key: `tile:${id}`, id, size }} icon={48} vertical={false} edge="bottom" editing={editing} roving={false} peak={1.25} open={false} handlers={handlers} />,
+    );
+  };
+
+  it("has a remove badge on every tile and a size switch on the ones that have a shorter form", () => {
+    for (const id of ["agenda", "focus", "contacts"] as const) {
+      const html = slot(id, "regular", true);
+      expect(html).toContain('class="remove"');
+      expect(html).toContain('class="resize"');
+    }
+    for (const id of ["clock", "mic", "hydration", "system"] as const) {
+      const html = slot(id, "regular", true);
+      expect(html).toContain('class="remove"');
+      expect(html).not.toContain('class="resize"');
+    }
+  });
+
+  it("names the switch for what it will do", () => {
+    expect(slot("focus", "regular", true)).toContain('aria-label="Make Focus compact"');
+    expect(slot("focus", "compact", true)).toContain('aria-label="Make Focus wide"');
+  });
+
+  it("shows no edit controls outside edit mode", () => {
+    const html = slot("focus", "regular", false);
+    expect(html).not.toContain('class="remove"');
+    expect(html).not.toContain('class="resize"');
+  });
+
+  it("marks a compact tile and gives it the length of one item", () => {
+    expect(slot("agenda", "compact", false)).toContain('data-size="compact"');
+    expect(slot("agenda", "compact", false)).toContain("--len:48px");
+    expect(slot("agenda", "regular", false)).toContain("--len:172.8px");
   });
 });

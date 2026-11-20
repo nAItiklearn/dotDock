@@ -1,4 +1,4 @@
-import { LENGTH_RATIO, isPopoverTile } from "./geometry";
+import { isPopoverTile } from "./geometry";
 import { appsInCategory, isTileId, TILE_IDS, type TileId } from "./model";
 import { matchScore } from "./nav";
 import type { Category, CategoryId, CategoryTone, DockApp } from "./protocol";
@@ -134,11 +134,6 @@ export function categoryCounts(items: readonly GalleryItem[], query: string): Re
   for (const category of GALLERY_CATEGORIES) counts[category] = filterGallery(items, query, category).length;
   return counts;
 }
-
-/** How a tile sits on the dock: a round mark alone, or a mark with words beside it. */
-export type TileShape = "round" | "wide";
-
-export const shapeOf = (id: TileId): TileShape => (LENGTH_RATIO[id][0] > LENGTH_RATIO[id][1] * 1.2 ? "wide" : "round");
 
 /** What a tile does when pressed, for the chips on its card. */
 export type TileAction = "popover" | "toggle" | "display";

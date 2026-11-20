@@ -14,11 +14,11 @@ describe("the harness backdrop", () => {
     expect([...DEV_WALLPAPER_IDS]).toEqual(["halftone-ridge", "meadow-dots", "soft-mono", "bloom-dots", "flute-flower"]);
   });
 
-  it("never offers a striped or gradient style, and starts on the halftone ridge", () => {
+  it("never offers a striped or gradient style, and starts on the windswept meadow", () => {
     for (const banned of ["louver-silver", "louver-ember", "arc-red", "arc-cyan", "liquid-gold", "red-waves", "glass-orbs"]) {
       expect(isWallpaperId(banned)).toBe(false);
     }
-    expect(DEFAULT_WALLPAPER).toBe("halftone-ridge");
+    expect(DEFAULT_WALLPAPER).toBe("meadow-dots");
   });
 
   it("has a full-size dark and light image on disk for every style", () => {

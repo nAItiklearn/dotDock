@@ -9,9 +9,9 @@ import {
   isAddable,
   OPT_IN_SERVICES,
   placeTile,
-  shapeOf,
   type GalleryInput,
 } from "./galleryItems";
+import { shapeOf } from "./geometry";
 import { TILE_IDS } from "./model";
 import type { Category, DockApp } from "./protocol";
 

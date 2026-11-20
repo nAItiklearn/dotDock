@@ -38,6 +38,7 @@ function recorder(): { calls: string[]; actions: MenuActions } {
       setLibrary: (open) => calls.push(`library ${open}`),
       setEditing: (editing) => calls.push(`editing ${editing}`),
       openGallery: () => calls.push("gallery"),
+      openSettings: () => calls.push("settings panel"),
     },
   };
 }
@@ -56,8 +57,8 @@ const find = (items: readonly MenuItem[], id: string): MenuItem => {
 
 describe("menuFor the bar", () => {
   it("offers the library and edit mode, and flips the edit entry while editing", () => {
-    expect(labels(menuFor(null, context().ctx))).toEqual(["Add widget…", "Show App Library", "Edit dock"]);
-    expect(labels(menuFor(null, context({ editing: true }).ctx))).toEqual(["Add widget…", "Show App Library", "Done editing"]);
+    expect(labels(menuFor(null, context().ctx))).toEqual(["Edit dock", "Add widget…", "Dock settings…", "Show App Library"]);
+    expect(labels(menuFor(null, context({ editing: true }).ctx))).toEqual(["Done editing", "Add widget…", "Dock settings…", "Show App Library"]);
   });
 
   it("runs the actions", () => {
@@ -120,7 +121,7 @@ describe("menuFor stacks, tiles and windows without an entry", () => {
     const { ctx, calls } = context();
     find(menuFor("tile:clock", ctx), "remove").run?.();
     expect(calls).toEqual([`settings ${JSON.stringify({ tiles: [] })}`]);
-    expect(labels(menuFor("tile:weather", ctx))).toEqual(["Add widget…", "Show App Library", "Edit dock"]);
+    expect(labels(menuFor("tile:weather", ctx))).toEqual(["Edit dock", "Add widget…", "Dock settings…", "Show App Library"]);
   });
 
   it("closes a group of windows that has no Start menu entry", () => {
@@ -132,7 +133,7 @@ describe("menuFor stacks, tiles and windows without an entry", () => {
   });
 
   it("falls back to the bar menu for unknown keys", () => {
-    expect(labels(menuFor("app:gone", context().ctx))).toEqual(["Add widget…", "Show App Library", "Edit dock"]);
+    expect(labels(menuFor("app:gone", context().ctx))).toEqual(["Edit dock", "Add widget…", "Dock settings…", "Show App Library"]);
   });
 });
 
@@ -141,6 +142,14 @@ describe("the add widget entry", () => {
     const { ctx, calls } = context();
     find(menuFor(null, ctx), "widgets").run?.();
     expect(calls).toEqual(["gallery"]);
+  });
+});
+
+describe("the dock settings entry", () => {
+  it("opens the settings popover from the bar's menu", () => {
+    const { ctx, calls } = context();
+    find(menuFor(null, ctx), "settings").run?.();
+    expect(calls).toEqual(["settings panel"]);
   });
 });
 

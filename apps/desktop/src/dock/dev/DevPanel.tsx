@@ -26,7 +26,7 @@ export function DevPanel() {
   const choice = useDockStore((s) => s.effectsChoice);
   const themeChoice = useDockStore((s) => s.themeChoice);
   const backdrop = useDockStore((s) => s.backdrop);
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [installed, setInstalled] = useState(0);
   const [feed, setFeed] = useState<FeedName>("contacts");
   const wallpaper = useDevWallpaper();

@@ -12,7 +12,8 @@ export const DEV_WALLPAPER_IDS = ["halftone-ridge", "meadow-dots", "soft-mono", 
 export type DevWallpaperId = (typeof DEV_WALLPAPER_IDS)[number];
 export type WallpaperMode = "dark" | "light";
 
-export const DEFAULT_WALLPAPER: DevWallpaperId = "halftone-ridge";
+/** The windswept green grass: the owner's choice of backdrop for tests, live runs and captures. */
+export const DEFAULT_WALLPAPER: DevWallpaperId = "meadow-dots";
 
 /** Display names come from the wallpaper manifest, so the picker says what the app's own picker says. */
 export const DEV_WALLPAPERS: readonly { readonly id: DevWallpaperId; readonly name: string }[] = DEV_WALLPAPER_IDS.map((id) => ({

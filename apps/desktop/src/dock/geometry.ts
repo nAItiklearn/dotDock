@@ -83,6 +83,12 @@ export const LENGTH_RATIO = {
 } as const;
 export type LengthKind = keyof typeof LENGTH_RATIO;
 
+/** How a tile sits on the dock: a round mark alone, or a mark with words beside it. */
+export type TileShape = "round" | "wide";
+
+/** A tile is wide when it is clearly longer than it is tall on a horizontal dock. */
+export const shapeOf = (kind: LengthKind): TileShape => (LENGTH_RATIO[kind][0] > LENGTH_RATIO[kind][1] * 1.2 ? "wide" : "round");
+
 export interface Metrics {
   readonly icon: number;
   readonly gap: number;
@@ -277,6 +283,9 @@ export const isPopoverTile = (id: string): id is PopoverTileId => Object.hasOwn(
 
 /** The widget gallery popover, in px: its size, and the icon size its live previews are drawn at. */
 export const GALLERY = { w: 660, h: 560, pad: 16, head: 52, icon: 40, cardMin: 190, gap: 12, gapToDock: 12 } as const;
+
+/** The dock settings popover, in px. */
+export const PREFS = { w: 330, h: 468, pad: 16, head: 52, gapToDock: 12 } as const;
 
 /** Context menus, in px. */
 export const MENU = { w: 236, row: 34, heading: 30, separator: 9, pad: 6, gap: 4 } as const;

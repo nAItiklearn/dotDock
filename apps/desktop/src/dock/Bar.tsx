@@ -70,6 +70,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const windows = useDockStore((s) => s.windows);
   const settings = useDockStore((s) => s.settings);
   const seen = useDockStore((s) => s.seen);
+  const tileSizes = useDockStore((s) => s.tileSizes);
   const editing = useDockStore((s) => s.editing);
   const stack = useDockStore((s) => s.stack);
   const tile = useDockStore((s) => s.tile);
@@ -84,8 +85,8 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const { edge } = settings;
   const vertical = isVertical(edge);
   const entries = useMemo(
-    () => buildEntries({ categories, apps, windows, settings }, { now: Date.now(), seen, editing, status: true }),
-    [categories, apps, windows, settings, seen, editing],
+    () => buildEntries({ categories, apps, windows, settings }, { now: Date.now(), seen, editing, status: true, sizes: tileSizes }),
+    [categories, apps, windows, settings, seen, editing, tileSizes],
   );
   const icon = fitIconSize(settings.iconSize, entries.map(lengthKind), (vertical ? viewport.h : viewport.w) - 2 * SCREEN_MARGIN, vertical);
   // One object per icon size: `measure` depends on it, and a new object on every render would re-measure (and force a layout) on every render.
@@ -380,6 +381,10 @@ export function Bar({ hidden, onLayout }: BarProps) {
         }
         const pinned = pinOf(entry);
         if (pinned) void actions.updateSettings({ pinned: unpin(current.pinned, pinned) });
+      },
+      resize: (entry) => {
+        if (entry.kind !== "tile") return;
+        useDockStore.getState().setTileSize(entry.id, entry.size === "compact" ? "regular" : "compact");
       },
       focused: (key) => setRoving(key),
       pointerDown: (entry, e) => {
