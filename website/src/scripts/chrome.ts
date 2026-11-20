@@ -142,6 +142,18 @@ function initWall(): void {
   }).observe(wall);
 }
 
+/**
+ * A link like /#widgets jumps before the fonts and pictures above the target have their final size, so the
+ * heading can end up under the sticky nav. Once everything has loaded, land on the target again (no animation).
+ */
+function initHashLanding(): void {
+  const target = location.hash ? document.getElementById(location.hash.slice(1)) : null;
+  if (!target || target instanceof HTMLDetailsElement) return;
+  const land = (): void => target.scrollIntoView({ block: "start", behavior: "instant" });
+  void document.fonts.ready.then(land);
+  window.addEventListener("load", land, { once: true });
+}
+
 initNav();
 initReveal();
 initCopy();
@@ -150,3 +162,4 @@ initArt();
 initScaled();
 initFaqLinks();
 initWall();
+initHashLanding();

@@ -6,6 +6,7 @@
  */
 import DotMatrix from "./DotMatrix.astro";
 import ridge from "../assets/wallpapers/halftone-ridge-light-640.webp";
+import cover from "../assets/photos/cover-poppy.webp";
 
 import type { WidgetKind } from "../lib/widgets";
 
@@ -15,8 +16,10 @@ interface Props {
   place?: string;
   /** Clock digits style. */
   clockStyle?: "dots" | "blocks" | "stripes";
+  /** Music only: show a track playing (a sample, with our own cover art) instead of "Nothing playing". */
+  playing?: boolean;
 }
-const { kind, place = "", clockStyle = "blocks" } = Astro.props;
+const { kind, place = "", clockStyle = "blocks", playing = false } = Astro.props;
 
 // The photo widget shows one of this project's own pictures, edge to edge, with the widget's usual corner radius.
 const picture = { image: ridge, alt: "Misty ridges drawn in halftone dots" };
@@ -58,6 +61,7 @@ const SAMPLE = {
     { day: "Fri", high: 21, low: 12 },
   ],
   todos: ["Pick a wallpaper", "Set up the dock", "Try the dark theme"],
+  track: { title: "Wind Meadow", artist: "Sample track", seconds: 214, at: 0.38 },
 };
 
 /** Dot-grid gauge as two SVG paths (lit and unlit), one unit per dot pitch. */
@@ -232,7 +236,7 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
 }
 
 {
-  kind === "music" && (
+  kind === "music" && !playing && (
     <section class="w w--pill" style={style} aria-label="Music, nothing playing">
       <div class="w-music">
         <svg class="w-music__art" viewBox="0 0 3 3" aria-hidden="true">
@@ -252,7 +256,27 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
     </section>
   )
 }
-
+{
+  kind === "music" && playing && (
+    <section class="w w--pill w--playing" style={`${style};--at:${SAMPLE.track.at};--len:${Math.round(SAMPLE.track.seconds * (1 - SAMPLE.track.at))}s`} aria-label={`Music, sample: ${SAMPLE.track.title}, playing`} data-music-playing>
+      <span class="sample-mark" aria-hidden="true" />
+      <div class="w-music">
+        <img class="w-music__cover" src={cover.src} width={cover.width} height={cover.height} alt="" loading="lazy" decoding="async" />
+        <div class="w-music__text">
+          <span class="w-music__title">{SAMPLE.track.title}</span>
+          <span class="caps w-music__artist">{SAMPLE.track.artist}</span>
+          <span class="w-music__bar" aria-hidden="true"><span class="w-music__fill" /></span>
+        </div>
+        <span class="w-music__eq" aria-hidden="true"><i /><i /><i /><i /></span>
+        <div class="w-music__controls" aria-hidden="true">
+          <svg class="w-music__skip w-music__skip--prev" viewBox="0 0 12 10"><path d="M0 0l6 5-6 5zM6 0l6 5-6 5z" /></svg>
+          <span class="w-music__play w-music__play--pause" />
+          <svg class="w-music__skip" viewBox="0 0 12 10"><path d="M0 0l6 5-6 5zM6 0l6 5-6 5z" /></svg>
+        </div>
+      </div>
+    </section>
+  )
+}
 {
   kind === "timer" && (
     <section class="w w--pill" style={style} aria-label="Timer" data-timer>

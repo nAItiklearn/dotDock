@@ -6,7 +6,7 @@ from typing import Callable
 
 import numpy as np
 
-from .band import render_band
+from .vignette import KINDS as VIGNETTES, render_vignette
 from .bloom import render_bouquet, render_tuft
 from .scape import render_scape
 from .scene import render_scene
@@ -49,7 +49,7 @@ def _scene(kind: str, seed: int):
 
 def _band(kind: str, seed: int):
     def render(variant: str, w: int, h: int, scale: float) -> Layers:
-        return render_band(w, h, scale, seed, kind, narrow=variant == "narrow")
+        return render_vignette(w, h, scale, seed, kind, narrow=variant == "narrow")
     return render
 
 
@@ -81,7 +81,7 @@ PIECES: dict[str, Piece] = {
     },
     **{
         f"band-{kind}": Piece(81 + i, {"wide": (1920, 300), "narrow": (720, 240)}, _band(kind, 81 + i), _colour_stack, _SCENE_Q | {"cloud": (100, 100), "sea": (78, 60), "line": (80, 80)})
-        for i, kind in enumerate(("sky", "sea", "field", "night"))
+        for i, kind in enumerate(VIGNETTES)
     },
     "meadow": Piece(71, {"wide": (1920, 420), "narrow": (720, 300)}, _scene("meadow", 71), _colour_stack, _SCENE_Q),
 }

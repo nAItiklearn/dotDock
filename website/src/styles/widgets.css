@@ -610,6 +610,77 @@ html[data-theme="paper"] .w-clock__digits {
   color: var(--text-dim);
 }
 
+/* Music, playing: our own cover, the track, a progress line that moves and a quiet level meter. */
+.w-music__cover {
+  flex: none;
+  width: calc(var(--k) * 60);
+  height: calc(var(--k) * 60);
+  border-radius: calc(var(--k) * 14);
+  box-shadow: inset 0 0 0 1px var(--border);
+  image-rendering: pixelated;
+}
+.w-music__artist {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-dim);
+}
+.w-music__bar {
+  position: relative;
+  height: 3px;
+  margin-top: calc(var(--k) * 6);
+  border-radius: var(--radius-pill);
+  background: var(--dot-off);
+  overflow: hidden;
+}
+.w-music__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--text);
+  transform-origin: left;
+  transform: scaleX(var(--at));
+  animation: music-progress var(--len) linear forwards;
+}
+@keyframes music-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+.w-music__eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: calc(var(--k) * 22);
+}
+.w-music__eq i {
+  width: 3px;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--accent);
+  transform-origin: bottom;
+  animation: music-eq 1.1s var(--ease-out) infinite alternate;
+}
+.w-music__eq i:nth-child(2) { animation-delay: -0.35s; }
+.w-music__eq i:nth-child(3) { animation-delay: -0.7s; }
+.w-music__eq i:nth-child(4) { animation-delay: -0.2s; }
+@keyframes music-eq {
+  from { transform: scaleY(0.25); }
+  to { transform: scaleY(1); }
+}
+.w-music__play--pause::after {
+  width: 34%;
+  height: 38%;
+  clip-path: polygon(0 0, 36% 0, 36% 100%, 0 100%, 0 0, 64% 0, 100% 0, 100% 100%, 64% 100%, 64% 0);
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .w-music__fill,
+  .w-music__eq i {
+    animation: none;
+  }
+}
+
 /* Widgets laid out as a free cluster instead of on the stage grid. */
 .cluster {
   --cols: 4;

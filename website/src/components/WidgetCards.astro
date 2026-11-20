@@ -1,46 +1,39 @@
 ---
+/**
+ * The widget bento: every widget at its real size on one cell grid, each with a caption under it. Rows are
+ * built from widgets of the same height, so every row ends flush and no tile is half empty. Spans are in
+ * grid cells for each width class (12 columns wide, 6 on tablets, 4 on phones); see styles/home.css.
+ */
 import SectionHead from "./SectionHead.astro";
 import Widget from "./Widget.astro";
+import type { WidgetKind } from "../lib/widgets";
 
-const cards = [
-  {
-    id: "time",
-    title: "Time",
-    line: "Three clock styles, a date and a month, always in step with your PC.",
-    wide: true,
-    items: [
-      { kind: "clock", style: "dots", place: "--w:4" },
-      { kind: "clock", style: "blocks", place: "--w:4" },
-      { kind: "clock", style: "stripes", place: "--w:4" },
-      { kind: "date" },
-      { kind: "calendar" },
-    ],
-  },
-  {
-    id: "system",
-    title: "System",
-    line: "Battery, memory and disk at a glance, as rings and dot grids.",
-    items: [{ kind: "ring" }, { kind: "ram" }, { kind: "disk" }, { kind: "batpill" }],
-  },
-  {
-    id: "media",
-    title: "Media",
-    line: "What is playing, with controls, from any player on your PC.",
-    items: [{ kind: "music" }],
-  },
-  {
-    id: "focus",
-    title: "Focus",
-    line: "A timer that really counts, and a list that really ticks.",
-    items: [{ kind: "timer" }, { kind: "todo" }],
-  },
-  {
-    id: "weather",
-    title: "Weather",
-    line: "The forecast for the place you choose, from Open-Meteo.",
-    items: [{ kind: "weather" }, { kind: "forecast" }],
-  },
-] as const;
+interface Tile {
+  kind: WidgetKind;
+  /** Name under the widget. */
+  name: string;
+  /** What it does, in a few words. */
+  note: string;
+  /** Height in cells, then width in cells at 12, 6 and 4 columns. */
+  h: 1 | 2;
+  span: [number, number, number];
+  style?: "dots" | "blocks" | "stripes";
+  playing?: boolean;
+}
+
+const tiles: Tile[] = [
+  { kind: "clock", name: "Clock", note: "Blocks, dots or stripes; this is Blocks", h: 2, span: [5, 4, 4], style: "blocks" },
+  { kind: "date", name: "Date", note: "Today, in the dot font", h: 2, span: [2, 2, 2] },
+  { kind: "calendar", name: "Month", note: "The month, today ringed", h: 2, span: [3, 4, 4] },
+  { kind: "ring", name: "Battery", note: "Charge as a ring", h: 2, span: [2, 2, 2] },
+  { kind: "todo", name: "To-do", note: "Tick a line, it stays ticked", h: 2, span: [4, 4, 4] },
+  { kind: "ram", name: "Memory", note: "RAM in use, one dot per slice", h: 2, span: [2, 2, 2] },
+  { kind: "disk", name: "Disk", note: "Space used on your drive", h: 2, span: [2, 2, 2] },
+  { kind: "forecast", name: "Forecast", note: "Five days, from Open-Meteo", h: 2, span: [4, 4, 4] },
+  { kind: "music", name: "Now playing", note: "Any player on your PC, with controls", h: 1, span: [5, 6, 4], playing: true },
+  { kind: "timer", name: "Focus timer", note: "Counts down, even with the tab hidden", h: 1, span: [4, 3, 4] },
+  { kind: "weather", name: "Weather", note: "The sky where you choose", h: 1, span: [3, 3, 4] },
+];
 ---
 
 <section class="section" id="widgets" aria-labelledby="widgets-title">
@@ -48,30 +41,20 @@ const cards = [
     <SectionHead label="The home screen" titleId="widgets-title">
       <Fragment slot="title">Made to be <span class="dim">glanced at.</span></Fragment>
       <Fragment slot="lede">
-        Time, date, calendar, battery and the timer are live on this page and read only this device. A hollow dot marks a sample value.
+        Time, date, month, battery and the timer on this page are live and read only this device. A hollow dot marks a sample value.
       </Fragment>
     </SectionHead>
 
-    <div class="wcards">
+    <div class="bento reveal" data-bento>
       {
-        cards.map((card, i) => (
-          <article class={`wcard reveal${"wide" in card ? " wcard--wide" : ""}`} style={`--i:${i % 2}`} aria-labelledby={`wc-${card.id}`}>
-            <header class="wcard__head">
-              <h3 class="wcard__title" id={`wc-${card.id}`}>{card.title}</h3>
-              <p class="wcard__line">{card.line}</p>
-            </header>
-            <div class="cluster wcard__cluster">
-              {
-                card.items.map((item) => (
-                  <Widget
-                    kind={item.kind}
-                    place={"place" in item ? item.place : ""}
-                    clockStyle={"style" in item ? item.style : "blocks"}
-                  />
-                ))
-              }
-            </div>
-          </article>
+        tiles.map((t) => (
+          <figure class="bento__tile" style={`--h:${t.h};--s12:${t.span[0]};--s6:${t.span[1]};--s4:${t.span[2]}`}>
+            <Widget kind={t.kind} place={`--w:var(--span);--h:${t.h}`} clockStyle={t.style ?? "blocks"} playing={t.playing ?? false} />
+            <figcaption class="bento__cap">
+              <span class="bento__name">{t.name}</span>
+              <span class="bento__note">{t.note}</span>
+            </figcaption>
+          </figure>
         ))
       }
     </div>

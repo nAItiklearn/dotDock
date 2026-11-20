@@ -68,46 +68,90 @@
   text-wrap: pretty;
 }
 
-/* ---------- Widget cards ---------- */
-.wcards {
+/* ---------- Widget bento ----------
+ * One grid of cells for every widget, 12 columns wide (6 on tablets, 4 on phones). A tile is the widget at
+ * its real size plus a caption under it; each row holds widgets of one height, so every row ends flush.
+ * --cell is one grid column; --k scales the widget's insides with it, exactly as on the desktop stage. */
+.bento {
+  --cols: 12;
+  --gap: var(--space-4);
+  container-type: inline-size;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-5);
-  margin-top: clamp(40px, 6vw, 72px);
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gap);
+  row-gap: var(--space-6);
+  margin-top: clamp(36px, 5vw, 64px);
 }
-@media (min-width: 900px) {
-  .wcards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .wcard--wide {
-    grid-column: 1 / -1;
-  }
-}
-.wcard {
+.bento__tile {
+  --span: var(--s12);
+  --cell: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  --k: calc(var(--cell) / 100);
   display: grid;
-  gap: var(--space-8);
+  grid-column: span var(--span);
   align-content: start;
-  padding: clamp(20px, 3vw, 36px);
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--radius-card);
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+}
+.bento .w {
+  width: 100%;
+  height: calc(var(--h) * var(--cell) + (var(--h) - 1) * var(--gap));
   background: var(--surface-2);
-}
-.wcard__title {
-  font-family: var(--font-display);
-  font-size: clamp(1.5rem, 2.4vw, 2.125rem);
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1.1;
-}
-.wcard__line {
-  max-width: 46ch;
-  margin-top: var(--space-2);
-  color: var(--text-dim);
-}
-.wcard .w {
-  background: var(--bg);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+  transition:
+    transform var(--dur-med) var(--ease-out),
+    box-shadow var(--dur-med) var(--ease-out);
+}
+.bento .w--circle {
+  justify-self: center;
+  width: auto;
+  aspect-ratio: 1;
+}
+@media (hover: hover) {
+  .bento__tile:hover .w {
+    transform: translateY(calc(-1 * var(--space-1)));
+    box-shadow: var(--shadow-lift, var(--shadow));
+  }
+}
+.bento__cap {
+  display: grid;
+  gap: 2px;
+  padding-inline: var(--space-1);
+}
+.bento__name {
+  font-family: var(--font-mono);
+  font-size: var(--text-caps);
+  font-weight: 500;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text);
+}
+.bento__note {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-dim);
+}
+/* The battery ring fills when the bento comes into view (the live value is set by scripts/live.ts). */
+.bento:not(.is-in) .ring__value {
+  stroke-dashoffset: var(--ring-len, 276.46) !important;
+}
+@media (max-width: 1023px) {
+  .bento {
+    --cols: 6;
+  }
+  .bento__tile {
+    --span: var(--s6);
+  }
+}
+@media (max-width: 599px) {
+  .bento {
+    --cols: 4;
+    --gap: var(--space-3);
+  }
+  .bento__tile {
+    --span: var(--s4);
+  }
 }
 
 /* ---------- Theme picker ---------- */

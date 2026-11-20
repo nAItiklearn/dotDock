@@ -1,135 +1,107 @@
 {
- "band-field": {
-  "seed": 83,
+ "band-butterflies": {
+  "seed": 85,
   "variants": {
    "wide": {
     "w": 1920,
     "h": 300,
     "layers": {
-     "mid": {
+     "stalk": {
       "1": {
-       "file": "band-field-wide-mid-1x.webp",
+       "file": "band-butterflies-wide-stalk-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 23986
+       "bytes": 518
       },
       "2": {
-       "file": "band-field-wide-mid-2x.webp",
+       "file": "band-butterflies-wide-stalk-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 57276
+       "bytes": 864
       }
      },
-     "near": {
+     "petal": {
       "1": {
-       "file": "band-field-wide-near-1x.webp",
+       "file": "band-butterflies-wide-petal-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 36180
+       "bytes": 366
       },
       "2": {
-       "file": "band-field-wide-near-2x.webp",
+       "file": "band-butterflies-wide-petal-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 85910
+       "bytes": 682
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "band-butterflies-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 228
+      },
+      "2": {
+       "file": "band-butterflies-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 544
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "band-butterflies-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 194
+      },
+      "2": {
+       "file": "band-butterflies-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 302
       }
      },
      "cloud": {
       "1": {
-       "file": "band-field-wide-cloud-1x.webp",
+       "file": "band-butterflies-wide-cloud-1x.webp",
        "w": 1920,
        "h": 300,
        "bytes": 66
       },
       "2": {
-       "file": "band-field-wide-cloud-2x.webp",
+       "file": "band-butterflies-wide-cloud-2x.webp",
        "w": 3840,
        "h": 600,
        "bytes": 140
       }
      },
-     "stalk": {
-      "1": {
-       "file": "band-field-wide-stalk-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 708
-      },
-      "2": {
-       "file": "band-field-wide-stalk-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 1068
-      }
-     },
-     "petal": {
-      "1": {
-       "file": "band-field-wide-petal-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 468
-      },
-      "2": {
-       "file": "band-field-wide-petal-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 838
-      }
-     },
-     "gold": {
-      "1": {
-       "file": "band-field-wide-gold-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 176
-      },
-      "2": {
-       "file": "band-field-wide-gold-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 364
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "band-field-wide-heart-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 108
-      },
-      "2": {
-       "file": "band-field-wide-heart-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 180
-      }
-     },
      "line": {
       "1": {
-       "file": "band-field-wide-line-1x.webp",
+       "file": "band-butterflies-wide-line-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 16772
+       "bytes": 1888
       },
       "2": {
-       "file": "band-field-wide-line-2x.webp",
+       "file": "band-butterflies-wide-line-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 40082
+       "bytes": 5680
       }
      },
      "grain": {
       "1": {
-       "file": "band-field-wide-grain-1x.webp",
+       "file": "band-butterflies-wide-grain-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 34920
+       "bytes": 12796
       },
       "2": {
-       "file": "band-field-wide-grain-2x.webp",
+       "file": "band-butterflies-wide-grain-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 87852
+       "bytes": 31796
       }
      }
     }
@@ -138,71 +110,29 @@
     "w": 720,
     "h": 240,
     "layers": {
-     "mid": {
-      "1": {
-       "file": "band-field-narrow-mid-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 8134
-      },
-      "2": {
-       "file": "band-field-narrow-mid-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 18026
-      }
-     },
-     "near": {
-      "1": {
-       "file": "band-field-narrow-near-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 11410
-      },
-      "2": {
-       "file": "band-field-narrow-near-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 26504
-      }
-     },
-     "cloud": {
-      "1": {
-       "file": "band-field-narrow-cloud-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 46
-      },
-      "2": {
-       "file": "band-field-narrow-cloud-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 72
-      }
-     },
      "stalk": {
       "1": {
-       "file": "band-field-narrow-stalk-1x.webp",
+       "file": "band-butterflies-narrow-stalk-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 360
+       "bytes": 308
       },
       "2": {
-       "file": "band-field-narrow-stalk-2x.webp",
+       "file": "band-butterflies-narrow-stalk-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 420
+       "bytes": 404
       }
      },
      "petal": {
       "1": {
-       "file": "band-field-narrow-petal-1x.webp",
+       "file": "band-butterflies-narrow-petal-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 242
+       "bytes": 226
       },
       "2": {
-       "file": "band-field-narrow-petal-2x.webp",
+       "file": "band-butterflies-narrow-petal-2x.webp",
        "w": 1440,
        "h": 480,
        "bytes": 322
@@ -210,447 +140,164 @@
      },
      "gold": {
       "1": {
-       "file": "band-field-narrow-gold-1x.webp",
+       "file": "band-butterflies-narrow-gold-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 96
+       "bytes": 128
       },
       "2": {
-       "file": "band-field-narrow-gold-2x.webp",
+       "file": "band-butterflies-narrow-gold-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 150
+       "bytes": 170
       }
      },
      "heart": {
       "1": {
-       "file": "band-field-narrow-heart-1x.webp",
+       "file": "band-butterflies-narrow-heart-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 82
+       "bytes": 100
       },
       "2": {
-       "file": "band-field-narrow-heart-2x.webp",
+       "file": "band-butterflies-narrow-heart-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 106
+       "bytes": 142
+      }
+     },
+     "cloud": {
+      "1": {
+       "file": "band-butterflies-narrow-cloud-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 46
+      },
+      "2": {
+       "file": "band-butterflies-narrow-cloud-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 72
       }
      },
      "line": {
       "1": {
-       "file": "band-field-narrow-line-1x.webp",
+       "file": "band-butterflies-narrow-line-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 5554
+       "bytes": 950
       },
       "2": {
-       "file": "band-field-narrow-line-2x.webp",
+       "file": "band-butterflies-narrow-line-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 14924
+       "bytes": 2556
       }
      },
      "grain": {
       "1": {
-       "file": "band-field-narrow-grain-1x.webp",
+       "file": "band-butterflies-narrow-grain-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 10210
+       "bytes": 5860
       },
       "2": {
-       "file": "band-field-narrow-grain-2x.webp",
+       "file": "band-butterflies-narrow-grain-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 26088
+       "bytes": 14196
       }
      }
     }
    }
   }
  },
- "band-night": {
-  "seed": 84,
+ "band-horse": {
+  "seed": 83,
   "variants": {
    "wide": {
     "w": 1920,
     "h": 300,
     "layers": {
-     "mid": {
-      "1": {
-       "file": "band-night-wide-mid-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 1690
-      },
-      "2": {
-       "file": "band-night-wide-mid-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 5794
-      }
-     },
-     "near": {
-      "1": {
-       "file": "band-night-wide-near-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 33198
-      },
-      "2": {
-       "file": "band-night-wide-near-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 79656
-      }
-     },
-     "cloud": {
-      "1": {
-       "file": "band-night-wide-cloud-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 136
-      },
-      "2": {
-       "file": "band-night-wide-cloud-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 298
-      }
-     },
      "stalk": {
       "1": {
-       "file": "band-night-wide-stalk-1x.webp",
+       "file": "band-horse-wide-stalk-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 552
+       "bytes": 510
       },
       "2": {
-       "file": "band-night-wide-stalk-2x.webp",
+       "file": "band-horse-wide-stalk-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 830
+       "bytes": 790
       }
      },
      "petal": {
       "1": {
-       "file": "band-night-wide-petal-1x.webp",
+       "file": "band-horse-wide-petal-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 76
+       "bytes": 154
       },
       "2": {
-       "file": "band-night-wide-petal-2x.webp",
+       "file": "band-horse-wide-petal-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 158
+       "bytes": 330
       }
      },
      "gold": {
       "1": {
-       "file": "band-night-wide-gold-1x.webp",
+       "file": "band-horse-wide-gold-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 538
+       "bytes": 208
       },
       "2": {
-       "file": "band-night-wide-gold-2x.webp",
+       "file": "band-horse-wide-gold-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 934
+       "bytes": 504
       }
      },
      "heart": {
       "1": {
-       "file": "band-night-wide-heart-1x.webp",
+       "file": "band-horse-wide-heart-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 76
+       "bytes": 508
       },
       "2": {
-       "file": "band-night-wide-heart-2x.webp",
+       "file": "band-horse-wide-heart-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 158
-      }
-     },
-     "line": {
-      "1": {
-       "file": "band-night-wide-line-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 2534
-      },
-      "2": {
-       "file": "band-night-wide-line-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 7262
-      }
-     },
-     "grain": {
-      "1": {
-       "file": "band-night-wide-grain-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 22336
-      },
-      "2": {
-       "file": "band-night-wide-grain-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 53450
-      }
-     }
-    }
-   },
-   "narrow": {
-    "w": 720,
-    "h": 240,
-    "layers": {
-     "mid": {
-      "1": {
-       "file": "band-night-narrow-mid-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 680
-      },
-      "2": {
-       "file": "band-night-narrow-mid-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 1980
-      }
-     },
-     "near": {
-      "1": {
-       "file": "band-night-narrow-near-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 11076
-      },
-      "2": {
-       "file": "band-night-narrow-near-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 25614
+       "bytes": 818
       }
      },
      "cloud": {
       "1": {
-       "file": "band-night-narrow-cloud-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 122
-      },
-      "2": {
-       "file": "band-night-narrow-cloud-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 172
-      }
-     },
-     "stalk": {
-      "1": {
-       "file": "band-night-narrow-stalk-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 264
-      },
-      "2": {
-       "file": "band-night-narrow-stalk-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 348
-      }
-     },
-     "petal": {
-      "1": {
-       "file": "band-night-narrow-petal-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 64
-      },
-      "2": {
-       "file": "band-night-narrow-petal-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 86
-      }
-     },
-     "gold": {
-      "1": {
-       "file": "band-night-narrow-gold-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 282
-      },
-      "2": {
-       "file": "band-night-narrow-gold-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 376
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "band-night-narrow-heart-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 62
-      },
-      "2": {
-       "file": "band-night-narrow-heart-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 82
-      }
-     },
-     "line": {
-      "1": {
-       "file": "band-night-narrow-line-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 1362
-      },
-      "2": {
-       "file": "band-night-narrow-line-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 3500
-      }
-     },
-     "grain": {
-      "1": {
-       "file": "band-night-narrow-grain-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 8558
-      },
-      "2": {
-       "file": "band-night-narrow-grain-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 20404
-      }
-     }
-    }
-   }
-  }
- },
- "band-sea": {
-  "seed": 82,
-  "variants": {
-   "wide": {
-    "w": 1920,
-    "h": 300,
-    "layers": {
-     "far": {
-      "1": {
-       "file": "band-sea-wide-far-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 17326
-      },
-      "2": {
-       "file": "band-sea-wide-far-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 43232
-      }
-     },
-     "sea": {
-      "1": {
-       "file": "band-sea-wide-sea-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 46610
-      },
-      "2": {
-       "file": "band-sea-wide-sea-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 57180
-      }
-     },
-     "cloud": {
-      "1": {
-       "file": "band-sea-wide-cloud-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 168
-      },
-      "2": {
-       "file": "band-sea-wide-cloud-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 340
-      }
-     },
-     "stalk": {
-      "1": {
-       "file": "band-sea-wide-stalk-1x.webp",
+       "file": "band-horse-wide-cloud-1x.webp",
        "w": 1920,
        "h": 300,
        "bytes": 66
       },
       "2": {
-       "file": "band-sea-wide-stalk-2x.webp",
+       "file": "band-horse-wide-cloud-2x.webp",
        "w": 3840,
        "h": 600,
        "bytes": 140
       }
      },
-     "petal": {
-      "1": {
-       "file": "band-sea-wide-petal-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 160
-      },
-      "2": {
-       "file": "band-sea-wide-petal-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 332
-      }
-     },
-     "gold": {
-      "1": {
-       "file": "band-sea-wide-gold-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 310
-      },
-      "2": {
-       "file": "band-sea-wide-gold-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 528
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "band-sea-wide-heart-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 112
-      },
-      "2": {
-       "file": "band-sea-wide-heart-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 204
-      }
-     },
      "line": {
       "1": {
-       "file": "band-sea-wide-line-1x.webp",
+       "file": "band-horse-wide-line-1x.webp",
        "w": 1920,
        "h": 300,
        "bytes": 1166
       },
       "2": {
-       "file": "band-sea-wide-line-2x.webp",
+       "file": "band-horse-wide-line-2x.webp",
        "w": 3840,
        "h": 600,
        "bytes": 4354
@@ -658,16 +305,16 @@
      },
      "grain": {
       "1": {
-       "file": "band-sea-wide-grain-1x.webp",
+       "file": "band-horse-wide-grain-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 17554
+       "bytes": 12486
       },
       "2": {
-       "file": "band-sea-wide-grain-2x.webp",
+       "file": "band-horse-wide-grain-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 44418
+       "bytes": 31464
       }
      }
     }
@@ -676,113 +323,85 @@
     "w": 720,
     "h": 240,
     "layers": {
-     "far": {
+     "stalk": {
       "1": {
-       "file": "band-sea-narrow-far-1x.webp",
+       "file": "band-horse-narrow-stalk-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 5622
+       "bytes": 254
       },
       "2": {
-       "file": "band-sea-narrow-far-2x.webp",
+       "file": "band-horse-narrow-stalk-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 12808
+       "bytes": 350
       }
      },
-     "sea": {
+     "petal": {
       "1": {
-       "file": "band-sea-narrow-sea-1x.webp",
+       "file": "band-horse-narrow-petal-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 15572
+       "bytes": 102
       },
       "2": {
-       "file": "band-sea-narrow-sea-2x.webp",
+       "file": "band-horse-narrow-petal-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 18516
+       "bytes": 148
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "band-horse-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 120
+      },
+      "2": {
+       "file": "band-horse-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 158
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "band-horse-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 422
+      },
+      "2": {
+       "file": "band-horse-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 548
       }
      },
      "cloud": {
       "1": {
-       "file": "band-sea-narrow-cloud-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 116
-      },
-      "2": {
-       "file": "band-sea-narrow-cloud-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 160
-      }
-     },
-     "stalk": {
-      "1": {
-       "file": "band-sea-narrow-stalk-1x.webp",
+       "file": "band-horse-narrow-cloud-1x.webp",
        "w": 720,
        "h": 240,
        "bytes": 46
       },
       "2": {
-       "file": "band-sea-narrow-stalk-2x.webp",
+       "file": "band-horse-narrow-cloud-2x.webp",
        "w": 1440,
        "h": 480,
        "bytes": 72
       }
      },
-     "petal": {
-      "1": {
-       "file": "band-sea-narrow-petal-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 114
-      },
-      "2": {
-       "file": "band-sea-narrow-petal-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 164
-      }
-     },
-     "gold": {
-      "1": {
-       "file": "band-sea-narrow-gold-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 262
-      },
-      "2": {
-       "file": "band-sea-narrow-gold-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 324
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "band-sea-narrow-heart-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 122
-      },
-      "2": {
-       "file": "band-sea-narrow-heart-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 150
-      }
-     },
      "line": {
       "1": {
-       "file": "band-sea-narrow-line-1x.webp",
+       "file": "band-horse-narrow-line-1x.webp",
        "w": 720,
        "h": 240,
        "bytes": 420
       },
       "2": {
-       "file": "band-sea-narrow-line-2x.webp",
+       "file": "band-horse-narrow-line-2x.webp",
        "w": 1440,
        "h": 480,
        "bytes": 1362
@@ -790,122 +409,108 @@
      },
      "grain": {
       "1": {
-       "file": "band-sea-narrow-grain-1x.webp",
+       "file": "band-horse-narrow-grain-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 8728
+       "bytes": 6716
       },
       "2": {
-       "file": "band-sea-narrow-grain-2x.webp",
+       "file": "band-horse-narrow-grain-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 21616
+       "bytes": 16870
       }
      }
     }
    }
   }
  },
- "band-sky": {
+ "band-meadow": {
   "seed": 81,
   "variants": {
    "wide": {
     "w": 1920,
     "h": 300,
     "layers": {
-     "far": {
+     "stalk": {
       "1": {
-       "file": "band-sky-wide-far-1x.webp",
+       "file": "band-meadow-wide-stalk-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 1166
+       "bytes": 818
       },
       "2": {
-       "file": "band-sky-wide-far-2x.webp",
+       "file": "band-meadow-wide-stalk-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 4354
+       "bytes": 1182
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "band-meadow-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 646
+      },
+      "2": {
+       "file": "band-meadow-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 986
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "band-meadow-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 106
+      },
+      "2": {
+       "file": "band-meadow-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 182
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "band-meadow-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 220
+      },
+      "2": {
+       "file": "band-meadow-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 528
       }
      },
      "cloud": {
       "1": {
-       "file": "band-sky-wide-cloud-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 380
-      },
-      "2": {
-       "file": "band-sky-wide-cloud-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 726
-      }
-     },
-     "stalk": {
-      "1": {
-       "file": "band-sky-wide-stalk-1x.webp",
+       "file": "band-meadow-wide-cloud-1x.webp",
        "w": 1920,
        "h": 300,
        "bytes": 66
       },
       "2": {
-       "file": "band-sky-wide-stalk-2x.webp",
+       "file": "band-meadow-wide-cloud-2x.webp",
        "w": 3840,
        "h": 600,
        "bytes": 140
       }
      },
-     "petal": {
-      "1": {
-       "file": "band-sky-wide-petal-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 80
-      },
-      "2": {
-       "file": "band-sky-wide-petal-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 154
-      }
-     },
-     "gold": {
-      "1": {
-       "file": "band-sky-wide-gold-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 138
-      },
-      "2": {
-       "file": "band-sky-wide-gold-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 302
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "band-sky-wide-heart-1x.webp",
-       "w": 1920,
-       "h": 300,
-       "bytes": 112
-      },
-      "2": {
-       "file": "band-sky-wide-heart-2x.webp",
-       "w": 3840,
-       "h": 600,
-       "bytes": 208
-      }
-     },
      "line": {
       "1": {
-       "file": "band-sky-wide-line-1x.webp",
+       "file": "band-meadow-wide-line-1x.webp",
        "w": 1920,
        "h": 300,
        "bytes": 1166
       },
       "2": {
-       "file": "band-sky-wide-line-2x.webp",
+       "file": "band-meadow-wide-line-2x.webp",
        "w": 3840,
        "h": 600,
        "bytes": 4354
@@ -913,16 +518,16 @@
      },
      "grain": {
       "1": {
-       "file": "band-sky-wide-grain-1x.webp",
+       "file": "band-meadow-wide-grain-1x.webp",
        "w": 1920,
        "h": 300,
-       "bytes": 12156
+       "bytes": 22906
       },
       "2": {
-       "file": "band-sky-wide-grain-2x.webp",
+       "file": "band-meadow-wide-grain-2x.webp",
        "w": 3840,
        "h": 600,
-       "bytes": 31624
+       "bytes": 57082
       }
      }
     }
@@ -931,99 +536,85 @@
     "w": 720,
     "h": 240,
     "layers": {
-     "far": {
+     "stalk": {
       "1": {
-       "file": "band-sky-narrow-far-1x.webp",
+       "file": "band-meadow-narrow-stalk-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 420
+       "bytes": 456
       },
       "2": {
-       "file": "band-sky-narrow-far-2x.webp",
+       "file": "band-meadow-narrow-stalk-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 1362
+       "bytes": 550
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "band-meadow-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 402
+      },
+      "2": {
+       "file": "band-meadow-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 500
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "band-meadow-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 84
+      },
+      "2": {
+       "file": "band-meadow-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 106
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "band-meadow-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 140
+      },
+      "2": {
+       "file": "band-meadow-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 232
       }
      },
      "cloud": {
       "1": {
-       "file": "band-sky-narrow-cloud-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 256
-      },
-      "2": {
-       "file": "band-sky-narrow-cloud-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 340
-      }
-     },
-     "stalk": {
-      "1": {
-       "file": "band-sky-narrow-stalk-1x.webp",
+       "file": "band-meadow-narrow-cloud-1x.webp",
        "w": 720,
        "h": 240,
        "bytes": 46
       },
       "2": {
-       "file": "band-sky-narrow-stalk-2x.webp",
+       "file": "band-meadow-narrow-cloud-2x.webp",
        "w": 1440,
        "h": 480,
        "bytes": 72
       }
      },
-     "petal": {
-      "1": {
-       "file": "band-sky-narrow-petal-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 66
-      },
-      "2": {
-       "file": "band-sky-narrow-petal-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 88
-      }
-     },
-     "gold": {
-      "1": {
-       "file": "band-sky-narrow-gold-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 124
-      },
-      "2": {
-       "file": "band-sky-narrow-gold-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 166
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "band-sky-narrow-heart-1x.webp",
-       "w": 720,
-       "h": 240,
-       "bytes": 120
-      },
-      "2": {
-       "file": "band-sky-narrow-heart-2x.webp",
-       "w": 1440,
-       "h": 480,
-       "bytes": 152
-      }
-     },
      "line": {
       "1": {
-       "file": "band-sky-narrow-line-1x.webp",
+       "file": "band-meadow-narrow-line-1x.webp",
        "w": 720,
        "h": 240,
        "bytes": 420
       },
       "2": {
-       "file": "band-sky-narrow-line-2x.webp",
+       "file": "band-meadow-narrow-line-2x.webp",
        "w": 1440,
        "h": 480,
        "bytes": 1362
@@ -1031,16 +622,442 @@
      },
      "grain": {
       "1": {
-       "file": "band-sky-narrow-grain-1x.webp",
+       "file": "band-meadow-narrow-grain-1x.webp",
        "w": 720,
        "h": 240,
-       "bytes": 6654
+       "bytes": 9792
       },
       "2": {
-       "file": "band-sky-narrow-grain-2x.webp",
+       "file": "band-meadow-narrow-grain-2x.webp",
        "w": 1440,
        "h": 480,
-       "bytes": 16944
+       "bytes": 24368
+      }
+     }
+    }
+   }
+  }
+ },
+ "band-octopus": {
+  "seed": 82,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 300,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "band-octopus-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 478
+      },
+      "2": {
+       "file": "band-octopus-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 816
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "band-octopus-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 386
+      },
+      "2": {
+       "file": "band-octopus-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 708
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "band-octopus-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 210
+      },
+      "2": {
+       "file": "band-octopus-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 424
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "band-octopus-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 126
+      },
+      "2": {
+       "file": "band-octopus-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 284
+      }
+     },
+     "cloud": {
+      "1": {
+       "file": "band-octopus-wide-cloud-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 146
+      },
+      "2": {
+       "file": "band-octopus-wide-cloud-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 326
+      }
+     },
+     "line": {
+      "1": {
+       "file": "band-octopus-wide-line-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 1166
+      },
+      "2": {
+       "file": "band-octopus-wide-line-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 4354
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "band-octopus-wide-grain-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 18210
+      },
+      "2": {
+       "file": "band-octopus-wide-grain-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 45736
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 240,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "band-octopus-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 346
+      },
+      "2": {
+       "file": "band-octopus-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 462
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "band-octopus-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 274
+      },
+      "2": {
+       "file": "band-octopus-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 390
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "band-octopus-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 122
+      },
+      "2": {
+       "file": "band-octopus-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 168
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "band-octopus-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 100
+      },
+      "2": {
+       "file": "band-octopus-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 136
+      }
+     },
+     "cloud": {
+      "1": {
+       "file": "band-octopus-narrow-cloud-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 96
+      },
+      "2": {
+       "file": "band-octopus-narrow-cloud-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 120
+      }
+     },
+     "line": {
+      "1": {
+       "file": "band-octopus-narrow-line-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 420
+      },
+      "2": {
+       "file": "band-octopus-narrow-line-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 1362
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "band-octopus-narrow-grain-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 8106
+      },
+      "2": {
+       "file": "band-octopus-narrow-grain-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 20374
+      }
+     }
+    }
+   }
+  }
+ },
+ "band-pond": {
+  "seed": 84,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 300,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "band-pond-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 458
+      },
+      "2": {
+       "file": "band-pond-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 794
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "band-pond-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 254
+      },
+      "2": {
+       "file": "band-pond-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 572
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "band-pond-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 216
+      },
+      "2": {
+       "file": "band-pond-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 532
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "band-pond-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 218
+      },
+      "2": {
+       "file": "band-pond-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 534
+      }
+     },
+     "cloud": {
+      "1": {
+       "file": "band-pond-wide-cloud-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 314
+      },
+      "2": {
+       "file": "band-pond-wide-cloud-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 630
+      }
+     },
+     "line": {
+      "1": {
+       "file": "band-pond-wide-line-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 3914
+      },
+      "2": {
+       "file": "band-pond-wide-line-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 11924
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "band-pond-wide-grain-1x.webp",
+       "w": 1920,
+       "h": 300,
+       "bytes": 11454
+      },
+      "2": {
+       "file": "band-pond-wide-grain-2x.webp",
+       "w": 3840,
+       "h": 600,
+       "bytes": 29330
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 240,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "band-pond-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 248
+      },
+      "2": {
+       "file": "band-pond-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 352
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "band-pond-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 160
+      },
+      "2": {
+       "file": "band-pond-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 258
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "band-pond-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 120
+      },
+      "2": {
+       "file": "band-pond-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 210
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "band-pond-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 136
+      },
+      "2": {
+       "file": "band-pond-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 230
+      }
+     },
+     "cloud": {
+      "1": {
+       "file": "band-pond-narrow-cloud-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 218
+      },
+      "2": {
+       "file": "band-pond-narrow-cloud-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 320
+      }
+     },
+     "line": {
+      "1": {
+       "file": "band-pond-narrow-line-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 2566
+      },
+      "2": {
+       "file": "band-pond-narrow-line-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 6142
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "band-pond-narrow-grain-1x.webp",
+       "w": 720,
+       "h": 240,
+       "bytes": 5356
+      },
+      "2": {
+       "file": "band-pond-narrow-grain-2x.webp",
+       "w": 1440,
+       "h": 480,
+       "bytes": 13568
       }
      }
     }
