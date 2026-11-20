@@ -14,7 +14,8 @@ Every dependency, font, sound, image and data source is listed here with its lic
 
 ## Wallpapers and icons
 - All wallpapers in `assets/wallpapers` are original, generated from code and fixed seeds by `tools/wallpaper-gen` (GPL-3.0-or-later, part of this project). No third-party images; where a style was inspired by an owner-supplied mood image, that image was only looked at and never used as input (see `docs/DECISIONS.md` D-015).
-- The app icon is original, drawn by `tools/icon-gen/make_icon.py`.
+- The logo mark, app icon, favicon and social preview are original, drawn from code by `tools/brand-gen` (GPL-3.0-or-later, part of this project). The mark is a dot and a pill; it copies no existing logo, glyph set or typeface.
+- The wordmark is the product name set in Doto (SIL OFL 1.1, above), cut into one SVG circle per dot so it needs no font. Tagline and captions on the brand artwork are Geist and Geist Mono (SIL OFL 1.1, above) outlined to paths. The OFL allows this; the outlines are not a font.
 
 ## Rust crates (direct dependencies)
 | Crate | Licence |
@@ -41,7 +42,8 @@ Transitive crate licences are checked by `cargo audit` in CI; a full generated l
 | @types/react, @types/react-dom, @types/node | MIT |
 
 ## Build-time tools (not shipped)
-- Python packages used by `tools/wallpaper-gen` and `tools/icon-gen`: numpy (BSD-3-Clause), Pillow (MIT-CMU / HPND), opencv-python (Apache-2.0).
+- Python packages used by `tools/wallpaper-gen`: numpy (BSD-3-Clause), Pillow (MIT-CMU / HPND), opencv-python (Apache-2.0).
+- Python packages used by `tools/brand-gen`: Pillow (MIT-CMU / HPND), resvg-py (MIT, wraps the resvg renderer, MPL-2.0), fontTools (MIT), Brotli (MIT), uharfbuzz (Apache-2.0, wraps HarfBuzz, MIT).
 - fontTools (MIT) for font subsetting.
 
 ## Design references (not shipped, not in the repository)
@@ -99,6 +101,18 @@ Not reused from Agent Island: its cat and orb artwork, its sounds (UI SFX, CC0) 
 | `walkdir`, `same-file`, `winapi-util` (via `notify`) | directory traversal helpers | Unlicense OR MIT |
 
 `serde`, `serde_json`, `thiserror` and `windows` are already used by the shell crate and are unchanged. `serde_json` is built with its `preserve_order` feature so Connect keeps the key order of the user's `settings.json`.
+
+## Dock backend (`apps/desktop/src-tauri/dock/`)
+
+| Crate | Used for | Licence |
+| --- | --- | --- |
+| `png` 0.18 (and its `fdeflate`, `miniz_oxide`, `crc32fast`, `bitflags`) | encoding the 256 px icon cache and decoding the logo files of Store packages; already in the tree through `tauri` | MIT OR Apache-2.0 |
+| `notify` 8, `tempfile` (dev), `serde`, `serde_json`, `thiserror`, `windows` | as listed above | as listed above |
+
+No icon, art, code or table is taken from another dock, launcher or Start menu replacement. The bundled table of well-known apps
+(`dock/src/classify/known.rs`) lists app names, executable names and AppUserModelID prefixes, which are facts, written by hand for this
+project. The icons shown in the dock are extracted at run time from the user's own installed apps and stay on the user's machine
+(`%LOCALAPPDATA%\dev.dotdock.desktop\dock-icons`); none is shipped or committed.
 
 
 ## Website (`website/`)

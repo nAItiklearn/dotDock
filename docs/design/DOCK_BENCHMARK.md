@@ -8,10 +8,10 @@ material); dotDock's column is measured on this laptop (1920 x 1080 at 125 %, re
 ## 1. Feel (motion and response)
 | Behaviour | macOS Dock | CoolDock | dotDock target |
 |---|---|---|---|
-| Hover magnification | Smooth cosine falloff over about 3 icons; follows the cursor continuously | No magnification seen | Continuous falloff driven by cursor x every frame, transform only; user can turn it off |
+| Hover magnification | Smooth cosine falloff over about 3 icons; follows the cursor continuously | No magnification seen | Subtle (about 1.25x peak on apps, little or none on stack tiles), narrow falloff, transform only, icons drawn at peak size and scaled down so they never blur; user can turn it off (owner feedback 2026-11-20: less bulge, no smear) |
 | Settle after the cursor leaves | Eases back in about 0.2 s, no overshoot | n/a | Critically damped spring, no overshoot, under 250 ms |
 | Launch feedback | Icon bounces until the app opens | Not shown | One soft dot-matrix pulse plus the running dot appearing; no repeated bounce |
-| Folder or stack opening | Fan, grid or list popover, scales from the icon | Popover grid fades and lifts | Grid grows out of the stack tile (shared-element transition), under 220 ms |
+| Folder or stack opening | Fan, grid or list popover, scales from the icon | Popover grid fades and lifts | Instant: content fully drawn on the first frame, at most an 80 ms fade (owner feedback 2026-11-20) |
 | Popover close | Instant fade | Fade | Reverse of opening, under 160 ms; Esc and click-away both close |
 | Reorder by drag | Neighbours slide apart | Not shown | Neighbours slide on springs; drop lands without a jump |
 | Window minimise | Genie or scale into the icon | n/a (macOS handles it) | Native Windows animation kept; the dock only updates indicators |
@@ -21,6 +21,7 @@ material); dotDock's column is measured on this laptop (1920 x 1080 at 125 %, re
 |---|---|---|
 | Frame time during magnification and stack open | p95 under 8.3 ms (120 Hz safe), no dropped frame at 60 Hz | Chrome DevTools performance trace of the dock WebView, 10 s sweeps |
 | Hover-to-first-movement latency | Under one frame after the pointer event | Trace: input event to the next composited frame |
+| Stack / App Library open, input to visible (owner feedback 2026-11-20: "opens with a bit of pause") | p95 under 50 ms including the first open, under 16 ms repeat opens; under 100 ms at 6x CPU throttle | `performance.mark` at pointerdown and at the first painted frame, plus a trace |
 | Click-to-launch (dock action only) | `ShellExecute` called under 30 ms after the click | Timestamps in `boot.log`-style dock log |
 | Idle CPU with the dock visible | Under 0.3 % of one core | Task Manager / `GetProcessTimes` over 60 s |
 | Idle wake-ups | No timers while nothing changes; the clock tile ticks once a minute | ETW or a 60 s trace |
