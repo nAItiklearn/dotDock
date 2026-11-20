@@ -23,10 +23,3 @@ export function readPalette(root: HTMLElement = document.documentElement): Palet
   const tones = Object.fromEntries(Object.entries(TONE_VAR).map(([tone, name]) => [tone, read(name)])) as Record<Tone, string>;
   return { tones, lead: read("--accent"), off: read("--dot-off") };
 }
-
-/** Calls `listener` whenever applyTheme() rewrites the theme properties. Returns the unsubscribe function. */
-export function watchTheme(listener: () => void, root: HTMLElement = document.documentElement): () => void {
-  const observer = new MutationObserver(listener);
-  observer.observe(root, { attributes: true, attributeFilter: ["style", "data-theme"] });
-  return () => observer.disconnect();
-}

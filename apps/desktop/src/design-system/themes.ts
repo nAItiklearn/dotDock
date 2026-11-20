@@ -114,3 +114,10 @@ export function applyTheme(theme: Theme, root: HTMLElement = document.documentEl
 export function themeById(id: string): Theme {
   return BUILTIN_THEMES.find((t) => t.id === id) ?? OBSIDIAN;
 }
+
+/** Calls `listener` whenever applyTheme() rewrites the theme properties. Returns the unsubscribe function. */
+export function watchTheme(listener: () => void, root: HTMLElement = document.documentElement): () => void {
+  const observer = new MutationObserver(listener);
+  observer.observe(root, { attributes: true, attributeFilter: ["style", "data-theme"] });
+  return () => observer.disconnect();
+}
