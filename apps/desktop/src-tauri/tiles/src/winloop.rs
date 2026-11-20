@@ -88,10 +88,9 @@ mod tests {
         let wake = Arc::new(Event::new().unwrap());
         let woke = Arc::new(AtomicBool::new(false));
         let (w, f) = (wake.clone(), woke.clone());
-        let t = EventThread::spawn("test-loop", move |stop| loop {
-            match wait_any(&[stop.handle(), w.handle()]) {
-                Some(1) => f.store(true, Ordering::SeqCst),
-                _ => break,
+        let t = EventThread::spawn("test-loop", move |stop| {
+            while let Some(1) = wait_any(&[stop.handle(), w.handle()]) {
+                f.store(true, Ordering::SeqCst);
             }
         })
         .unwrap();

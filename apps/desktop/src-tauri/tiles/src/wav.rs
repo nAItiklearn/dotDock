@@ -68,14 +68,19 @@ pub fn header(channels: u16, sample_rate: u32, data_len: u32) -> [u8; HEADER_LEN
 
 /// Length in milliseconds of a canonical PCM WAV, from its header and total file size.
 pub fn duration_ms(file_head: &[u8], file_len: u64) -> Option<u64> {
-    if file_head.len() < HEADER_LEN || &file_head[0..4] != b"RIFF" || &file_head[8..12] != b"WAVE" || &file_head[36..40] != b"data" {
+    if file_head.len() < HEADER_LEN
+        || &file_head[0..4] != b"RIFF"
+        || &file_head[8..12] != b"WAVE"
+        || &file_head[36..40] != b"data"
+    {
         return None;
     }
     let byte_rate = u64::from(u32::from_le_bytes(file_head[28..32].try_into().ok()?));
     if byte_rate == 0 {
         return None;
     }
-    let data_len = u64::from(u32::from_le_bytes(file_head[40..44].try_into().ok()?)).min(file_len.saturating_sub(HEADER_LEN as u64));
+    let data_len = u64::from(u32::from_le_bytes(file_head[40..44].try_into().ok()?))
+        .min(file_len.saturating_sub(HEADER_LEN as u64));
     Some(data_len * 1000 / byte_rate)
 }
 

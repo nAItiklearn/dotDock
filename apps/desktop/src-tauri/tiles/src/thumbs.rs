@@ -10,8 +10,8 @@ use std::sync::Mutex;
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::SIZE;
 use windows::Win32::Graphics::Gdi::{
-    DeleteObject, GetDC, GetDIBits, GetObjectW, ReleaseDC, BITMAP, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
-    HGDIOBJ,
+    DeleteObject, GetDC, GetDIBits, GetObjectW, ReleaseDC, BITMAP, BITMAPINFO, BITMAPINFOHEADER, BI_RGB,
+    DIB_RGB_COLORS, HGDIOBJ,
 };
 use windows::Win32::UI::Shell::{IShellItemImageFactory, SHCreateItemFromParsingName, SIIGBF_RESIZETOFIT};
 
@@ -47,7 +47,7 @@ impl Thumbs {
 
 /// Reverts premultiplied BGRA from GDI into straight RGBA.
 fn bgra_premultiplied_to_rgba(pixels: &mut [u8]) {
-    for p in pixels.chunks_exact_mut(4) {
+    for p in pixels.as_chunks_mut::<4>().0 {
         let a = u32::from(p[3]);
         let (b, g, r) = (u32::from(p[0]), u32::from(p[1]), u32::from(p[2]));
         let un = |c: u32| if a == 0 || a == 255 { c as u8 } else { ((c * 255 + a / 2) / a).min(255) as u8 };
@@ -68,7 +68,9 @@ fn render(path: &Path, size: u32) -> Result<String, String> {
             .GetImage(SIZE { cx: size as i32, cy: size as i32 }, SIIGBF_RESIZETOFIT)
             .map_err(|e| format!("Windows has no thumbnail for that file: {e}"))?;
         let mut info = BITMAP::default();
-        if GetObjectW(HGDIOBJ(bitmap.0), std::mem::size_of::<BITMAP>() as i32, Some((&mut info as *mut BITMAP).cast())) == 0 {
+        if GetObjectW(HGDIOBJ(bitmap.0), std::mem::size_of::<BITMAP>() as i32, Some((&mut info as *mut BITMAP).cast()))
+            == 0
+        {
             let _ = DeleteObject(HGDIOBJ(bitmap.0));
             return Err("Windows returned an unreadable thumbnail".to_owned());
         }

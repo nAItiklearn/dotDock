@@ -20,9 +20,9 @@ const TOASTS_ENABLED_VALUE: &str = "NOC_GLOBAL_SETTING_TOASTS_ENABLED";
 
 /// Interprets the night light state blob; None when its layout is not the one we know.
 fn parse_night_light(blob: &[u8]) -> Option<bool> {
-    match blob.get(NIGHT_LIGHT_MARKER_AT)? {
-        &NIGHT_LIGHT_ON => Some(true),
-        &NIGHT_LIGHT_OFF => Some(false),
+    match *blob.get(NIGHT_LIGHT_MARKER_AT)? {
+        NIGHT_LIGHT_ON => Some(true),
+        NIGHT_LIGHT_OFF => Some(false),
         _ => None,
     }
 }

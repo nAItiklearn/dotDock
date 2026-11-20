@@ -8,8 +8,8 @@
 //! Not understood and skipped: RDATE, BYSETPOS, BYHOUR and other sub-day rules, VTODO and VJOURNAL.
 
 use super::civil::{
-    days_from_civil, days_in_month, fields_from_wall, nth_weekday_of_month, wall_from_fields, weekday, Fields, MS_PER_DAY,
-    MS_PER_MINUTE,
+    days_from_civil, days_in_month, fields_from_wall, nth_weekday_of_month, wall_from_fields, weekday, Fields,
+    MS_PER_DAY, MS_PER_MINUTE,
 };
 use super::meeting;
 use crate::protocol::CalendarEvent;
@@ -285,7 +285,10 @@ fn parse_rule(value: &str) -> Option<Rule> {
             }
             "INTERVAL" => rule.interval = val.parse::<u32>().ok().filter(|n| *n > 0)?,
             "COUNT" => rule.count = Some(val.parse().ok()?),
-            "UNTIL" => rule.until = Some(parse_stamp(val, None, false)?.wall_ms + if val.len() == 8 { MS_PER_DAY - 1 } else { 0 }),
+            "UNTIL" => {
+                rule.until =
+                    Some(parse_stamp(val, None, false)?.wall_ms + if val.len() == 8 { MS_PER_DAY - 1 } else { 0 })
+            }
             "BYDAY" => {
                 for d in val.split(',') {
                     let d = d.trim().to_ascii_uppercase();
@@ -328,8 +331,11 @@ fn expand(start_wall: i64, rule: &Rule, limit_wall: i64) -> Vec<i64> {
             }
             Freq::Weekly => {
                 let week_start = start_day - i64::from(weekday(start_day)) + step * 7;
-                let wanted: Vec<u32> =
-                    if rule.by_day.is_empty() { vec![weekday(start_day)] } else { rule.by_day.iter().map(|(_, w)| *w).collect() };
+                let wanted: Vec<u32> = if rule.by_day.is_empty() {
+                    vec![weekday(start_day)]
+                } else {
+                    rule.by_day.iter().map(|(_, w)| *w).collect()
+                };
                 days.extend(wanted.into_iter().map(|w| week_start + i64::from(w)));
             }
             Freq::Monthly | Freq::Yearly => {
@@ -348,7 +354,11 @@ fn expand(start_wall: i64, rule: &Rule, limit_wall: i64) -> Vec<i64> {
                         for (ordinal, wd) in &rule.by_day {
                             if *ordinal == 0 {
                                 let first = days_from_civil(year, month, 1);
-                                days.extend((0..i64::from(days_in_month(year, month))).map(|d| first + d).filter(|d| weekday(*d) == *wd));
+                                days.extend(
+                                    (0..i64::from(days_in_month(year, month)))
+                                        .map(|d| first + d)
+                                        .filter(|d| weekday(*d) == *wd),
+                                );
                             } else if let Some(d) = nth_weekday_of_month(year, month, *wd, *ordinal) {
                                 days.push(d);
                             }
@@ -444,7 +454,11 @@ fn build_event(props: &[Prop]) -> Option<IcsEvent> {
         exdates: props
             .iter()
             .filter(|p| p.name == "EXDATE")
-            .flat_map(|p| p.value.split(',').filter_map(|v| parse_stamp(v, p.param("TZID"), p.param("VALUE").is_some_and(|x| x == "DATE"))))
+            .flat_map(|p| {
+                p.value
+                    .split(',')
+                    .filter_map(|v| parse_stamp(v, p.param("TZID"), p.param("VALUE").is_some_and(|x| x == "DATE")))
+            })
             .collect(),
         recurrence_id: get("RECURRENCE-ID").and_then(stamp_of),
         cancelled: get("STATUS").is_some_and(|p| p.value.eq_ignore_ascii_case("CANCELLED")),
@@ -550,11 +564,18 @@ impl Calendar {
                 }
                 let Some(start) = self.instant(&e.start, wall, local) else { continue };
                 let end = start + length.max(0);
-                let overlaps = if end > start { end > from_ms && start < to_ms } else { start >= from_ms && start < to_ms };
+                let overlaps =
+                    if end > start { end > from_ms && start < to_ms } else { start >= from_ms && start < to_ms };
                 if !overlaps {
                     continue;
                 }
-                let texts = e.meeting_urls.iter().map(String::as_str).chain(e.location.as_deref()).chain(e.url.as_deref()).chain(e.description.as_deref());
+                let texts = e
+                    .meeting_urls
+                    .iter()
+                    .map(String::as_str)
+                    .chain(e.location.as_deref())
+                    .chain(e.url.as_deref())
+                    .chain(e.description.as_deref());
                 out.push(CalendarEvent {
                     id: format!("{}@{start}", e.uid),
                     title: e.summary.clone(),
@@ -567,7 +588,9 @@ impl Calendar {
                 });
             }
         }
-        out.sort_by(|a, b| a.start_ms.cmp(&b.start_ms).then(a.end_ms.cmp(&b.end_ms)).then_with(|| a.title.cmp(&b.title)));
+        out.sort_by(|a, b| {
+            a.start_ms.cmp(&b.start_ms).then(a.end_ms.cmp(&b.end_ms)).then_with(|| a.title.cmp(&b.title))
+        });
         out
     }
 }
@@ -607,7 +630,9 @@ mod tests {
 
     #[test]
     fn floating_times_are_the_users_local_time() {
-        let cal = parse(&wrap("BEGIN:VEVENT\r\nUID:a\r\nSUMMARY:Lunch\r\nDTSTART:20261120T120000\r\nDURATION:PT1H\r\nEND:VEVENT\r\n"));
+        let cal = parse(&wrap(
+            "BEGIN:VEVENT\r\nUID:a\r\nSUMMARY:Lunch\r\nDTSTART:20261120T120000\r\nDURATION:PT1H\r\nEND:VEVENT\r\n",
+        ));
         let e = &day_window(&cal, 2026, 11, 20)[0];
         assert_eq!(e.start_ms, at(2026, 11, 20, 11, 0), "12:00 at UTC+1 is 11:00 UTC");
         assert_eq!(e.end_ms - e.start_ms, 3_600_000);
@@ -639,7 +664,8 @@ mod tests {
         ));
         let from = at(2026, 11, 1, 0, 0);
         let all = cal.between(from, from + 60 * MS_PER_DAY, &plus_one);
-        let days: Vec<_> = all.iter().map(|e| super::super::civil::civil_from_days(e.start_ms.div_euclid(MS_PER_DAY))).collect();
+        let days: Vec<_> =
+            all.iter().map(|e| super::super::civil::civil_from_days(e.start_ms.div_euclid(MS_PER_DAY))).collect();
         // Mon 2 Nov, Wed 4 Nov, then two weeks on: Mon 16, Wed 18, Mon 30 Nov (COUNT=5).
         assert_eq!(days, [(2026, 11, 2), (2026, 11, 4), (2026, 11, 16), (2026, 11, 18), (2026, 11, 30)]);
     }
@@ -653,10 +679,23 @@ mod tests {
         let board = cal.between(at(2026, 11, 1, 0, 0), at(2026, 12, 1, 0, 0), &plus_one);
         let board: Vec<_> = board.iter().filter(|e| e.title == "Board").collect();
         assert_eq!(board.len(), 1);
-        assert_eq!(super::super::civil::civil_from_days(board[0].start_ms.div_euclid(MS_PER_DAY)), (2026, 11, 10), "second Tuesday of November 2026");
+        assert_eq!(
+            super::super::civil::civil_from_days(board[0].start_ms.div_euclid(MS_PER_DAY)),
+            (2026, 11, 10),
+            "second Tuesday of November 2026"
+        );
         // A 29 February birthday only occurs in leap years.
-        assert!(cal.between(at(2026, 2, 28, 0, 0), at(2026, 3, 2, 0, 0), &plus_one).iter().all(|e| e.title != "Birthday"));
-        assert_eq!(cal.between(at(2028, 2, 28, 0, 0), at(2028, 3, 2, 0, 0), &plus_one).iter().filter(|e| e.title == "Birthday").count(), 1);
+        assert!(cal
+            .between(at(2026, 2, 28, 0, 0), at(2026, 3, 2, 0, 0), &plus_one)
+            .iter()
+            .all(|e| e.title != "Birthday"));
+        assert_eq!(
+            cal.between(at(2028, 2, 28, 0, 0), at(2028, 3, 2, 0, 0), &plus_one)
+                .iter()
+                .filter(|e| e.title == "Birthday")
+                .count(),
+            1
+        );
     }
 
     #[test]
@@ -666,16 +705,27 @@ mod tests {
              BEGIN:VEVENT\r\nUID:d\r\nSUMMARY:Daily (moved)\r\nRECURRENCE-ID:20261119T080000Z\r\nDTSTART:20261119T150000Z\r\nEND:VEVENT\r\n",
         ));
         let from = at(2026, 11, 15, 0, 0);
-        let titles: Vec<_> = cal.between(from, from + 10 * MS_PER_DAY, &plus_one).iter().map(|e| (e.title.clone(), fields_from_wall(e.start_ms).day, fields_from_wall(e.start_ms).hour)).collect();
+        let titles: Vec<_> = cal
+            .between(from, from + 10 * MS_PER_DAY, &plus_one)
+            .iter()
+            .map(|e| (e.title.clone(), fields_from_wall(e.start_ms).day, fields_from_wall(e.start_ms).hour))
+            .collect();
         assert_eq!(
             titles,
-            [("Daily".to_owned(), 16, 8), ("Daily".to_owned(), 17, 8), ("Daily (moved)".to_owned(), 19, 15), ("Daily".to_owned(), 20, 8)]
+            [
+                ("Daily".to_owned(), 16, 8),
+                ("Daily".to_owned(), 17, 8),
+                ("Daily (moved)".to_owned(), 19, 15),
+                ("Daily".to_owned(), 20, 8)
+            ]
         );
     }
 
     #[test]
     fn cancelled_events_are_hidden() {
-        let cal = parse(&wrap("BEGIN:VEVENT\r\nUID:a\r\nSUMMARY:Gone\r\nSTATUS:CANCELLED\r\nDTSTART:20261120T090000Z\r\nEND:VEVENT\r\n"));
+        let cal = parse(&wrap(
+            "BEGIN:VEVENT\r\nUID:a\r\nSUMMARY:Gone\r\nSTATUS:CANCELLED\r\nDTSTART:20261120T090000Z\r\nEND:VEVENT\r\n",
+        ));
         assert!(day_window(&cal, 2026, 11, 20).is_empty());
     }
 
@@ -684,7 +734,9 @@ mod tests {
         let zone = "BEGIN:VTIMEZONE\r\nTZID:Europe/Berlin\r\n\
             BEGIN:STANDARD\r\nDTSTART:19701025T030000\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+0100\r\nRRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r\nEND:STANDARD\r\n\
             BEGIN:DAYLIGHT\r\nDTSTART:19700329T020000\r\nTZOFFSETFROM:+0100\r\nTZOFFSETTO:+0200\r\nRRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\n";
-        let ev = |date: &str| format!("BEGIN:VEVENT\r\nUID:{date}\r\nSUMMARY:Call\r\nDTSTART;TZID=Europe/Berlin:{date}T090000\r\nEND:VEVENT\r\n");
+        let ev = |date: &str| {
+            format!("BEGIN:VEVENT\r\nUID:{date}\r\nSUMMARY:Call\r\nDTSTART;TZID=Europe/Berlin:{date}T090000\r\nEND:VEVENT\r\n")
+        };
         let cal = parse(&wrap(&format!("{zone}{}{}", ev("20260715"), ev("20261120"))));
         let from = at(2026, 1, 1, 0, 0);
         let events = cal.between(from, from + 365 * MS_PER_DAY, &plus_one);

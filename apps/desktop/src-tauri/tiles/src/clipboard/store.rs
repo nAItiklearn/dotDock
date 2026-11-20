@@ -47,7 +47,6 @@ pub struct Entry {
     thumbnail: Option<String>,
 }
 
-#[derive(Default)]
 pub struct Store {
     /// Newest first.
     entries: Vec<Entry>,
@@ -70,6 +69,12 @@ fn make_thumbnail(dib: &[u8]) -> Option<String> {
     let rgba = image::dib_to_rgba(&info, dib);
     let (small, w, h) = image::thumbnail(&rgba, info.width, info.height, THUMB_SIDE);
     image::encode_png(&small, w, h).ok().map(|png| image::png_data_url(&png))
+}
+
+impl Default for Store {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Store {

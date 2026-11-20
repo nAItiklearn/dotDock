@@ -68,7 +68,14 @@ pub fn fields_from_wall(wall_ms: i64) -> Fields {
     let days = wall_ms.div_euclid(MS_PER_DAY);
     let secs = wall_ms.rem_euclid(MS_PER_DAY) / 1000;
     let (year, month, day) = civil_from_days(days);
-    Fields { year, month, day, hour: (secs / 3600) as u32, minute: (secs % 3600 / 60) as u32, second: (secs % 60) as u32 }
+    Fields {
+        year,
+        month,
+        day,
+        hour: (secs / 3600) as u32,
+        minute: (secs % 3600 / 60) as u32,
+        second: (secs % 60) as u32,
+    }
 }
 
 /// The day (since 1970-01-01) of the `nth` occurrence of `weekday` in a month. Positive `nth` counts from the

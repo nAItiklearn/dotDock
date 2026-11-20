@@ -94,7 +94,7 @@ pub fn dib_to_rgba(dib: &Dib, bytes: &[u8]) -> Vec<u8> {
 
 /// Converts a top-down BGRA buffer (what GDI returns) to opaque RGBA in place.
 pub fn bgra_to_rgba(pixels: &mut [u8]) {
-    for p in pixels.chunks_exact_mut(RGBA) {
+    for p in pixels.as_chunks_mut::<RGBA>().0 {
         p.swap(0, 2);
         p[3] = 255;
     }

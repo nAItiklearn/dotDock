@@ -184,7 +184,7 @@ impl Inner {
             .and_then(|sealed| vault::unprotect(&sealed).ok())
             .and_then(|json| serde_json::from_slice(&json).ok())
             .map(Store::from_saved)
-            .unwrap_or_else(Store::new)
+            .unwrap_or_default()
     }
 
     /// The clipboard changed: record it unless its owner asked not to be recorded.

@@ -188,7 +188,8 @@ fn grab_window(hwnd: HWND) -> Result<(Vec<u8>, Area), String> {
         })?;
         // Crop away the invisible resize border that Windows adds around a framed window.
         let crop = Area { x: visible.x - full.x, y: visible.y - full.y, w: visible.w, h: visible.h };
-        let crop = clamp_to_desktop(crop, Area { x: 0, y: 0, w: full.w, h: full.h }).ok_or("The window has no visible area")?;
+        let crop = clamp_to_desktop(crop, Area { x: 0, y: 0, w: full.w, h: full.h })
+            .ok_or("The window has no visible area")?;
         let mut out = Vec::with_capacity(crop.w as usize * crop.h as usize * 4);
         for row in crop.y..crop.y + crop.h {
             let start = (row as usize * full.w as usize + crop.x as usize) * 4;
@@ -211,7 +212,12 @@ fn free_name(folder: &Path, stamp: &str) -> PathBuf {
 }
 
 /// Takes a screenshot and saves it in `folder`. Returns the file.
-pub fn capture(folder: &Path, mode: CaptureMode, hwnd: Option<&str>, rect: Option<PixelRect>) -> Result<PathBuf, String> {
+pub fn capture(
+    folder: &Path,
+    mode: CaptureMode,
+    hwnd: Option<&str>,
+    rect: Option<PixelRect>,
+) -> Result<PathBuf, String> {
     let _physical = PhysicalPixels::begin();
     let (mut pixels, area) = match mode {
         CaptureMode::Screen => {
@@ -266,13 +272,15 @@ mod tests {
     #[test]
     fn a_region_capture_saves_a_real_png_of_the_screen() {
         let dir = tempfile::tempdir().unwrap();
-        let path = capture(dir.path(), CaptureMode::Region, None, Some(PixelRect { x: 0, y: 0, w: 64, h: 48 })).expect("capture");
-        let mut reader = png::Decoder::new(fs::File::open(&path).unwrap()).read_info().unwrap();
+        let path = capture(dir.path(), CaptureMode::Region, None, Some(PixelRect { x: 0, y: 0, w: 64, h: 48 }))
+            .expect("capture");
+        let mut reader =
+            png::Decoder::new(std::io::BufReader::new(fs::File::open(&path).unwrap())).read_info().unwrap();
         let info = reader.info();
         assert_eq!((info.width, info.height), (64, 48));
         let mut buf = vec![0; reader.output_buffer_size().unwrap()];
         reader.next_frame(&mut buf).unwrap();
-        assert!(buf.chunks_exact(4).all(|p| p[3] == 255), "screenshots are opaque");
+        assert!(buf.as_chunks::<4>().0.iter().all(|p| p[3] == 255), "screenshots are opaque");
     }
 
     #[test]

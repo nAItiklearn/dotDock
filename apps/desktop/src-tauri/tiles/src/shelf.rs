@@ -50,7 +50,10 @@ impl Shelf {
                     ShelfItem {
                         id: s.id.clone(),
                         path: s.path.clone(),
-                        name: path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| s.path.clone()),
+                        name: path
+                            .file_name()
+                            .map(|n| n.to_string_lossy().into_owned())
+                            .unwrap_or_else(|| s.path.clone()),
                         added_ms: s.added_ms,
                         exists: path.exists(),
                         is_dir: path.is_dir(),
@@ -153,8 +156,8 @@ mod tests {
         let (shelf, rx) = shelf_in(dir.path());
         let a = file(dir.path(), "a.txt");
         let b = file(dir.path(), "b.txt");
-        assert_eq!(shelf.add(&[a.clone()]).unwrap(), 1);
-        assert_eq!(shelf.add(&[b.clone()]).unwrap(), 1);
+        assert_eq!(shelf.add(std::slice::from_ref(&a)).unwrap(), 1);
+        assert_eq!(shelf.add(std::slice::from_ref(&b)).unwrap(), 1);
         let names: Vec<_> = shelf.state().items.iter().map(|i| i.name.clone()).collect();
         assert_eq!(names, ["b.txt", "a.txt"]);
         assert!(matches!(rx.try_iter().last(), Some(TileData::Shelf(_))));
@@ -190,7 +193,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let (shelf, _rx) = shelf_in(dir.path());
         let a = file(dir.path(), "a.txt");
-        shelf.add(&[a.clone()]).unwrap();
+        shelf.add(std::slice::from_ref(&a)).unwrap();
         fs::remove_file(&a).unwrap();
         let state = shelf.state();
         assert_eq!(state.items.len(), 1);
@@ -209,6 +212,6 @@ mod tests {
         assert_eq!(shelf.state().items.len(), MAX_ITEMS - 1);
         shelf.clear().unwrap();
         assert!(shelf.state().items.is_empty());
-        assert!(shelf.contains(&paths[0]) == false);
+        assert!(!shelf.contains(&paths[0]));
     }
 }

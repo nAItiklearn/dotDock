@@ -45,7 +45,9 @@ fn classify(url: &str) -> Option<MeetingService> {
     if host == "meet.google.com" && path.len() > 4 {
         return Some(MeetingService::Meet);
     }
-    if host_is(&host, "webex.com") && ["/meet/", "/join/", "/j.php", "/webappng"].iter().any(|p| path.starts_with(p) || path.contains(p)) {
+    if host_is(&host, "webex.com")
+        && ["/meet/", "/join/", "/j.php", "/webappng"].iter().any(|p| path.starts_with(p) || path.contains(p))
+    {
         return Some(MeetingService::Webex);
     }
     let others = ["whereby.com", "meet.jit.si", "gotomeet.me", "gotomeeting.com", "bluejeans.com", "chime.aws"];
@@ -59,7 +61,8 @@ fn candidates(text: &str) -> Vec<&str> {
     loop {
         // ASCII lower-casing keeps byte offsets, so positions found here index `rest` too.
         let lower = rest.to_ascii_lowercase();
-        let Some(at) = ["https://", "msteams:", "zoommtg:", "zoomus:"].iter().filter_map(|s| lower.find(s)).min() else {
+        let Some(at) = ["https://", "msteams:", "zoommtg:", "zoomus:"].iter().filter_map(|s| lower.find(s)).min()
+        else {
             break;
         };
         let tail = &rest[at..];
@@ -129,7 +132,8 @@ mod tests {
 
     #[test]
     fn the_first_field_with_a_link_wins() {
-        let link = find_join_link(["Room 4", "https://meet.google.com/aaa-bbbb-ccc and https://zoom.us/j/123456789"]).unwrap();
+        let link =
+            find_join_link(["Room 4", "https://meet.google.com/aaa-bbbb-ccc and https://zoom.us/j/123456789"]).unwrap();
         assert_eq!(link.service, MeetingService::Meet);
     }
 

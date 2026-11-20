@@ -89,7 +89,9 @@ pub fn link(channel: Channel, action: ContactAction, value: &str) -> Result<Stri
         (Phone, Video) => unsupported("A video call over a phone number"),
         (Teams, Message) => Ok(format!("msteams://teams.microsoft.com/l/chat/0/0?users={}", encode(value))),
         (Teams, Call) => Ok(format!("msteams://teams.microsoft.com/l/call/0/0?users={}", encode(value))),
-        (Teams, Video) => Ok(format!("msteams://teams.microsoft.com/l/call/0/0?users={}&withVideo=true", encode(value))),
+        (Teams, Video) => {
+            Ok(format!("msteams://teams.microsoft.com/l/call/0/0?users={}&withVideo=true", encode(value)))
+        }
         (Zoom, Call | Video) => Ok(format!("zoommtg://zoom.us/join?confno={value}")),
         (Zoom, Message) => unsupported("Messaging in Zoom"),
         // WhatsApp has no public call link; its chat opens and the call button is one tap away.
@@ -222,9 +224,18 @@ mod tests {
             link(Channel::Teams, ContactAction::Video, "ada@example.com").unwrap(),
             "msteams://teams.microsoft.com/l/call/0/0?users=ada%40example.com&withVideo=true"
         );
-        assert_eq!(link(Channel::Zoom, ContactAction::Video, "1234567890").unwrap(), "zoommtg://zoom.us/join?confno=1234567890");
-        assert_eq!(link(Channel::Whatsapp, ContactAction::Message, "+15551234567").unwrap(), "whatsapp://send?phone=15551234567");
-        assert_eq!(link(Channel::Discord, ContactAction::Message, "123456789012345678").unwrap(), "discord://-/users/123456789012345678");
+        assert_eq!(
+            link(Channel::Zoom, ContactAction::Video, "1234567890").unwrap(),
+            "zoommtg://zoom.us/join?confno=1234567890"
+        );
+        assert_eq!(
+            link(Channel::Whatsapp, ContactAction::Message, "+15551234567").unwrap(),
+            "whatsapp://send?phone=15551234567"
+        );
+        assert_eq!(
+            link(Channel::Discord, ContactAction::Message, "123456789012345678").unwrap(),
+            "discord://-/users/123456789012345678"
+        );
         assert_eq!(link(Channel::Email, ContactAction::Message, "ada@example.com").unwrap(), "mailto:ada@example.com");
     }
 

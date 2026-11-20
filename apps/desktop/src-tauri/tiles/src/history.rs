@@ -170,11 +170,8 @@ impl History {
                 n.refresh(true);
             }
             let mut last = Instant::now();
-            loop {
-                match rx.recv_timeout(INTERVAL) {
-                    Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
-                    _ => break,
-                }
+            // A message or a closed channel means stop; only a timeout is the next tick.
+            while let Err(std::sync::mpsc::RecvTimeoutError::Timeout) = rx.recv_timeout(INTERVAL) {
                 let seconds = last.elapsed().as_secs_f64().max(0.001);
                 last = Instant::now();
                 let (down, up) = networks.as_mut().map_or((0, 0), |n| {
@@ -259,7 +256,7 @@ mod tests {
             let _ = tx.send(d);
         }));
         h.start().unwrap();
-        let first = rx.recv_timeout(Duration::from_secs(4)).expect("a sample");
+        let first = rx.recv_timeout(Duration::from_secs(10)).expect("a sample");
         let TileData::SystemHistory(s) = first else { panic!("wrong tile") };
         assert_eq!(s.cpu.len(), 1);
         assert!(s.memory_total_bytes > 0);

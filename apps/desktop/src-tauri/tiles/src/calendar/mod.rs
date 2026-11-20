@@ -32,7 +32,8 @@ const FILE_QUIET: Duration = Duration::from_millis(400);
 const MIN_SLEEP: Duration = Duration::from_secs(1);
 /// `.ics` files bigger than this are not calendars.
 const MAX_ICS_BYTES: u64 = 20 * 1024 * 1024;
-const NO_EVENTS_HINT: &str = "Windows has no calendar events to show. Add an account in Windows Settings, or choose an .ics file.";
+const NO_EVENTS_HINT: &str =
+    "Windows has no calendar events to show. Add an account in Windows Settings, or choose an .ics file.";
 
 fn civil_of(f: Fields) -> Civil {
     Civil { year: f.year, month: f.month, day: f.day, hour: f.hour, minute: f.minute, second: f.second }
@@ -67,12 +68,18 @@ fn read_ics(path: &Path) -> Result<ics::Calendar, String> {
 fn compose(settings: &Settings, cached: &mut Option<(PathBuf, SystemTime, u64, ics::Calendar)>) -> CalendarState {
     let now = now_ms();
     let (Some(from), Some(to)) = (midnight(now, 0), midnight(now, DAYS_AHEAD)) else {
-        return CalendarState { source: CalendarSource::None, problem: Some("Windows would not give the local time".into()), ics_path: None, events: Vec::new() };
+        return CalendarState {
+            source: CalendarSource::None,
+            problem: Some("Windows would not give the local time".into()),
+            ics_path: None,
+            events: Vec::new(),
+        };
     };
     if let Some(path) = settings.get().calendar_ics_path {
         let file = PathBuf::from(&path);
         let stamp = std::fs::metadata(&file).and_then(|m| Ok((m.modified()?, m.len()))).ok();
-        let fresh = matches!((&cached, stamp), (Some((p, t, l, _)), Some((mt, ml))) if *p == file && *t == mt && *l == ml);
+        let fresh =
+            matches!((&cached, stamp), (Some((p, t, l, _)), Some((mt, ml))) if *p == file && *t == mt && *l == ml);
         if !fresh {
             *cached = read_ics(&file).ok().zip(stamp).map(|(cal, (t, l))| (file.clone(), t, l, cal));
         }
@@ -103,7 +110,11 @@ fn compose(settings: &Settings, cached: &mut Option<(PathBuf, SystemTime, u64, i
 
 /// How long the worker may sleep: until midnight, the end of the running or next event, or the refresh limit.
 fn sleep_for(state: &CalendarState, now: i64) -> Duration {
-    let next_boundary = midnight(now, 1).into_iter().chain(state.events.iter().flat_map(|e| [e.start_ms, e.end_ms])).filter(|t| *t > now).min();
+    let next_boundary = midnight(now, 1)
+        .into_iter()
+        .chain(state.events.iter().flat_map(|e| [e.start_ms, e.end_ms]))
+        .filter(|t| *t > now)
+        .min();
     let until = next_boundary.map(|t| Duration::from_millis((t - now) as u64 + 500)).unwrap_or(REFRESH_MAX);
     until.min(REFRESH_MAX).max(MIN_SLEEP)
 }
@@ -227,9 +238,19 @@ pub fn next_event(events: &[CalendarEvent], now: i64) -> Option<&CalendarEvent> 
 mod tests {
     use super::*;
     use crate::protocol::MeetingService;
+    use civil::wall_from_fields;
 
     fn ev(start: i64, end: i64) -> CalendarEvent {
-        CalendarEvent { id: start.to_string(), title: "x".into(), start_ms: start, end_ms: end, all_day: false, location: None, calendar: None, join: None }
+        CalendarEvent {
+            id: start.to_string(),
+            title: "x".into(),
+            start_ms: start,
+            end_ms: end,
+            all_day: false,
+            location: None,
+            calendar: None,
+            join: None,
+        }
     }
 
     #[test]
@@ -243,7 +264,12 @@ mod tests {
     #[test]
     fn the_worker_sleeps_until_the_next_boundary_but_never_longer_than_the_limit() {
         let now = now_ms();
-        let soon = CalendarState { source: CalendarSource::IcsFile, problem: None, ics_path: None, events: vec![ev(now + 30_000, now + 90_000)] };
+        let soon = CalendarState {
+            source: CalendarSource::IcsFile,
+            problem: None,
+            ics_path: None,
+            events: vec![ev(now + 30_000, now + 90_000)],
+        };
         let d = sleep_for(&soon, now);
         assert!(d >= Duration::from_secs(29) && d <= Duration::from_secs(32), "{d:?}");
         let empty = CalendarState { events: vec![], ..soon };
@@ -257,7 +283,10 @@ mod tests {
         assert!(join("file:///C:/Windows/System32/calc.exe").is_err());
         assert!(join("https://evil.example/?next=https://zoom.us/j/123456789").is_err());
         // The recogniser accepts these; opening them is not exercised here.
-        assert_eq!(meeting::find_join_link(["https://zoom.us/j/123456789"]).map(|l| l.service), Some(MeetingService::Zoom));
+        assert_eq!(
+            meeting::find_join_link(["https://zoom.us/j/123456789"]).map(|l| l.service),
+            Some(MeetingService::Zoom)
+        );
     }
 
     #[test]
