@@ -502,32 +502,17 @@ button {
 .footer__list a:hover {
   color: var(--text);
 }
-/* The wordmark stands over a wallpaper that fades in from the page colour. */
+/* The wordmark stands in the sky of a dotted lake; the scene is the footer's floor. */
 .footer__stage {
   position: relative;
   overflow: hidden;
-  height: clamp(240px, 40vw, 560px);
-}
-.footer__wp {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 70%;
-  display: none;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 60%);
-  mask-image: linear-gradient(to bottom, transparent, #000 60%);
-}
-html[data-theme="obsidian"] .footer__wp[data-for="obsidian"],
-html[data-theme="paper"] .footer__wp[data-for="paper"],
-html[data-theme="aurum"] .footer__wp[data-for="aurum"] {
-  display: block;
+  contain: paint;
 }
 .footer__mark {
   position: absolute;
-  /* Whole word visible: sized so seven dot-font characters fit the width, lifted off the bottom edge. */
-  inset: auto 0 0.12em;
+  z-index: 1;
+  /* Whole word visible: sized so seven dot-font characters fit the width, lifted off the top edge. */
+  inset: clamp(8px, 2.4vw, 56px) 0 auto;
   text-align: center;
   font-family: var(--font-dot);
   font-variation-settings: "ROND" 100;

@@ -1,5 +1,5 @@
 /*
- * The desktop shot: screen frame, island, dock and the decorative objects beside it. Sizes are
+ * The desktop shot: screen frame, island and dock. Sizes are
  * fractions of the screen width (cqw), so the shot scales as one piece. The widgets inside use the
  * stage rules in widgets.css.
  */
@@ -207,53 +207,6 @@
   }
   .desk__app:nth-child(n + 5) {
     display: none;
-  }
-}
-
-/* Objects beside the screen: a halftone sphere and a segmented ring, both drawn in code. */
-.desk__sphere {
-  position: absolute;
-  z-index: 3;
-  left: -6.5%;
-  bottom: -13%;
-  width: clamp(100px, 19%, 300px);
-  aspect-ratio: 1;
-  background: var(--text);
-  -webkit-mask: var(--sphere) center / contain no-repeat;
-  mask: var(--sphere) center / contain no-repeat;
-  pointer-events: none;
-}
-.desk__ring {
-  position: absolute;
-  z-index: 3;
-  right: -3.5%;
-  top: -11%;
-  width: clamp(90px, 17%, 270px);
-  fill: none;
-  stroke-width: 11;
-  stroke-linecap: round;
-  pointer-events: none;
-}
-.desk__ring path {
-  stroke: var(--text);
-}
-.desk__ring .desk__ring-b {
-  stroke: var(--accent);
-}
-.desk__ring .desk__ring-d {
-  stroke-width: 6;
-  opacity: 0.55;
-}
-@media (max-width: 959px) {
-  .desk__sphere {
-    left: -3%;
-    bottom: -5%;
-    width: 30%;
-  }
-  .desk__ring {
-    right: -2%;
-    top: -7%;
-    width: 24%;
   }
 }
 

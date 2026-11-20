@@ -14,11 +14,9 @@ import { WALLPAPERS } from "../lib/wallpapers";
 interface Props {
   /** "a" puts the clock top-left; "b" mirrors the whole layout. */
   layout?: "a" | "b";
-  /** Draw the decorative dot sphere and ring beside the screen. */
-  objects?: boolean;
   class?: string;
 }
-const { layout = "a", objects = false, class: className = "" } = Astro.props;
+const { layout = "a", class: className = "" } = Astro.props;
 
 const COLS = 12;
 /** x, y, w, h on the 12-column desktop grid; `small` is the [x, y, w, h] on narrow screens, or null to hide. */
@@ -63,25 +61,9 @@ function glyphPaths(lit: readonly number[]): { on: string; off: string } {
   return { on, off };
 }
 
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const sphereUrl = `url(${base}/art/sphere.svg)`;
 ---
 
 <div class={`desk ${className}`.trim()} data-layout={layout}>
-  {
-    objects && (
-      <>
-        <span class="desk__sphere" style={`--sphere:${sphereUrl}`} aria-hidden="true" />
-        <svg class="desk__ring" viewBox="0 0 100 100" aria-hidden="true">
-          <path class="desk__ring-a" d="M50 8a42 42 0 0 1 36.4 21" />
-          <path class="desk__ring-b" d="M91 56a42 42 0 0 1-27 34.5" />
-          <path class="desk__ring-c" d="M37 91.5A42 42 0 0 1 9 50" />
-          <path class="desk__ring-d" d="M14.5 33A42 42 0 0 1 36 12.5" />
-        </svg>
-      </>
-    )
-  }
-
   <div class="desk__bezel">
     <div class="stage desk__screen" data-stage>
       {

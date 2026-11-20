@@ -11,7 +11,7 @@ Every dependency, font, sound, image and data source is listed here with its lic
 - **Weather data by [Open-Meteo.com](https://open-meteo.com/)**, licensed CC BY 4.0. Forecast and geocoding APIs, used only after the user picks a place.
 
 ## Wallpapers and icons
-- All wallpapers in `assets/wallpapers` are original, generated from code and fixed seeds by `tools/wallpaper-gen` (GPL-3.0-or-later, part of this project). No third-party images.
+- All wallpapers in `assets/wallpapers` are original, generated from code and fixed seeds by `tools/wallpaper-gen` (GPL-3.0-or-later, part of this project). No third-party images; where a style was inspired by an owner-supplied mood image, that image was only looked at and never used as input (see `docs/DECISIONS.md` D-015).
 - The app icon is original, drawn by `tools/icon-gen/make_icon.py`.
 
 ## Rust crates (direct dependencies)

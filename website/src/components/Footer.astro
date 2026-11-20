@@ -9,8 +9,7 @@ import {
   REPO_URL,
   ROUTES,
 } from "../brand";
-import { THEMES } from "../lib/themes";
-import { WALLPAPERS } from "../lib/wallpapers";
+import Art from "./Art.astro";
 
 const year = new Date().getFullYear();
 
@@ -70,12 +69,8 @@ const columns = [
   </div>
 
   <div class="footer__stage" aria-hidden="true">
-    {
-      THEMES.map((t) => (
-        <img class="footer__wp" data-for={t.id} src={WALLPAPERS[t.id].large} width="1920" height="1080" alt="" loading="lazy" decoding="async" />
-      ))
-    }
     <span class="footer__mark">{PRODUCT_NAME}</span>
+    <Art piece="horizon" class="footer__art" parallax={0.06} />
   </div>
 
   <div class="wrap">

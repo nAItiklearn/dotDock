@@ -7,6 +7,7 @@ import "../styles/widgets.css";
 import "../styles/pages.css";
 import "../styles/desk.css";
 import "../styles/home.css";
+import "../styles/art.css";
 import geistUrl from "../assets/fonts/Geist.woff2?url";
 import geistMonoUrl from "../assets/fonts/GeistMono.woff2?url";
 import dotoUrl from "../assets/fonts/Doto.woff2?url";
@@ -18,6 +19,7 @@ import {
   THEME_STORAGE_KEY,
   themeCss,
 } from "../lib/themes";
+import { artCss } from "../lib/art";
 import { PRODUCT_NAME, REPO_URL, SITE_URL } from "../brand";
 
 interface Props {
@@ -85,6 +87,7 @@ const jsonLd = {
     <link rel="preload" href={dotoUrl} as="font" type="font/woff2" crossorigin />
 
     <style is:inline set:html={themeCss()} />
+    <style is:inline set:html={artCss()} />
     <script is:inline set:html={themeBoot} />
     {structuredData && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
   </head>

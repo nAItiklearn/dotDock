@@ -1,0 +1,350 @@
+{
+ "horizon": {
+  "seed": 21,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 820,
+    "layers": {
+     "ink": {
+      "1": {
+       "file": "horizon-wide-ink-1x.webp",
+       "w": 1920,
+       "h": 820,
+       "bytes": 57848
+      },
+      "2": {
+       "file": "horizon-wide-ink-2x.webp",
+       "w": 3840,
+       "h": 1640,
+       "bytes": 142466
+      }
+     },
+     "accent": {
+      "1": {
+       "file": "horizon-wide-accent-1x.webp",
+       "w": 1920,
+       "h": 820,
+       "bytes": 9524
+      },
+      "2": {
+       "file": "horizon-wide-accent-2x.webp",
+       "w": 3840,
+       "h": 1640,
+       "bytes": 27712
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 900,
+    "h": 700,
+    "layers": {
+     "ink": {
+      "1": {
+       "file": "horizon-narrow-ink-1x.webp",
+       "w": 900,
+       "h": 700,
+       "bytes": 33786
+      },
+      "2": {
+       "file": "horizon-narrow-ink-2x.webp",
+       "w": 1800,
+       "h": 1400,
+       "bytes": 82086
+      }
+     },
+     "accent": {
+      "1": {
+       "file": "horizon-narrow-accent-1x.webp",
+       "w": 900,
+       "h": 700,
+       "bytes": 9170
+      },
+      "2": {
+       "file": "horizon-narrow-accent-2x.webp",
+       "w": 1800,
+       "h": 1400,
+       "bytes": 23382
+      }
+     }
+    }
+   }
+  }
+ },
+ "rock-left": {
+  "seed": 8,
+  "variants": {
+   "wide": {
+    "w": 460,
+    "h": 560,
+    "layers": {
+     "body": {
+      "1": {
+       "file": "rock-left-wide-body-1x.webp",
+       "w": 460,
+       "h": 560,
+       "bytes": 3870
+      },
+      "2": {
+       "file": "rock-left-wide-body-2x.webp",
+       "w": 920,
+       "h": 1120,
+       "bytes": 9078
+      }
+     },
+     "ink-paper": {
+      "1": {
+       "file": "rock-left-wide-ink-paper-1x.webp",
+       "w": 460,
+       "h": 560,
+       "bytes": 15216
+      },
+      "2": {
+       "file": "rock-left-wide-ink-paper-2x.webp",
+       "w": 920,
+       "h": 1120,
+       "bytes": 19656
+      }
+     },
+     "ink-dark": {
+      "1": {
+       "file": "rock-left-wide-ink-dark-1x.webp",
+       "w": 460,
+       "h": 560,
+       "bytes": 14130
+      },
+      "2": {
+       "file": "rock-left-wide-ink-dark-2x.webp",
+       "w": 920,
+       "h": 1120,
+       "bytes": 18852
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 210,
+    "h": 260,
+    "layers": {
+     "body": {
+      "1": {
+       "file": "rock-left-narrow-body-1x.webp",
+       "w": 210,
+       "h": 260,
+       "bytes": 1638
+      },
+      "2": {
+       "file": "rock-left-narrow-body-2x.webp",
+       "w": 420,
+       "h": 520,
+       "bytes": 3704
+      }
+     },
+     "ink-paper": {
+      "1": {
+       "file": "rock-left-narrow-ink-paper-1x.webp",
+       "w": 210,
+       "h": 260,
+       "bytes": 7150
+      },
+      "2": {
+       "file": "rock-left-narrow-ink-paper-2x.webp",
+       "w": 420,
+       "h": 520,
+       "bytes": 13716
+      }
+     },
+     "ink-dark": {
+      "1": {
+       "file": "rock-left-narrow-ink-dark-1x.webp",
+       "w": 210,
+       "h": 260,
+       "bytes": 6360
+      },
+      "2": {
+       "file": "rock-left-narrow-ink-dark-2x.webp",
+       "w": 420,
+       "h": 520,
+       "bytes": 12328
+      }
+     }
+    }
+   }
+  }
+ },
+ "rock-right": {
+  "seed": 5,
+  "variants": {
+   "wide": {
+    "w": 460,
+    "h": 560,
+    "layers": {
+     "body": {
+      "1": {
+       "file": "rock-right-wide-body-1x.webp",
+       "w": 460,
+       "h": 560,
+       "bytes": 2826
+      },
+      "2": {
+       "file": "rock-right-wide-body-2x.webp",
+       "w": 920,
+       "h": 1120,
+       "bytes": 7026
+      }
+     },
+     "ink-paper": {
+      "1": {
+       "file": "rock-right-wide-ink-paper-1x.webp",
+       "w": 460,
+       "h": 560,
+       "bytes": 9212
+      },
+      "2": {
+       "file": "rock-right-wide-ink-paper-2x.webp",
+       "w": 920,
+       "h": 1120,
+       "bytes": 12482
+      }
+     },
+     "ink-dark": {
+      "1": {
+       "file": "rock-right-wide-ink-dark-1x.webp",
+       "w": 460,
+       "h": 560,
+       "bytes": 8640
+      },
+      "2": {
+       "file": "rock-right-wide-ink-dark-2x.webp",
+       "w": 920,
+       "h": 1120,
+       "bytes": 12064
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 210,
+    "h": 260,
+    "layers": {
+     "body": {
+      "1": {
+       "file": "rock-right-narrow-body-1x.webp",
+       "w": 210,
+       "h": 260,
+       "bytes": 1120
+      },
+      "2": {
+       "file": "rock-right-narrow-body-2x.webp",
+       "w": 420,
+       "h": 520,
+       "bytes": 2676
+      }
+     },
+     "ink-paper": {
+      "1": {
+       "file": "rock-right-narrow-ink-paper-1x.webp",
+       "w": 210,
+       "h": 260,
+       "bytes": 5020
+      },
+      "2": {
+       "file": "rock-right-narrow-ink-paper-2x.webp",
+       "w": 420,
+       "h": 520,
+       "bytes": 9536
+      }
+     },
+     "ink-dark": {
+      "1": {
+       "file": "rock-right-narrow-ink-dark-1x.webp",
+       "w": 210,
+       "h": 260,
+       "bytes": 4646
+      },
+      "2": {
+       "file": "rock-right-narrow-ink-dark-2x.webp",
+       "w": 420,
+       "h": 520,
+       "bytes": 8778
+      }
+     }
+    }
+   }
+  }
+ },
+ "scape": {
+  "seed": 11,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 760,
+    "layers": {
+     "ink": {
+      "1": {
+       "file": "scape-wide-ink-1x.webp",
+       "w": 1920,
+       "h": 760,
+       "bytes": 188100
+      },
+      "2": {
+       "file": "scape-wide-ink-2x.webp",
+       "w": 3840,
+       "h": 1520,
+       "bytes": 460756
+      }
+     },
+     "accent": {
+      "1": {
+       "file": "scape-wide-accent-1x.webp",
+       "w": 1920,
+       "h": 760,
+       "bytes": 10930
+      },
+      "2": {
+       "file": "scape-wide-accent-2x.webp",
+       "w": 3840,
+       "h": 1520,
+       "bytes": 29128
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 900,
+    "h": 700,
+    "layers": {
+     "ink": {
+      "1": {
+       "file": "scape-narrow-ink-1x.webp",
+       "w": 900,
+       "h": 700,
+       "bytes": 80722
+      },
+      "2": {
+       "file": "scape-narrow-ink-2x.webp",
+       "w": 1800,
+       "h": 1400,
+       "bytes": 193882
+      }
+     },
+     "accent": {
+      "1": {
+       "file": "scape-narrow-accent-1x.webp",
+       "w": 900,
+       "h": 700,
+       "bytes": 13262
+      },
+      "2": {
+       "file": "scape-narrow-accent-2x.webp",
+       "w": 1800,
+       "h": 1400,
+       "bytes": 31570
+      }
+     }
+    }
+   }
+  }
+ }
+}

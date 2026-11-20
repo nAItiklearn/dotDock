@@ -1,0 +1,115 @@
+/*
+ * Site art: dot masks painted in the page's theme colours (see src/lib/art.ts for the mask rules).
+ * Paper is ink on warm paper, Obsidian is cream on charcoal, Aurum is gold on black: the masks carry
+ * only coverage, so every colour here is a theme token and the art swaps with the theme for free.
+ */
+[data-theme] {
+  --art-ink: var(--text);
+  --art-accent: var(--accent);
+}
+/* Aurum is gold on black: the dots are gold and the one accent is the pale of the page. */
+[data-theme="aurum"] {
+  --art-ink: var(--accent);
+  --art-accent: var(--text);
+}
+.art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--art-w) / var(--art-h);
+  pointer-events: none;
+  user-select: none;
+}
+.art__layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+.art__ink {
+  background: var(--art-ink);
+}
+.art__accent {
+  background: var(--art-accent);
+}
+.art__dim {
+  background: color-mix(in srgb, var(--art-ink) 52%, var(--bg));
+}
+/* The solid shape painted behind a dotted object so what lies behind it does not show through. */
+.art__body {
+  background: color-mix(in srgb, var(--bg) 90%, var(--art-ink));
+}
+
+/* ---------- Hero landscape ---------- */
+.hero__stage {
+  position: relative;
+  isolation: isolate;
+  /* The band above the screen where the far ridges show; the screen then sits in the hills. */
+  padding-top: clamp(120px, 14vw, 280px);
+}
+.hero__scape {
+  --scape-w: max(100%, 1100px);
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: var(--scape-w);
+  margin-left: calc(var(--scape-w) / -2);
+  /* Mist: the dots thin out towards the foot of the hero so the page below starts clean. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 62%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 62%, transparent 96%);
+}
+@media (max-width: 899px) {
+  .hero__scape {
+    --scape-w: 900px;
+  }
+}
+/* The boulders stand in the column of the screen, each overlapping one lower corner of it. */
+.hero__rocks {
+  --rock-w: clamp(150px, 20vw, 400px);
+  --inset: calc(var(--page-margin) + 56px);
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+}
+@media (min-width: 960px) {
+  .hero__rocks {
+    --inset: calc(var(--page-margin) + clamp(24px, 5vw, 96px) + 56px);
+  }
+}
+.hero__rock {
+  position: absolute;
+  bottom: 0;
+  width: var(--rock-w);
+}
+.hero__rock--l {
+  left: calc(var(--inset) - var(--rock-w));
+}
+.hero__rock--r {
+  right: calc(var(--inset) - var(--rock-w));
+}
+@media (max-width: 899px) {
+  .hero__rocks {
+    --rock-w: clamp(96px, 30vw, 210px);
+    --inset: calc(var(--page-margin) + 32px);
+  }
+}
+/* On a dark page the dots are light, so a heavy ridge would out-shine the headline: tone it down. */
+html:not([data-theme="paper"]) .hero__scape .art__ink {
+  opacity: 0.62;
+}
+
+/* ---------- Footer horizon ---------- */
+.footer__art {
+  --horizon-w: max(100%, 1200px);
+  width: var(--horizon-w);
+  margin-left: calc(50% - var(--horizon-w) / 2);
+}
+@media (max-width: 899px) {
+  .footer__art {
+    --horizon-w: 900px;
+  }
+}
