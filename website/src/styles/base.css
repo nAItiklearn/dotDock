@@ -4,7 +4,8 @@
  * Token names and values mirror apps/desktop/src/design-system/tokens.css where the product has one.
  */
 :root {
-  --font-ui: "Geist", "Geist Fallback", system-ui, sans-serif;
+  --font-ui: "Inter", "Inter Fallback", system-ui, sans-serif;
+  --font-display: "Inter Display", "Inter", "Inter Fallback", system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, "Cascadia Mono", monospace;
   --font-dot: "Doto", "Doto Fallback", "Geist Mono", monospace;
 
@@ -21,16 +22,19 @@
   --space-24: 96px;
 
   --radius-pill: 999px;
-  --radius-lg: 28px;
-  --radius-md: 20px;
+  --radius-art: 28px;
+  --radius-card: 18px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
   --radius-sm: 12px;
 
-  --text-caps: 12px;
-  --tracking-caps: 0.14em;
+  --text-caps: 11px;
+  --tracking-caps: 0.12em;
   --hairline: 1px;
 
   --page-margin: clamp(16px, 4vw, 64px);
-  --page-max: 1600px;
+  --page-max: 1248px;
+  --page-wide: 1408px;
   --nav-h: 72px;
 
   /* Flat slate used to illustrate an unthemed Windows desktop in the safety demo. Not a theme colour. */
@@ -87,8 +91,9 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
-  font-size: 17px;
-  line-height: 1.55;
+  font-size: clamp(1rem, 0.95rem + 0.15vw, 1.125rem);
+  line-height: 1.5;
+  letter-spacing: -0.011em;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -172,13 +177,25 @@ button {
   margin-inline: auto;
   padding-inline: var(--page-margin);
 }
+.wrap--wide {
+  max-width: var(--page-wide);
+}
 
-/* Spaced mono caps: labels and captions. */
+/* Chip and label text: Inter 500, small, in the sentence case it is written in. */
 .caps {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-dim);
+  line-height: 1.3;
+}
+/* A field note: the tiny spaced mono caps that caption art and label data. */
+.note {
   font-family: var(--font-mono);
-  font-size: var(--text-caps);
-  font-weight: 450;
-  letter-spacing: var(--tracking-caps);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
   line-height: 1.3;
@@ -227,7 +244,7 @@ button {
   color: var(--text);
   font-size: 15px;
   font-weight: 500;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.011em;
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -318,6 +335,7 @@ button {
 .nav__links {
   display: none;
   gap: var(--space-8);
+  font-size: 14px;
 }
 .nav__links a {
   text-decoration: none;
@@ -399,7 +417,7 @@ button {
 /* ---------- Sections ---------- */
 .section {
   position: relative;
-  padding-block: clamp(64px, 9vw, 128px) 0;
+  padding-block: clamp(96px, 11vw, 160px) 0;
 }
 .section__head {
   display: grid;
@@ -412,25 +430,26 @@ button {
   align-items: center;
   gap: var(--space-2);
   padding: 7px 14px 7px 12px;
-  border: var(--hairline) solid var(--line-strong);
+  border: var(--hairline) solid var(--line);
   border-radius: var(--radius-pill);
-  background: var(--fill-faint);
+  background: var(--surface-2);
   color: var(--text);
 }
 .h2 {
-  max-width: 16ch;
-  font-size: clamp(2.5rem, 6.6vw, 6rem);
-  line-height: 0.96;
-  font-weight: 600;
-  letter-spacing: -0.055em;
+  max-width: 20ch;
+  font-family: var(--font-display);
+  font-size: clamp(2.125rem, 1.2rem + 2.4vw, 3.25rem);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 .h2 .dim {
   color: var(--text-dim);
 }
 .lede {
-  max-width: 52ch;
-  font-size: clamp(1.0625rem, 1.5vw, 1.3125rem);
+  max-width: 56ch;
+  font-size: clamp(1rem, 0.95rem + 0.15vw, 1.125rem);
   line-height: 1.5;
   color: var(--text-dim);
   text-wrap: pretty;
@@ -461,14 +480,14 @@ button {
   /* Nothing sits below it, so skipping its layout until it nears the viewport cannot misplace an anchor. */
   content-visibility: auto;
   contain-intrinsic-size: auto 880px;
-  margin-top: clamp(64px, 10vw, 140px);
+  margin-top: clamp(96px, 11vw, 160px);
 }
 .footer__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-10);
-  padding-block: var(--space-12);
-  border-top: var(--hairline) solid var(--line-strong);
+  padding-block: var(--space-12) clamp(24px, 4vw, 56px);
+  border-top: var(--hairline) solid var(--line);
 }
 @media (min-width: 900px) {
   .footer__grid {
@@ -476,18 +495,19 @@ button {
     gap: var(--space-8);
   }
 }
-.footer__brand {
-  margin-bottom: var(--space-3);
-  font-family: var(--font-dot);
-  font-variation-settings: "ROND" 100;
-  font-weight: 800;
-  font-size: 28px;
-  line-height: 1;
+.footer__lockup {
+  margin-bottom: var(--space-4);
 }
 .footer__about p {
   max-width: 34ch;
   font-size: 15px;
   color: var(--text-dim);
+}
+.footer__title {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--text);
 }
 .footer__list {
   display: grid;
@@ -502,7 +522,7 @@ button {
 .footer__list a:hover {
   color: var(--text);
 }
-/* The wordmark stands in the sky of a dotted lake; the scene is the footer's floor. */
+/* The lockup stands in the sky of a dotted lake; the scene is the footer's floor. */
 .footer__stage {
   position: relative;
   overflow: hidden;
@@ -511,22 +531,31 @@ button {
 .footer__mark {
   position: absolute;
   z-index: 1;
-  /* Whole word visible: sized so seven dot-font characters fit the width, lifted off the top edge. */
+  /* Whole lockup visible: the mark and seven dot-font characters fit the width from 320 px up. */
   inset: clamp(8px, 2.4vw, 56px) 0 auto;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.14em;
   font-family: var(--font-dot);
   font-variation-settings: "ROND" 100;
   font-weight: 800;
-  font-size: clamp(3.5rem, 15vw, 17rem);
+  font-size: clamp(3rem, 14vw, 16rem);
   line-height: 0.8;
   white-space: nowrap;
   color: var(--text);
   user-select: none;
 }
+.footer__mark-icon {
+  width: 0.76em;
+  height: 0.8em;
+}
 .footer__legal {
   display: grid;
   gap: var(--space-3);
   padding-block: var(--space-6) var(--space-10);
+  font-size: 13px;
+  color: var(--text-dim);
 }
 .footer__legal a {
   color: var(--text);

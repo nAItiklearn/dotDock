@@ -10,6 +10,7 @@ import {
   ROUTES,
 } from "../brand";
 import Art from "./Art.astro";
+import Mark from "./Mark.astro";
 
 const year = new Date().getFullYear();
 
@@ -46,13 +47,16 @@ const columns = [
   <div class="wrap">
     <div class="footer__grid">
       <div class="footer__about">
-        <p class="footer__brand">{PRODUCT_NAME}</p>
+        <a class="wordmark footer__lockup" href={ROUTES.home} aria-label={`${PRODUCT_NAME}, home`}>
+          <Mark size={34} />
+          <span class="wordmark__text">{PRODUCT_NAME}</span>
+        </a>
         <p>A free, open-source desktop environment for Windows, drawn in dots. No account, no telemetry, no cookies on this site.</p>
       </div>
       {
         columns.map((col) => (
           <nav aria-label={col.title}>
-            <h2 class="caps caps--text">{col.title}</h2>
+            <h2 class="footer__title">{col.title}</h2>
             <ul class="footer__list">
               {
                 col.links.map((l) => (
@@ -69,18 +73,18 @@ const columns = [
   </div>
 
   <div class="footer__stage" aria-hidden="true">
-    <span class="footer__mark">{PRODUCT_NAME}</span>
+    <span class="footer__mark"><Mark size={48} class="footer__mark-icon" />{PRODUCT_NAME}</span>
     <Art piece="horizon" class="footer__art" parallax={0.06} />
   </div>
 
   <div class="wrap">
     <div class="footer__legal">
-      <p class="caps">{DISCLAIMER}</p>
-      <p class="caps">
+      <p>{DISCLAIMER}</p>
+      <p>
         {LICENSE_SPDX} &middot; Fonts SIL OFL 1.1 &middot; Weather data by
         <a href={OPEN_METEO_URL} rel="noopener">Open-Meteo</a> (CC BY 4.0)
       </p>
-      <p class="caps tabular">&copy; {year} {PRODUCT_NAME} contributors</p>
+      <p class="tabular">&copy; {year} {PRODUCT_NAME} contributors</p>
     </div>
   </div>
 </footer>

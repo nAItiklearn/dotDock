@@ -26,6 +26,19 @@ def _ink_accent_stack(layers: Layers, theme: str) -> list:
     return [(layers["ink"], "ink"), (layers["accent"], "accent")]
 
 
+# Preview colours of the scape layers per theme: the same values as the art tokens in website/src/lib/themes.ts.
+_SCAPE_COLOURS = {
+    "paper": {"far": "#b3c0ae", "mid": "#86a37e", "near": "#4d7a47", "sun": "#da3038", "flower": "#da3038", "eye": "#f0c24a"},
+    "obsidian": {"far": "#2f3f35", "mid": "#476650", "near": "#6f9a76", "sun": "#e94248", "flower": "#e94248", "eye": "#f2d98a"},
+    "aurum": {"far": "#3d3422", "mid": "#6e5828", "near": "#b08a38", "sun": "#e3b456", "flower": "#f4efe4", "eye": "#e3b456"},
+}
+
+
+def _scape_stack(layers: Layers, theme: str) -> list:
+    c = _SCAPE_COLOURS[theme]
+    return [(layers[k], c[k]) for k in ("far", "mid", "near", "sun", "flower", "eye")]
+
+
 def _scape(variant: str, w: int, h: int, scale: float) -> Layers:
     return render_scape(w, h, scale, seed=11 if variant == "wide" else 12, narrow=variant == "narrow")
 
@@ -36,7 +49,7 @@ def _horizon(variant: str, w: int, h: int, scale: float) -> Layers:
 
 def _rock(seed: int):
     def render(variant: str, w: int, h: int, scale: float) -> Layers:
-        pitch = 5.5 if variant == "wide" else 3.8
+        pitch = 4.8 if variant == "wide" else 3.6
         r = render_rock(w, h, scale, seed, planes=11, pitch=pitch)
         return {"body": r["body"], "ink-paper": r["dark"], "ink-dark": r["light"]}
 
@@ -51,10 +64,10 @@ _rock_l, _rock_l_stack = _rock(8)
 _rock_r, _rock_r_stack = _rock(5)
 
 PIECES: dict[str, Piece] = {
-    "scape": Piece(11, {"wide": (1920, 760), "narrow": (900, 700)}, _scape, _ink_accent_stack,
-                   {"ink": (78, 60), "accent": (80, 70)}),
-    "rock-left": Piece(8, {"wide": (460, 560), "narrow": (210, 260)}, _rock_l, _rock_l_stack, _ROCK_Q),
-    "rock-right": Piece(5, {"wide": (460, 560), "narrow": (210, 260)}, _rock_r, _rock_r_stack, _ROCK_Q),
+    "scape": Piece(11, {"wide": (1920, 1100), "narrow": (720, 340)}, _scape, _scape_stack,
+                   {"far": (78, 60), "mid": (78, 60), "near": (78, 60), "sun": (80, 70), "flower": (80, 70), "eye": (80, 70)}),
+    "rock-left": Piece(8, {"wide": (320, 390), "narrow": (170, 207)}, _rock_l, _rock_l_stack, _ROCK_Q),
+    "rock-right": Piece(5, {"wide": (320, 390), "narrow": (170, 207)}, _rock_r, _rock_r_stack, _ROCK_Q),
     "horizon": Piece(21, {"wide": (1920, 820), "narrow": (900, 700)}, _horizon, _ink_accent_stack,
                      {"ink": (78, 60), "accent": (80, 70)}),
 }

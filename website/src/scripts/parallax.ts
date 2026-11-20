@@ -6,7 +6,7 @@
  * cropped to the middle and a drift would reveal its edge.
  *
  * `data-parallax-origin="page"` measures from the top of the page (the hero); otherwise the
- * offset is zero when the piece's parent is centred in the viewport.
+ * offset is zero until the piece's parent passes the middle of the viewport.
  */
 import { prefersReducedMotion } from "../lib/dom";
 
@@ -30,7 +30,9 @@ function paint(): void {
   const mid = window.innerHeight / 2;
   for (const item of items) {
     if (!item.visible) continue;
-    const dy = item.fromPage ? window.scrollY : mid - (item.parent.getBoundingClientRect().top + item.parent.offsetHeight / 2);
+    // Zero until the piece reaches the middle of the screen, so it never starts displaced and an art
+    // card's edge never shows past its picture; after that it drifts by the factor.
+    const dy = item.fromPage ? window.scrollY : Math.max(0, mid - (item.parent.getBoundingClientRect().top + item.parent.offsetHeight / 2));
     item.el.style.transform = `translate3d(0, ${(dy * item.factor).toFixed(1)}px, 0)`;
   }
 }

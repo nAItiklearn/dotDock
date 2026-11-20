@@ -14,8 +14,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const source = resolve(process.argv[2] ?? join(here, "..", "..", "assets", "wallpapers"));
 const out = join(here, "..", "src", "assets", "wallpapers");
 
-// One wallpaper per theme, chosen so the widget cluster sits on the calm left half.
-const PICKS = ["arc-red-dark", "paper-ring-light", "liquid-gold-dark"];
+// One natural wallpaper per theme (hills and meadow, never an abstract), chosen so the widget cluster sits on the calm left half.
+const PICKS = ["halftone-ridge-light", "halftone-ridge-dark", "meadow-dots-dark"];
 const WIDTHS = [1920, 640];
 
 await mkdir(out, { recursive: true });

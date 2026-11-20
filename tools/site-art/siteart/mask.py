@@ -41,7 +41,7 @@ def preview(layers: list[tuple[np.ndarray, str]], theme: str, out: Path, bg_extr
     h, w = layers[0][0].shape
     img = np.broadcast_to(bg, (h, w, 3)).copy()
     for cov, role in layers:
-        col = {"ink": ink, "accent": accent, "dim": ink * 0.5 + bg * 0.5}[role]
+        col = _rgb(role) if role.startswith("#") else {"ink": ink, "accent": accent, "dim": ink * 0.5 + bg * 0.5}[role]
         img = img + (col - img) * cov[..., None]
     out.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(np.clip(img * 255 + 0.5, 0, 255).astype(np.uint8), "RGB").save(out)

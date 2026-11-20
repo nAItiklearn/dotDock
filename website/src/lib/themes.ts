@@ -1,11 +1,13 @@
 /**
- * Origin: copied from apps/desktop/src/design-system/themes.ts so the page re-themes with the
- * product's real tokens. Copied, not imported, because the website is a separate app.
- * Differences from the product, kept to what the web needs:
- *  - `accentText`: the accent used as small text must reach 4.5:1 contrast (WCAG AA); the plain
- *    accent stays for dots, rings and large shapes.
- *  - Paper `textDim` and `accent` are one notch deeper (accent #e2363d to #da3038) so white text on
- *    the accent also passes. Obsidian `accentInk` is the charcoal ink for the same reason.
+ * Website theme tokens. They started as a copy of apps/desktop/src/design-system/themes.ts and now follow
+ * docs/design/WEBSITE_SYSTEM.md (light-first: Paper is the default, the art carries the colour).
+ * The role names are the product's; the values are the website's:
+ *  - `surface2` is the card colour of the table (`--surface`), `surface` stays the translucent glass the
+ *    widgets in the desktop shot are drawn on.
+ *  - `accentText`: the accent used as small text must reach 4.5:1 contrast (WCAG AA), so it is a deeper
+ *    red on Paper; the plain accent stays for dots, rings and large shapes.
+ *  - Paper's accent is #da3038 (the table says #e2363d, which gives white button text only 4.35:1) and
+ *    Obsidian's accent ink stays charcoal (white on #e94248 is 3.9:1); see docs/DECISIONS.md.
  *  - `themeCss()` turns the tokens into CSS variables at build time; there is no runtime theme code.
  * `tools/contrast.mjs` fails the build if a pairing drops below its threshold.
  */
@@ -26,6 +28,15 @@ export interface ThemeColors {
   readonly danger: string;
   readonly success: string;
   readonly shadow: string;
+  /** Art palette: ridges from far to near, the sun, wild flowers (petal and eye), the sky at the horizon, stone. */
+  readonly artFar: string;
+  readonly artMid: string;
+  readonly artNear: string;
+  readonly artSun: string;
+  readonly artFlower: string;
+  readonly artEye: string;
+  readonly artSky: string;
+  readonly artStone: string;
 }
 
 export type ThemeId = "obsidian" | "paper" | "aurum";
@@ -45,20 +56,28 @@ export const OBSIDIAN: Theme = {
   mode: "dark",
   blurb: "Charcoal, warm white, one red.",
   colors: {
-    bg: "#111111",
+    bg: "#0e0e0e",
     surface: "rgba(22, 22, 22, 0.86)",
-    surface2: "#1c1c1c",
-    border: "rgba(255, 255, 255, 0.07)",
-    text: "#e8e6e3",
-    textDim: "#8a8a86",
+    surface2: "#171717",
+    border: "rgba(255, 255, 255, 0.09)",
+    text: "#f2f0ec",
+    textDim: "#a3a19d",
     accent: "#e94248",
     accentText: "#f16d70",
     accentInk: "#111111",
-    dotOn: "#e8e6e3",
-    dotOff: "rgba(232, 230, 227, 0.14)",
+    dotOn: "#f2f0ec",
+    dotOff: "rgba(242, 240, 236, 0.14)",
     danger: "#f16d70",
     success: "#9eae96",
     shadow: "0 12px 32px rgba(0, 0, 0, 0.35)",
+    artFar: "#2f3f35",
+    artMid: "#476650",
+    artNear: "#6f9a76",
+    artSun: "#e94248",
+    artFlower: "#e94248",
+    artEye: "#f2d98a",
+    artSky: "#17201b",
+    artStone: "#d8d4cb",
   },
 };
 
@@ -68,20 +87,28 @@ export const PAPER: Theme = {
   mode: "light",
   blurb: "Warm off-white, black ink, one red.",
   colors: {
-    bg: "#e8e6e3",
-    surface: "rgba(245, 244, 241, 0.92)",
-    surface2: "#dcdad6",
-    border: "rgba(17, 17, 17, 0.06)",
-    text: "#111111",
-    textDim: "#5f5e5a",
+    bg: "#f6f5f2",
+    surface: "rgba(255, 255, 255, 0.9)",
+    surface2: "#ffffff",
+    border: "rgba(0, 0, 0, 0.08)",
+    text: "#0b0b0b",
+    textDim: "#5f5d59",
     accent: "#da3038",
     accentText: "#b02026",
     accentInk: "#ffffff",
     dotOn: "#da3038",
-    dotOff: "rgba(17, 17, 17, 0.12)",
+    dotOff: "rgba(11, 11, 11, 0.12)",
     danger: "#c42b31",
     success: "#5f7a55",
-    shadow: "0 10px 28px rgba(17, 17, 17, 0.12)",
+    shadow: "0 10px 28px rgba(11, 11, 11, 0.12)",
+    artFar: "#b3c0ae",
+    artMid: "#86a37e",
+    artNear: "#4d7a47",
+    artSun: "#da3038",
+    artFlower: "#da3038",
+    artEye: "#f0c24a",
+    artSky: "#ece8d8",
+    artStone: "#2b2b27",
   },
 };
 
@@ -91,29 +118,35 @@ export const AURUM: Theme = {
   mode: "dark",
   blurb: "Near-black with a single gold.",
   colors: {
-    bg: "#0c0c0c",
-    surface: "rgba(18, 17, 15, 0.86)",
-    surface2: "#1c1a16",
-    border: "rgba(232, 200, 120, 0.10)",
-    text: "#f5f4f1",
-    textDim: "#a3a19d",
-    accent: "#e2b453",
-    accentText: "#e2b453",
+    bg: "#0d0c0a",
+    surface: "rgba(22, 20, 17, 0.86)",
+    surface2: "#161411",
+    border: "rgba(255, 240, 210, 0.10)",
+    text: "#f4efe4",
+    textDim: "#a8a293",
+    accent: "#e3b456",
+    accentText: "#e3b456",
     accentInk: "#111111",
-    dotOn: "#e2b453",
-    dotOff: "rgba(226, 180, 83, 0.16)",
+    dotOn: "#e3b456",
+    dotOff: "rgba(227, 180, 86, 0.16)",
     danger: "#f16d70",
     success: "#9eae96",
     shadow: "0 12px 32px rgba(0, 0, 0, 0.4)",
+    artFar: "#3d3422",
+    artMid: "#6e5828",
+    artNear: "#b08a38",
+    artSun: "#e3b456",
+    artFlower: "#f4efe4",
+    artEye: "#e3b456",
+    artSky: "#1c1810",
+    artStone: "#e8dcc0",
   },
 };
 
-export const THEMES: readonly Theme[] = [OBSIDIAN, PAPER, AURUM];
+export const THEMES: readonly Theme[] = [PAPER, OBSIDIAN, AURUM];
 /** localStorage key holding the visitor's chosen theme id. */
 export const THEME_STORAGE_KEY = "dotdock-theme";
-export const DEFAULT_THEME: ThemeId = "obsidian";
-/** Theme used when the visitor's system asks for a light interface and has not chosen one. */
-export const LIGHT_PREFERENCE_THEME: ThemeId = "paper";
+export const DEFAULT_THEME: ThemeId = "paper";
 
 const CSS_VAR: Record<keyof ThemeColors, string> = {
   bg: "--bg",
@@ -130,6 +163,14 @@ const CSS_VAR: Record<keyof ThemeColors, string> = {
   danger: "--danger",
   success: "--success",
   shadow: "--shadow",
+  artFar: "--art-far",
+  artMid: "--art-mid",
+  artNear: "--art-near",
+  artSun: "--art-sun",
+  artFlower: "--art-flower",
+  artEye: "--art-eye",
+  artSky: "--art-sky",
+  artStone: "--art-stone",
 };
 
 /**

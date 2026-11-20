@@ -1,52 +1,59 @@
 ---
 import Art from "./Art.astro";
 import Desktop from "./Desktop.astro";
-import { LATEST_RELEASE, REPO_URL, ROUTES, TAGLINE_DOTS, TAGLINE_FIRST, TAGLINE_SECOND } from "../brand";
+import { LATEST_RELEASE, LICENSE_SPDX, REPO_URL, ROUTES, TAGLINE_DOTS, TAGLINE_FIRST, TAGLINE_SECOND } from "../brand";
+
+// Honest facts only: what the project is, where it stands.
+const facts = [
+  { label: "No telemetry", live: true },
+  { label: "Windows 10 and 11", live: true },
+  { label: LICENSE_SPDX, live: true },
+  { label: LATEST_RELEASE ? `Release ${LATEST_RELEASE.tag}` : "In development", live: false },
+];
 ---
 
 <section class="hero" id="top" aria-labelledby="hero-title">
-  <div class="wrap hero__inner">
-    <p class="caps caps-row chip-label">
-      <span class="dot" aria-hidden="true"></span>
-      For Windows 10 and 11
-    </p>
-
-    <h1 class="hero__title" id="hero-title">
-      <span class="hero__line">{TAGLINE_FIRST}</span>
-      <span class="hero__line">{TAGLINE_SECOND} <span class="hero__dots">{TAGLINE_DOTS}</span>.</span>
-    </h1>
-
-    <p class="hero__lede">
-      One calm environment for your whole Windows desktop.
-    </p>
-
-    <div class="hero__actions">
-      <a class="btn btn--accent btn--lg" href={ROUTES.download}>Download for Windows</a>
-      <a class="btn btn--lg btn--quiet" href={REPO_URL} rel="noopener">View on GitHub</a>
-    </div>
-
-    <ul class="hero__trust caps">
-      <li>Free and open source</li>
-      <li>No telemetry</li>
-      <li class="hero__soon">{LATEST_RELEASE ? `Release ${LATEST_RELEASE.tag}` : "In development"}</li>
-    </ul>
-  </div>
-
-  <!-- The product sits inside a landscape drawn in dots: far ridges and a sun behind the screen, two boulders in front of it. -->
-  <div class="hero__stage">
+  <!-- A full-bleed landscape drawn in dots: ridges in mist, a sun, wild flowers. It moves a little slower than the page. -->
+  <div class="hero__land" aria-hidden="true">
     <div class="hero__scape">
       <Art piece="scape" parallax={0.1} fromPage />
     </div>
-    <div class="wrap hero__shot">
-      <Desktop class="desk--tilt" />
+  </div>
+
+  <div class="wrap hero__inner">
+    <p class="chip hero__eyebrow"><span class="dot" aria-hidden="true"></span>A free, open-source desktop environment</p>
+
+    <h1 class="hero__title" id="hero-title">
+      {TAGLINE_FIRST} {TAGLINE_SECOND} {TAGLINE_DOTS}<span class="hero__stop" aria-hidden="true"></span><span class="sr-only">.</span>
+    </h1>
+
+    <p class="hero__lede">
+      One calm home for your whole Windows desktop: widgets that live on it, a dock on the way, and an island for your AI coding work.
+    </p>
+
+    <a class="btn btn--accent btn--lg" href={ROUTES.download}>Download for Windows</a>
+
+    <ul class="hero__facts" aria-label="At a glance">
+      {
+        facts.map((f) => (
+          <li>
+            <span class={f.live ? "dot" : "dot dot--hollow"} aria-hidden="true"></span>
+            {f.label}
+          </li>
+        ))
+      }
+      <li><a href={REPO_URL} rel="noopener">View on GitHub</a></li>
+    </ul>
+  </div>
+
+  <!-- The screen rises into the landscape from the foot of the hero; two stippled boulders stand in front of its corners. -->
+  <div class="wrap hero__frame">
+    <Desktop />
+    <div class="hero__rock hero__rock--l">
+      <Art piece="rock-left" parallax={-0.05} fromPage />
     </div>
-    <div class="wrap hero__rocks">
-      <div class="hero__rock hero__rock--l">
-        <Art piece="rock-left" parallax={-0.05} fromPage />
-      </div>
-      <div class="hero__rock hero__rock--r">
-        <Art piece="rock-right" parallax={-0.07} fromPage />
-      </div>
+    <div class="hero__rock hero__rock--r">
+      <Art piece="rock-right" parallax={-0.07} fromPage />
     </div>
   </div>
 </section>

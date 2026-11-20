@@ -36,7 +36,7 @@
   margin: 0;
   padding: clamp(20px, 3vw, 40px);
   border: var(--hairline) solid var(--line-strong);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   background: var(--fill-faint);
 }
 .boot__caption {

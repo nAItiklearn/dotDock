@@ -76,97 +76,97 @@
   "seed": 8,
   "variants": {
    "wide": {
-    "w": 460,
-    "h": 560,
+    "w": 320,
+    "h": 390,
     "layers": {
      "body": {
       "1": {
        "file": "rock-left-wide-body-1x.webp",
-       "w": 460,
-       "h": 560,
-       "bytes": 3870
+       "w": 320,
+       "h": 390,
+       "bytes": 2566
       },
       "2": {
        "file": "rock-left-wide-body-2x.webp",
-       "w": 920,
-       "h": 1120,
-       "bytes": 9078
+       "w": 640,
+       "h": 780,
+       "bytes": 5948
       }
      },
      "ink-paper": {
       "1": {
        "file": "rock-left-wide-ink-paper-1x.webp",
-       "w": 460,
-       "h": 560,
-       "bytes": 15216
+       "w": 320,
+       "h": 390,
+       "bytes": 10408
       },
       "2": {
        "file": "rock-left-wide-ink-paper-2x.webp",
-       "w": 920,
-       "h": 1120,
-       "bytes": 19656
+       "w": 640,
+       "h": 780,
+       "bytes": 24364
       }
      },
      "ink-dark": {
       "1": {
        "file": "rock-left-wide-ink-dark-1x.webp",
-       "w": 460,
-       "h": 560,
-       "bytes": 14130
+       "w": 320,
+       "h": 390,
+       "bytes": 9640
       },
       "2": {
        "file": "rock-left-wide-ink-dark-2x.webp",
-       "w": 920,
-       "h": 1120,
-       "bytes": 18852
+       "w": 640,
+       "h": 780,
+       "bytes": 22520
       }
      }
     }
    },
    "narrow": {
-    "w": 210,
-    "h": 260,
+    "w": 170,
+    "h": 207,
     "layers": {
      "body": {
       "1": {
        "file": "rock-left-narrow-body-1x.webp",
-       "w": 210,
-       "h": 260,
-       "bytes": 1638
+       "w": 170,
+       "h": 207,
+       "bytes": 1192
       },
       "2": {
        "file": "rock-left-narrow-body-2x.webp",
-       "w": 420,
-       "h": 520,
-       "bytes": 3704
+       "w": 340,
+       "h": 414,
+       "bytes": 2772
       }
      },
      "ink-paper": {
       "1": {
        "file": "rock-left-narrow-ink-paper-1x.webp",
-       "w": 210,
-       "h": 260,
-       "bytes": 7150
+       "w": 170,
+       "h": 207,
+       "bytes": 4298
       },
       "2": {
        "file": "rock-left-narrow-ink-paper-2x.webp",
-       "w": 420,
-       "h": 520,
-       "bytes": 13716
+       "w": 340,
+       "h": 414,
+       "bytes": 10242
       }
      },
      "ink-dark": {
       "1": {
        "file": "rock-left-narrow-ink-dark-1x.webp",
-       "w": 210,
-       "h": 260,
-       "bytes": 6360
+       "w": 170,
+       "h": 207,
+       "bytes": 3868
       },
       "2": {
        "file": "rock-left-narrow-ink-dark-2x.webp",
-       "w": 420,
-       "h": 520,
-       "bytes": 12328
+       "w": 340,
+       "h": 414,
+       "bytes": 9148
       }
      }
     }
@@ -177,97 +177,97 @@
   "seed": 5,
   "variants": {
    "wide": {
-    "w": 460,
-    "h": 560,
+    "w": 320,
+    "h": 390,
     "layers": {
      "body": {
       "1": {
        "file": "rock-right-wide-body-1x.webp",
-       "w": 460,
-       "h": 560,
-       "bytes": 2826
+       "w": 320,
+       "h": 390,
+       "bytes": 1814
       },
       "2": {
        "file": "rock-right-wide-body-2x.webp",
-       "w": 920,
-       "h": 1120,
-       "bytes": 7026
+       "w": 640,
+       "h": 780,
+       "bytes": 4326
       }
      },
      "ink-paper": {
       "1": {
        "file": "rock-right-wide-ink-paper-1x.webp",
-       "w": 460,
-       "h": 560,
-       "bytes": 9212
+       "w": 320,
+       "h": 390,
+       "bytes": 6670
       },
       "2": {
        "file": "rock-right-wide-ink-paper-2x.webp",
-       "w": 920,
-       "h": 1120,
-       "bytes": 12482
+       "w": 640,
+       "h": 780,
+       "bytes": 15530
       }
      },
      "ink-dark": {
       "1": {
        "file": "rock-right-wide-ink-dark-1x.webp",
-       "w": 460,
-       "h": 560,
-       "bytes": 8640
+       "w": 320,
+       "h": 390,
+       "bytes": 6084
       },
       "2": {
        "file": "rock-right-wide-ink-dark-2x.webp",
-       "w": 920,
-       "h": 1120,
-       "bytes": 12064
+       "w": 640,
+       "h": 780,
+       "bytes": 14318
       }
      }
     }
    },
    "narrow": {
-    "w": 210,
-    "h": 260,
+    "w": 170,
+    "h": 207,
     "layers": {
      "body": {
       "1": {
        "file": "rock-right-narrow-body-1x.webp",
-       "w": 210,
-       "h": 260,
-       "bytes": 1120
+       "w": 170,
+       "h": 207,
+       "bytes": 844
       },
       "2": {
        "file": "rock-right-narrow-body-2x.webp",
-       "w": 420,
-       "h": 520,
-       "bytes": 2676
+       "w": 340,
+       "h": 414,
+       "bytes": 1942
       }
      },
      "ink-paper": {
       "1": {
        "file": "rock-right-narrow-ink-paper-1x.webp",
-       "w": 210,
-       "h": 260,
-       "bytes": 5020
+       "w": 170,
+       "h": 207,
+       "bytes": 2816
       },
       "2": {
        "file": "rock-right-narrow-ink-paper-2x.webp",
-       "w": 420,
-       "h": 520,
-       "bytes": 9536
+       "w": 340,
+       "h": 414,
+       "bytes": 6536
       }
      },
      "ink-dark": {
       "1": {
        "file": "rock-right-narrow-ink-dark-1x.webp",
-       "w": 210,
-       "h": 260,
-       "bytes": 4646
+       "w": 170,
+       "h": 207,
+       "bytes": 2538
       },
       "2": {
        "file": "rock-right-narrow-ink-dark-2x.webp",
-       "w": 420,
-       "h": 520,
-       "bytes": 8778
+       "w": 340,
+       "h": 414,
+       "bytes": 5962
       }
      }
     }
@@ -279,68 +279,180 @@
   "variants": {
    "wide": {
     "w": 1920,
-    "h": 760,
+    "h": 1100,
     "layers": {
-     "ink": {
+     "far": {
       "1": {
-       "file": "scape-wide-ink-1x.webp",
+       "file": "scape-wide-far-1x.webp",
        "w": 1920,
-       "h": 760,
-       "bytes": 188100
+       "h": 1100,
+       "bytes": 56782
       },
       "2": {
-       "file": "scape-wide-ink-2x.webp",
+       "file": "scape-wide-far-2x.webp",
        "w": 3840,
-       "h": 1520,
-       "bytes": 460756
+       "h": 2200,
+       "bytes": 148032
       }
      },
-     "accent": {
+     "mid": {
       "1": {
-       "file": "scape-wide-accent-1x.webp",
+       "file": "scape-wide-mid-1x.webp",
        "w": 1920,
-       "h": 760,
-       "bytes": 10930
+       "h": 1100,
+       "bytes": 78448
       },
       "2": {
-       "file": "scape-wide-accent-2x.webp",
+       "file": "scape-wide-mid-2x.webp",
        "w": 3840,
-       "h": 1520,
-       "bytes": 29128
+       "h": 2200,
+       "bytes": 203608
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scape-wide-near-1x.webp",
+       "w": 1920,
+       "h": 1100,
+       "bytes": 105328
+      },
+      "2": {
+       "file": "scape-wide-near-2x.webp",
+       "w": 3840,
+       "h": 2200,
+       "bytes": 267828
+      }
+     },
+     "sun": {
+      "1": {
+       "file": "scape-wide-sun-1x.webp",
+       "w": 1920,
+       "h": 1100,
+       "bytes": 10596
+      },
+      "2": {
+       "file": "scape-wide-sun-2x.webp",
+       "w": 3840,
+       "h": 2200,
+       "bytes": 31362
+      }
+     },
+     "flower": {
+      "1": {
+       "file": "scape-wide-flower-1x.webp",
+       "w": 1920,
+       "h": 1100,
+       "bytes": 17246
+      },
+      "2": {
+       "file": "scape-wide-flower-2x.webp",
+       "w": 3840,
+       "h": 2200,
+       "bytes": 46250
+      }
+     },
+     "eye": {
+      "1": {
+       "file": "scape-wide-eye-1x.webp",
+       "w": 1920,
+       "h": 1100,
+       "bytes": 6962
+      },
+      "2": {
+       "file": "scape-wide-eye-2x.webp",
+       "w": 3840,
+       "h": 2200,
+       "bytes": 22074
       }
      }
     }
    },
    "narrow": {
-    "w": 900,
-    "h": 700,
+    "w": 720,
+    "h": 340,
     "layers": {
-     "ink": {
+     "far": {
       "1": {
-       "file": "scape-narrow-ink-1x.webp",
-       "w": 900,
-       "h": 700,
-       "bytes": 80722
+       "file": "scape-narrow-far-1x.webp",
+       "w": 720,
+       "h": 340,
+       "bytes": 7530
       },
       "2": {
-       "file": "scape-narrow-ink-2x.webp",
-       "w": 1800,
-       "h": 1400,
-       "bytes": 193882
+       "file": "scape-narrow-far-2x.webp",
+       "w": 1440,
+       "h": 680,
+       "bytes": 17294
       }
      },
-     "accent": {
+     "mid": {
       "1": {
-       "file": "scape-narrow-accent-1x.webp",
-       "w": 900,
-       "h": 700,
-       "bytes": 13262
+       "file": "scape-narrow-mid-1x.webp",
+       "w": 720,
+       "h": 340,
+       "bytes": 11578
       },
       "2": {
-       "file": "scape-narrow-accent-2x.webp",
-       "w": 1800,
-       "h": 1400,
-       "bytes": 31570
+       "file": "scape-narrow-mid-2x.webp",
+       "w": 1440,
+       "h": 680,
+       "bytes": 27162
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scape-narrow-near-1x.webp",
+       "w": 720,
+       "h": 340,
+       "bytes": 15528
+      },
+      "2": {
+       "file": "scape-narrow-near-2x.webp",
+       "w": 1440,
+       "h": 680,
+       "bytes": 36168
+      }
+     },
+     "sun": {
+      "1": {
+       "file": "scape-narrow-sun-1x.webp",
+       "w": 720,
+       "h": 340,
+       "bytes": 4852
+      },
+      "2": {
+       "file": "scape-narrow-sun-2x.webp",
+       "w": 1440,
+       "h": 680,
+       "bytes": 11590
+      }
+     },
+     "flower": {
+      "1": {
+       "file": "scape-narrow-flower-1x.webp",
+       "w": 720,
+       "h": 340,
+       "bytes": 6056
+      },
+      "2": {
+       "file": "scape-narrow-flower-2x.webp",
+       "w": 1440,
+       "h": 680,
+       "bytes": 14586
+      }
+     },
+     "eye": {
+      "1": {
+       "file": "scape-narrow-eye-1x.webp",
+       "w": 720,
+       "h": 340,
+       "bytes": 1846
+      },
+      "2": {
+       "file": "scape-narrow-eye-2x.webp",
+       "w": 1440,
+       "h": 680,
+       "bytes": 4554
       }
      }
     }

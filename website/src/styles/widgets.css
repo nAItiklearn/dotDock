@@ -654,3 +654,13 @@ html[data-theme="paper"] .w-clock__digits {
     transition: none;
   }
 }
+
+/* Product visuals keep the product's own label style: mono, spaced, upper case. */
+.w .caps,
+.stage .caps {
+  font-family: var(--font-mono);
+  font-size: var(--text-caps);
+  font-weight: 450;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}

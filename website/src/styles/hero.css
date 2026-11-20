@@ -1,83 +1,82 @@
-/* Hero: a centred headline and one clear action, then the desktop shot. */
+/*
+ * Hero: a full-bleed landscape behind everything (styles/art.css), then an eyebrow, the display headline,
+ * one sentence, one button and a quiet row of facts, and the screen rising from the foot into the hills.
+ */
 .hero {
   position: relative;
-  padding-top: calc(var(--nav-h) + clamp(36px, 5.6vw, 88px));
-  overflow-x: clip;
+  isolation: isolate;
+  overflow: clip;
+  padding-top: calc(var(--nav-h) + clamp(48px, 7vw, 112px));
+  padding-bottom: clamp(36px, 5vw, 80px);
 }
 .hero__inner {
   display: grid;
   justify-items: center;
-  gap: var(--space-5);
+  gap: clamp(20px, 2.2vw, 28px);
+  max-width: calc(840px + 2 * var(--page-margin));
   text-align: center;
 }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  padding: 0 14px 0 12px;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+}
 .hero__title {
-  font-size: clamp(2.875rem, 8.4vw, 9rem);
-  line-height: 0.9;
-  font-weight: 600;
-  letter-spacing: -0.062em;
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 1rem + 4.2vw, 4.75rem);
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.045em;
   text-wrap: balance;
 }
-.hero__line {
-  display: block;
-}
-.hero__dots {
-  font-family: var(--font-dot);
-  font-variation-settings: "ROND" 100;
-  font-weight: 800;
-  letter-spacing: 0;
-  color: var(--accent-text);
+/* The full stop is the brand's dot: a round, accent-coloured point in place of a period. */
+.hero__stop {
+  display: inline-block;
+  width: 0.15em;
+  height: 0.15em;
+  margin-left: 0.04em;
+  border-radius: 50%;
+  background: var(--accent);
 }
 .hero__lede {
-  max-width: 36ch;
-  font-size: clamp(1.0625rem, 1.5vw, 1.375rem);
+  max-width: 46ch;
+  font-size: clamp(1.0625rem, 0.98rem + 0.3vw, 1.25rem);
   line-height: 1.45;
   color: var(--text-dim);
   text-wrap: balance;
 }
-.hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-}
-.btn--quiet {
-  border-color: transparent;
-  background: var(--fill-faint);
-}
-.btn--quiet:hover {
-  border-color: var(--line-strong);
-}
-.hero__trust {
+.hero__facts {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--space-2) var(--space-6);
-  margin-top: var(--space-2);
-  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
 }
-.hero__trust li {
+.hero__facts li {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
 }
-.hero__trust li::before {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
+.hero__facts a {
+  color: var(--text);
 }
-.hero__trust .hero__soon::before {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--accent);
-}
-
-.hero__shot {
-  padding-bottom: clamp(24px, 4vw, 56px);
-}
-@media (min-width: 960px) {
-  .hero__shot {
-    padding-inline: clamp(24px, 5vw, 96px);
-  }
+/* The screen: it stays whole, its foot resting on the meadow, and the boulders stand at its lower corners. */
+.hero__frame {
+  position: relative;
+  max-width: calc(1180px + 2 * var(--page-margin));
+  margin-top: clamp(64px, 8vw, 128px);
 }
