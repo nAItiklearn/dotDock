@@ -22,9 +22,9 @@ use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::HiDpi::{SetThreadDpiAwarenessContext, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2};
 use windows::Win32::UI::Input::KeyboardAndMouse::VK_ESCAPE;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CallNextHookEx, DispatchMessageW, GetCursorPos, GetMessageW, KillTimer, PostThreadMessageW, SetTimer,
-    SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL, WH_MOUSE_LL,
-    WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_QUIT, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_TIMER,
+    CallNextHookEx, DispatchMessageW, GetCursorPos, GetMessageW, KillTimer, PeekMessageW, PostThreadMessageW, SetTimer,
+    SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, KBDLLHOOKSTRUCT, MSG, PM_NOREMOVE, WH_KEYBOARD_LL,
+    WH_MOUSE_LL, WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_QUIT, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_TIMER, WM_USER,
 };
 
 /// Side of the magnifier square, in pixels. Odd, so the picked pixel is its centre.
@@ -119,8 +119,9 @@ fn read_cursor() -> Option<(Sample, Vec<String>)> {
     unsafe { GetCursorPos(&mut point) }.ok()?;
     let (ox, oy) = loupe_origin(point.x, point.y, LOUPE_SIDE, desktop_bounds());
     let pixels = grab_square(ox, oy, LOUPE_SIDE).ok()?;
-    let loupe: Vec<String> = pixels.chunks_exact(4).map(hex_of_bgra).collect();
-    let centre = ((point.y - oy).clamp(0, LOUPE_SIDE - 1) * LOUPE_SIDE + (point.x - ox).clamp(0, LOUPE_SIDE - 1)) as usize;
+    let loupe: Vec<String> = pixels.as_chunks::<4>().0.iter().map(|p| hex_of_bgra(p)).collect();
+    let centre =
+        ((point.y - oy).clamp(0, LOUPE_SIDE - 1) * LOUPE_SIDE + (point.x - ox).clamp(0, LOUPE_SIDE - 1)) as usize;
     Some((Sample { x: point.x, y: point.y, hex: loupe[centre].clone() }, loupe))
 }
 
@@ -172,8 +173,6 @@ impl ColourPicker {
         }
         let (state, emitter, file, thread_id) =
             (self.state.clone(), self.emitter.clone(), self.history_file.clone(), &self.thread_id);
-        let id_cell = std::sync::Arc::new(AtomicU32::new(0));
-        let id_for_thread = id_cell.clone();
         let (ready_tx, ready_rx) = std::sync::mpsc::channel::<Result<u32, String>>();
         let join = thread::Builder::new()
             .name("tiles-colour".to_owned())
@@ -185,19 +184,28 @@ impl ColourPicker {
                     let instance = GetModuleHandleW(None).unwrap_or_default();
                     let mouse = SetWindowsHookExW(WH_MOUSE_LL, Some(mouse_hook), Some(instance.into()), 0);
                     let keyboard = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_hook), Some(instance.into()), 0);
-                    let (Ok(mouse), Ok(keyboard)) = (mouse, keyboard) else {
-                        let _ = ready_tx.send(Err("Windows would not start the colour picker".to_owned()));
-                        return;
+                    let (mouse, keyboard) = match (mouse, keyboard) {
+                        (Ok(m), Ok(k)) => (m, k),
+                        (m, k) => {
+                            // One hook may have been installed; never leave it behind.
+                            for hook in [m, k].into_iter().flatten() {
+                                let _ = UnhookWindowsHookEx(hook);
+                            }
+                            let _ = ready_tx.send(Err("Windows would not start the colour picker".to_owned()));
+                            return;
+                        }
                     };
                     let timer = SetTimer(None, 0, SAMPLE_INTERVAL_MS, None);
-                    id_for_thread.store(GetCurrentThreadId(), Ordering::SeqCst);
-                    let _ = ready_tx.send(Ok(GetCurrentThreadId()));
+                    // Creates this thread's message queue, so a cancel posted at once is not lost.
+                    let mut probe = MSG::default();
+                    let _ = PeekMessageW(&mut probe, None, WM_USER, WM_USER, PM_NOREMOVE);
                     {
                         let mut s = lock(&state);
                         s.picking = true;
                         s.current = None;
                         s.loupe.clear();
                     }
+                    let _ = ready_tx.send(Ok(GetCurrentThreadId()));
                     emitter.emit(TileData::ColourPicker(lock(&state).clone()));
 
                     let deadline = Instant::now() + PICK_TIMEOUT;
@@ -249,7 +257,8 @@ impl ColourPicker {
                 emitter.emit(TileData::ColourPicker(snapshot));
             })
             .map_err(|e| format!("could not start the colour picker: {e}"))?;
-        let started = ready_rx.recv_timeout(Duration::from_secs(3)).map_err(|_| "the colour picker did not start".to_owned())?;
+        let started =
+            ready_rx.recv_timeout(Duration::from_secs(3)).map_err(|_| "the colour picker did not start".to_owned())?;
         match started {
             Ok(id) => {
                 thread_id.store(id, Ordering::SeqCst);
