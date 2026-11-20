@@ -1,5 +1,6 @@
 //! dotDock core: owns the desktop overlay window, providers and boot timing.
 
+mod core_commands;
 mod desktop_host;
 mod island_host;
 mod providers;
@@ -8,7 +9,6 @@ mod tray;
 use desktop_host::{HitRect, HitRegions, Hwnd};
 use dotdock_shell::crash_guard::{self, StartDecision};
 use dotdock_shell::providers::weather::{self, Place};
-use dotdock_shell::wallpaper;
 use dotdock_shell::{autostart, boot_log as boot, dock_guard, sentinel};
 use providers::{ProvidersReady, WeatherWake};
 use std::time::Duration;
@@ -51,80 +51,6 @@ fn weather_set_place(place: Place, wake: State<'_, WeatherWake>) -> Result<(), S
     Ok(())
 }
 
-/// One bundled wallpaper for the Settings picker.
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WallpaperItem {
-    id: String,
-    name: String,
-    style: String,
-    mode: String,
-    accent: String,
-    path: String,
-    /// Web path of the small preview, e.g. `/wallpaper-thumbs/paper-ring-dark.jpg`.
-    thumb: Option<String>,
-}
-
-fn bundled_wallpapers_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
-    app.path().resource_dir().map(|d| d.join("wallpapers")).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn wallpapers_list(app: AppHandle) -> Result<Vec<WallpaperItem>, String> {
-    let dir = bundled_wallpapers_dir(&app)?;
-    let items = wallpaper::bundled(&dir).map_err(|e| e.to_string())?;
-    Ok(items
-        .into_iter()
-        .map(|(e, path)| WallpaperItem {
-            id: e.id,
-            name: e.name,
-            style: e.style,
-            mode: e.mode,
-            accent: e.accent,
-            thumb: e.thumb.map(|t| format!("/{t}")),
-            path: path.to_string_lossy().into_owned(),
-        })
-        .collect())
-}
-
-/// Sets a bundled wallpaper as the real Windows wallpaper (all monitors when `monitor` is None).
-#[tauri::command]
-async fn wallpaper_apply(
-    app: AppHandle,
-    id: String,
-    mode: String,
-    fit: wallpaper::Fit,
-    monitor: Option<String>,
-) -> Result<(), String> {
-    let dir = bundled_wallpapers_dir(&app)?;
-    let items = wallpaper::bundled(&dir).map_err(|e| e.to_string())?;
-    let (_, path) = items
-        .into_iter()
-        .find(|(e, _)| e.id == id && e.mode == mode)
-        .ok_or_else(|| format!("no bundled wallpaper {id} ({mode})"))?;
-    wallpaper::apply(&path, monitor.as_deref(), fit).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn wallpaper_monitors() -> Result<Vec<String>, String> {
-    wallpaper::monitors().map_err(|e| e.to_string())
-}
-
-/// The in-app "Restore Windows desktop" action.
-#[tauri::command]
-async fn restore_windows() -> Result<(), String> {
-    dotdock_shell::restore::restore_windows().map(|_| ()).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn autostart_set(enabled: bool) -> Result<(), String> {
-    if enabled {
-        autostart::enable().map(|_| ()).map_err(|e| e.to_string())
-    } else {
-        autostart::disable().map_err(|e| e.to_string())
-    }
-}
-
 /// A widget text field gained (`true`) or lost focus.
 #[tauri::command]
 fn overlay_set_typing(app: AppHandle, typing: bool) {
@@ -140,6 +66,9 @@ fn set_hit_regions(rects: Vec<HitRect>, regions: State<'_, HitRegions>) {
 }
 
 fn show_overlay(app: &AppHandle) {
+    if !core_commands::load_prefs().use_our_desktop {
+        return;
+    }
     let Some(window) = app.get_webview_window(OVERLAY_LABEL) else { return };
     if window.is_visible().unwrap_or(false) {
         return;
@@ -260,6 +189,9 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| tray::open_settings(app)))
         .manage(ready.clone())
         .manage(regions.clone())
+        .register_uri_scheme_protocol(core_commands::WALLPAPER_SCHEME, |_ctx, request| {
+            core_commands::serve_wallpaper(&request)
+        })
         .invoke_handler(tauri::generate_handler![
             providers_ready,
             overlay_ready,
@@ -277,11 +209,22 @@ pub fn run() {
             media_command,
             weather_search,
             weather_set_place,
-            wallpapers_list,
-            wallpaper_apply,
-            wallpaper_monitors,
-            restore_windows,
-            autostart_set
+            core_commands::startup_get,
+            core_commands::startup_set,
+            core_commands::restore_windows,
+            core_commands::displays_list,
+            core_commands::wallpapers_list,
+            core_commands::wallpapers_assignments,
+            core_commands::wallpapers_assign,
+            core_commands::wallpapers_import,
+            core_commands::wallpapers_remove,
+            core_commands::shortcuts_register,
+            core_commands::settings_open,
+            core_commands::overlay_edit_mode,
+            core_commands::app_info,
+            core_commands::app_open_data_folder,
+            core_commands::settings_dock_get,
+            core_commands::settings_dock_set
         ])
         .setup(move |app| {
             boot::mark("setup");
@@ -289,6 +232,7 @@ pub fn run() {
             let window = create_overlay(&handle)?;
             boot::mark("window-created");
             tray::install(&handle)?;
+            app.manage(core_commands::HotkeyState::start(&handle));
             island_host::start(&handle)?;
             let wake = providers::spawn(handle.clone(), ready)?;
             app.manage(wake);

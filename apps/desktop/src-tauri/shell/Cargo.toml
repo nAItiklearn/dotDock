@@ -13,7 +13,7 @@ sysinfo = { version = "0.40", default-features = false, features = ["system", "d
 thiserror = "2"
 base64 = "0.23"
 ureq = { version = "3", features = ["json"] }
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Security", "Win32_System_Power", "Win32_System_Registry", "Win32_System_Threading", "Foundation", "Media_Control", "Storage_Streams", "Win32_System_Com", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging"] }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Security", "Win32_System_Power", "Win32_System_Registry", "Win32_System_Threading", "Foundation", "Media_Control", "Storage_Streams", "Win32_System_Com", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging"] }
 
 [dev-dependencies]
 tempfile = "3"

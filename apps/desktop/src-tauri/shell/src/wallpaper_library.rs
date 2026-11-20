@@ -150,9 +150,26 @@ impl Library {
     }
 }
 
+/// The content type an imported picture is served with.
+pub fn mime_of(path: &Path) -> &'static str {
+    match path.extension().and_then(|e| e.to_str()).map(str::to_ascii_lowercase).as_deref() {
+        Some("png") => "image/png",
+        Some("bmp") => "image/bmp",
+        Some("webp") => "image/webp",
+        Some("gif") => "image/gif",
+        _ => "image/jpeg",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pictures_are_served_with_their_type() {
+        assert_eq!(mime_of(Path::new("a.PNG")), "image/png");
+        assert_eq!(mime_of(Path::new("a.jfif")), "image/jpeg");
+    }
 
     fn picture(dir: &Path, name: &str) -> PathBuf {
         let path = dir.join(name);

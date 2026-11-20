@@ -4,8 +4,10 @@
 
 pub mod autostart;
 pub mod boot_log;
+pub mod core_prefs;
 pub mod crash_guard;
 pub mod desktop_icons;
+pub mod displays;
 pub mod dock_guard;
 pub mod file_dialog;
 pub mod hotkey;
