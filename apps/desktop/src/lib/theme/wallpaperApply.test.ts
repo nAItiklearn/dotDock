@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { widgetCatalog } from "../../overlay/catalog";
 import { DEFAULT_SETTINGS, LIMITS } from "../model/defaults";
@@ -5,7 +7,7 @@ import { createApp, type AppContext } from "../state/app";
 import { MemoryBackend } from "../storage/backend";
 import { extractPalette } from "./palette";
 import { applyWallpaperTheme, selectTheme } from "./wallpaperApply";
-import { buildThemeDoc, themeFromPalette, WALLPAPER_THEME_ID } from "./wallpaperTheme";
+import { auditAa, buildThemeDoc, suggestMode, themeFromPalette, WALLPAPER_THEME_ID } from "./wallpaperTheme";
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
@@ -92,5 +94,77 @@ describe("applyWallpaperTheme", () => {
     expect(result.ok).toBe(false);
     expect(state(app).customThemes).toHaveLength(LIMITS.maxCustomThemes);
     expect(state(app).settings.theme).toEqual(before);
+  });
+});
+
+/** A theme from one of the shipped wallpapers, sampled as the webview samples it (see wallpaperFixtures.test.ts). */
+function themeFromWallpaper(name: string) {
+  const bytes = readFileSync(join(__dirname, "fixtures", "wallpapers", `${name}.rgb`));
+  const width = bytes.readUInt16LE(0);
+  const height = bytes.readUInt16LE(2);
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let i = 0; i < width * height; i++) data.set([bytes[4 + i * 3] ?? 0, bytes[5 + i * 3] ?? 0, bytes[6 + i * 3] ?? 0, 255], i * 4);
+  const palette = extractPalette({ width, height, data });
+  if (!palette) throw new Error(`${name} has no pixels`);
+  const mode = suggestMode(palette);
+  return { palette, doc: buildThemeDoc(themeFromPalette(palette, mode), mode, name) };
+}
+
+describe("theme from real wallpapers: preview, apply, undo", () => {
+  const THREE = ["meadow-dots-dark", "paper-ring-light", "soft-mono-dark"] as const;
+
+  it("previewing changes nothing: every accent and mode is built and audited without touching the settings", async () => {
+    const app = await boot();
+    const before = structuredClone({ settings: state(app).settings, customThemes: state(app).customThemes });
+    for (const name of THREE) {
+      const { palette } = themeFromWallpaper(name);
+      for (const mode of ["dark", "light"] as const) {
+        for (const accent of palette.accents.length > 0 ? palette.accents : [undefined]) {
+          auditAa(buildThemeDoc(themeFromPalette(palette, mode, accent), mode, name).colors);
+        }
+      }
+    }
+    expect({ settings: state(app).settings, customThemes: state(app).customThemes }).toEqual(before);
+  });
+
+  it("applies three wallpapers in a row and undoes back to exactly where it started", async () => {
+    const app = await boot();
+    const initial = structuredClone({ settings: state(app).settings, customThemes: state(app).customThemes });
+    const undos: (() => void)[] = [];
+    for (const name of THREE) {
+      const { doc } = themeFromWallpaper(name);
+      const result = applyWallpaperTheme(app.settings, doc);
+      if (!result.ok) throw new Error(result.reason);
+      expect(state(app).customThemes.find((t) => t.id === WALLPAPER_THEME_ID)?.name).toBe(name);
+      expect(state(app).settings.theme.fixedId).toBe(WALLPAPER_THEME_ID);
+      undos.push(result.undo);
+    }
+    expect(state(app).customThemes).toHaveLength(1);
+    // Each undo brings back the wallpaper theme before it, in reverse.
+    undos.pop()?.();
+    expect(state(app).customThemes[0]?.name).toBe(THREE[1]);
+    undos.pop()?.();
+    expect(state(app).customThemes[0]?.name).toBe(THREE[0]);
+    undos.pop()?.();
+    expect({ settings: state(app).settings, customThemes: state(app).customThemes }).toEqual(initial);
+  });
+
+  it("keeps what it saved after a restart, and so does an undo", async () => {
+    const backend = new MemoryBackend();
+    const bus = { send: () => undefined, subscribe: () => () => undefined };
+    const first = createApp({ catalog: widgetCatalog, backend, bus });
+    await first.start();
+    const result = applyWallpaperTheme(first.settings, themeFromWallpaper("meadow-dots-dark").doc);
+    if (!result.ok) throw new Error(result.reason);
+    await vi.runAllTimersAsync();
+    const second = createApp({ catalog: widgetCatalog, backend, bus });
+    await second.start();
+    expect(second.settings.getState().settings.theme.fixedId).toBe(WALLPAPER_THEME_ID);
+    result.undo();
+    await vi.runAllTimersAsync();
+    const third = createApp({ catalog: widgetCatalog, backend, bus });
+    await third.start();
+    expect(third.settings.getState().settings.theme).toEqual(DEFAULT_SETTINGS.theme);
+    expect(third.settings.getState().customThemes).toEqual([]);
   });
 });
