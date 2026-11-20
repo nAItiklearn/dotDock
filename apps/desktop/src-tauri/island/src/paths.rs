@@ -47,8 +47,27 @@ impl ClaudeDirs {
 
 /// `%USERPROFILE%\.codex\sessions`, where Codex writes its rollout logs.
 pub fn codex_sessions_dir() -> Option<PathBuf> {
-    let home = std::env::var_os("USERPROFILE").or_else(|| std::env::var_os("HOME"))?;
-    Some(PathBuf::from(home).join(".codex").join("sessions"))
+    home_dir().map(|h| h.join(".codex").join("sessions"))
+}
+
+fn home_dir() -> Option<PathBuf> {
+    std::env::var_os("USERPROFILE").or_else(|| std::env::var_os("HOME")).map(PathBuf::from)
+}
+
+fn non_empty_env(name: &str) -> Option<PathBuf> {
+    std::env::var_os(name).filter(|v| !v.is_empty()).map(PathBuf::from)
+}
+
+/// `$COPILOT_HOME`, otherwise `%USERPROFILE%\.copilot`: where GitHub Copilot CLI keeps its configuration and `hooks`.
+pub fn copilot_home() -> Option<PathBuf> {
+    non_empty_env("COPILOT_HOME").or_else(|| home_dir().map(|h| h.join(".copilot")))
+}
+
+/// `$XDG_CONFIG_HOME\opencode`, otherwise `%USERPROFILE%\.config\opencode`: OpenCode's global configuration and `plugins`.
+pub fn opencode_config_dir() -> Option<PathBuf> {
+    non_empty_env("XDG_CONFIG_HOME")
+        .or_else(|| home_dir().map(|h| h.join(".config")))
+        .map(|config| config.join("opencode"))
 }
 
 #[cfg(test)]

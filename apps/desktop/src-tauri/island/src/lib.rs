@@ -9,6 +9,7 @@
 //!
 //! Reads local files only. No network, no AI calls, no Tauri dependency.
 
+pub mod agents;
 pub mod codex;
 pub mod connect;
 pub mod copilot;

@@ -19,7 +19,7 @@ export type Phase =
   | "error"
   | "stopped";
 
-export type AgentKind = "claude" | "codex";
+export type AgentKind = "claude" | "codex" | "copilot" | "opencode" | "other";
 
 /** Phases that mean "the turn is over"; they linger for a few seconds and then collapse. */
 export const TERMINAL_PHASES: ReadonlySet<Phase> = new Set(["done", "paused", "limit", "error", "stopped"]);
@@ -37,6 +37,8 @@ export interface Problem {
 export interface SessionView {
   readonly id: string;
   readonly agent: AgentKind;
+  /** The agent's own name for labels, for example "GitHub Copilot CLI" or the name an unknown agent reported. */
+  readonly agentLabel: string;
   readonly phase: Phase;
   /** Tool name as the agent reports it (Read, Bash, apply_patch ...). */
   readonly tool: string | null;
@@ -125,11 +127,26 @@ export const DEFAULT_SETTINGS: IslandSettings = {
 
 export type ConnectionState = "no-claude" | "disconnected" | "connected" | "outdated" | "hook-missing";
 
+/** The agents Connect sets up with one file of their own (a hooks file, a plugin file). */
+export type ConnectableAgent = "copilot" | "opencode";
+
+export type AgentState = "not-found" | "disconnected" | "connected" | "outdated" | "hook-missing";
+
+export interface AgentConnection {
+  readonly agent: ConnectableAgent;
+  readonly state: AgentState;
+  /** Absolute path of the file Connect writes and Disconnect deletes; empty when there is nowhere to look. */
+  readonly file: string;
+}
+
 export interface ConnectionStatus {
   readonly state: ConnectionState;
   /** Absolute path of the Claude Code user settings file that Connect edits. */
   readonly settingsPath: string;
   readonly codexAvailable: boolean;
+  readonly agents: readonly AgentConnection[];
+  /** The folder any agent can report to; see docs/ISLAND_PROTOCOL.md. */
+  readonly feedDir: string;
 }
 
 export type FocusOutcome = "focused" | "window-not-found" | "session-ended";
@@ -177,6 +194,8 @@ export const CMD = {
   dismiss: "island_dismiss",
   connect: "island_connect",
   disconnect: "island_disconnect",
+  connectAgent: "island_connect_agent",
+  disconnectAgent: "island_disconnect_agent",
   connection: "island_connection",
   setSettings: "island_set_settings",
 } as const;

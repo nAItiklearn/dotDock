@@ -2,6 +2,7 @@
 //! pill at the top centre. Logic lives in the `dotdock-island` crate; this only wires it up.
 //! See docs/ISLAND_INTEGRATION.md.
 
+use dotdock_island::agents::{AgentHomes, Connectable};
 use dotdock_island::engine::{Alert, Snapshot};
 use dotdock_island::paths::ClaudeDirs;
 use dotdock_island::pointer::{self, PointerEvent, Poller, Regions, Target};
@@ -124,7 +125,10 @@ pub fn start(app: &AppHandle) -> tauri::Result<()> {
 
     let data_dir = dotdock_shell::app_data_dir().ok_or(tauri::Error::WindowNotFound)?;
     let hook_source = std::env::current_exe()?.with_file_name("dotdock-island-hook.exe");
-    let service = match IslandService::start(ServiceConfig { dirs, data_dir, hook_source }, TauriHost(app.clone())) {
+    let service = match IslandService::start(
+        ServiceConfig { dirs, data_dir, hook_source, homes: AgentHomes::from_env() },
+        TauriHost(app.clone()),
+    ) {
         Ok(s) => s,
         Err(err) => {
             dotdock_shell::boot_log::record(&format!("island: service failed: {err}"));
@@ -197,6 +201,22 @@ pub fn island_connect(s: State<'_, IslandState>) -> Res<dotdock_island::service:
 #[tauri::command]
 pub fn island_disconnect(s: State<'_, IslandState>) -> Res<dotdock_island::service::ConnectionStatus> {
     s.service.disconnect().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn island_connect_agent(
+    agent: Connectable,
+    s: State<'_, IslandState>,
+) -> Res<dotdock_island::service::ConnectionStatus> {
+    s.service.connect_agent(agent).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn island_disconnect_agent(
+    agent: Connectable,
+    s: State<'_, IslandState>,
+) -> Res<dotdock_island::service::ConnectionStatus> {
+    s.service.disconnect_agent(agent).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
