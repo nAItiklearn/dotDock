@@ -3,6 +3,12 @@ body {
   overflow: auto;
   background: var(--bg);
 }
+/* ?wallpaper=: the widgets over a real desktop picture, fixed like a wallpaper. */
+body {
+  background-image: var(--gallery-wallpaper, none);
+  background-size: cover;
+  background-attachment: fixed;
+}
 .gallery {
   display: flex;
   flex-direction: column;

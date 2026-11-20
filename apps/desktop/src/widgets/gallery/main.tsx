@@ -26,6 +26,7 @@ import "./gallery.css";
  *   ?focus=0.5,0.4,1              its framing: focal x, focal y, zoom
  *   ?panel=1                      the photo widget next to its live settings panel
  *   ?empty=1                      the photo widget without a picture
+ *   ?wallpaper=<url>              a desktop wallpaper behind the page instead of the theme background
  */
 const params = new URLSearchParams(location.search);
 const stateParam = params.get("state") ?? "live";
@@ -81,6 +82,8 @@ const VARIANTS: Readonly<Record<string, readonly Variant[]>> = {
     { label: "ink mat, square, flat", config: { frame: "mat", tint: "ink", radius: 0, thickness: 20, shadow: false } },
     { label: "accent keyline, squircle", config: { frame: "hairline", tint: "accent", shape: "squircle", thickness: 8 } },
     { label: "ink polaroid, mono", config: { frame: "polaroid", tint: "ink", tone: "mono", caption: "Kyoto" } },
+    { label: "grey polaroid", config: { frame: "polaroid", tint: "dim", caption: "Ridge at dusk" } },
+    { label: "accent polaroid", config: { frame: "polaroid", tint: "accent", caption: "First light" } },
   ],
 };
 
@@ -99,6 +102,8 @@ const photoId = (...parts: readonly string[]): string =>
   `gallery${showPhotoEmpty ? "-empty" : ""}-${parts.join("-").replaceAll(" ", "-")}`;
 
 applyTheme(themeById(params.get("theme") ?? "obsidian"));
+const wallpaper = params.get("wallpaper");
+if (wallpaper) document.body.style.setProperty("--gallery-wallpaper", `url("${CSS.escape(wallpaper)}")`);
 const weatherCode = params.get("code");
 applyGalleryState(state, {
   ...(weatherCode === null ? {} : { code: Number(weatherCode) }),
