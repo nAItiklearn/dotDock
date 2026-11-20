@@ -3,7 +3,7 @@ import type { Category, CategoryId, DockApp } from "./protocol";
 
 // The store reads the page address and local storage when it is created; the tests have neither.
 vi.stubGlobal("location", { search: "" });
-const { useDockStore } = await import("./store");
+const { isFrozen, useDockStore } = await import("./store");
 
 const NOW = Date.now();
 const category = (id: CategoryId): Category => ({ id, name: null, tone: "neutral", order: 0 });
@@ -47,5 +47,17 @@ describe("showStack", () => {
     useDockStore.getState().showStack("media", FROM);
     useDockStore.getState().showStack("media", FROM);
     expect(useDockStore.getState().stack?.fresh.size).toBe(0);
+  });
+});
+
+describe("isFrozen", () => {
+  const calm = { locked: false, displayOff: false, fullscreen: false };
+
+  it("is false while nothing asks the dock to stop", () => {
+    expect(isFrozen(calm)).toBe(false);
+  });
+
+  it.each(["locked", "displayOff", "fullscreen"] as const)("is true when the core says %s", (reason) => {
+    expect(isFrozen({ ...calm, [reason]: true })).toBe(true);
   });
 });

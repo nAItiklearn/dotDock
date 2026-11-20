@@ -2,7 +2,7 @@
 //! it restores stock Windows, disables autostart, and says why on the next manual launch.
 //! Also records panics to the boot log, since release builds abort without a console.
 
-use crate::{boot_log, restore};
+use crate::{boot_log, dock_guard, restore};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -92,7 +92,8 @@ pub fn take_tripped_notice() -> Option<u64> {
     Some(at)
 }
 
-/// Writes panics (any thread) to the boot log before the process aborts.
+/// Writes panics (any thread) to the boot log and puts the taskbar back if this process hid it,
+/// before the process aborts. The sentinel is the backstop when even this cannot run.
 pub fn install_panic_hook() {
     std::panic::set_hook(Box::new(|info| {
         let location = info.location().map(|l| format!("{}:{}", l.file(), l.line())).unwrap_or_default();
@@ -104,5 +105,6 @@ pub fn install_panic_hook() {
             .unwrap_or_default();
         let thread = std::thread::current().name().unwrap_or("unnamed").to_owned();
         boot_log::record(&format!("panic thread={thread} at={location} {message}"));
+        dock_guard::restore_after_dock();
     }));
 }

@@ -56,9 +56,14 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
+      # The restore watchdog ships beside dotdock.exe (see ci.yml for why it is not in tauri.conf.json).
+      - name: Build the restore sentinel
+        run: cargo build --release -p dotdock-sentinel
+        working-directory: apps/desktop/src-tauri
+
       # Cold build on purpose: release artifacts do not use the shared rust cache.
       - name: Build bundle
-        run: pnpm tauri build
+        run: pnpm tauri build --config src-tauri/tauri.sentinel.conf.json
 
       - name: Stage portable exe
         run: |

@@ -21,13 +21,25 @@ live thumbnails, and a few excellent live tiles, all in the home screen's dot-ma
 - **Explorer restarts.** Listen for `TaskbarCreated`; re-hide the new taskbar and re-register the app bar.
 
 ## 3. Restore guarantees (all must be proven before the dock can hide anything)
+The one way to hide the taskbar is `dock_guard::hide_for_dock` (`shell/src/dock_guard.rs`). It checks the snapshot
+holds the original auto-hide value, makes sure the sentinel is watching, writes the marker
+`%LOCALAPPDATA%\dev.dotdock.desktop\taskbar-hidden.json` (owner pid and start time, auto-hide as it was just before
+the hide; written, flushed and renamed so a power cut leaves no half file), and only then hides. "Hidden by us" means
+"the marker exists". Every path below acts on the marker, and removes it only after checking that the taskbar is
+visible and auto-hide is back. Design record: D-017. Test record: `docs/QA/DOCK_D0_RESTORE.md`.
+
 | Exit path | How the taskbar comes back |
 |---|---|
-| Normal quit, "Use Windows desktop", uninstall | The core shows the taskbar and restores the auto-hide state. |
-| Panic / crash | The panic hook restores, then the crash-loop guard (D-012) disables the dock after 3 unclean starts. |
-| Hard kill (`taskkill /F`), power loss | A tiny watchdog process (`dotdock-sentinel`) waits on the core's process handle and restores when it ends. On next sign-in the core restores before doing anything else if the last run was unclean. |
-| App will not start at all | `tools/restore-windows.ps1` shows the taskbar and restores the snapshot. |
-| Shift held at launch | Safe mode: the dock does not hide the taskbar. |
+| Normal quit, "Use Windows desktop", uninstall | The core calls `restore_after_dock` on `RunEvent::Exit`; `restore_windows` (in-app action, `--restore-windows` run by the uninstaller) calls `release`, which also clears the marker. |
+| Panic / crash | The panic hook calls `restore_after_dock` (own marker only), then the crash-loop guard (D-012) disables the dock after 3 unclean starts. |
+| Hard kill (`taskkill /F`, `/F /T`), exit without restoring | The sentinel (`dotdock-sentinel.exe`, or `dotdock.exe --sentinel` when that file is missing) waits on the core's process handle; when it ends with the marker present, the sentinel restores. It exits quietly when the marker is gone. It starts detached from the core's process tree, so a tree kill cannot take it along. |
+| Sentinel killed | The core checks for it every second and starts a new one; the unwatched window is at most that second. |
+| Power loss, sign-out, sentinel and core both killed | `recover_if_dirty` runs first thing at the next start (also in safe mode) and restores if the marker's owner is not running. A live owner (a second launch) is left alone. Explorer rebuilds a visible taskbar on its own at sign-in; only the auto-hide value can stay changed until then. |
+| App will not start at all | `tools/restore-windows.ps1` removes the marker first, then shows the taskbar and restores the snapshot. |
+| Shift held at launch | Safe mode: it returns before any window exists, so nothing can hide the taskbar (it still recovers a dirty marker). |
+
+Explorer re-shows the taskbar window about 50 ms after auto-hide changes, so a hide is repeated until it stays
+hidden. The dock still has to watch `TaskbarCreated` and call `hide_for_dock` again after an Explorer restart.
 
 ## 4. Layout and surfaces
 - **Dock bar**: a floating pill, bottom by default (top, left, right selectable), per monitor, auto-hide option.
@@ -35,14 +47,25 @@ live thumbnails, and a few excellent live tiles, all in the home screen's dot-ma
   pinned, a divider, live tiles, the status pill (volume, network, battery, clock).
 - **Category stack**: one tile showing up to four mini icons of its apps in a 2 x 2 grid. Click opens a
   stack popover: category name, a grid of its apps, tinted with the category colour. Arrow keys,
-  type-to-filter, Esc closes.
+  type-to-filter, Esc closes. Opens instantly (content on the first frame, at most an 80 ms fade).
 - **App Library**: full-screen overlay (hotkey, or a dock button), search field on top, every category
   as a section with its apps; typing filters apps, then Start-menu files and calculator results.
-- **Hover**: magnification with spring physics on the compositor (transform only); label tooltip.
+- **Hover**: subtle magnification (about 1.25x peak, none or slight on stacks), transform only, never blurring; label tooltip.
 - **Running indicators**: a dot under each running app; two dots for several windows; accent for the
   focused one. Badges where Windows exposes them.
 - **Window menu**: hovering a running app shows live DWM thumbnails of its windows; click restores or
   minimises; right-click: new window, pin/unpin, move to stack, close all.
+
+## 4b. Dock themes (owner request 2026-11-20)
+- `glass` (default): macOS-style glass. The blur is the native DWM backdrop (Windows 11 22H2+:
+  `DWMWA_SYSTEMBACKDROP_TYPE` = transient/acrylic; Windows 10: `SetWindowCompositionAttribute`
+  acrylic), applied by the dock host to the dock window, clipped to the pill shape. CSS `backdrop-filter`
+  cannot blur the desktop behind a transparent WebView2 window, so it is not used for this.
+- `glass-lite`: used automatically when transparency effects are off, on battery saver, or when the
+  native backdrop is unavailable: semi-opaque tinted bar, same layout.
+- `obsidian`, `paper`, `aurum` (solid, matching the home-screen themes) and `minimal` (icons only).
+- The host tells the UI whether the area behind the dock is light or dark (`data-backdrop`) so text and
+  icons stay readable.
 
 ## 5. Automatic categories (the headline feature)
 - **Sources**: Start menu shortcuts (`%ProgramData%` and `%APPDATA%\Microsoft\Windows\Start Menu`) and
@@ -77,4 +100,4 @@ history (respects "exclude from history"), file shelf, downloads, screenshots, n
 | D4 | Running windows, thumbnails, window menu, taskbar hidden | Restore guarantees re-tested |
 | D5 | App Library with search | Rubric 4.5 |
 | D6 | Live tiles, first wave | Each 4.5 |
-| D7 | Settings pages, website section, release | Owner review, then tag `v2.0.0` |
+| D7 | Settings pages, every row of `docs/dock/FEATURE_PARITY.md` accepted or justified, website updated with real dock screenshots, logo everywhere, launch video (`docs/design/LAUNCH_VIDEO.md`), release | Owner review, then tag `v2.0.0` |

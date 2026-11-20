@@ -5,9 +5,12 @@
 pub mod autostart;
 pub mod boot_log;
 pub mod crash_guard;
+pub mod dock_guard;
+mod process;
 pub mod providers;
 mod registry;
 pub mod restore;
+pub mod sentinel;
 pub mod snapshot;
 pub mod taskbar;
 pub mod wallpaper;

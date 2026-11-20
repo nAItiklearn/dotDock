@@ -3,8 +3,8 @@ import { listen } from "@tauri-apps/api/event";
 import { isTauri } from "../providers/bridge";
 import type { Rect } from "./geometry";
 import { activationTarget } from "./model";
-import type { Category, CategoryId, CommandResult, DockApp, DockBackdrop, DockSettings, DockSnapshot, DockWindow } from "./protocol";
-import { useDockStore } from "./store";
+import type { Category, CategoryId, CommandResult, DockApp, DockBackdrop, DockSettings, DockSnapshot, DockWindow, FrozenState } from "./protocol";
+import { isFrozen, useDockStore } from "./store";
 import { t } from "./strings";
 
 /** Everything the dock needs from the outside world. The Tauri core provides it; a browser has nothing. */
@@ -29,7 +29,7 @@ export interface Handlers {
   readonly settings: (settings: DockSettings) => void;
   readonly library: (action: "toggle" | "open" | "close") => void;
   readonly pointer: (inside: boolean) => void;
-  readonly frozen: (frozen: boolean) => void;
+  readonly frozen: (state: FrozenState) => void;
   readonly backdrop: (backdrop: DockBackdrop) => void;
 }
 
@@ -57,7 +57,7 @@ const tauriBackend: DockBackend = {
       listen<DockSettings>("dock://settings", (e) => handlers.settings(e.payload)),
       listen<"toggle" | "open" | "close">("dock://library", (e) => handlers.library(e.payload)),
       listen<{ inside: boolean }>("dock://pointer", (e) => handlers.pointer(e.payload.inside)),
-      listen<{ frozen: boolean }>("dock://frozen", (e) => handlers.frozen(e.payload.frozen)),
+      listen<FrozenState>("dock://frozen", (e) => handlers.frozen(e.payload)),
       listen<DockBackdrop>("dock://backdrop", (e) => handlers.backdrop(e.payload)),
     ]);
     return () => offs.forEach((off) => off());
@@ -114,7 +114,7 @@ async function start(): Promise<() => void> {
       setLibrary(action === "toggle" ? !libraryOpen : action === "open");
     },
     pointer: store.setPointerInside,
-    frozen: store.setFrozen,
+    frozen: (state) => store.setFrozen(isFrozen(state)),
     backdrop: store.setBackdrop,
   });
   const snapshot = await backend.ready();

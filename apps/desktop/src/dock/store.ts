@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { readChoice, saveChoice, type EffectsChoice } from "./effects";
 import type { PopoverTileId, Rect } from "./geometry";
 import { appsInCategory, freshAppIds } from "./model";
-import type { Category, CategoryId, DockApp, DockSettings, DockSnapshot, DockWindow } from "./protocol";
+import type { Category, CategoryId, DockApp, DockSettings, DockSnapshot, DockWindow, FrozenState } from "./protocol";
 import { DEFAULT_BACKDROP, readThemeChoice, saveThemeChoice, type Backdrop, type DockThemeId } from "./theme";
 
 export const DEFAULT_SETTINGS: DockSettings = {
@@ -17,6 +17,9 @@ export const DEFAULT_SETTINGS: DockSettings = {
   pinned: [],
   tiles: [],
 };
+
+/** Whether the dock should stop drawing and ticking: any one of the core's reasons is enough. */
+export const isFrozen = (state: FrozenState): boolean => state.locked || state.displayOff || state.fullscreen;
 
 /** A command that failed, shown for a moment above the dock. */
 export interface Notice {

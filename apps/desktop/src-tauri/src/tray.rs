@@ -1,9 +1,11 @@
 //! Tray icon: the always-available control point (MASTER_SPEC 9.6).
 
 use crate::desktop_host::{self, Hwnd};
+use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_CXSMICON};
 
 pub const SETTINGS_LABEL: &str = "settings";
 /// Asks the overlay to toggle widget edit mode.
@@ -86,9 +88,22 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
                 open_settings(tray.app_handle());
             }
         });
-    if let Some(icon) = app.default_window_icon() {
-        builder = builder.icon(icon.clone());
+    if let Some(icon) = tray_icon(app) {
+        builder = builder.icon(icon);
     }
     builder.build(app)?;
     Ok(())
+}
+
+/// The notification area draws the small-icon size (16 px at 100% scale, 32 px at 200%). The app's
+/// .ico holds a hand-drawn image for each of those sizes, so ask for that one instead of letting
+/// Windows shrink the large window icon, which blurs the 1 px gap between the dot and the pill.
+fn tray_icon(app: &AppHandle) -> Option<Image<'static>> {
+    // SAFETY: GetSystemMetrics has no preconditions; it returns 0 on failure.
+    let small = unsafe { GetSystemMetrics(SM_CXSMICON) };
+    u32::try_from(small)
+        .ok()
+        .filter(|size| *size > 0)
+        .and_then(|size| Image::from_app_icon_resource(size).ok())
+        .or_else(|| app.default_window_icon().cloned().map(Image::to_owned))
 }

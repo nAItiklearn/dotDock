@@ -143,4 +143,23 @@ function Set-TaskbarAutoHide([bool]$On) {
     [void][DotDock.Native]::SHAppBarMessage($script:AbmSetState, [ref]$data)
 }
 
+# The dock writes this file before it hides the taskbar and removes it once the taskbar is back.
+# Must match MARKER_FILE in apps/desktop/src-tauri/shell/src/dock_guard.rs.
+function Get-TaskbarMarkerPath { Join-Path (Get-AppDataDir) 'taskbar-hidden.json' }
+
+# Reads and removes the marker; returns "automatically hide the taskbar" as it was before the dock
+# hid it, or $null when there is no marker or it is unreadable. Removing it first keeps a watching
+# sentinel from restoring the taskbar a second time while a script is restoring it.
+function Clear-TaskbarMarker {
+    $path = Get-TaskbarMarkerPath
+    if (-not (Test-Path -LiteralPath $path)) { return $null }
+    $before = $null
+    try {
+        $marker = Get-Content -LiteralPath $path -Raw -Encoding UTF8 | ConvertFrom-Json
+        $before = [bool]$marker.autoHideBefore
+    } catch { }
+    Remove-Item -LiteralPath $path -Force
+    return $before
+}
+
 Export-ModuleMember -Function * -Variable AppName, DataDirName, DesktopKey, AdvancedKey, SerializeKey, RunKey

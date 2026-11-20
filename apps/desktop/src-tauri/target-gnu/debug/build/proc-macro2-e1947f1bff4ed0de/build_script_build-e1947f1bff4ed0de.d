@@ -1,0 +1,5 @@
+D:\dotDock\apps\desktop\src-tauri\target-gnu\debug\build\proc-macro2-e1947f1bff4ed0de\build_script_build-e1947f1bff4ed0de.d: C:\Users\Lenovo\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\proc-macro2-1.0.107\build.rs
+
+D:\dotDock\apps\desktop\src-tauri\target-gnu\debug\build\proc-macro2-e1947f1bff4ed0de\build_script_build-e1947f1bff4ed0de.exe: C:\Users\Lenovo\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\proc-macro2-1.0.107\build.rs
+
+C:\Users\Lenovo\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\proc-macro2-1.0.107\build.rs:

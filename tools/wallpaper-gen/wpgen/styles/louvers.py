@@ -10,7 +10,8 @@ import math
 import cv2
 import numpy as np
 
-from ..core import (F32, Canvas, blur_xy, clamp01, eval_waves_pointwise, make_waves, ramp, rgb, smoothstep)
+from ..core import (F32, Canvas, blur_xy, clamp01, eval_waves_pointwise, lens_strips, make_waves, ramp, remap_axis, rgb,
+                    smoothstep)
 from ..registry import Style
 
 
@@ -26,30 +27,6 @@ def _warp(rng, x, y, amount, k=(0.6, 1.8), n=7):
     wv = make_waves(rng, n, k[0], k[1], slope=0.6)
     wy = make_waves(rng, n, k[0], k[1], slope=0.6)
     return x + amount * eval_waves_pointwise(x, y, wv), y + amount * eval_waves_pointwise(x, y, wy)
-
-
-def _lens(n_px: int, pitch_px: float, curv: float):
-    """Per-column lens coordinates for a row of cylindrical flutes."""
-    p = np.arange(n_px, dtype=F32) + 0.5
-    cell = np.floor(p / pitch_px)
-    s = (p / pitch_px - cell) * 2.0 - 1.0
-    centre = (cell + 0.5) * pitch_px
-    return centre.astype(F32), s.astype(F32), (s + curv * s**3).astype(F32), cell.astype(F32)
-
-
-def _remap_axis(field: np.ndarray, src: np.ndarray, out_w: int, out_h: int, f: float, origin_px: float, axis: int):
-    """Sample ``field`` (low-res, extended by origin_px) at per-column (axis=1) or per-row (axis=0) source coordinates."""
-    if axis == 1:  # src has length out_w: source x per column, y is identity
-        fx = ((src + origin_px) / f - 0.5).astype(F32)
-        fy = ((np.arange(out_h, dtype=F32) + 0.5) / f - 0.5).astype(F32)
-        mx = np.ascontiguousarray(np.broadcast_to(fx[None, :], (out_h, out_w)))
-        my = np.ascontiguousarray(np.broadcast_to(fy[:, None], (out_h, out_w)))
-    else:  # src has length out_h: source y per row
-        fy = ((src + origin_px) / f - 0.5).astype(F32)
-        fx = ((np.arange(out_w, dtype=F32) + 0.5) / f - 0.5).astype(F32)
-        mx = np.ascontiguousarray(np.broadcast_to(fx[None, :], (out_h, out_w)))
-        my = np.ascontiguousarray(np.broadcast_to(fy[:, None], (out_h, out_w)))
-    return cv2.remap(field, mx, my, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
 
 
 # ---------------------------------------------------------------------------
@@ -105,17 +82,17 @@ def render_ember(c: Canvas, mode: str, seed: int) -> np.ndarray:
     f = 2.0 * max(1.0, H / 2160.0)
     f = max(f, 1.0)
     x0 = m * 0.5 * pitch * (1 + curv) * 1.15 + 8
-    centre, s, lens, cell = _lens(W, pitch, curv)
+    centre, s, lens, cell = lens_strips(W, pitch, curv)
 
     t_f, a_f = _ember_fields(c, rng, mode, x0, f)
     chans = []
     disp = (0.985, 1.0, 1.02)          # tiny chromatic dispersion between flute edge and centre
     for d in disp:
         src = centre + m * 0.5 * pitch * lens * d
-        chans.append(_remap_axis(t_f, src, W, H, f, x0, axis=1))
+        chans.append(remap_axis(t_f, src, W, H, f, x0, axis=1))
     a_chans = None
     if a_f is not None:
-        a_chans = [_remap_axis(a_f, centre + m * 0.5 * pitch * lens * d, W, H, f, x0, axis=1) for d in disp]
+        a_chans = [remap_axis(a_f, centre + m * 0.5 * pitch * lens * d, W, H, f, x0, axis=1) for d in disp]
 
     out = np.empty((H, W, 3), dtype=F32)
     if mode == "dark":
@@ -152,73 +129,104 @@ def render_ember(c: Canvas, mode: str, seed: int) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# louver-silver: horizontal brushed-metal slats, the same lens idea turned on its side
+# louver-silver: horizontal brushed-chrome slats over a folded, creased sheet of light
 # ---------------------------------------------------------------------------
-def _band(x, y, x0, y0, ang, width, curve=0.0, k=2.2):
-    """Soft line through (x0, y0) at angle ``ang`` with a gentle bend; gaussian across, ``width`` in height units."""
-    ca, sa = math.cos(ang), math.sin(ang)
-    dx, dy = x - x0, y - y0
-    along = dx * ca + dy * sa
-    across = -dx * sa + dy * ca + curve * np.sin(along * k)
-    return np.exp(-((across / width) ** 2)).astype(F32)
+SLATS = 27                 # slats over the canvas height
+SLAT_WINDOW = 0.9          # how much of a slat's height each slat refracts (in slats)
+BRUSH_STREAK_PX = (30.0, 0.55)   # brushed grain: streak length and thickness in 4K reference pixels
 
 
-def _silver_light_field(c: Canvas, rng, mode, y0_px, f):
-    wf = int(math.ceil(c.w / f))
-    hf = int(math.ceil((c.h + 2 * y0_px) / f))
-    xs = (((np.arange(wf, dtype=F32) + 0.5) * f) / c.h)[None, :]
-    ys = (((np.arange(hf, dtype=F32) + 0.5) * f - y0_px) / c.h)[:, None]
-    u = xs / c.aspect
-    mask = smoothstep(0.28, 0.62, u) * (1.0 - 0.75 * smoothstep(0.72, 0.98, u) * smoothstep(0.45, 0.05, ys))
-    wv = make_waves(rng, 6, 0.4, 1.1, slope=0.8)
-    xw = xs + 0.05 * eval_waves_pointwise(xs, ys, wv)
-    yw = ys + 0.05 * eval_waves_pointwise(ys, xs, wv)
-    # three crossing sheen lines (a broad one, a sharp one, a faint wide one)
-    g = 0.55 * _band(xw, yw, 1.28, 0.40, 0.62, 0.060, 0.02) + 0.95 * _band(xw, yw, 1.30, 0.41, 0.62, 0.0065, 0.02)
-    g += 0.40 * _band(xw, yw, 1.62, 0.74, -0.52, 0.090, 0.03) + 0.70 * _band(xw, yw, 1.64, 0.745, -0.52, 0.0055, 0.03)
-    g += 0.30 * _band(xw, yw, 1.0, 0.95, -0.15, 0.20, 0.0)
-    return (g * mask).astype(F32)
+def _gauss(d, w):
+    return np.exp(-((d / w) ** 2)).astype(F32)
+
+
+def _curve_arc(x, y, x0, slope, bend, y_from, y_to, width, fade):
+    """Thin light arc x(y) = x0 + slope*y + bend*y^2, gaussian across, fading in/out over ``fade`` of the canvas height."""
+    xc = x0 + slope * y + bend * y * y
+    dxdy = slope + 2.0 * bend * y
+    d = (x - xc) / np.sqrt(1.0 + dxdy * dxdy)
+    return _gauss(d, width) * smoothstep(y_from, y_from + fade, y) * smoothstep(y_to, y_to - fade, y)
+
+
+def _crease_frame(x, y, vx, vy, up_left_slope, up_right_slope):
+    """Signed distances to the two arms of the V-shaped crease; positive inside (above) the fold."""
+    n1 = np.array([up_left_slope, -1.0], dtype=F32)
+    n1 /= np.linalg.norm(n1)
+    n2 = np.array([-up_right_slope, -1.0], dtype=F32)
+    n2 /= np.linalg.norm(n2)
+    return (n1[0] * (x - vx) + n1[1] * (y - vy)).astype(F32), (n2[0] * (x - vx) + n2[1] * (y - vy)).astype(F32)
 
 
 def render_silver(c: Canvas, mode: str, seed: int) -> np.ndarray:
     rng = np.random.default_rng(seed)
     W, H = c.w, c.h
-    n_slats = 19.0
-    pitch = H / n_slats
-    m, curv = 3.2, 0.25
-    f = max(1.0, 2.0 * H / 2160.0)
-    y0 = m * 0.5 * pitch * (1 + curv) * 1.15 + 8
+    dark = mode == "dark"
+    pitch = H / SLATS
+    rows = np.arange(H, dtype=F32) + 0.5
+    cell = np.floor(rows / pitch)
+    s = (rows / pitch - cell) * 2.0 - 1.0                    # -1 at a slat's top lip, +1 at its lower seam
+    lens = s + 0.25 * s**3
+    y_eff = ((cell + 0.5 + SLAT_WINDOW * 0.5 * lens) * pitch / H)[:, None]
+    x = c.x
+    a = c.aspect
+    quiet = 0.25 + 0.75 * smoothstep(0.28, 0.62, x / a)      # the clock side keeps the folds faint
+    corner = smoothstep(0.52, 0.80, x / a) * smoothstep(0.50, 0.12, c.y)   # and so does the widget corner
 
-    centre, s, lens, _cell = _lens(H, pitch, curv)
-    g_f = _silver_light_field(c, rng, mode, y0, f)
-    src = centre + m * 0.5 * pitch * lens
-    g = _remap_axis(g_f, src, W, H, f, y0, axis=0)
+    # a large V-shaped crease: lighter sheet above it, darker below, a faint lit lip on the fold itself
+    wv = make_waves(rng, 6, 0.4, 1.1, slope=0.8)
+    xw = x + 0.014 * eval_waves_pointwise(x, y_eff, wv)
+    s1, s2 = _crease_frame(xw, y_eff, 0.86, 0.70, 0.62, 0.74)
+    m = np.minimum(s1, s2)
+    inside = smoothstep(-0.004, 0.010, m)                    # a crisp fold between the two sheets
+    lip = _gauss(m - 0.004, 0.0035)                          # the lit edge of the upper sheet
+    shadow = (_gauss(m + 0.028, 0.034) + 0.45 * _gauss(m + 0.10, 0.09)) * (1.0 - inside)
+    # broad studio light pool behind the sheet and a darker floor
+    pool = _gauss(x - 1.15, 0.65) * _gauss(y_eff - 0.12, 0.55)
+    # thin bright arcs sweeping across the slats, drawn in true pixel space so they cross the lips smoothly
+    y = c.y
+    arc1 = _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.0020, 0.14)
+    arc2 = _curve_arc(x, y, 1.30, 0.74, -0.30, 0.28, 1.02, 0.0020, 0.14)
+    bloom1 = 0.34 * _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.008, 0.16) + 0.14 * _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.032, 0.20)
+    bloom1 += 0.06 * _curve_arc(x, y, 0.70, 0.98, -0.62, 0.03, 0.93, 0.09, 0.25)
+    bloom2 = 0.12 * _curve_arc(x, y, 1.30, 0.74, -0.30, 0.28, 1.02, 0.008, 0.16)
+    haze = bloom1 + bloom2 + 0.44 * _curve_arc(x, y, 1.36, 0.74, -0.30, 0.28, 1.02, 0.12, 0.25)
 
-    # brushed grain: very fine streaks along the slats, a little stronger where it catches light
+    gate = 1.0 - smoothstep(0.72, 1.0, np.abs(s))            # arcs dim into the seams between slats
+    glint = (1.25 * arc1 + 0.55 * arc2) * (0.55 + 0.45 * gate)[:, None] * (0.20 + 0.80 * quiet)
+
+    # brushed grain: very fine horizontal streaks that catch a little more light where the sheet is lit
     nn = rng.standard_normal((H // 2, W // 2)).astype(F32)
-    nn = blur_xy(nn, 22.0 * (W / 3840), 0.55)
+    nn = blur_xy(nn, BRUSH_STREAK_PX[0] * W / 3840.0, BRUSH_STREAK_PX[1])
     nn /= nn.std() + 1e-6
     nn = cv2.resize(nn, (W, H), interpolation=cv2.INTER_CUBIC)
 
-    if mode == "dark":
-        gl = 0.20 + 0.20 * smoothstep(0.25, 0.85, c.u) * (1.0 - 0.95 * smoothstep(0.66, 0.95, c.u) * smoothstep(0.50, 0.08, c.v)) + g * 1.0
-        gl = gl * (1.0 + nn * (0.016 + 0.03 * clamp01(g)))
-        stops = [(0.0, "#070708"), (0.14, "#141518"), (0.30, "#2b2c30"), (0.55, "#7a7c80"), (0.80, "#cbcdd0"),
-                 (1.0, "#f3f2f0"), (1.3, "#ffffff")]
-        # each slat is lit from above and shades towards its lower lip
-        profile = 1.0 - 0.55 * smoothstep(0.15, 1.0, s)
+    if dark:
+        tone = 0.29 + 0.32 * inside + 0.34 * pool * (0.35 + 0.65 * inside) - 0.12 * shadow
+        tone += 0.14 * smoothstep(0.0, 1.0, x / a) * (1.0 - y) * inside
+        tone = tone * (0.46 + 0.54 * quiet) + haze * quiet + 0.30 * lip * quiet + glint
+        tone *= 1.0 - 0.62 * corner
+        tone *= 1.0 + nn * (0.024 + 0.030 * clamp01(tone))
+        stops = [(0.0, "#050506"), (0.12, "#111214"), (0.30, "#26272a"), (0.52, "#5a5c60"), (0.74, "#a4a6aa"),
+                 (0.92, "#e2e3e4"), (1.06, "#ffffff")]
+        profile = 0.40 + 0.60 * _gauss(s + 0.45, 0.66)       # lit upper body, shaded lower lip
+        seam_dark, lip_lit = 0.86, 0.20
     else:
-        gl = 0.62 + g * 0.55 - 0.22 * (1.0 - clamp01(g * 1.6)) * (0.35 + 0.65 * (smoothstep(0.2, 0.7, c.u)))
-        gl = gl * (1.0 + nn * (0.012 + 0.025 * clamp01(g)))
-        stops = [(0.0, "#6c6e72"), (0.30, "#9fa1a4"), (0.55, "#d0d1d3"), (0.85, "#f0efed"), (1.1, "#ffffff")]
-        profile = 1.0 - 0.34 * smoothstep(0.15, 1.0, s)
-    col = ramp(gl, stops)
-    col *= profile[:, None, None]
-    # slat edges: dark lap line on the lower lip, thin lit lip on the upper edge
-    gap = smoothstep(0.93, 1.0, s) * (0.65 if mode == "dark" else 0.26)
-    col *= (1.0 - gap)[:, None, None]
-    lip = np.exp(-(((s + 0.94) / 0.05) ** 2)) * (0.16 if mode == "dark" else 0.22)
-    col += lip[:, None, None] * (1.0 - col)
+        tone = 0.40 + 0.30 * inside + 0.18 * pool * (0.35 + 0.65 * inside) - 0.14 * shadow
+        tone -= 0.12 * smoothstep(0.3, 1.0, y) * (1.0 - inside)
+        tone = 0.82 + (tone - 0.82) * (0.16 + 0.84 * quiet) * (1.0 - 0.6 * corner) + 0.6 * haze * quiet + 0.10 * lip * quiet + 0.80 * glint
+        tone *= 1.0 + nn * (0.014 + 0.020 * clamp01(tone))
+        stops = [(0.0, "#4c4e52"), (0.26, "#7e8084"), (0.48, "#b2b4b7"), (0.70, "#d9dadb"), (0.88, "#f0efed"),
+                 (1.05, "#ffffff")]
+        profile = 0.72 + 0.28 * _gauss(s + 0.45, 0.66)
+        seam_dark, lip_lit = 0.30, 0.32
+    col = ramp(tone, stops)
+    # slat shading and the dark lap line on each lower lip; on the clock side of the light variant both stay gentle
+    soften = (0.45 + 0.55 * quiet) * (1.0 - 0.55 * corner) if not dark else 1.0
+    seam = smoothstep(0.74, 1.0, s) * seam_dark
+    col *= (1.0 - (1.0 - profile[:, None]) * soften)[..., None]
+    col *= (1.0 - seam[:, None] * soften)[..., None]
+    lit = _gauss(s + 0.95, 0.06) * lip_lit
+    col += lit[:, None, None] * (1.0 - col)
     return clamp01(col)
 
 

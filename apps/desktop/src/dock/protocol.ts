@@ -130,6 +130,16 @@ export interface DockBackdrop {
   readonly saver: boolean;
 }
 
+/**
+ * When the dock should stop rendering: the session is locked, the display is off, or a fullscreen app
+ * (a game, a presentation) has the foreground. Any true means freeze all animation loops.
+ */
+export interface FrozenState {
+  readonly locked: boolean;
+  readonly displayOff: boolean;
+  readonly fullscreen: boolean;
+}
+
 /** Events the core emits to the dock window. */
 export interface DockEvents {
   "dock://apps": readonly DockApp[];
@@ -142,11 +152,8 @@ export interface DockEvents {
    * from the WebView, so the core, which already polls the cursor, reports it.
    */
   "dock://pointer": { readonly inside: boolean };
-  /**
-   * The core froze the dock: display off, session locked, a fullscreen app in front, or the dock auto-hidden. The UI stops
-   * every frame loop and timer until `frozen: false`, so a hidden dock costs nothing.
-   */
-  "dock://frozen": { readonly frozen: boolean };
+  /** The core froze the dock: the UI stops every frame loop and timer while any field is true, so a hidden dock costs nothing. */
+  "dock://frozen": FrozenState;
   /** The blur and tone of what is behind the dock changed (a new wallpaper, battery saver, a transparency setting). */
   "dock://backdrop": DockBackdrop;
 }

@@ -31,6 +31,9 @@
 ### Website (`website/`, Astro, static)
 - Home, download, FAQ, licence and privacy pages; live widgets; the island notch plays a scripted session with the app's own scene code.
 
+### Brand (`brand/`, `tools/brand-gen`)
+- New logo: a dot docked in a pill, reading as a `d` (D-019). One master drawing generates the Tauri icons (multi-size `.ico` with hand-redrawn 16 to 32 px), favicon, apple-touch icon, the website nav mark, SVG logos, a Doto wordmark and the 1280 x 640 social preview. The tray now loads the small-icon size. Usage guide in `brand/README.md`; QA in `docs/QA/brand-logo.md` (4.62 on the rubric).
+
 ### Time tracking
 - Hackatime hook fixed on 2026-11-19 after heartbeats were being killed; see `docs/HACKATIME_STATUS.md`. Nothing was back-filled.
 
@@ -41,9 +44,18 @@
 
 ## In progress
 - Desktop wallpapers from the owner's mood images (louvre and soft-mono reworked, four new styles). Generated from code only.
+- **Dock backend (milestones D1 and D2), branch `worktree-agent-a175321c268719d26`:** crate `dotdock-dock` with the app catalogue (214 apps on this machine), classifier (98.1 % on the first judged run, `docs/spikes/DOCK_CLASSIFIER.md`), 256 px icon cache, push-driven window list, launch, DWM thumbnails, the app-bar spike and the `DockService` facade. Idle CPU 0.08 to 0.13 %, warm start 140 to 240 ms with nothing scanned or extracted (`docs/spikes/DOCK_D1.md`, D-019). Not wired into the app yet; the host (`dock_host.rs`) and UI are the other tracks.
 
-## v2 plan (next)
-- Dock and launcher replacing the taskbar, with an App Library that groups apps by category (productivity, social, coding, AI, and more). Study the owner's dock videos and images, launchmeapp.com and cooldock.app first; build originals only.
+## v2: the dock (in progress)
+**Release rule (owner, 2026-11-20):** release the app and the website once everything averages 4.8 on the rubric and every phase of `docs/QA/V2_TEST_PLAN.md` has passed.
+
+Merged on main:
+- D0 safety: taskbar marker, sentinel watchdog, recovery at start; 120/120 real restore tests; sentinel bundled in the MSVC installer.
+- D1/D2 backend `dotdock-dock`: 214 apps, classifier 98 %, 256 px icons, running windows, launch, DWM thumbnails, app-bar spike; idle 0.08 to 0.13 % CPU.
+- Logo and icon set; six desktop wallpapers at 4.5+; island verified live with real Claude Code sessions (plate made opaque).
+- Specs: DOCK_SPEC, DOCK_BENCHMARK (incl. stack input-to-visible under 50 ms), DOCK_MARKET, FEATURE_PARITY, WEBSITE_SYSTEM, LAUNCH_VIDEO, V2_TEST_PLAN.
+
+Running (worktree tracks): dock UI (latency fix, every feature testable, CoolDock tiles, themes incl. glass), native tiles (real data), dock host integration (window, glass backdrop, app bar, taskbar replacement), notch for any AI agent (Copilot CLI, OpenCode, generic protocol), modules on/off + theme from own wallpaper, website redesign (Inter Display, art-led hero, Features page, showcase strip).
 
 ## Machine notes that affect boot time
 - 22 apps autostart from `HKCU\Run` and compete at sign-in.

@@ -1,6 +1,7 @@
 ---
 import { PRODUCT_NAME, ROUTES } from "../brand";
 import { THEMES } from "../lib/themes";
+import Mark from "./Mark.astro";
 
 interface Props {
   /** Pathname of the page being rendered, to mark the current link. */
@@ -19,7 +20,7 @@ const links = [
 <header class="nav" data-nav>
   <div class="nav__inner">
     <a class="wordmark" href={ROUTES.home} aria-label={`${PRODUCT_NAME}, home`}>
-      <span class="dot" aria-hidden="true"></span>
+      <Mark size={28} />
       <span class="wordmark__text">{PRODUCT_NAME}</span>
     </a>
 

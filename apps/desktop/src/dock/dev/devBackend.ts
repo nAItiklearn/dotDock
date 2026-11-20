@@ -1,6 +1,6 @@
 import type { DockBackend, Handlers } from "../bridge";
 import type { Rect } from "../geometry";
-import type { Category, CategoryId, CommandResult, DockApp, DockBackdrop, DockSettings, DockSnapshot, DockWindow } from "../protocol";
+import type { Category, CategoryId, CommandResult, DockApp, DockBackdrop, DockSettings, DockSnapshot, DockWindow, FrozenState } from "../protocol";
 import { APPS, CATEGORIES, SAMPLE_NOW, SETTINGS, WINDOWS, makeApp } from "./fixtures";
 import { rasterize } from "./sampleIcons";
 
@@ -62,8 +62,9 @@ export const dev = {
   library(action: "toggle" | "open" | "close"): void {
     handlers?.library(action);
   },
-  freeze(frozen: boolean): void {
-    handlers?.frozen(frozen);
+  /** What the core reports when the session locks, the display turns off or a fullscreen app takes over. */
+  freeze(state: Partial<FrozenState>): void {
+    handlers?.frozen({ locked: false, displayOff: false, fullscreen: false, ...state });
   },
   pointer(inside: boolean): void {
     handlers?.pointer(inside);
