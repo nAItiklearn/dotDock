@@ -8,6 +8,7 @@ import type { FeedName, TileIssue } from "../tiles/ui-types";
 import { dev } from "./devBackend";
 import { devTiles, sampleAgenda, sampleMeeting } from "./devTiles";
 import { WINDOWS } from "./fixtures";
+import { DEV_WALLPAPERS, isWallpaperId, setWallpaper, useDevWallpaper, type WallpaperMode } from "./wallpapers";
 import { seedFocus, seedReminders, type FocusSeed } from "./seeds";
 
 /** DEV ONLY. Fixture controls for the dock. Never part of the production build. */
@@ -17,7 +18,6 @@ const EFFECTS: readonly EffectsChoice[] = ["auto", "full", "lite"];
 const FEEDS: readonly FeedName[] = ["contacts", "meeting", "stopwatch", "mic", "hydration", "agenda", "audio"];
 const ISSUES: readonly (TileIssue | "none")[] = ["none", "unsupported", "no-device", "offline", "error", "needs-setup"];
 const FOCUS_SEEDS: readonly FocusSeed[] = ["idle", "running", "paused", "break", "other-timer"];
-const BACKDROP_TONES = ["auto", "light", "dark"] as const;
 const MINUTE_MS = 60_000;
 const NEW_APPS = ["Lumen Notes", "Tide Weather", "Grain Recorder"] as const;
 
@@ -29,6 +29,7 @@ export function DevPanel() {
   const [open, setOpen] = useState(true);
   const [installed, setInstalled] = useState(0);
   const [feed, setFeed] = useState<FeedName>("contacts");
+  const wallpaper = useDevWallpaper();
   const set = dev.patchSettings;
   const toggleTile = (id: TileId, on: boolean): void => set({ tiles: on ? [...settings.tiles, id] : settings.tiles.filter((tile) => tile !== id) });
 
@@ -102,18 +103,27 @@ export function DevPanel() {
           </div>
 
           <label>
-            theme
-            <select value={themeChoice} onChange={(e) => useDockStore.getState().setThemeChoice(e.target.value as DockThemeId)}>
-              {DOCK_THEMES.map((id) => (
-                <option key={id}>{id}</option>
+            wallpaper
+            <select value={wallpaper.id} onChange={(e) => isWallpaperId(e.target.value) && setWallpaper({ id: e.target.value })}>
+              {DEV_WALLPAPERS.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
               ))}
             </select>
           </label>
           <label>
-            desktop behind (from the host)
-            <select value={backdrop.tone ?? "auto"} onChange={(e) => dev.backdrop({ ...backdrop, tone: e.target.value === "auto" ? null : (e.target.value as "light" | "dark") })}>
-              {BACKDROP_TONES.map((tone) => (
-                <option key={tone}>{tone}</option>
+            wallpaper tone
+            <select value={wallpaper.mode} onChange={(e) => setWallpaper({ mode: e.target.value as WallpaperMode })}>
+              <option>dark</option>
+              <option>light</option>
+            </select>
+          </label>
+          <label>
+            theme
+            <select value={themeChoice} onChange={(e) => useDockStore.getState().setThemeChoice(e.target.value as DockThemeId)}>
+              {DOCK_THEMES.map((id) => (
+                <option key={id}>{id}</option>
               ))}
             </select>
           </label>
