@@ -60,12 +60,11 @@ const SHAPES: readonly (TitledOption & { readonly const: PhotoShape })[] = [
   { const: "circle", title: "Circle" },
 ];
 
-/** Border colours are theme roles, so a border follows the theme except paper and ink, which stay put. */
+/** Border colours are tokens: paper and ink are the same in every theme, grey and accent follow the theme. */
 const TINTS: readonly (TitledOption & { readonly const: PhotoTint })[] = [
   { const: "paper", title: "Paper", swatch: "--photo-mat" },
   { const: "ink", title: "Ink", swatch: "--photo-ink" },
-  { const: "text", title: "Theme text", swatch: "--text" },
-  { const: "dim", title: "Theme grey", swatch: "--text-dim" },
+  { const: "dim", title: "Grey", swatch: "--text-dim" },
   { const: "accent", title: "Accent", swatch: "--accent" },
 ];
 

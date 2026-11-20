@@ -3,6 +3,7 @@ import {
   bandFor,
   DOT_FILL,
   dotsPath,
+  fitsRounded,
   ellipsePerimeter,
   ellipsePoints,
   layoutFrame,
@@ -113,10 +114,19 @@ describe("dot-matrix border", () => {
   const dots = (card = large, over: Partial<LookSettings> = {}) => layoutFrame(look({ frame: "dots", ...over }), card);
 
   it("tiles each side with whole cells and shares the corner dots", () => {
-    const layout = dots(large, { thickness: 12 });
+    const layout = dots(large, { thickness: 12, radius: 0 });
     const cols = Math.round(large.w / 12);
     const rows = Math.round(large.h / 12);
     expect(layout.dots).toHaveLength(2 * cols + 2 * (rows - 2));
+  });
+
+  it("leaves out a dot a rounded corner would cut, and keeps the ones that fit", () => {
+    const square = dots(large, { thickness: 12, radius: 0 });
+    const rounded = dots(large, { thickness: 12, radius: 28 });
+    expect(rounded.dots.length).toBeLessThan(square.dots.length);
+    for (const d of rounded.dots) expect(fitsRounded(large, 28, d, rounded.dotRadius)).toBe(true);
+    const corner = square.dots[0];
+    expect(corner && fitsRounded(large, 28, corner, square.dotRadius)).toBe(false);
   });
 
   it("keeps every dot inside the widget and out of the photo window", () => {

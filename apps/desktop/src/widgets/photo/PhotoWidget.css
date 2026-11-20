@@ -21,10 +21,6 @@
   --photo-line: var(--photo-ink);
   --photo-line-ink: var(--photo-mat);
 }
-.photo--tint-text {
-  --photo-line: var(--text);
-  --photo-line-ink: var(--bg);
-}
 .photo--tint-dim {
   --photo-line: var(--text-dim);
   --photo-line-ink: var(--bg);
@@ -253,6 +249,7 @@
   color: var(--accent-ink);
   font-size: var(--text-sm);
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition: transform var(--dur-fast) var(--ease-out);
 }
@@ -272,6 +269,11 @@
   color: var(--accent);
 }
 /* A border or a small widget leaves little room: drop the pictogram first, then the sentence. */
+@container (max-width: 160px) {
+  .photo-empty {
+    padding: var(--space-2);
+  }
+}
 @container (max-height: 168px) {
   .photo-empty__icon {
     display: none;

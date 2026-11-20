@@ -8,7 +8,7 @@ import type { Box } from "./frame";
 
 export type PhotoFrame = "none" | "hairline" | "mat" | "polaroid" | "dots";
 export type PhotoShape = "rounded" | "squircle" | "circle";
-export type PhotoTint = "paper" | "ink" | "text" | "dim" | "accent";
+export type PhotoTint = "paper" | "ink" | "dim" | "accent";
 
 /** The border settings of a photo widget, as stored in its placement. */
 export interface LookSettings {
@@ -129,6 +129,19 @@ function rectRing(card: Box, band: number): { insets: Insets; dots: Dot[]; radiu
   };
 }
 
+/**
+ * True when a circle of radius `r` at `dot` lies wholly inside a card of the given size whose
+ * corners have `radius`. A dot that would be cut by a rounded corner is left out of the ring
+ * instead of being drawn half missing.
+ */
+export function fitsRounded(card: Box, radius: number, dot: Dot, r: number): boolean {
+  const corner = Math.min(radius, card.w / 2, card.h / 2);
+  if (corner <= 0) return true;
+  const dx = Math.max(0, Math.abs(dot.x - card.w / 2) - (card.w / 2 - corner));
+  const dy = Math.max(0, Math.abs(dot.y - card.h / 2) - (card.h / 2 - corner));
+  return Math.hypot(dx, dy) + r <= corner + 1e-9;
+}
+
 /** Ramanujan's approximation of an ellipse's perimeter; exact enough to count dots. */
 export function ellipsePerimeter(a: number, b: number): number {
   return Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)));
@@ -181,7 +194,7 @@ export function layoutFrame(look: Look, card: Box): FrameLayout {
   if (look.frame === "dots" && band > 0) {
     const ring = look.shape === "circle" ? ellipseRing(card, band) : rectRing(card, band);
     insets = ring.insets;
-    dots = ring.dots;
+    dots = look.shape === "circle" ? ring.dots : ring.dots.filter((d) => fitsRounded(card, look.radius, d, ring.radius));
     dotRadius = ring.radius;
   } else if (look.frame === "polaroid") {
     insets = { top: band, right: band, bottom: band * POLAROID_FOOT, left: band };
