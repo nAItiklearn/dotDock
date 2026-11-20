@@ -1,14 +1,16 @@
 //! The app bar spike: reserving a strip of the screen so maximised windows stop at the dock.
 //!
 //! **Nothing in the default code path calls this.** `AppBar::register` is only called from the `appbar_probe`
-//! example and, later, by the host when the user turns "reserve space" on. The returned guard removes the bar
-//! when dropped, so an early return or a panic cannot leave a bar registered; `Drop` also runs on the unwinding
-//! path of the panic hook the app installs.
+//! example; the host calls `AppBar::claim` when the user turns "reserve space" on. The returned guard removes the
+//! bar when dropped, so an early return or a panic cannot leave a bar registered; `Drop` also runs on the
+//! unwinding path of the panic hook the app installs.
 
 use crate::protocol::DockEdge;
 use std::io;
-use windows::Win32::Foundation::{HWND, LPARAM, RECT};
-use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTOPRIMARY};
+use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT};
+use windows::Win32::Graphics::Gdi::{
+    GetMonitorInfoW, MonitorFromPoint, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTOPRIMARY,
+};
 use windows::Win32::UI::Shell::{
     SHAppBarMessage, ABE_BOTTOM, ABE_LEFT, ABE_RIGHT, ABE_TOP, ABM_NEW, ABM_QUERYPOS, ABM_REMOVE, ABM_SETPOS,
     APPBARDATA,
@@ -69,35 +71,68 @@ impl AppBar {
     /// Registers `hwnd` as an app bar on `edge` of its monitor, `thickness` px deep, moves the window into
     /// the strip the system grants, and returns the guard. `callback_message` receives `ABN_*` notifications.
     pub fn register(hwnd: isize, edge: DockEdge, thickness: i32, callback_message: u32) -> io::Result<AppBar> {
+        let mut bar = AppBar::new(hwnd, edge, callback_message)?;
+        bar.place(thickness)?;
+        Ok(bar)
+    }
+
+    /// Registers `hwnd` as an app bar on `edge` of `monitor` and reserves a strip `thickness` px deep without
+    /// moving the window: the dock draws on a larger sheet and only the strip under its bar is kept free.
+    pub fn claim(
+        hwnd: isize,
+        monitor: RECT,
+        edge: DockEdge,
+        thickness: i32,
+        callback_message: u32,
+    ) -> io::Result<AppBar> {
+        let mut bar = AppBar::new(hwnd, edge, callback_message)?;
+        bar.reserve(monitor, thickness);
+        Ok(bar)
+    }
+
+    fn new(hwnd: isize, edge: DockEdge, callback_message: u32) -> io::Result<AppBar> {
         let hwnd = HWND(hwnd as *mut _);
-        let mut bar = AppBar { hwnd, callback_message, edge, rect: RECT::default() };
         let mut new = data(hwnd, callback_message, edge, RECT::default());
         // SAFETY: SHAppBarMessage with a fully initialised APPBARDATA; ABM_NEW returns TRUE on success.
         if unsafe { SHAppBarMessage(ABM_NEW, &mut new) } == 0 {
             return Err(io::Error::other("the shell refused to register the app bar"));
         }
-        bar.place(thickness)?;
-        Ok(bar)
+        Ok(AppBar { hwnd, callback_message, edge, rect: RECT::default() })
     }
 
-    /// Asks for the strip, lets the system adjust it for other bars, claims it and moves the window there.
-    /// Call again to change the thickness or after a display change.
-    pub fn place(&mut self, thickness: i32) -> io::Result<RECT> {
-        let monitor = monitor_rect(self.hwnd)?;
+    /// Asks for the strip of `monitor`, lets the system adjust it for other bars and claims it. Call again to
+    /// change the thickness or after a display change. Returns the strip granted.
+    pub fn reserve(&mut self, monitor: RECT, thickness: i32) -> RECT {
         let mut abd = data(self.hwnd, self.callback_message, self.edge, strip(monitor, self.edge, thickness));
         // SAFETY: QUERYPOS and SETPOS read and write only the APPBARDATA we pass.
         unsafe {
             SHAppBarMessage(ABM_QUERYPOS, &mut abd);
             abd.rc = with_thickness(abd.rc, self.edge, thickness);
             SHAppBarMessage(ABM_SETPOS, &mut abd);
-            let r = abd.rc;
-            MoveWindow(self.hwnd, r.left, r.top, r.right - r.left, r.bottom - r.top, true).map_err(io::Error::other)?;
         }
         self.rect = abd.rc;
-        Ok(abd.rc)
+        abd.rc
     }
 
-    /// The strip granted by the last `place`.
+    /// Reserves the strip on the window's own monitor and moves the window into it.
+    pub fn place(&mut self, thickness: i32) -> io::Result<RECT> {
+        let granted = self.reserve(monitor_rect(self.hwnd)?, thickness);
+        // SAFETY: moves the window that owns this bar into the strip it was granted.
+        unsafe {
+            MoveWindow(
+                self.hwnd,
+                granted.left,
+                granted.top,
+                granted.right - granted.left,
+                granted.bottom - granted.top,
+                true,
+            )
+            .map_err(io::Error::other)?;
+        }
+        Ok(granted)
+    }
+
+    /// The strip granted by the last `reserve` or `place`.
     pub fn rect(&self) -> RECT {
         self.rect
     }
@@ -117,6 +152,18 @@ fn monitor_rect(hwnd: HWND) -> io::Result<RECT> {
     let mut info = MONITORINFO { cbSize: size_of::<MONITORINFO>() as u32, ..Default::default() };
     // SAFETY: plain monitor query; `info.cbSize` is set.
     let ok = unsafe { GetMonitorInfoW(MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY), &mut info) };
+    if ok.as_bool() {
+        Ok(info.rcMonitor)
+    } else {
+        Err(io::Error::other("no monitor info"))
+    }
+}
+
+/// The full rectangle of the primary monitor, in physical pixels.
+pub fn primary_monitor() -> io::Result<RECT> {
+    let mut info = MONITORINFO { cbSize: size_of::<MONITORINFO>() as u32, ..Default::default() };
+    // SAFETY: MonitorFromPoint with DEFAULTTOPRIMARY always returns a monitor; `info.cbSize` is set.
+    let ok = unsafe { GetMonitorInfoW(MonitorFromPoint(POINT::default(), MONITOR_DEFAULTTOPRIMARY), &mut info) };
     if ok.as_bool() {
         Ok(info.rcMonitor)
     } else {

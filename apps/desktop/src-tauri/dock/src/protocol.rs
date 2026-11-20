@@ -362,12 +362,13 @@ impl Serialize for CommandResult {
 pub const EVENT_APPS: &str = "dock://apps";
 pub const EVENT_WINDOWS: &str = "dock://windows";
 pub const EVENT_SETTINGS: &str = "dock://settings";
+/// The App Library's global shortcut was pressed (payload `"toggle"`).
+pub const EVENT_LIBRARY: &str = "dock://library";
+/// The cursor entered or left the rectangles from `dock_set_regions` (payload `{ "inside": bool }`).
+pub const EVENT_POINTER: &str = "dock://pointer";
 pub use crate::frozen::EVENT_FROZEN;
 
 /// One event for the dock window; `name()` and the serialised payload are what the host emits.
-///
-/// `Frozen` is not in `protocol.ts` yet: it is additive (`"dock://frozen": FrozenState`) and is added there by
-/// the integration step. Until then the host can use it to stop the dock window rendering.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DockEvent {
     Apps(Vec<DockApp>),

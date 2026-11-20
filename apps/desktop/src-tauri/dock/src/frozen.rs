@@ -2,6 +2,7 @@
 //! the foreground. The sensors (`running::sensors`) feed these functions; the host asks `FrozenState::frozen`
 //! and tells the dock window to stop drawing. The state is plain data so the rules are tested everywhere.
 
+use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
 
 /// `WTS_*` session change codes (wtsapi32.h) the dock acts on.
@@ -29,17 +30,29 @@ pub mod display {
     pub const OFF: u32 = 0;
 }
 
-/// Event name the host emits `FrozenState` under. Not part of `protocol.ts` yet; the integration step adds it.
+/// Event name the host emits `FrozenState` under (`"dock://frozen"` in `protocol.ts`).
 pub const EVENT_FROZEN: &str = "dock://frozen";
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct FrozenState {
     /// The session is locked or disconnected.
     pub locked: bool,
     pub display_off: bool,
     /// A full-screen app, a presentation, or the screen saver has the screen.
     pub fullscreen: bool,
+}
+
+/// On the wire the three reasons come with their verdict (`frozen`), so a window that only wants to know whether to
+/// draw does not have to combine them.
+impl Serialize for FrozenState {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut state = serializer.serialize_struct("FrozenState", 4)?;
+        state.serialize_field("locked", &self.locked)?;
+        state.serialize_field("displayOff", &self.display_off)?;
+        state.serialize_field("fullscreen", &self.fullscreen)?;
+        state.serialize_field("frozen", &self.frozen())?;
+        state.end()
+    }
 }
 
 impl FrozenState {
@@ -143,5 +156,18 @@ mod tests {
         let v = serde_json::to_value(FrozenState { locked: false, display_off: true, fullscreen: false }).unwrap();
         assert_eq!(v["displayOff"], true);
         assert_eq!(v["locked"], false);
+    }
+
+    #[test]
+    fn the_wire_form_carries_the_verdict() {
+        let at_rest = serde_json::to_value(FrozenState::default()).unwrap();
+        assert_eq!(at_rest["frozen"], false);
+        for state in [
+            FrozenState { locked: true, ..FrozenState::default() },
+            FrozenState { display_off: true, ..FrozenState::default() },
+            FrozenState { fullscreen: true, ..FrozenState::default() },
+        ] {
+            assert_eq!(serde_json::to_value(state).unwrap()["frozen"], true);
+        }
     }
 }
