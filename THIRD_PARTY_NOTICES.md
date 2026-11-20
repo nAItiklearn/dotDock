@@ -8,6 +8,7 @@ Every dependency, font, sound, image and data source is listed here with its lic
 | Doto | The Doto Project Authors (github.com/oliverlalan/Doto) | SIL Open Font License 1.1 (`assets/web/fonts/Doto-OFL.txt`) |
 | Geist | The Geist Project Authors (github.com/vercel/geist-font) | SIL Open Font License 1.1 (`assets/web/fonts/Geist-OFL.txt`) |
 | Geist Mono | The Geist Project Authors (github.com/vercel/geist-font) | SIL Open Font License 1.1 (`assets/web/fonts/GeistMono-OFL.txt`) |
+| Inter and Inter Display (website only) | The Inter Project Authors (github.com/rsms/inter, release 4.1) | SIL Open Font License 1.1 (`website/public/licenses/Inter-OFL.txt`) |
 
 ## Data
 - **Weather data by [Open-Meteo.com](https://open-meteo.com/)**, licensed CC BY 4.0. Forecast and geocoding APIs, used only after the user picks a place.
@@ -127,7 +128,9 @@ The showcase site is a static Astro project. These packages are build-time only;
 
 Transitive package licences are pinned by `website/pnpm-lock.yaml`.
 
-- Fonts: the same Doto, Geist and Geist Mono files as above, copied to `website/src/assets/fonts`, with their OFL texts in `website/public/licenses`.
+- Fonts: Doto and Geist Mono as above, plus Inter 4.1 (Inter 400 and 500 for text, Inter Display 700 and 800 for headlines), subset to Latin by `tools/site-art/subset_fonts.py` (fontTools, MIT, and brotli, MIT; build-time only). The files are in `website/src/assets/fonts`, their OFL texts in `website/public/licenses`. The website no longer uses Geist (sans); that face stays only in the outlined brand artwork above.
+- Site art: the dot landscapes, pixel flowers and grass on the website are generated from code and fixed seeds by `tools/site-art` (GPL-3.0-or-later, part of this project; numpy, Pillow and opencv as in `tools/wallpaper-gen`). They are original; the owner's mood images were only looked at, never used as input.
+- Navigation icon: the GitHub mark (Invertocat) in the header is the unmodified mark published by GitHub at https://github.com/logos, used under GitHub's logo and usage guidelines to link to this project's repository on GitHub. It is a trademark of GitHub, Inc.; the project is not affiliated with or endorsed by GitHub.
 - Wallpapers: downscaled WebP copies of three of the original wallpapers in `assets/wallpapers`, made by `website/tools/make-wallpapers.mjs`. Original, GPL-3.0-or-later like the rest of the project.
 - Theme tokens and dot-matrix glyph geometry are copied from `apps/desktop/src/design-system` (this project's own code).
 
