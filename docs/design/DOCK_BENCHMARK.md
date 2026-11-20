@@ -21,6 +21,7 @@ material); dotDock's column is measured on this laptop (1920 x 1080 at 125 %, re
 |---|---|---|
 | Frame time during magnification and stack open | p95 under 8.3 ms (120 Hz safe), no dropped frame at 60 Hz | Chrome DevTools performance trace of the dock WebView, 10 s sweeps |
 | Hover-to-first-movement latency | Under one frame after the pointer event | Trace: input event to the next composited frame |
+| Stack / App Library open, input to visible (owner feedback 2026-11-20: "opens with a bit of pause") | p95 under 50 ms including the first open, under 16 ms repeat opens; under 100 ms at 6x CPU throttle | `performance.mark` at pointerdown and at the first painted frame, plus a trace |
 | Click-to-launch (dock action only) | `ShellExecute` called under 30 ms after the click | Timestamps in `boot.log`-style dock log |
 | Idle CPU with the dock visible | Under 0.3 % of one core | Task Manager / `GetProcessTimes` over 60 s |
 | Idle wake-ups | No timers while nothing changes; the clock tile ticks once a minute | ETW or a 60 s trace |
