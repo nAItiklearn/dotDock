@@ -5,7 +5,6 @@ import { Button, IconButton, SelectField } from "../../lib/ui/controls";
 import { Icon } from "../../lib/ui/Icon";
 import { NativeGate, useNativeResource, type NativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
-import { pageById } from "../pageMeta";
 
 interface WallpaperData {
   readonly items: readonly WallpaperItem[];
@@ -123,10 +122,9 @@ export function WallpapersPage() {
       return { items, assignments, displays };
     },
   );
-  const page = pageById("wallpapers");
   return (
     <>
-      <PageHeader title={page.title} description={page.description} />
+      <PageHeader page="wallpapers" />
       <NativeGate
         resource={resource}
         icon="wallpaper"

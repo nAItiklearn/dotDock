@@ -4,7 +4,6 @@ import { getApp } from "../../lib/state/app";
 import { SelectField, Switch } from "../../lib/ui/controls";
 import { NativeGate, useNativeResource, type NativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
-import { pageById } from "../pageMeta";
 
 /** How often the live numbers refresh while this page is open. */
 const STATS_POLL_MS = 2000;
@@ -115,10 +114,9 @@ function PerformanceBody({ resource, settings }: { readonly resource: NativeReso
 
 export function PerformancePage() {
   const resource = useNativeResource((api) => api.performance.get());
-  const page = pageById("performance");
   return (
     <>
-      <PageHeader title={page.title} description={page.description} />
+      <PageHeader page="performance" />
       <NativeGate
         resource={resource}
         icon="gauge"

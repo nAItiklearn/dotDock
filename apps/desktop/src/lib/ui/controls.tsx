@@ -198,11 +198,34 @@ interface TextFieldProps {
   readonly maxLength?: number;
   readonly type?: "text" | "time";
   readonly disabled?: boolean;
+  /** Enter, and by default leaving the field, commit what was typed. */
   readonly onCommit?: () => void;
+  /**
+   * False when committing does something new (creating a profile) rather than saving an edit:
+   * then only Enter commits, so moving on to the next control never acts too early.
+   */
+  readonly commitOnBlur?: boolean;
+  /** Escape: drop what was typed. */
+  readonly onCancel?: () => void;
+  /** For a field that appears because the person asked to type, such as Rename. */
+  readonly autoFocus?: boolean;
   readonly invalid?: boolean;
 }
 
-export function TextField({ value, onChange, label, placeholder, maxLength, type = "text", disabled = false, onCommit, invalid = false }: TextFieldProps) {
+export function TextField({
+  value,
+  onChange,
+  label,
+  placeholder,
+  maxLength,
+  type = "text",
+  disabled = false,
+  onCommit,
+  commitOnBlur = true,
+  onCancel,
+  autoFocus = false,
+  invalid = false,
+}: TextFieldProps) {
   const id = useId();
   return (
     <input
@@ -214,6 +237,7 @@ export function TextField({ value, onChange, label, placeholder, maxLength, type
       placeholder={placeholder}
       maxLength={maxLength}
       disabled={disabled}
+      autoFocus={autoFocus}
       aria-label={label}
       aria-invalid={invalid || undefined}
       spellCheck={false}
@@ -221,8 +245,13 @@ export function TextField({ value, onChange, label, placeholder, maxLength, type
       onChange={(e) => onChange(e.currentTarget.value)}
       onKeyDown={(e) => {
         if (e.key === "Enter") onCommit?.();
+        else if (e.key === "Escape" && onCancel) {
+          // The field's own Escape; it must not also close a panel or leave edit mode.
+          e.stopPropagation();
+          onCancel();
+        }
       }}
-      onBlur={onCommit}
+      onBlur={commitOnBlur ? onCommit : undefined}
     />
   );
 }

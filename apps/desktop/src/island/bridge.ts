@@ -75,6 +75,11 @@ const detachedBackend: IslandBackend = {
 
 let backend: IslandBackend = isTauri() ? tauriBackend : detachedBackend;
 
+/** False in a plain browser: there is no core to show the island, store its settings or connect agents. */
+export function hasIslandBackend(): boolean {
+  return backend !== detachedBackend;
+}
+
 /** Lets the dev-only fixture panel stand in for the core. Never called in production code paths. */
 export function setBackend(next: IslandBackend): void {
   backend = next;

@@ -7,7 +7,6 @@ import { Button } from "../../lib/ui/controls";
 import { downloadText, pickTextFile } from "../ui/download";
 import { PageHeader, Row, Section } from "../ui/layout";
 import { offerUndo } from "../ui/undo";
-import { pageById } from "../pageMeta";
 
 /** The prefix the provider store uses for its last-known-value cache (src/providers/store.ts). */
 const PROVIDER_CACHE_PREFIX = "dotdock.cache.";
@@ -207,10 +206,9 @@ function CacheRow() {
 export function DataPage() {
   const { files, location } = useStoredFiles();
   const total = files.reduce((sum, f) => sum + f.bytes, 0);
-  const page = pageById("data");
   return (
     <>
-      <PageHeader title={page.title} description={page.description} />
+      <PageHeader page="data" />
       <Section title="Stored on this PC" description={`${files.length} files, ${formatBytes(total)}.`}>
         <div className="row row--block" data-setting-id="stored">
           <p className="row__desc">

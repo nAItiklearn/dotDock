@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { PAGES } from "./pageMeta";
+import { PAGES } from "./sections";
 import { SEARCH_ENTRIES, searchSettings } from "./searchIndex";
 
 const pagesDir = join(dirname(fileURLToPath(import.meta.url)), "pages");
@@ -42,6 +42,7 @@ describe("searchSettings", () => {
     expect(searchSettings("corner")[0]?.id).toBe("radius");
     expect(searchSettings("fullscreen").map((h) => h.id)).toContain("pause-rules");
     expect(searchSettings("shortcuts").map((h) => h.page)).toContain("shortcuts");
+    expect(searchSettings("notch").map((h) => h.page)).toContain("notch-look");
   });
 
   it("is case-insensitive and needs every word to match", () => {
@@ -55,6 +56,6 @@ describe("searchSettings", () => {
   });
 
   it("carries the page title for display", () => {
-    expect(searchSettings("launch")[0]).toMatchObject({ id: "launch", pageTitle: "Startup & Windows" });
+    expect(searchSettings("launch")[0]).toMatchObject({ id: "launch", where: "General · Startup" });
   });
 });

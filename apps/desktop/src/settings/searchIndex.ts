@@ -1,4 +1,4 @@
-import { pageById, type PageId } from "./pageMeta";
+import { pageById, sectionById, type PageId } from "./sections";
 
 export interface SearchEntry {
   /** Matches the `id` of a Row (or section anchor) on the page, so the result can scroll to it. */
@@ -13,36 +13,61 @@ const e = (page: PageId, id: string, title: string, keywords = ""): SearchEntry 
 
 /** Every setting a person can look for. Each id is a Row id on its page; a test keeps the two in step. */
 export const SEARCH_ENTRIES: readonly SearchEntry[] = [
-  e("home", "profiles", "Layout profiles", "work focus minimal switch scene preset new duplicate rename delete reset"),
-  e("home", "edit-layout", "Edit layout", "arrange drag move resize widgets desktop"),
-  e("home", "layout-widgets", "Widgets on this profile", "list remove delete add per display"),
-  e("home", "collision", "When widgets collide", "push swap overlap bump"),
-  e("home", "guides", "Alignment guides", "snap lines align"),
-  e("home", "lock", "Lock layout", "freeze prevent changes accidental"),
-  e("home", "gap", "Widget spacing", "gap gutter between"),
-  e("home", "edge", "Screen edge margin", "safe area padding border"),
-  e("home", "display-layouts", "Layouts per display", "monitor screen clear copy"),
+  e("startup", "launch", "Launch at sign-in", "startup autostart boot login windows"),
+  e("startup", "desktop-icons", "Hide desktop icons", "shortcuts files clutter"),
+  e("startup", "startup-delay", "Windows startup delay", "wait seconds boot slow"),
 
-  e("appearance", "theme", "Theme", "obsidian paper aurum colour color dark light palette"),
-  e("appearance", "theme-switch", "Switch automatically", "system windows schedule time day night light dark follow"),
-  e("appearance", "custom-themes", "Your themes", "editor create import export json accent oklch contrast custom"),
-  e("appearance", "radius", "Corner roundness", "radius shape round square cards"),
-  e("appearance", "motion", "Motion", "animation reduce reduced still"),
-  e("appearance", "motion-speed", "Animation speed", "fast slow transitions"),
-  e("appearance", "font", "Interface font", "typeface mono sans geist"),
+  e("about", "version", "Version", "build release"),
+  e("about", "updates", "Check for updates", "new version download"),
+  e("about", "updates-auto", "Check for updates automatically", "daily background update service"),
+  e("about", "licences", "Licences", "license third party notices fonts open source"),
+  e("about", "attribution", "Credits and attribution", "open-meteo weather nothing affiliated"),
 
-  e("wallpapers", "wallpaper-library", "Wallpaper library", "image background import desktop picture"),
-  e("wallpapers", "wallpaper-fit", "Fit mode", "fill fit stretch tile center span"),
+  e("layout", "edit-layout", "Edit layout", "arrange drag move resize widgets desktop"),
+  e("layout", "layout-widgets", "Widgets on this profile", "list remove delete add per display"),
+  e("layout", "collision", "When widgets collide", "push swap overlap bump"),
+  e("layout", "guides", "Alignment guides", "snap lines align"),
+  e("layout", "lock", "Lock layout", "freeze prevent changes accidental"),
+  e("layout", "gap", "Widget spacing", "gap gutter between grid"),
+  e("layout", "edge", "Screen edge margin", "safe area padding border"),
+  e("layout", "display-layouts", "Layouts per display", "monitor screen clear copy"),
+
+  e("profiles", "profiles", "Layout profiles", "work focus minimal switch scene preset rename delete reset use"),
+  e("profiles", "new-profile", "New profile", "create add duplicate copy empty"),
 
   e("widgets", "gallery", "Add a widget", "gallery preview clock date calendar weather battery memory disk"),
 
-  e("startup", "use-desktop", "Use this desktop", "windows stock switch back replace"),
-  e("startup", "launch", "Launch at sign-in", "startup autostart boot login"),
-  e("startup", "desktop-icons", "Hide desktop icons", "shortcuts files clutter"),
-  e("startup", "restore", "Restore Windows desktop", "panic undo revert original wallpaper icons"),
-  e("startup", "boot-timing", "Boot timing", "speed startup seconds measure"),
-
   e("displays", "display-list", "Displays and safe margins", "monitor screen resolution scaling dpi refresh edge padding taskbar"),
+
+  e("agents", "agent-claude", "Claude Code", "agent connect disconnect hooks notch island ai"),
+  e("agents", "agent-codex", "Codex", "agent openai logs notch island ai"),
+  e("agents", "done-linger", "Keep a finished task visible", "linger done seconds"),
+  e("agents", "sound", "Play a sound when a task finishes", "chime alert notification done"),
+  e("agents", "volume", "Chime volume", "sound loud quiet"),
+
+  e("notch-look", "notch-enabled", "Show the notch", "island hide off on"),
+  e("notch-look", "notch-idle", "When nothing is running", "idle tiny pill hidden"),
+  e("notch-look", "notch-style", "Dot style", "icon dots blocks stripes"),
+  e("notch-look", "notch-scale", "Notch size", "scale bigger smaller"),
+  e("notch-look", "notch-offset", "Distance from the top edge", "offset position gap"),
+  e("notch-look", "notch-detail", "Current file or command", "detail show"),
+  e("notch-look", "notch-tokens", "Tokens this turn", "count usage show"),
+  e("notch-look", "notch-elapsed", "Elapsed time", "timer duration show"),
+  e("notch-look", "notch-project", "Project name", "folder repository show"),
+  e("notch-look", "notch-scene", "Creature and landscape", "beetle scene strip"),
+  e("notch-look", "notch-aside", "Move aside when the cursor is over it", "hover slide"),
+  e("notch-look", "notch-follow", "Follow the cursor to other monitors", "multi monitor screen"),
+
+  e("themes", "theme", "Theme", "obsidian paper aurum colour color dark light palette"),
+  e("themes", "theme-switch", "Switch automatically", "system windows schedule time day night light dark follow"),
+  e("themes", "custom-themes", "Your themes", "editor create import export json accent oklch contrast custom"),
+  e("themes", "radius", "Corner roundness", "radius shape round square cards"),
+  e("themes", "motion", "Motion", "animation reduce reduced still"),
+  e("themes", "motion-speed", "Animation speed", "fast slow transitions"),
+  e("themes", "font", "Interface font", "typeface mono sans"),
+
+  e("wallpapers", "wallpaper-library", "Wallpaper library", "image background import desktop picture"),
+  e("wallpapers", "wallpaper-fit", "Fit mode", "fill fit stretch tile center span"),
 
   e("performance", "pause-rules", "Pause rules", "fullscreen game battery saver lock"),
   e("performance", "refresh", "System data refresh", "hz rate cpu memory update"),
@@ -60,15 +85,21 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("data", "cache", "Cached data", "cache clear delete weather battery"),
   e("data", "network", "Network use", "privacy internet weather open-meteo telemetry analytics updates"),
 
-  e("about", "version", "Version", "build release"),
-  e("about", "updates", "Updates", "check new version"),
-  e("about", "diagnostics", "Diagnostics", "copy report support bug"),
-  e("about", "licences", "Licences", "license third party notices fonts open source"),
-  e("about", "attribution", "Credits and attribution", "open-meteo weather nothing affiliated"),
+  e("recovery", "restore", "Restore Windows desktop", "panic undo revert original wallpaper icons way back"),
+  e("recovery", "open-folder", "Logs and data folder", "boot.log panic log open explorer"),
+  e("recovery", "diagnostics", "Diagnostics", "copy report support bug"),
+  e("recovery", "boot-timing", "Boot timing", "speed startup seconds measure"),
+  e("recovery", "use-desktop", "Use this desktop", "windows stock switch back replace off environment"),
 ];
 
 export interface SearchHit extends SearchEntry {
-  readonly pageTitle: string;
+  /** Where the setting lives, for example "Home screen · Layout". */
+  readonly where: string;
+}
+
+function whereOf(page: PageId): string {
+  const meta = pageById(page);
+  return `${sectionById(meta.section).title} · ${meta.title}`;
 }
 
 /** Every word of the query must appear somewhere in the title, keywords or page name. Title hits rank first. */
@@ -77,9 +108,9 @@ export function searchSettings(query: string, entries: readonly SearchEntry[] = 
   if (words.length === 0) return [];
   const scored: { hit: SearchHit; score: number }[] = [];
   for (const entry of entries) {
-    const pageTitle = pageById(entry.page).title;
+    const where = whereOf(entry.page);
     const title = entry.title.toLowerCase();
-    const rest = `${entry.keywords} ${pageTitle}`.toLowerCase();
+    const rest = `${entry.keywords} ${where}`.toLowerCase();
     let score = 0;
     let all = true;
     for (const word of words) {
@@ -88,7 +119,7 @@ export function searchSettings(query: string, entries: readonly SearchEntry[] = 
       else if (rest.includes(word)) score += 1;
       else all = false;
     }
-    if (all) scored.push({ hit: { ...entry, pageTitle }, score });
+    if (all) scored.push({ hit: { ...entry, where }, score });
   }
   return scored.sort((a, b) => b.score - a.score).map((s) => s.hit);
 }

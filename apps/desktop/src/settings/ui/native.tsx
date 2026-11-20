@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { getNativeApi, NativeUnavailableError, type NativeApi } from "../../lib/native/api";
+import { getApp } from "../../lib/state/app";
 import { Button } from "../../lib/ui/controls";
 import { Icon, type IconName } from "../../lib/ui/Icon";
 
@@ -14,6 +15,8 @@ export interface NativeResource<T> {
   readonly reload: () => void;
   /** Replaces the data with a fresh value the core just returned from a write. */
   readonly set: (next: T) => void;
+  /** Changes the data on screen before the core answers, so a switch moves the moment it is clicked. */
+  readonly update: (change: (current: T) => T) => void;
 }
 
 function describe(error: unknown): string {
@@ -44,7 +47,42 @@ export function useNativeResource<T>(load: (api: NativeApi) => Promise<T>): Nati
 
   useEffect(run, [run]);
   const set = useCallback((data: T) => setState({ status: "ready", data }), []);
-  return { state, reload: run, set };
+  const update = useCallback(
+    (change: (current: T) => T) => setState((s) => (s.status === "ready" ? { status: "ready", data: change(s.data) } : s)),
+    [],
+  );
+  return { state, reload: run, set, update };
+}
+
+/**
+ * Instant apply for settings the core owns. The change shows at once; writes go to the core one at a
+ * time in the order they were made, so rapid clicks always end on the last one. Only the answer to
+ * the latest write replaces what is on screen, so an older answer never flips a switch back for a
+ * moment. A failed write is reported and the real state read back.
+ */
+export function useNativeWrite<T>(resource: NativeResource<T>, failure: string): (guess: (current: T) => T, write: () => Promise<T>) => void {
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const latest = useRef(0);
+  const { set, update, reload } = resource;
+  return useCallback(
+    (guess, write) => {
+      update(guess);
+      latest.current += 1;
+      const ticket = latest.current;
+      queue.current = queue.current.then(() =>
+        write().then(
+          (answer) => {
+            if (ticket === latest.current) set(answer);
+          },
+          (error: unknown) => {
+            getApp().notices.getState().push({ key: `native:${failure}`, level: "error", message: `${failure}: ${describe(error)}` });
+            reload();
+          },
+        ),
+      );
+    },
+    [set, update, reload, failure],
+  );
 }
 
 export interface NativeGateProps<T> {

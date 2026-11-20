@@ -6,31 +6,39 @@ import { useAppearance } from "../lib/theme/useAppearance";
 import { IconButton, Kbd } from "../lib/ui/controls";
 import { Icon } from "../lib/ui/Icon";
 import { AboutPage } from "./pages/AboutPage";
-import { AppearancePage } from "./pages/AppearancePage";
 import { DataPage } from "./pages/DataPage";
 import { DisplaysPage } from "./pages/DisplaysPage";
-import { HomePage } from "./pages/HomePage";
+import { LayoutPage } from "./pages/LayoutPage";
+import { AgentsPage, NotchLookPage } from "./pages/NotchPages";
 import { PerformancePage } from "./pages/PerformancePage";
+import { ProfilesPage } from "./pages/ProfilesPage";
+import { RecoveryPage } from "./pages/RecoveryPage";
 import { ShortcutsPage } from "./pages/ShortcutsPage";
 import { StartupPage } from "./pages/StartupPage";
+import { ThemesPage } from "./pages/ThemesPage";
 import { WallpapersPage } from "./pages/WallpapersPage";
 import { WidgetsPage } from "./pages/WidgetsPage";
-import { isPageId, PAGES, pageById, type PageId } from "./pageMeta";
+import { hrefFor, pageById, pagesOf, parseRoute, SECTIONS, type PageId, type Route } from "./sections";
 import { searchSettings } from "./searchIndex";
+import { moveFocusAmongLinks } from "./ui/layout";
 import { UndoBar } from "./ui/undo";
 import "./settings.css";
 
 const PAGE_COMPONENTS: Readonly<Record<PageId, () => ReactNode>> = {
-  home: () => <HomePage />,
-  appearance: () => <AppearancePage />,
-  wallpapers: () => <WallpapersPage />,
-  widgets: () => <WidgetsPage />,
   startup: () => <StartupPage />,
+  about: () => <AboutPage />,
+  layout: () => <LayoutPage />,
+  profiles: () => <ProfilesPage />,
+  widgets: () => <WidgetsPage />,
   displays: () => <DisplaysPage />,
+  agents: () => <AgentsPage />,
+  "notch-look": () => <NotchLookPage />,
+  themes: () => <ThemesPage />,
+  wallpapers: () => <WallpapersPage />,
   performance: () => <PerformancePage />,
   shortcuts: () => <ShortcutsPage />,
   data: () => <DataPage />,
-  about: () => <AboutPage />,
+  recovery: () => <RecoveryPage />,
 };
 
 const FLASH_MS = 1800;
@@ -39,21 +47,10 @@ const FOCUS_RETRY_MS = 1200;
 const FOCUS_RETRY_STEP_MS = 80;
 const FOCUSABLE = "button, input, select, a[href], [tabindex]:not([tabindex='-1'])";
 
-interface Route {
-  readonly page: PageId;
-  readonly focus: string | null;
-}
-
-function parseHash(hash: string): Route {
-  const match = /^#\/([a-z]+)(?:\?focus=([\w-]+))?/.exec(hash);
-  const id = match?.[1];
-  return { page: id && isPageId(id) ? id : "home", focus: match?.[2] ?? null };
-}
-
 function useRoute(): Route {
-  const [route, setRoute] = useState(() => parseHash(window.location.hash));
+  const [route, setRoute] = useState(() => parseRoute(window.location.hash));
   useEffect(() => {
-    const onChange = (): void => setRoute(parseHash(window.location.hash));
+    const onChange = (): void => setRoute(parseRoute(window.location.hash));
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
@@ -115,13 +112,13 @@ function SearchResults({ query, onPick }: { readonly query: string; readonly onP
       <ul className="results">
         {hits.map((hit) => (
           <li key={hit.id}>
-            <a className="result" href={`#/${hit.page}?focus=${hit.id}`} onClick={onPick}>
+            <a className="result" href={hrefFor(hit.page, hit.id)} onClick={onPick}>
               <span className="result__icon" aria-hidden="true">
                 <Icon name={pageById(hit.page).icon} size={18} />
               </span>
               <span className="result__text">
                 <span className="result__title">{hit.title}</span>
-                <span className="caps">{hit.pageTitle}</span>
+                <span className="caps">{hit.where}</span>
               </span>
               <Icon name="chevron" size={16} />
             </a>
@@ -165,7 +162,7 @@ export function SettingsApp() {
     } else if (e.key === "Enter") {
       const first = searchSettings(query)[0];
       if (first) {
-        window.location.hash = `#/${first.page}?focus=${first.id}`;
+        window.location.hash = hrefFor(first.page, first.id);
         clearSearch();
       }
     } else if (e.key === "ArrowDown") {
@@ -173,15 +170,6 @@ export function SettingsApp() {
       content.current?.querySelector<HTMLElement>(".result")?.focus();
     }
   };
-  const onNavKey = (e: KeyboardEvent<HTMLElement>): void => {
-    const links = [...e.currentTarget.querySelectorAll<HTMLElement>("a")];
-    const index = links.indexOf(document.activeElement as HTMLElement);
-    const next = e.key === "ArrowDown" ? index + 1 : e.key === "ArrowUp" ? index - 1 : e.key === "Home" ? 0 : e.key === "End" ? links.length - 1 : -1;
-    if (next < 0) return;
-    e.preventDefault();
-    links[(next + links.length) % links.length]?.focus();
-  };
-
   return (
     <div className="settings">
       <a className="skip-link" href="#content" onClick={(e) => { e.preventDefault(); content.current?.focus(); }}>
@@ -209,16 +197,26 @@ export function SettingsApp() {
           />
           {query === "" ? <Kbd>/</Kbd> : null}
         </label>
-        <nav aria-label="Settings pages" onKeyDown={onNavKey}>
+        <nav aria-label="Settings sections" onKeyDown={(e) => moveFocusAmongLinks(e, "vertical")}>
           <ul className="nav">
-            {PAGES.map((p) => (
-              <li key={p.id}>
-                <a className="nav__item" href={`#/${p.id}`} aria-current={query === "" && route.page === p.id ? "page" : undefined} onClick={clearSearch}>
-                  <Icon name={p.icon} size={18} />
-                  {p.title}
-                </a>
-              </li>
-            ))}
+            {SECTIONS.map((section) => {
+              const current = query === "" && pageById(route.page).section === section.id;
+              return (
+                <li key={section.id}>
+                  <a
+                    className="nav__item"
+                    href={hrefFor((pagesOf(section.id)[0] ?? pageById(route.page)).id)}
+                    aria-current={current ? "page" : undefined}
+                    onClick={clearSearch}
+                  >
+                    <span className={`nav__icon nav__icon--${section.id}`} aria-hidden="true">
+                      <Icon name={section.icon} size={14} />
+                    </span>
+                    {section.title}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </aside>

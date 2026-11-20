@@ -51,6 +51,12 @@ const GLYPHS = {
   warning: { line: ["M12 4l9 15.5H3z", "M12 10v4.5"], fill: [circle(12, 17.2, 0.9)] },
   restore: { line: ["M5 12a7 7 0 1 1 2 5", "M5 18v-5h5"] },
   settings: { line: ["M4 8h8.5", "M17.5 8H20", circle(15, 8, 2.5), "M4 16h2.5", "M11.5 16H20", circle(9, 16, 2.5)] },
+  /** A screen with the notch pill at its top edge. */
+  notch: { line: ["M5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9A2.5 2.5 0 0 1 5.5 5z", "M9.5 8h5"] },
+  /** A screen with the dock bar along its bottom edge. */
+  dock: { line: ["M5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9A2.5 2.5 0 0 1 5.5 5z", "M8 15.5h8"] },
+  /** Two stacked sheets: profiles, one arrangement over another. */
+  layers: { line: ["M12 4l8 4-8 4-8-4z", "M4 12l8 4 8-4", "M4 16l8 4 8-4"] },
   folder: { line: ["M4.5 6h5l2 2.5h8A1.5 1.5 0 0 1 21 10v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18V7.5A1.5 1.5 0 0 1 4.5 6z"] },
 } as const satisfies Record<string, Glyph>;
 

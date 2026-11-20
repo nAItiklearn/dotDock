@@ -1,25 +1,60 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { IconButton } from "../../lib/ui/controls";
+import { hrefFor, pageById, pagesOf, sectionById, type PageId } from "../sections";
+
+// ------------------------------------------------------------ link navigation
+
+/**
+ * Arrow keys move between the links of a list (the sidebar, a tab strip), Home and End jump to the
+ * ends, and the focus wraps. Tab still leaves the list, as everywhere else.
+ */
+export function moveFocusAmongLinks(e: KeyboardEvent<HTMLElement>, axis: "vertical" | "horizontal"): void {
+  const forward = axis === "vertical" ? "ArrowDown" : "ArrowRight";
+  const back = axis === "vertical" ? "ArrowUp" : "ArrowLeft";
+  const links = [...e.currentTarget.querySelectorAll<HTMLElement>("a")];
+  const index = links.indexOf(document.activeElement as HTMLElement);
+  if (index < 0) return;
+  const next = e.key === forward ? index + 1 : e.key === back ? index - 1 : e.key === "Home" ? 0 : e.key === "End" ? links.length - 1 : null;
+  if (next === null) return;
+  e.preventDefault();
+  links[(next + links.length) % links.length]?.focus();
+}
 
 // ---------------------------------------------------------------- page header
 
-export function PageHeader({ title, description }: { readonly title: string; readonly description: string }) {
+/**
+ * Top of every page: the section it belongs to, the page title and what the page is for, then the
+ * section's pages as tabs, so everything about one part of the product is a click away.
+ */
+export function PageHeader({ page }: { readonly page: PageId }) {
+  const meta = pageById(page);
+  const section = sectionById(meta.section);
+  const siblings = pagesOf(meta.section);
   const heading = useRef<HTMLHeadingElement>(null);
   // Moving focus to the title on navigation tells screen-reader users where they are and
   // lets keyboard users continue from the top of the new page.
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
-  }, [title]);
+  }, [page]);
   return (
     <header className="page-header">
       <div className="page-header__eyebrow">
         <span className="status-dot" aria-hidden="true" />
-        <span className="caps">Settings</span>
+        <span className="caps">{section.title}</span>
       </div>
       <h1 ref={heading} tabIndex={-1} className="page-header__title">
-        {title}
+        {meta.title}
       </h1>
-      <p className="page-header__desc">{description}</p>
+      <p className="page-header__desc">{meta.description}</p>
+      {siblings.length > 1 ? (
+        <nav className="tabs" aria-label={`${section.title} pages`} onKeyDown={(e) => moveFocusAmongLinks(e, "horizontal")}>
+          {siblings.map((p) => (
+            <a key={p.id} className="tabs__item" href={hrefFor(p.id)} aria-current={p.id === page ? "page" : undefined}>
+              {p.title}
+            </a>
+          ))}
+        </nav>
+      ) : null}
     </header>
   );
 }
