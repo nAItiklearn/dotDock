@@ -83,6 +83,12 @@
   /* Photo borders: warm paper and near-black ink, the same in every theme. */
   --photo-mat: #efede9;
   --photo-ink: #111111;
+  /* A caption on a grey or accent border the warm pair cannot carry at 4.5 : 1 takes the strongest pair. */
+  --photo-mat-max: #ffffff;
+  --photo-ink-max: #000000;
+  /* A band's outer hairline: the caption ink at this strength, so a paper mat on a light desktop
+     (or ink on a dark one) keeps a visible edge. */
+  --photo-edge-mix: 24%;
 }
 
 @media (prefers-reduced-motion: reduce) {
