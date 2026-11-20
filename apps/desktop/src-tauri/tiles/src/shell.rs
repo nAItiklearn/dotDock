@@ -43,7 +43,8 @@ pub fn reveal(path: &Path) -> Result<(), String> {
 }
 
 /// Schemes the dock itself ever asks Windows to launch. Anything else from the UI is refused.
-const ALLOWED_SCHEMES: [&str; 11] = [
+const ALLOWED_SCHEMES: [&str; 12] = [
+    "ms-screenclip:",
     "https:",
     "http:",
     "tel:",

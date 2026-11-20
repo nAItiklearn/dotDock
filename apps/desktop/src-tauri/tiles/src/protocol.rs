@@ -252,6 +252,7 @@ pub struct FileItem {
     pub name: String,
     pub modified_ms: i64,
     pub size_bytes: u64,
+    pub is_dir: bool,
     /// Still being written by a browser or downloader (`.crdownload`, `.part`, `.tmp`, ...).
     pub partial: bool,
 }

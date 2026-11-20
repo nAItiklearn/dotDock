@@ -132,6 +132,26 @@ impl<M: Send + 'static> Drop for Worker<M> {
     }
 }
 
+/// The message of workers that only need to be told "look again".
+pub struct Refresh;
+
+/// Like `coalesce`, but stops waiting after `cap`, so a steady stream of events (a download that keeps growing)
+/// still produces a refresh now and then.
+pub fn coalesce_capped<M>(rx: &Receiver<Option<M>>, quiet: Duration, cap: Duration) -> bool {
+    let deadline = std::time::Instant::now() + cap;
+    loop {
+        let left = deadline.saturating_duration_since(std::time::Instant::now());
+        if left.is_zero() {
+            return true;
+        }
+        match rx.recv_timeout(quiet.min(left)) {
+            Ok(Some(_)) => {}
+            Ok(None) | Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => return false,
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => return true,
+        }
+    }
+}
+
 /// After a message arrived, keeps absorbing messages that follow within `window` so a burst becomes one refresh.
 /// Returns false when the worker should stop.
 pub fn coalesce<M>(rx: &Receiver<Option<M>>, window: Duration) -> bool {

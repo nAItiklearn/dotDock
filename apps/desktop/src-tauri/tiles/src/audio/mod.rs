@@ -34,7 +34,7 @@ const COALESCE: Duration = Duration::from_millis(8);
 /// How long `start` waits for the worker's first reading.
 const START_TIMEOUT: Duration = Duration::from_secs(3);
 
-pub(crate) struct Refresh;
+pub(crate) use crate::com::Refresh;
 
 #[derive(Clone)]
 pub(crate) struct Poke(pub(crate) Sender<Option<Refresh>>);
