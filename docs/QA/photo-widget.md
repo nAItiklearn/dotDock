@@ -1,6 +1,6 @@
 # QA: photo widget, finishing pass (2026-11-21)
 
-Follows `docs/QA/photo-frames.md` (sizes, borders, shapes; scored 4.79 by its maker). This pass is the visual QA over real wallpapers, a frame-time trace, the fresh reviewer B and the rescore. Code: `apps/desktop/src/widgets/photo/`. Decision: `docs/DECISIONS.md` D-021.
+Follows `docs/QA/photo-frames.md` (sizes, borders, shapes; scored 4.79 by its maker). This pass is the visual QA over real wallpapers, a frame-time trace, the fresh reviewer B and the rescore. Code: `apps/desktop/src/widgets/photo/`. Decision: `docs/DECISIONS.md` D-025.
 
 ## Build and self-verify
 - `tsc --noEmit` is clean. `vitest run` passes 759 tests in 44 files (752 before this pass).
@@ -19,7 +19,7 @@ Follows `docs/QA/photo-frames.md` (sizes, borders, shapes; scored 4.79 by its ma
 Findings and what was done:
 | Finding | Fix |
 |---|---|
-| The circle shape became an ellipse on non-square sizes; 4x3 and 3x4 read as eggs, and the reference desktop (`1747058098-43375-ss7-thumb.webp`) uses a pill | The circle is now a pill: round ends of half the short side, a true circle on square sizes, and a dot ring spaced evenly along the pill (D-021, commit e271d42) |
+| The circle shape became an ellipse on non-square sizes; 4x3 and 3x4 read as eggs, and the reference desktop (`1747058098-43375-ss7-thumb.webp`) uses a pill | The circle is now a pill: round ends of half the short side, a true circle on square sizes, and a dot ring spaced evenly along the pill (D-025, commit e271d42) |
 | Borderless (edge to edge) must not have a dotted ring | Confirmed on every sheet and in the live run (`photo-live/04-borderless-done-no-ring.png`); only the dot-matrix border draws dots |
 | Mat and polaroid bands of the same lightness as the desktop (paper on Wind Meadow light, ink on Red Waves dark) | Readable: the band's hairline edge (`--photo-edge-mix`) outlines it on every wallpaper |
 | Captions on grey and accent polaroids over grass and red | Readable; the ink is chosen per border colour to at least 4.5 : 1 (`ink.test.ts`) |

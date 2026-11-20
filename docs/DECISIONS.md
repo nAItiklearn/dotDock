@@ -141,7 +141,7 @@ Numbered D-019 because D-017 and D-018 exist on `main`; the backend track's bran
 - **App bar and thumbnails are spikes behind explicit calls.** `AppBar::register` is only called from `examples/appbar_probe.rs`; its guard removes the bar on `Drop`. Thumbnails are `DwmRegisterThumbnail` into the host window, laid out by pure arithmetic (`thumbnail::layout`). Nothing in `DockService::start` hides the taskbar or registers a bar.
 - **Tests that hide the taskbar** (allowed by the owner for this milestone) hold a guard that shows it again and restores the auto-hide state, plus a panic hook for the release profile (which aborts and never runs `Drop`).
 
-## D-021 Photo widget: the circle shape is a pill on non-square sizes (photo track)
+## D-025 Photo widget: the circle shape is a pill on non-square sizes (photo track)
 - **Context:** visual QA over seven wallpapers showed the circle shape as an ellipse on Wide, Landscape, Portrait, Tall and Panorama. A 4x3 or 3x4 ellipse reads as an egg, and the reference desktop (`1747058098-43375-ss7-thumb.webp`) puts a wide photo in a pill.
 - **Decision:** the circle shape keeps fully round ends: a true circle on Small, Medium and Large, a pill (radius half the short side) on every other size. The dot ring is spaced evenly by distance along the pill, with an even count so it is symmetric on both axes. The option is titled "Circle or pill"; the stored value stays `circle`, so saved layouts need no migration.
 - **Rejected:** keeping the ellipse (eggs on 4x3 and 3x4); centring a true circle inside wide sizes (wastes most of the footprint).
