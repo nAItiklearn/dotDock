@@ -3,6 +3,7 @@
 
 pub const MS_PER_DAY: i64 = 86_400_000;
 pub const MS_PER_MINUTE: i64 = 60_000;
+pub const MS_PER_HOUR: i64 = 3_600_000;
 
 /// Days since 1970-01-01 for a proleptic Gregorian date.
 pub fn days_from_civil(year: i32, month: u32, day: u32) -> i64 {

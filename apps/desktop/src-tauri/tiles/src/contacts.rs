@@ -104,6 +104,11 @@ pub fn link(channel: Channel, action: ContactAction, value: &str) -> Result<Stri
     }
 }
 
+/// Whether `action` can be performed over `channel` at all. The failures of [`link`] do not depend on the value.
+pub fn supports(channel: Channel, action: ContactAction) -> bool {
+    link(channel, action, "").is_ok()
+}
+
 fn clean(mut contact: Contact) -> Result<Contact, String> {
     contact.name = contact.name.trim().to_owned();
     if contact.name.is_empty() || contact.name.chars().count() > MAX_NAME_CHARS {
@@ -171,6 +176,17 @@ impl Contacts {
             return Ok(());
         }
         self.commit(list, next)
+    }
+
+    /// The link that performs `action` for a stored contact, over the first of their ways that can. The caller opens it.
+    pub fn link_for_action(&self, id: &str, action: ContactAction) -> Result<String, String> {
+        let list = lock(&self.list);
+        let contact = list.iter().find(|c| c.id == id).ok_or("That contact is gone")?;
+        contact
+            .handles
+            .iter()
+            .find_map(|h| link(h.channel, action, &h.value).ok())
+            .ok_or_else(|| format!("{} has no way to do that", contact.name))
     }
 
     /// The link for a stored contact's channel and action. The caller opens it.

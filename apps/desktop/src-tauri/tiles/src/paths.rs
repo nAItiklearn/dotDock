@@ -43,6 +43,14 @@ impl DataDir {
     pub fn colour_history(&self) -> PathBuf {
         self.0.join("colour-history.json")
     }
+
+    pub fn stopwatch(&self) -> PathBuf {
+        self.0.join("stopwatch.json")
+    }
+
+    pub fn hydration(&self) -> PathBuf {
+        self.0.join("hydration.json")
+    }
 }
 
 fn known_folder(id: &windows::core::GUID) -> Option<PathBuf> {

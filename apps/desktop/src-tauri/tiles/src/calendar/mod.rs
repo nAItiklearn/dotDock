@@ -16,7 +16,7 @@ use crate::com::{coalesce, ComGuard, Refresh, Worker};
 use crate::emit::{lock, Emitter, Shared};
 use crate::protocol::{CalendarEvent, CalendarSource, CalendarState, TileData};
 use crate::settings::Settings;
-use civil::{days_from_civil, fields_from_wall, Fields, MS_PER_DAY};
+use civil::{days_from_civil, fields_from_wall, Fields, MS_PER_DAY, MS_PER_HOUR};
 use notify::{RecursiveMode, Watcher};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -44,11 +44,20 @@ fn local_instant(wall_ms: i64) -> Option<i64> {
     local_to_unix_ms(civil_of(fields_from_wall(wall_ms)))
 }
 
+/// Days since 1970-01-01 of the local calendar day that contains `now`.
+pub(crate) fn local_day(now: i64) -> Option<i64> {
+    let c = local_civil(now)?;
+    Some(days_from_civil(c.year, c.month, c.day))
+}
+
+/// Unix time of `hour`:00 local time on the day `days` after the one that contains `now`.
+pub(crate) fn local_hour(now: i64, days: i64, hour: u32) -> Option<i64> {
+    local_instant((local_day(now)? + days) * MS_PER_DAY + i64::from(hour) * MS_PER_HOUR)
+}
+
 /// Unix time of local midnight `days` days after today's.
 fn midnight(now: i64, days: i64) -> Option<i64> {
-    let c = local_civil(now)?;
-    let today = days_from_civil(c.year, c.month, c.day);
-    local_instant((today + days) * MS_PER_DAY)
+    local_hour(now, days, 0)
 }
 
 fn read_ics(path: &Path) -> Result<ics::Calendar, String> {
