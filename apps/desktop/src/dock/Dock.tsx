@@ -1,12 +1,14 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import { Bar, type BarLayout } from "./Bar";
 import { EditBanner } from "./EditBanner";
 import { chooseEffects, readCapabilities } from "./effects";
 import type { Rect } from "./geometry";
-import { loadContextMenu, loadLibrary, loadPreview, loadStackPopover, usePanel, whenIdle } from "./prefetch";
+import { loadContextMenu, loadLibrary, loadPreview, loadStackPopover, loadTilePopover, usePanel, whenIdle } from "./prefetch";
 import { useDockStore } from "./store";
+import { isTranslucent, resolveTheme } from "./theme";
 import { useAutoHide, useKeyboardFocus, useNoticeTimeout, useRegions, type PanelRects } from "./useDockShell";
+import { useDockPalette } from "./useDockTheme";
 import { useViewport } from "./useViewport";
 import "./dock.css";
 
@@ -48,19 +50,25 @@ export function Dock() {
   const editing = useDockStore((s) => s.editing);
   const libraryOpen = useDockStore((s) => s.libraryOpen);
   const stack = useDockStore((s) => s.stack);
+  const tile = useDockStore((s) => s.tile);
   const pinned = useDockStore((s) => s.settings.pinned);
   const menu = useDockStore((s) => s.menu);
   const previewKey = useDockStore((s) => s.previewKey);
   const notice = useDockStore((s) => s.notice);
   const frozen = useDockStore((s) => s.frozen);
   const choice = useDockStore((s) => s.effectsChoice);
+  const themeChoice = useDockStore((s) => s.themeChoice);
+  const backdrop = useDockStore((s) => s.backdrop);
+  const rootRef = useRef<HTMLElement>(null);
   const viewport = useViewport();
   const [capabilities] = useState(readCapabilities);
   const effects = chooseEffects(choice, capabilities);
+  const theme = resolveTheme(themeChoice, effects, backdrop);
+  const mode = useDockPalette(rootRef, theme, ready);
   const [layout, setLayout] = useState<BarLayout | null>(null);
   const [panels, setPanels] = useState<PanelRects>({});
 
-  const modal = libraryOpen || stack !== null || menu !== null;
+  const modal = libraryOpen || stack !== null || tile !== null || menu !== null;
   const busy = pointerInside || editing || modal;
   const hidden = useAutoHide(autoHide && !frozen, busy);
   useRegions(layout, hidden, panels, viewport, modal);
@@ -72,6 +80,7 @@ export function Dock() {
   const idle = useIdleAfter(ready);
   const stackModule = usePanel(loadStackPopover, idle || stack !== null);
   const libraryModule = usePanel(loadLibrary, idle || libraryOpen);
+  const tileModule = usePanel(loadTilePopover, idle || tile !== null);
   useEffect(() => (idle ? whenIdle(() => void Promise.all([loadContextMenu(), loadPreview()]), IDLE_TIMEOUT_MS) : undefined), [idle]);
   const stackCategories = useMemo(() => pinned.flatMap((p) => (p.kind === "stack" ? [p.category] : [])), [pinned]);
   const warmStacks = useStepsWhenIdle(stackModule !== null, stackCategories.length);
@@ -94,6 +103,7 @@ export function Dock() {
   const closeTop = (): void => {
     const store = useDockStore.getState();
     if (store.menu) store.setMenu(null);
+    else if (store.tile) store.showTile(null);
     else store.openStack(null);
   };
   const rootVars = layout
@@ -101,11 +111,22 @@ export function Dock() {
     : undefined;
 
   return (
-    <main className="dock-root" data-effects={effects} data-frozen={frozen ? "true" : undefined} data-edge={layout?.edge} style={rootVars}>
+    <main
+      ref={rootRef}
+      className="dock-root"
+      data-effects={effects}
+      data-dock-theme={theme}
+      data-backdrop={backdrop.tone ?? mode}
+      data-seamless={isTranslucent(theme) ? "true" : undefined}
+      data-frozen={frozen ? "true" : undefined}
+      data-edge={layout?.edge}
+      style={rootVars}
+    >
       {libraryModule !== null && (warmLibrary || libraryOpen) ? <libraryModule.Library open={libraryOpen} /> : null}
-      {stack !== null || menu !== null ? <div className="scrim" onPointerDown={closeTop} onContextMenu={(e) => (e.preventDefault(), closeTop())} /> : null}
+      {stack !== null || tile !== null || menu !== null ? <div className="scrim" onPointerDown={closeTop} onContextMenu={(e) => (e.preventDefault(), closeTop())} /> : null}
       <Bar hidden={hidden} onLayout={onLayout} />
       {stackModule !== null ? <stackModule.StackLayer categories={readyStacks} open={libraryOpen ? null : stack} /> : null}
+      {tile !== null && tileModule !== null ? <tileModule.TilePopover open={tile} /> : null}
       {previewKey !== null && !editing && !modal ? (
         <Suspense fallback={null}>
           <Preview onRect={rects.preview} />

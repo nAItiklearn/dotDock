@@ -3,7 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { isTauri } from "../providers/bridge";
 import type { Rect } from "./geometry";
 import { activationTarget } from "./model";
-import type { Category, CategoryId, CommandResult, DockApp, DockSettings, DockSnapshot, DockWindow } from "./protocol";
+import type { Category, CategoryId, CommandResult, DockApp, DockBackdrop, DockSettings, DockSnapshot, DockWindow } from "./protocol";
 import { useDockStore } from "./store";
 import { t } from "./strings";
 
@@ -30,6 +30,7 @@ export interface Handlers {
   readonly library: (action: "toggle" | "open" | "close") => void;
   readonly pointer: (inside: boolean) => void;
   readonly frozen: (frozen: boolean) => void;
+  readonly backdrop: (backdrop: DockBackdrop) => void;
 }
 
 /** A rejected invoke becomes a failed result: every command resolves, as the contract promises. */
@@ -57,6 +58,7 @@ const tauriBackend: DockBackend = {
       listen<"toggle" | "open" | "close">("dock://library", (e) => handlers.library(e.payload)),
       listen<{ inside: boolean }>("dock://pointer", (e) => handlers.pointer(e.payload.inside)),
       listen<{ frozen: boolean }>("dock://frozen", (e) => handlers.frozen(e.payload.frozen)),
+      listen<DockBackdrop>("dock://backdrop", (e) => handlers.backdrop(e.payload)),
     ]);
     return () => offs.forEach((off) => off());
   },
@@ -113,6 +115,7 @@ async function start(): Promise<() => void> {
     },
     pointer: store.setPointerInside,
     frozen: store.setFrozen,
+    backdrop: store.setBackdrop,
   });
   const snapshot = await backend.ready();
   if (snapshot) store.applySnapshot(snapshot);

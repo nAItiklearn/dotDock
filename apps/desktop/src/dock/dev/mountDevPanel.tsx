@@ -1,9 +1,11 @@
 import { createRoot } from "react-dom/client";
 import { useProviderStore } from "../../providers/store";
 import { actions, setBackend } from "../bridge";
+import { setTilesBackend } from "../tiles/backend";
 import { useDockStore } from "../store";
 import { DevPanel } from "./DevPanel";
 import { dev, devBackend } from "./devBackend";
+import { devTiles } from "./devTiles";
 import { perf } from "./perfHarness";
 import { sampleIcon } from "./sampleIcons";
 import "./DevPanel.css";
@@ -13,6 +15,7 @@ import "./DevPanel.css";
 /** Replaces the missing core with fixtures. Must run before the dock connects. */
 export function installDevBackend(): void {
   setBackend(devBackend);
+  setTilesBackend(devTiles.backend);
 }
 
 const BYTES_PER_GIB = 1024 ** 3;
@@ -51,7 +54,7 @@ export function mountDevPanel(): void {
   backdrop.style.backgroundImage = `url(/wallpaper-thumbs/${wallpaper}.jpg)`;
   document.body.prepend(backdrop);
   if (params.get("sample") !== "0") publishSampleProviders();
-  Object.assign(window, { dockDev: { dev, store: useDockStore, actions, perf } });
+  Object.assign(window, { dockDev: { dev, tiles: devTiles, store: useDockStore, actions, perf } });
   if (params.get("panel") === "0") return;
   const host = document.createElement("div");
   host.id = "dev-panel";

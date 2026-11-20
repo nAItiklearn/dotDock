@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { readChoice, saveChoice, type EffectsChoice } from "./effects";
-import type { Rect } from "./geometry";
+import type { PopoverTileId, Rect } from "./geometry";
 import { appsInCategory, freshAppIds } from "./model";
 import type { Category, CategoryId, DockApp, DockSettings, DockSnapshot, DockWindow } from "./protocol";
+import { DEFAULT_BACKDROP, readThemeChoice, saveThemeChoice, type Backdrop, type DockThemeId } from "./theme";
 
 export const DEFAULT_SETTINGS: DockSettings = {
   schema: 1,
@@ -29,6 +30,12 @@ export interface OpenStack {
   readonly from: Rect;
   /** Apps that were new when it opened. Opening marks them seen, so the popover keeps its own copy. */
   readonly fresh: ReadonlySet<string>;
+}
+
+export interface OpenTile {
+  readonly id: PopoverTileId;
+  /** Where the tile was drawn when it was opened: the popover sits beside it. */
+  readonly from: Rect;
 }
 
 export interface MenuTarget {
@@ -68,6 +75,7 @@ interface DockStore {
   readonly seen: ReadonlySet<string>;
 
   readonly stack: OpenStack | null;
+  readonly tile: OpenTile | null;
   readonly libraryOpen: boolean;
   readonly editing: boolean;
   readonly menu: MenuTarget | null;
@@ -80,6 +88,10 @@ interface DockStore {
   readonly frozen: boolean;
   /** The user's choice for visual effects; "auto" lets the capability check decide. */
   readonly effectsChoice: EffectsChoice;
+  /** The theme the user chose for the dock; glass may be drawn as glass-lite when it cannot be done (theme.ts). */
+  readonly themeChoice: DockThemeId;
+  /** What the core says about the area behind the dock. */
+  readonly backdrop: Backdrop;
 
   applySnapshot: (snapshot: DockSnapshot) => void;
   applyApps: (apps: readonly DockApp[]) => void;
@@ -88,6 +100,8 @@ interface DockStore {
   setApps: (apps: readonly DockApp[]) => void;
   markSeen: (ids: readonly string[]) => void;
   openStack: (stack: OpenStack | null) => void;
+  /** Opens a live tile's popover beside the tile, or closes it with null. */
+  showTile: (tile: OpenTile | null) => void;
   /** Opens a category's stack: notes which of its apps are new, then marks them seen. */
   showStack: (category: CategoryId, from: Rect) => void;
   setLibrary: (open: boolean) => void;
@@ -98,6 +112,8 @@ interface DockStore {
   setPreviewKey: (key: string | null) => void;
   setFrozen: (frozen: boolean) => void;
   setEffectsChoice: (choice: EffectsChoice) => void;
+  setThemeChoice: (choice: DockThemeId) => void;
+  setBackdrop: (backdrop: Backdrop) => void;
 }
 
 let noticeId = 0;
@@ -111,6 +127,7 @@ export const useDockStore = create<DockStore>((set, get) => ({
   seen: readSeen(),
 
   stack: null,
+  tile: null,
   libraryOpen: false,
   editing: false,
   menu: null,
@@ -119,6 +136,8 @@ export const useDockStore = create<DockStore>((set, get) => ({
   previewKey: null,
   frozen: false,
   effectsChoice: readChoice(),
+  themeChoice: readThemeChoice(),
+  backdrop: DEFAULT_BACKDROP,
 
   applySnapshot: (snapshot) =>
     set({ ready: true, categories: snapshot.categories, apps: snapshot.apps, windows: snapshot.windows, settings: snapshot.settings }),
@@ -133,17 +152,18 @@ export const useDockStore = create<DockStore>((set, get) => ({
     writeSeen(next);
     set({ seen: next });
   },
-  openStack: (stack) => set({ stack, menu: null }),
+  openStack: (stack) => set(stack === null ? { stack, menu: null } : { stack, menu: null, tile: null }),
+  showTile: (tile) => set(tile === null ? { tile } : { tile, stack: null, menu: null }),
   showStack: (category, from) => {
     const { apps, seen } = get();
     const inStack = appsInCategory(apps, category);
     const fresh = freshAppIds(inStack, seen, Date.now());
     get().markSeen(inStack.map((a) => a.id));
-    set({ stack: { category, from, fresh }, menu: null });
+    set({ stack: { category, from, fresh }, menu: null, tile: null });
   },
-  setLibrary: (libraryOpen) => set({ libraryOpen, stack: null, menu: null }),
-  setEditing: (editing) => set({ editing, menu: null }),
-  setMenu: (menu) => set({ menu }),
+  setLibrary: (libraryOpen) => set({ libraryOpen, stack: null, tile: null, menu: null }),
+  setEditing: (editing) => set(editing ? { editing, menu: null, tile: null } : { editing, menu: null }),
+  setMenu: (menu) => set(menu === null ? { menu } : { menu, tile: null }),
   setNotice: (text) => set({ notice: text === null ? null : { id: ++noticeId, text } }),
   setPointerInside: (pointerInside) => set({ pointerInside }),
   setPreviewKey: (previewKey) => (get().previewKey === previewKey ? undefined : set({ previewKey })),
@@ -152,4 +172,9 @@ export const useDockStore = create<DockStore>((set, get) => ({
     saveChoice(effectsChoice);
     set({ effectsChoice });
   },
+  setThemeChoice: (themeChoice) => {
+    saveThemeChoice(themeChoice);
+    set({ themeChoice });
+  },
+  setBackdrop: (backdrop) => set({ backdrop }),
 }));

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 export const loadStackPopover = (): Promise<typeof import("./StackPopover")> => import("./StackPopover");
 export const loadContextMenu = (): Promise<typeof import("./ContextMenu")> => import("./ContextMenu");
 export const loadLibrary = (): Promise<typeof import("./Library")> => import("./Library");
+export const loadTilePopover = (): Promise<typeof import("./tiles/popovers")> => import("./tiles/popovers");
 export const loadPreview = (): Promise<typeof import("./Preview")> => import("./Preview");
 
 type Loader<M> = () => Promise<M>;

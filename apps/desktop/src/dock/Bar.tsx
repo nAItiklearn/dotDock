@@ -8,6 +8,7 @@ import {
   anchorPoint,
   contains,
   fitIconSize,
+  isPopoverTile,
   isVertical,
   metricsFor,
   RATIO,
@@ -70,6 +71,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const seen = useDockStore((s) => s.seen);
   const editing = useDockStore((s) => s.editing);
   const stack = useDockStore((s) => s.stack);
+  const tile = useDockStore((s) => s.tile);
   const menu = useDockStore((s) => s.menu);
   const pointerInside = useDockStore((s) => s.pointerInside);
   const reduced = useReducedMotion();
@@ -124,7 +126,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
     const sub = labelSub.current;
     if (root && name && sub) engine.attachLabel({ root, name, sub });
   }, [engine]);
-  const labelBlocked = editing || stack !== null || menu !== null;
+  const labelBlocked = editing || stack !== null || tile !== null || menu !== null;
   useEffect(() => engine.setLabelBlocked(labelBlocked), [engine, labelBlocked]);
   useEffect(() => engine.setPreviewKey(previewKey), [engine, previewKey]);
   useEffect(() => {
@@ -303,6 +305,14 @@ export function Bar({ hidden, onLayout }: BarProps) {
           }
           store.showStack(entry.category.id, rectOf(face));
           return;
+        case "tile":
+          if (isEditing || !isPopoverTile(entry.id)) return;
+          if (store.tile?.id === entry.id) {
+            store.showTile(null);
+            return;
+          }
+          store.showTile({ id: entry.id, from: rectOf(face) });
+          return;
         case "app": {
           if (isEditing) return;
           const target = activationTarget(entry.windows);
@@ -325,7 +335,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
 
     /** Set from the press that opened a panel until the click that ends it has passed, so that click does not toggle the panel shut. */
     let openedOnPress = false;
-    const panelOf = (entry: BarEntry): string => (entry.kind === "library" ? "library" : entry.kind === "stack" ? "stack" : "menu");
+    const panelOf = (entry: BarEntry): string => (entry.kind === "library" ? "library" : entry.kind === "stack" ? "stack" : entry.kind === "tile" ? "tile" : "menu");
     const openOnPress = (entry: BarEntry, face: HTMLElement, startedAt: number): void => {
       markOpenStart(panelOf(entry), startedAt);
       open(entry, face);
@@ -404,7 +414,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
     const back = vertical ? "ArrowUp" : "ArrowLeft";
     const forward = vertical ? "ArrowDown" : "ArrowRight";
     if (e.key !== back && e.key !== forward && e.key !== "Home" && e.key !== "End") return;
-    const stops = Array.from(e.currentTarget.querySelectorAll<HTMLElement>(".disc"));
+    const stops = Array.from(e.currentTarget.querySelectorAll<HTMLElement>(".disc, .tile__hit"));
     const at = stops.indexOf(document.activeElement as HTMLElement);
     if (stops.length === 0) return;
     const to = e.key === "Home" ? 0 : e.key === "End" ? stops.length - 1 : Math.min(stops.length - 1, Math.max(0, at + (e.key === forward ? 1 : -1)));
@@ -453,7 +463,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
               editing={editing}
               roving={entry.key === rovingKey}
               peak={peak}
-              open={(entry.kind === "stack" && stack?.category === entry.category.id) || (entry.kind === "add" && menu?.key === entry.key)}
+              open={(entry.kind === "stack" && stack?.category === entry.category.id) || (entry.kind === "add" && menu?.key === entry.key) || (entry.kind === "tile" && tile?.id === entry.id)}
               handlers={handlers}
             />
           ))}

@@ -1,11 +1,12 @@
 import { memo, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { Icon } from "../design-system/Icon";
 import { LibraryMark } from "./DockIcons";
-import { faceBox, lengthOf, renderScale } from "./geometry";
+import { faceBox, isPopoverTile, lengthOf, renderScale } from "./geometry";
 import type { DockEdge } from "./protocol";
 import { indicatorFor, lengthKind, magnifyWeight, type AppEntry, type BarEntry, type StackEntry } from "./model";
 import { plural, t } from "./strings";
-import { StatusPill, Tile } from "./tiles";
+import { StatusPill, Tile } from "./tiles/Tile";
+import type { TileControls } from "./tiles/shell";
 import { toneVar } from "./tones";
 
 /** What a slot can ask of the bar. The bar keeps these stable so slots only re-render when their entry changes. */
@@ -41,7 +42,8 @@ export interface SlotProps {
 export const isDraggable = (entry: BarEntry): boolean => (entry.kind === "app" && entry.pinned) || entry.kind === "stack" || entry.kind === "tile";
 
 /** Items that open a panel: it opens on the press, ahead of the click, so the dock answers as fast as the hand moves. */
-export const opensPanel = (entry: BarEntry): boolean => entry.kind === "stack" || entry.kind === "library" || entry.kind === "add";
+export const opensPanel = (entry: BarEntry): boolean =>
+  entry.kind === "stack" || entry.kind === "library" || entry.kind === "add" || (entry.kind === "tile" && isPopoverTile(entry.id));
 
 /** Whether edit mode shows a remove badge on an entry. */
 export const isRemovable = isDraggable;
@@ -125,9 +127,26 @@ function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "
     );
   }
   if (entry.kind === "tile") {
+    const controls: TileControls = {
+      editing,
+      open,
+      onPress: (face, e) => handlers.press(entry, face, e),
+      onActivate: (face) => handlers.activate(entry, face),
+      onPressKey: (face, e) => handlers.pressKey(entry, face, e),
+    };
     return (
-      <div className="face face--tile" style={box} data-editing={editing ? "true" : undefined} onPointerDown={draggable ? (e) => handlers.pointerDown(entry, e) : undefined}>
-        <Tile id={entry.id} />
+      <div
+        className="face face--tile"
+        style={box}
+        data-editing={editing ? "true" : undefined}
+        onPointerDown={draggable ? (e) => handlers.pointerDown(entry, e) : undefined}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handlers.context(entry, e, e.currentTarget);
+        }}
+      >
+        <Tile id={entry.id} controls={controls} />
         {removable ? <RemoveBadge name={name} onRemove={() => handlers.remove(entry)} /> : null}
       </div>
     );

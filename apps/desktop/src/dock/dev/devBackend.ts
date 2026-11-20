@@ -1,6 +1,6 @@
 import type { DockBackend, Handlers } from "../bridge";
 import type { Rect } from "../geometry";
-import type { Category, CategoryId, CommandResult, DockApp, DockSettings, DockSnapshot, DockWindow } from "../protocol";
+import type { Category, CategoryId, CommandResult, DockApp, DockBackdrop, DockSettings, DockSnapshot, DockWindow } from "../protocol";
 import { APPS, CATEGORIES, SAMPLE_NOW, SETTINGS, WINDOWS, makeApp } from "./fixtures";
 import { rasterize } from "./sampleIcons";
 
@@ -67,6 +67,10 @@ export const dev = {
   },
   pointer(inside: boolean): void {
     handlers?.pointer(inside);
+  },
+  /** What the core would report about the desktop behind the dock. */
+  backdrop(backdrop: DockBackdrop): void {
+    handlers?.backdrop(backdrop);
   },
 };
 

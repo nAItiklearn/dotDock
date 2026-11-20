@@ -3,7 +3,21 @@ import { MAGNIFY_WEIGHT, type LengthKind } from "./geometry";
 import { categoryLabel } from "./strings";
 
 /** Live tiles the dock knows how to draw. Ids in `DockSettings.tiles` that are not listed here are ignored. */
-export const TILE_IDS = ["clock", "media", "system"] as const;
+export const TILE_IDS = [
+  "clock",
+  "media",
+  "system",
+  "agenda",
+  "meeting",
+  "focus",
+  "stopwatch",
+  "hydration",
+  "reminders",
+  "progress",
+  "contacts",
+  "mic",
+  "audio",
+] as const;
 export type TileId = (typeof TILE_IDS)[number];
 export const isTileId = (id: string): id is TileId => (TILE_IDS as readonly string[]).includes(id);
 

@@ -67,6 +67,17 @@ export const LENGTH_RATIO = {
   clock: [2.3, 1.55],
   media: [3.8, 1],
   system: [1.05, 1.05],
+  /** Tiles with words beside a round mark: on a vertical dock only the mark stays, so they are one item long. */
+  agenda: [3.6, 1],
+  meeting: [3.9, 1],
+  focus: [2.8, 1],
+  stopwatch: [2.6, 1],
+  hydration: [1, 1],
+  reminders: [3.1, 1],
+  progress: [2.5, 1],
+  contacts: [2.1, 1],
+  mic: [1, 1],
+  audio: [1, 1],
   /** Measured once drawn; this estimate only sizes the dock before the first measurement. */
   status: [3.2, 2.3],
 } as const;
@@ -242,6 +253,27 @@ export const LIBRARY = { cellW: 112, cellH: 120, face: 64, gap: 8, maxWidth: 124
 export function libraryColumns(width: number): number {
   return Math.max(1, Math.floor((width + LIBRARY.gap) / (LIBRARY.cellW + LIBRARY.gap)));
 }
+
+/**
+ * Popovers that open from a live tile, in px. Each tile's size is fixed so the popover can be placed before it is
+ * laid out; a list inside scrolls when it outgrows its tile's room. Tiles not listed here (the clock, the media
+ * player and the microphone) act on a press and have no popover.
+ */
+export const TILE_POPOVER = { pad: 16, head: 52, gap: 12 } as const;
+export const TILE_POPOVER_SIZE = {
+  system: { w: 320, h: 300 },
+  agenda: { w: 340, h: 380 },
+  meeting: { w: 340, h: 250 },
+  focus: { w: 320, h: 320 },
+  stopwatch: { w: 320, h: 400 },
+  hydration: { w: 300, h: 340 },
+  reminders: { w: 340, h: 420 },
+  progress: { w: 340, h: 360 },
+  contacts: { w: 340, h: 400 },
+  audio: { w: 340, h: 380 },
+} as const;
+export type PopoverTileId = keyof typeof TILE_POPOVER_SIZE;
+export const isPopoverTile = (id: string): id is PopoverTileId => Object.hasOwn(TILE_POPOVER_SIZE, id);
 
 /** Context menus, in px. */
 export const MENU = { w: 236, row: 34, heading: 30, separator: 9, pad: 6, gap: 4 } as const;

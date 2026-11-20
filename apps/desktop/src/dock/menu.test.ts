@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { actionable, addable, heightBefore, menuFor, menuSize, type MenuActions, type MenuContext, type MenuItem } from "./menu";
 import { MENU } from "./geometry";
+import { TILE_IDS } from "./model";
 import type { Category, DockApp, DockSettings, DockWindow } from "./protocol";
 
 const categories: Category[] = [
@@ -139,13 +140,30 @@ describe("the add chooser", () => {
   it("offers the stacks and tiles that are not on the dock yet", () => {
     const { ctx, calls } = context();
     const items = menuFor("add", ctx);
-    expect(labels(items)).toEqual(["Stacks", "Development", "Games", "Live tiles", "Now playing", "System"]);
+    expect(labels(items)).toEqual([
+      "Stacks",
+      "Development",
+      "Games",
+      "Live tiles",
+      "Now playing",
+      "System",
+      "Today",
+      "Next meeting",
+      "Focus",
+      "Stopwatch",
+      "Water",
+      "Reminders",
+      "Progress",
+      "Contacts",
+      "Microphone",
+      "Sound",
+    ]);
     find(items, "stack:games").run?.();
     expect(calls[0]).toContain('"category":"games"');
   });
 
   it("is empty when everything is on the dock", () => {
-    const full = { ...settings, pinned: categories.map((c) => ({ kind: "stack" as const, category: c.id })), tiles: ["clock", "media", "system"] };
+    const full = { ...settings, pinned: categories.map((c) => ({ kind: "stack" as const, category: c.id })), tiles: [...TILE_IDS] };
     expect(menuFor("add", context({ settings: full }).ctx)).toEqual([]);
     expect(addable({ settings: full, categories, apps }).stacks).toEqual([]);
   });

@@ -120,6 +120,16 @@ export interface DockCommands {
 
 export type CommandResult = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 
+/** What the core knows about the area behind the dock: whether the native blur can be applied and how light it is. */
+export interface DockBackdrop {
+  /** The native blur can be applied: Windows 11 22H2 or later, or the Windows 10 acrylic fallback. */
+  readonly available: boolean;
+  /** Whether the desktop behind the dock is light or dark; null while the core has not measured it. */
+  readonly tone: "light" | "dark" | null;
+  /** Windows battery saver is on: the dock drops transparency to save power. */
+  readonly saver: boolean;
+}
+
 /** Events the core emits to the dock window. */
 export interface DockEvents {
   "dock://apps": readonly DockApp[];
@@ -137,4 +147,6 @@ export interface DockEvents {
    * every frame loop and timer until `frozen: false`, so a hidden dock costs nothing.
    */
   "dock://frozen": { readonly frozen: boolean };
+  /** The blur and tone of what is behind the dock changed (a new wallpaper, battery saver, a transparency setting). */
+  "dock://backdrop": DockBackdrop;
 }

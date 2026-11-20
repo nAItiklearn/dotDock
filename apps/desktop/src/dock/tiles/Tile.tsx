@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
-import { DotIcon } from "../design-system/DotMatrix";
-import { Icon } from "../design-system/Icon";
-import { useProvider } from "../providers/store";
-import { sendMediaCommand } from "../widgets/mediaControls";
-import { BatteryIcon, DockIcon } from "./DockIcons";
-import type { TileId } from "./model";
-import { useDockStore } from "./store";
-import { t } from "./strings";
+import { DotIcon } from "../../design-system/DotMatrix";
+import { Icon } from "../../design-system/Icon";
+import { useProvider } from "../../providers/store";
+import { sendMediaCommand } from "../../widgets/mediaControls";
+import { BatteryIcon, DockIcon } from "../DockIcons";
+import type { TileId } from "../model";
+import { t } from "../strings";
+import { AgendaFace, AudioFace, ContactsFace, FocusFace, HydrationFace, MeetingFace, MicFace, ProgressFace, RemindersFace, StopwatchFace, SystemFace } from "./faces";
+import { useAwake } from "./hooks";
+import type { TileControls } from "./shell";
 
 const MS_PER_MINUTE = 60_000;
 /** Lands just after the minute turns, so the clock never shows the old minute. */
 const MINUTE_LAG_MS = 40;
-const PERCENT = 100;
 const LOW_BATTERY = 20;
 
 /**
@@ -20,16 +21,9 @@ const LOW_BATTERY = 20;
  */
 export function useMinuteClock(): Date {
   const [now, setNow] = useState(() => new Date());
-  const frozen = useDockStore((s) => s.frozen);
-  const [hidden, setHidden] = useState(() => document.hidden);
+  const awake = useAwake();
   useEffect(() => {
-    const update = (): void => setHidden(document.hidden);
-    document.addEventListener("visibilitychange", update);
-    return () => document.removeEventListener("visibilitychange", update);
-  }, []);
-  const paused = frozen || hidden;
-  useEffect(() => {
-    if (paused) return undefined;
+    if (!awake) return undefined;
     setNow(new Date());
     let timer = 0;
     const schedule = (): void => {
@@ -41,7 +35,7 @@ export function useMinuteClock(): Date {
     };
     schedule();
     return () => window.clearTimeout(timer);
-  }, [paused]);
+  }, [awake]);
   return now;
 }
 
@@ -108,45 +102,34 @@ function MediaTile() {
   );
 }
 
-const RING_DOTS = 12;
-const RING_BOX = 40;
-const RING_RADIUS = 15.5;
-const RING_DOT = 2.3;
-
-function SystemTile() {
-  const { data } = useProvider("system");
-  const used = data && data.memTotalBytes > 0 ? data.memUsedBytes / data.memTotalBytes : null;
-  const lit = used === null ? 0 : Math.round(used * RING_DOTS);
-  const percent = used === null ? null : Math.round(used * PERCENT);
-  return (
-    <div className="tile tile--system" role="img" aria-label={percent === null ? t("tile.system") : `${t("tile.system.memory")} ${percent}%`}>
-      <svg viewBox={`0 0 ${RING_BOX} ${RING_BOX}`} aria-hidden="true">
-        {Array.from({ length: RING_DOTS }, (_, i) => {
-          const angle = (i / RING_DOTS) * Math.PI * 2 - Math.PI / 2;
-          return (
-            <circle
-              key={i}
-              cx={RING_BOX / 2 + Math.cos(angle) * RING_RADIUS}
-              cy={RING_BOX / 2 + Math.sin(angle) * RING_RADIUS}
-              r={RING_DOT}
-              fill={i < lit ? "var(--accent)" : "var(--dot-off)"}
-            />
-          );
-        })}
-      </svg>
-      <span className="system__value">{percent === null ? "–" : percent}</span>
-    </div>
-  );
-}
-
-export function Tile({ id }: { readonly id: TileId }) {
+export function Tile({ id, controls }: { readonly id: TileId; readonly controls: TileControls }) {
   switch (id) {
     case "clock":
       return <ClockTile />;
     case "media":
       return <MediaTile />;
     case "system":
-      return <SystemTile />;
+      return <SystemFace controls={controls} />;
+    case "agenda":
+      return <AgendaFace controls={controls} />;
+    case "meeting":
+      return <MeetingFace controls={controls} />;
+    case "focus":
+      return <FocusFace controls={controls} />;
+    case "stopwatch":
+      return <StopwatchFace controls={controls} />;
+    case "hydration":
+      return <HydrationFace controls={controls} />;
+    case "reminders":
+      return <RemindersFace controls={controls} />;
+    case "progress":
+      return <ProgressFace controls={controls} />;
+    case "contacts":
+      return <ContactsFace controls={controls} />;
+    case "mic":
+      return <MicFace />;
+    case "audio":
+      return <AudioFace controls={controls} />;
   }
 }
 

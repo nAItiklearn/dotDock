@@ -2,7 +2,9 @@
  * Dock window. Sizes come from the custom properties Bar.tsx derives from geometry.ts (--d-*), so this file
  * never repeats a pixel value of the layout. Colours are theme roles; the category tones are the only extras.
  */
-:root {
+/* Declared on the dock root as well, so a dock theme that sets its own palette there recomputes everything derived from it. */
+:root,
+.dock-root {
   /* Category tones, one pair per theme mode. light-dark() follows the colour-scheme the theme engine sets. */
   --tone-red: light-dark(#e2363d, #e94248);
   --tone-amber: light-dark(#c98f1a, #e2b453);
@@ -51,6 +53,52 @@
   --panel-shadow: 0 6px 16px rgb(0 0 0 / 0.3);
   --scrim: color-mix(in srgb, var(--bg) 97%, black);
   --scrim-filter: none;
+}
+
+/*
+ * Dock themes (theme.ts), one attribute on the root. The solid themes (obsidian, paper, aurum) keep the bar opaque and
+ * differ only in palette, which useDockPalette puts on the root. The others change how much of the desktop shows:
+ * glass-lite is a semi-opaque tinted bar, glass the same bar left nearly clear for the native blur behind it, and
+ * minimal draws no bar at all, only the icons.
+ */
+.dock-root[data-dock-theme="glass-lite"] {
+  --bar-fill: color-mix(in srgb, var(--solid) 78%, transparent);
+  --disc: color-mix(in srgb, var(--surface-2) 70%, transparent);
+}
+.dock-root[data-dock-theme="glass"] {
+  --bar-fill: color-mix(in srgb, var(--solid) 30%, transparent);
+  --disc: color-mix(in srgb, var(--surface-2) 52%, transparent);
+  --disc-edge: color-mix(in srgb, var(--text) 16%, transparent);
+  --border: color-mix(in srgb, var(--text) 18%, transparent);
+  --bar-shadow: var(--top-light), 0 10px 30px rgb(0 0 0 / 0.22);
+}
+.dock-root[data-dock-theme="minimal"] {
+  --bar-fill: transparent;
+  --bar-shadow: none;
+  --border: transparent;
+  --disc: color-mix(in srgb, var(--surface-2) 38%, transparent);
+  --lift-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+/*
+ * A translucent bar is three overlapping pieces, so where the middle runs under an end the fill would be doubled, a
+ * visible seam. The middle is clipped to stop where the ends begin, and still reaches past the bar for its shadow.
+ */
+.dock-root[data-seamless="true"] .dock-anchor[data-axis="x"] .plate__mid {
+  clip-path: polygon(
+    var(--d-overlap) calc(-1 * var(--shadow-reach)),
+    calc(100% - var(--d-overlap)) calc(-1 * var(--shadow-reach)),
+    calc(100% - var(--d-overlap)) calc(100% + var(--shadow-reach)),
+    var(--d-overlap) calc(100% + var(--shadow-reach))
+  );
+}
+.dock-root[data-seamless="true"] .dock-anchor[data-axis="y"] .plate__mid {
+  clip-path: polygon(
+    calc(-1 * var(--shadow-reach)) var(--d-overlap),
+    calc(100% + var(--shadow-reach)) var(--d-overlap),
+    calc(100% + var(--shadow-reach)) calc(100% - var(--d-overlap)),
+    calc(-1 * var(--shadow-reach)) calc(100% - var(--d-overlap))
+  );
 }
 
 /* Panels appear in their first frame, fully laid out; only their opacity fades in, and they close at once. */
@@ -692,22 +740,6 @@ html[data-dragging="true"] * {
 .dock-anchor[data-axis="y"] .media__text,
 .dock-anchor[data-axis="y"] .media__button {
   display: none;
-}
-
-.tile--system {
-  justify-content: center;
-}
-.tile--system svg {
-  position: absolute;
-  inset: 4%;
-  width: 92%;
-  height: 92%;
-}
-.system__value {
-  position: relative;
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  font-variant-numeric: tabular-nums;
 }
 
 /* The status pill: network, battery, clock. */
