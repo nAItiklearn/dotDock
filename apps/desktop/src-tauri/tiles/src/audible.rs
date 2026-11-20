@@ -15,6 +15,9 @@ const SOUND: &str = r"C:\Windows\Media\ding.wav";
 pub const HEAR_WITHIN: Duration = Duration::from_secs(10);
 /// The sound is played again this often while waiting, in case the first one ended before the stream was ready.
 const REPLAY_EVERY: Duration = Duration::from_millis(900);
+/// How long the sound plays before `take` returns, so a loopback stream opened next finds a render stream running:
+/// one opened on an idle output can stay silent on some drivers.
+const HEAD_START: Duration = Duration::from_millis(300);
 
 static SPEAKERS: Mutex<()> = Mutex::new(());
 
@@ -28,6 +31,7 @@ impl Speakers {
     pub fn take() -> Self {
         let turn = SPEAKERS.lock().unwrap_or_else(PoisonError::into_inner);
         play();
+        std::thread::sleep(HEAD_START);
         Self { _turn: turn, last_played: Instant::now() }
     }
 

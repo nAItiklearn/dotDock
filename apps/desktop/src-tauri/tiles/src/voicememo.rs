@@ -435,14 +435,13 @@ mod tests {
         assert_eq!(memos[1].duration_ms, 1000);
     }
 
-    /// The capture path end to end on real audio. The speakers' loopback stands in for the microphone, because
-    /// Windows can block microphone access machine-wide; everything after the device is opened (format conversion,
-    /// streaming to disk, the WAV header, levels) is the production code. Audible, so it runs on request.
-    #[test]
-    #[ignore = "plays a short system sound on the speakers; run with --ignored"]
-    fn recording_real_audio_writes_a_valid_wav() {
+    /// How many times the loopback test tries: on some drivers a loopback stream stays silent now and then.
+    const LOOPBACK_ATTEMPTS: usize = 3;
+
+    /// One try at recording the speakers while a sound plays. The error says what did not happen.
+    fn record_the_speakers_once() -> Result<(), String> {
         use windows::Win32::Media::Audio::{eRender, AUDCLNT_STREAMFLAGS_LOOPBACK};
-        let dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().map_err(|e| e.to_string())?;
         let path = dir.path().join("loopback.wav");
         let levels = Arc::new(Mutex::new(Vec::new()));
         let seen = levels.clone();
@@ -460,15 +459,20 @@ mod tests {
             playing: None,
             problem: None,
         }));
-        let stop = Arc::new(Event::new().unwrap());
+        let stop = Arc::new(Event::new()?);
         let (ready_tx, ready_rx) = std::sync::mpsc::channel();
         let (p, s, st) = (path.clone(), stop.clone(), state.clone());
+        // The sound starts first: a loopback stream opened on an idle output can stay silent.
+        let mut speakers = crate::audible::Speakers::take();
         let worker = thread::spawn(move || {
             let source = || crate::audio::devices::default_device(eRender).map(|d| (d, AUDCLNT_STREAMFLAGS_LOOPBACK));
             record(&p, &s, &ready_tx, &st, &emitter, &source)
         });
-        assert!(ready_rx.recv_timeout(Duration::from_secs(5)).unwrap().is_ok(), "the capture stream opens");
-        let mut speakers = crate::audible::Speakers::take();
+        if ready_rx.recv_timeout(Duration::from_secs(5)).is_err() {
+            // The recorder ended before it was ready, so its result says why; a slow one is told to stop.
+            stop.signal();
+            return Err(format!("the capture stream did not open: {:?}", worker.join()));
+        }
         let waited = std::time::Instant::now();
         while !lock(&levels).iter().any(|p| *p > 0.0) && waited.elapsed() < crate::audible::HEAR_WITHIN {
             thread::sleep(LEVEL_EVERY);
@@ -476,10 +480,12 @@ mod tests {
         }
         drop(speakers);
         stop.signal();
-        worker.join().unwrap().expect("the recording finishes cleanly");
-        let bytes = fs::read(&path).unwrap();
-        let duration = wav::duration_ms(&bytes[..wav::HEADER_LEN], bytes.len() as u64).expect("a valid WAV header");
-        assert!(duration > 0 && duration < 15_000, "duration {duration} ms");
+        worker.join().map_err(|_| "the recorder panicked".to_owned())??;
+        let bytes = fs::read(&path).map_err(|e| e.to_string())?;
+        let duration = wav::duration_ms(&bytes[..wav::HEADER_LEN], bytes.len() as u64).ok_or("no valid WAV header")?;
+        if duration == 0 || duration >= 15_000 {
+            return Err(format!("the recording is {duration} ms long"));
+        }
         let loudest = bytes[wav::HEADER_LEN..]
             .as_chunks::<2>()
             .0
@@ -487,8 +493,32 @@ mod tests {
             .map(|c| i16::from_le_bytes([c[0], c[1]]).unsigned_abs())
             .max()
             .unwrap_or(0);
-        assert!(loudest > 0, "the sound reached the file ({} bytes)", bytes.len());
-        assert!(lock(&levels).iter().any(|p| *p > 0.0), "level events carried the sound");
+        if loudest == 0 || !lock(&levels).iter().any(|p| *p > 0.0) {
+            return Err(format!("the loopback stayed silent ({} bytes recorded)", bytes.len()));
+        }
+        Ok(())
+    }
+
+    /// The capture path end to end on real audio. The speakers' loopback stands in for the microphone, because
+    /// Windows can block microphone access machine-wide; everything after the device is opened (format conversion,
+    /// streaming to disk, the WAV header, levels) is the production code. Audible, so it runs on request.
+    #[test]
+    #[ignore = "plays a short system sound on the speakers; run with --ignored"]
+    fn recording_real_audio_writes_a_valid_wav() {
+        // Windows hands a loopback stream silence while the output is muted, and a test must not change the
+        // user's settings, so it asks for the speakers to be on instead.
+        assert!(
+            !crate::audio::read_once().muted,
+            "unmute the speakers to run this test: a muted output records silence"
+        );
+        let mut failures = Vec::new();
+        for _ in 0..LOOPBACK_ATTEMPTS {
+            match record_the_speakers_once() {
+                Ok(()) => return,
+                Err(why) => failures.push(why),
+            }
+        }
+        panic!("no attempt recorded the sound: {failures:?}");
     }
 
     #[test]

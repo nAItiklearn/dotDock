@@ -101,6 +101,9 @@ fn tiles_for(feeds: &BTreeSet<FeedName>) -> HashSet<TileId> {
 }
 
 pub struct DockTiles {
+    /// Held by `watch`, `mic_watch`, `mic_unwatch` and `shutdown`, so two of them from different threads cannot
+    /// interleave: one that stops a provider the other is only about to start would leave it running unwatched.
+    gate: Mutex<()>,
     core: Arc<Core>,
     hub: TileHub,
     stopwatch: Stopwatch,
@@ -126,11 +129,12 @@ impl DockTiles {
         let hydration = Hydration::new(data_dir.hydration(), zone, move |feed| {
             hydration_core.deliver(FeedsUpdate { hydration: Some(feed), ..FeedsUpdate::default() });
         });
-        Self { core, hub, stopwatch, hydration }
+        Self { gate: Mutex::new(()), core, hub, stopwatch, hydration }
     }
 
     /// Makes `feeds` the set being watched, replacing the previous set.
     pub fn watch(&self, feeds: &[FeedName]) {
+        let _one_at_a_time = lock(&self.gate);
         let wanted: BTreeSet<FeedName> = feeds.iter().copied().collect();
         let (before, water_was_watched) = {
             let mut watching = lock(&self.core.watching);
@@ -185,6 +189,7 @@ impl DockTiles {
 
     /// Starts reading the microphone's level. Windows shows its microphone indicator while this is on.
     pub fn mic_watch(&self) -> Result<(), String> {
+        let _one_at_a_time = lock(&self.gate);
         {
             let mut watching = lock(&self.core.watching);
             if watching.mic_level {
@@ -198,6 +203,7 @@ impl DockTiles {
     }
 
     pub fn mic_unwatch(&self) {
+        let _one_at_a_time = lock(&self.gate);
         let was_watching = std::mem::replace(&mut lock(&self.core.watching).mic_level, false);
         if was_watching {
             self.hub.unsubscribe(TileId::MicrophoneLevel);
@@ -206,6 +212,7 @@ impl DockTiles {
 
     /// Stops every provider. Call when the dock quits.
     pub fn shutdown(&self) {
+        let _one_at_a_time = lock(&self.gate);
         *lock(&self.core.watching) = Watching::default();
         self.hub.shutdown();
         self.hydration.stop();
@@ -442,6 +449,31 @@ mod tests {
         assert!(dock.audio(AudioOp::Output { device_id: "no-such-device".into() }).is_err());
         assert!(dock.hydration(HydrationOp::Log { ml: 0 }).is_err());
         assert!(dock.stopwatch(StopwatchOp::Pause).is_ok(), "pausing a stopped stopwatch is not an error");
+    }
+
+    #[test]
+    fn watches_from_several_threads_never_leave_a_provider_running_unwatched() {
+        let (dock, _rx, _dir) = dock();
+        let dock = Arc::new(dock);
+        let threads: Vec<_> = (0..6)
+            .map(|i| {
+                let dock = dock.clone();
+                std::thread::spawn(move || {
+                    for k in 0..40 {
+                        if (i + k) % 2 == 0 {
+                            dock.watch(&[FeedName::Contacts]);
+                        } else {
+                            dock.watch(&[]);
+                        }
+                    }
+                })
+            })
+            .collect();
+        for t in threads {
+            t.join().unwrap();
+        }
+        dock.unwatch();
+        assert!(dock.hub.active().is_empty());
     }
 
     #[test]
