@@ -12,6 +12,7 @@ use crate::island_host::{IslandSlot, Notch};
 use crate::tray;
 use dotdock_shell::modules::{Environment, ModuleId, Modules};
 use dotdock_shell::{boot_log as boot, dock_guard, handover};
+use std::sync::{Mutex, PoisonError};
 use tauri::{AppHandle, Emitter, Manager};
 
 /// Emitted to every window with the `Environment` whenever any part starts or stops.
@@ -56,18 +57,31 @@ pub async fn environment_set(app: AppHandle, on: bool) -> Result<Environment, St
     tauri::async_runtime::spawn_blocking(move || switch_theme(&app, on)).await.map_err(|e| e.to_string())?
 }
 
+/// One switch at a time, from any window: the desktop hand-over runs outside the manager's own lock.
+static SWITCHING: Mutex<()> = Mutex::new(());
+
+/// The parts and the desktop always switch together. When the desktop part fails, the parts have still
+/// switched, so the answer is the new state with what did not come along named in its problems.
 fn switch_theme(app: &AppHandle, on: bool) -> Result<Environment, String> {
+    let _one_at_a_time = SWITCHING.lock().unwrap_or_else(PoisonError::into_inner);
     let modules = app.state::<Modules>();
     let dir = dotdock_shell::app_data_dir().ok_or("LOCALAPPDATA is not set")?;
     if on {
-        let taken = handover::take_over(&dir, &handover::Windows).map_err(|e| e.to_string())?;
+        let taken = handover::take_over(&dir, &handover::Windows);
         boot::record(&format!("theme on: {taken:?}"));
-        modules.set_environment(true).map_err(|e| e.to_string())
+        let mut environment = modules.set_environment(true).map_err(|e| e.to_string())?;
+        if let Err(e) = taken {
+            environment.problems.push(format!("{e}, so the Windows wallpaper stays for now."));
+        }
+        Ok(environment)
     } else {
-        let environment = modules.set_environment(false).map_err(|e| e.to_string())?;
+        let mut environment = modules.set_environment(false).map_err(|e| e.to_string())?;
         let handed = handover::hand_back(&dir, &handover::Windows);
         boot::record(&format!("theme off: {handed:?}"));
-        handed.map(|()| environment).map_err(|e| e.to_string())
+        if let Err(e) = handed {
+            environment.problems.push(format!("{e}."));
+        }
+        Ok(environment)
     }
 }
 

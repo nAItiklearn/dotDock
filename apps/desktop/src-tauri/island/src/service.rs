@@ -150,9 +150,6 @@ impl IslandService {
                 }
                 Output::Alert(alert) => {
                     let s = lock(&sink_settings).clone();
-                    if !s.enabled {
-                        return;
-                    }
                     if s.sound {
                         sound::play(chime_for(alert.kind), s.volume);
                     }

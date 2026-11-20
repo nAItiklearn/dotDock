@@ -7,9 +7,11 @@
 //! On: the recorded wallpapers go back on their monitors and launch at sign-in is turned on again if
 //! it was on. The record is then removed, so it always describes the last time dotDock was switched off.
 //!
-//! The record lives in `desktop-handover.json` beside the Windows snapshot. A second "off" while one
-//! exists keeps it: the desktop on screen is then Windows' own, not dotDock's. A damaged record is an
-//! error on "on", never a silent skip, and it is kept so nothing is lost.
+//! The record lives in `desktop-handover.json` beside the Windows snapshot; the copies go into a new
+//! numbered folder under `desktop-handover` each time, so the copies Windows is showing are never the
+//! ones being replaced. A second "off" while a record exists keeps it: the desktop on screen is then
+//! Windows' own, not dotDock's. A damaged record is never silently skipped: it is moved aside to
+//! `desktop-handover.damaged.json`, so nothing is lost, and the error is returned.
 //!
 //! The Windows side is behind [`Desktop`], so the order and the failure cases are unit-tested.
 
@@ -17,9 +19,13 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use crate::wallpaper::Fit;
+
 pub const FILE: &str = "desktop-handover.json";
 /// Private copies of dotDock's wallpapers: the originals may be files Windows overwrites.
 const COPIES: &str = "desktop-handover";
+/// Where a record that could not be read is moved, so the next record does not overwrite it.
+const DAMAGED: &str = "desktop-handover.damaged.json";
 const SCHEMA: u32 = 1;
 
 /// The part of Windows that dotDock changes and hands back.
@@ -28,7 +34,9 @@ pub trait Desktop {
     fn wallpapers(&self) -> Result<Vec<(String, PathBuf)>, String>;
     /// Every monitor's device path, in the shell's order.
     fn monitors(&self) -> Result<Vec<String>, String>;
-    fn set_wallpaper(&self, monitor: &str, file: &Path) -> Result<(), String>;
+    /// How wallpapers are fitted to the screen; one setting for every monitor.
+    fn fit(&self) -> Result<Fit, String>;
+    fn set_wallpaper(&self, monitor: &str, file: &Path, fit: Fit) -> Result<(), String>;
     fn autostart_enabled(&self) -> bool;
     fn enable_autostart(&self) -> Result<(), String>;
     /// The same effect as `tools/restore-windows.ps1`.
@@ -47,6 +55,8 @@ pub struct MonitorWallpaper {
 pub struct Record {
     pub schema: u32,
     pub wallpapers: Vec<MonitorWallpaper>,
+    #[serde(default)]
+    pub fit: Fit,
     pub autostart: bool,
 }
 
@@ -94,15 +104,39 @@ fn read_record(dir: &Path) -> Result<Option<Record>, HandoverError> {
     }
 }
 
-/// Copies each wallpaper into the private folder under a name of its own; the same file shown on
-/// several monitors is copied once.
-fn copy_wallpapers(dir: &Path, shown: &[(String, PathBuf)]) -> Result<Vec<MonitorWallpaper>, HandoverError> {
-    let copies = dir.join(COPIES);
-    // Old copies belong to an earlier record, which "on" has already used and removed.
-    if copies.exists() {
-        std::fs::remove_dir_all(&copies).map_err(|e| HandoverError::Record(e.to_string()))?;
+/// Moves a record that cannot be read out of the way, keeping it for a person to look at.
+fn set_aside(dir: &Path) {
+    // Best effort: if even the rename fails, the next off overwrites the damaged file, which is no worse.
+    let _ = std::fs::rename(record_path(dir), dir.join(DAMAGED));
+}
+
+/// A folder for this record's copies that no earlier record uses.
+fn new_generation(copies: &Path) -> std::io::Result<PathBuf> {
+    std::fs::create_dir_all(copies)?;
+    let mut n: u32 = 0;
+    loop {
+        let candidate = copies.join(n.to_string());
+        match std::fs::create_dir(&candidate) {
+            Ok(()) => return Ok(candidate),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => n += 1,
+            Err(e) => return Err(e),
+        }
     }
-    std::fs::create_dir_all(&copies).map_err(|e| HandoverError::Record(e.to_string()))?;
+}
+
+/// Removes every earlier generation of copies. Best effort: one Windows still holds goes next time.
+fn forget_other_generations(copies: &Path, keep: &Path) {
+    let Ok(entries) = std::fs::read_dir(copies) else { return };
+    for entry in entries.flatten() {
+        if entry.path() != keep {
+            let _ = std::fs::remove_dir_all(entry.path());
+        }
+    }
+}
+
+/// Copies each wallpaper into `folder` under a name of its own; the same file shown on several
+/// monitors is copied once. The sources may be earlier copies: they are left in place.
+fn copy_wallpapers(folder: &Path, shown: &[(String, PathBuf)]) -> Result<Vec<MonitorWallpaper>, HandoverError> {
     let mut sources: Vec<&PathBuf> = Vec::new();
     let mut out = Vec::with_capacity(shown.len());
     for (monitor, file) in shown {
@@ -117,13 +151,33 @@ fn copy_wallpapers(dir: &Path, shown: &[(String, PathBuf)]) -> Result<Vec<Monito
             Some(ext) => format!("wallpaper-{index}.{}", ext.to_string_lossy()),
             None => format!("wallpaper-{index}"),
         };
-        let copy = copies.join(name);
+        let copy = folder.join(name);
         if !copy.exists() {
             std::fs::copy(file, &copy).map_err(|e| HandoverError::Record(format!("{}: {e}", file.display())))?;
         }
         out.push(MonitorWallpaper { monitor: monitor.clone(), file: copy });
     }
     Ok(out)
+}
+
+/// Records what is on screen as dotDock's desktop, in a new generation of copies.
+fn record(dir: &Path, desktop: &dyn Desktop) -> Result<(), HandoverError> {
+    let failed = |e: std::io::Error| HandoverError::Record(e.to_string());
+    let shown = desktop.wallpapers().map_err(HandoverError::Record)?;
+    let fit = desktop.fit().map_err(HandoverError::Record)?;
+    let copies = dir.join(COPIES);
+    let folder = new_generation(&copies).map_err(failed)?;
+    let wallpapers = match copy_wallpapers(&folder, &shown) {
+        Ok(wallpapers) => wallpapers,
+        Err(e) => {
+            let _ = std::fs::remove_dir_all(&folder);
+            return Err(e);
+        }
+    };
+    write_record(dir, &Record { schema: SCHEMA, wallpapers, fit, autostart: desktop.autostart_enabled() })
+        .map_err(failed)?;
+    forget_other_generations(&copies, &folder);
+    Ok(())
 }
 
 /// Switching the theme off: records dotDock's desktop, then restores Windows. Call after every part
@@ -133,14 +187,12 @@ pub fn hand_back(dir: &Path, desktop: &dyn Desktop) -> Result<(), HandoverError>
     let recorded = match read_record(dir) {
         // Already handed back: what is on screen is Windows' own desktop, so the record stays as it is.
         Ok(Some(_)) => Ok(()),
-        // Nothing recorded, or a damaged record: the desktop on screen is dotDock's, so record it afresh.
-        Ok(None) | Err(_) => {
-            desktop.wallpapers().map_err(HandoverError::Record).and_then(|shown| copy_wallpapers(dir, &shown)).and_then(
-                |wallpapers| {
-                    let record = Record { schema: SCHEMA, wallpapers, autostart: desktop.autostart_enabled() };
-                    write_record(dir, &record).map_err(|e| HandoverError::Record(e.to_string()))
-                },
-            )
+        // Nothing recorded: the desktop on screen is dotDock's.
+        Ok(None) => record(dir, desktop),
+        // Damaged: what it described cannot come back, so it is kept aside and the screen recorded.
+        Err(_) => {
+            set_aside(dir);
+            record(dir, desktop)
         }
     };
     desktop.restore_windows().map_err(HandoverError::Restore)?;
@@ -151,8 +203,13 @@ pub fn hand_back(dir: &Path, desktop: &dyn Desktop) -> Result<(), HandoverError>
 /// A monitor that is no longer attached is skipped; a monitor that was not attached then gets the
 /// first monitor's wallpaper, so no screen is left with the Windows one.
 pub fn take_over(dir: &Path, desktop: &dyn Desktop) -> Result<TakenOver, HandoverError> {
-    let Some(record) = read_record(dir)? else {
-        return Ok(TakenOver { nothing_recorded: true, ..TakenOver::default() });
+    let record = match read_record(dir) {
+        Ok(Some(record)) => record,
+        Ok(None) => return Ok(TakenOver { nothing_recorded: true, ..TakenOver::default() }),
+        Err(e) => {
+            set_aside(dir);
+            return Err(e);
+        }
     };
     let attached = desktop.monitors().map_err(HandoverError::TakeOver)?;
     let fallback = record.wallpapers.iter().find(|w| w.file.is_file());
@@ -160,7 +217,7 @@ pub fn take_over(dir: &Path, desktop: &dyn Desktop) -> Result<TakenOver, Handove
     for monitor in &attached {
         let own = record.wallpapers.iter().find(|w| &w.monitor == monitor && w.file.is_file());
         if let Some(wallpaper) = own.or(fallback) {
-            desktop.set_wallpaper(monitor, &wallpaper.file).map_err(HandoverError::TakeOver)?;
+            desktop.set_wallpaper(monitor, &wallpaper.file, record.fit).map_err(HandoverError::TakeOver)?;
             set += 1;
         }
     }
@@ -185,8 +242,12 @@ impl Desktop for Windows {
         crate::wallpaper::monitors().map_err(|e| e.to_string())
     }
 
-    fn set_wallpaper(&self, monitor: &str, file: &Path) -> Result<(), String> {
-        crate::wallpaper::apply(file, Some(monitor), crate::wallpaper::Fit::default()).map_err(|e| e.to_string())
+    fn fit(&self) -> Result<Fit, String> {
+        crate::wallpaper::fit().map_err(|e| e.to_string())
+    }
+
+    fn set_wallpaper(&self, monitor: &str, file: &Path, fit: Fit) -> Result<(), String> {
+        crate::wallpaper::apply(file, Some(monitor), fit).map_err(|e| e.to_string())
     }
 
     fn autostart_enabled(&self) -> bool {
@@ -213,6 +274,7 @@ mod tests {
         walls: RefCell<BTreeMap<String, PathBuf>>,
         monitors: RefCell<Vec<String>>,
         autostart: RefCell<bool>,
+        fit: RefCell<Fit>,
         windows_wallpaper: PathBuf,
         fail_restore: bool,
         fail_read: bool,
@@ -232,6 +294,7 @@ mod tests {
                 walls: RefCell::new(walls),
                 monitors: RefCell::new(vec!["left".into(), "right".into()]),
                 autostart: RefCell::new(true),
+                fit: RefCell::new(Fit::Span),
                 windows_wallpaper: windows,
                 fail_restore: false,
                 fail_read: false,
@@ -254,8 +317,12 @@ mod tests {
         fn monitors(&self) -> Result<Vec<String>, String> {
             Ok(self.monitors.borrow().clone())
         }
-        fn set_wallpaper(&self, monitor: &str, file: &Path) -> Result<(), String> {
+        fn fit(&self) -> Result<Fit, String> {
+            Ok(*self.fit.borrow())
+        }
+        fn set_wallpaper(&self, monitor: &str, file: &Path, fit: Fit) -> Result<(), String> {
             self.log.borrow_mut().push(format!("wallpaper {monitor}"));
+            *self.fit.borrow_mut() = fit;
             self.walls.borrow_mut().insert(monitor.to_owned(), file.to_owned());
             Ok(())
         }
@@ -273,6 +340,7 @@ mod tests {
                 return Err("schtasks refused".into());
             }
             *self.autostart.borrow_mut() = false;
+            *self.fit.borrow_mut() = Fit::Fill;
             let windows = self.windows_wallpaper.clone();
             self.walls.borrow_mut().values_mut().for_each(|w| *w = windows.clone());
             Ok(())
@@ -291,6 +359,7 @@ mod tests {
         assert!(record.autostart);
         assert_eq!(record.wallpapers.len(), 2);
         assert!(record.wallpapers.iter().all(|w| w.file.starts_with(dir.path().join(COPIES))));
+        assert_eq!(record.fit, Fit::Span);
     }
 
     #[test]
@@ -302,6 +371,7 @@ mod tests {
         assert_eq!(taken, TakenOver { wallpapers: 2, autostart: true, nothing_recorded: false });
         assert_eq!(fake.shown("left"), b"meadow");
         assert_eq!(fake.shown("right"), b"dunes");
+        assert_eq!(*fake.fit.borrow(), Fit::Span, "the fit the user chose, not the default");
         assert!(fake.autostart_enabled());
         assert!(read_record(dir.path()).expect("readable").is_none());
     }
@@ -367,13 +437,42 @@ mod tests {
     }
 
     #[test]
-    fn a_damaged_record_is_an_error_and_is_kept() {
+    fn a_damaged_record_is_an_error_on_and_is_kept_aside() {
         let dir = tempfile::tempdir().expect("temp dir");
         let fake = Fake::new(dir.path());
         std::fs::write(record_path(dir.path()), b"{not json").expect("write");
         assert!(matches!(take_over(dir.path(), &fake), Err(HandoverError::Damaged(_))));
-        assert!(record_path(dir.path()).exists());
+        assert_eq!(std::fs::read(dir.path().join(DAMAGED)).expect("kept aside"), b"{not json");
         assert!(fake.log.borrow().is_empty());
+        // The next on finds no record and changes nothing; the damaged one is still there to look at.
+        assert!(take_over(dir.path(), &fake).expect("second on").nothing_recorded);
+        assert!(dir.path().join(DAMAGED).exists());
+    }
+
+    #[test]
+    fn off_over_a_damaged_record_keeps_it_aside_and_records_the_screen() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let fake = Fake::new(dir.path());
+        std::fs::write(record_path(dir.path()), b"{not json").expect("write");
+        hand_back(dir.path(), &fake).expect("hand back");
+        assert_eq!(std::fs::read(dir.path().join(DAMAGED)).expect("kept aside"), b"{not json");
+        take_over(dir.path(), &fake).expect("take over");
+        assert_eq!(fake.shown("left"), b"meadow");
+    }
+
+    #[test]
+    fn two_full_cycles_bring_dotdock_back_both_times() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let fake = Fake::new(dir.path());
+        for cycle in 0..2 {
+            hand_back(dir.path(), &fake).unwrap_or_else(|e| panic!("off {cycle}: {e}"));
+            assert_eq!(fake.shown("left"), b"windows");
+            take_over(dir.path(), &fake).unwrap_or_else(|e| panic!("on {cycle}: {e}"));
+            assert_eq!(fake.shown("left"), b"meadow", "cycle {cycle}");
+            assert_eq!(fake.shown("right"), b"dunes", "cycle {cycle}");
+        }
+        // Only the generation in use is kept.
+        assert_eq!(std::fs::read_dir(dir.path().join(COPIES)).expect("copies").count(), 1);
     }
 
     #[test]
@@ -397,8 +496,8 @@ mod tests {
         let meadow = dir.path().join("meadow.jpg");
         fake.walls.borrow_mut().insert("right".into(), meadow);
         hand_back(dir.path(), &fake).expect("hand back");
-        let copies = std::fs::read_dir(dir.path().join(COPIES)).expect("copies").count();
-        assert_eq!(copies, 1);
+        let generation = std::fs::read_dir(dir.path().join(COPIES)).expect("copies").flatten().next().expect("one");
+        assert_eq!(std::fs::read_dir(generation.path()).expect("generation").count(), 1);
     }
 
     #[test]
@@ -406,9 +505,10 @@ mod tests {
         let record = Record {
             schema: SCHEMA,
             wallpapers: vec![MonitorWallpaper { monitor: "m".into(), file: PathBuf::from("w.jpg") }],
+            fit: Fit::Span,
             autostart: true,
         };
         let json = serde_json::to_string(&record).expect("serialises");
-        assert_eq!(json, r#"{"schema":1,"wallpapers":[{"monitor":"m","file":"w.jpg"}],"autostart":true}"#);
+        assert_eq!(json, r#"{"schema":1,"wallpapers":[{"monitor":"m","file":"w.jpg"}],"fit":"span","autostart":true}"#);
     }
 }

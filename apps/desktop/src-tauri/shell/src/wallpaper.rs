@@ -26,6 +26,14 @@ pub enum Fit {
 }
 
 impl Fit {
+    /// The fit Windows reports; a position this build does not know reads as the default.
+    fn from_position(position: DESKTOP_WALLPAPER_POSITION) -> Self {
+        [Fit::Fill, Fit::Fit, Fit::Stretch, Fit::Tile, Fit::Center, Fit::Span]
+            .into_iter()
+            .find(|fit| fit.position() == position)
+            .unwrap_or_default()
+    }
+
     fn position(self) -> DESKTOP_WALLPAPER_POSITION {
         match self {
             Fit::Fill => DWPOS_FILL,
@@ -100,6 +108,17 @@ fn take_pwstr(p: PWSTR) -> String {
         CoTaskMemFree(Some(p.0 as *const _));
         s
     }
+}
+
+/// How Windows fits wallpapers to the screen now; one setting for every monitor.
+pub fn fit() -> Result<Fit, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply().
+    let position = unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        wp.GetPosition()?
+    };
+    Ok(Fit::from_position(position))
 }
 
 /// Applies `path` to one monitor (device path from `monitors()`) or, with None, to every monitor.
@@ -225,6 +244,13 @@ mod tests {
     fn a_missing_file_is_a_read_error_not_a_panic() {
         let dir = tempfile::tempdir().expect("temp dir");
         assert!(matches!(read_limited(&dir.path().join("gone.jpg"), 16), Err(WallpaperError::Read(_))));
+    }
+
+    #[test]
+    fn every_fit_reads_back_from_its_windows_position() {
+        for fit in [Fit::Fill, Fit::Fit, Fit::Stretch, Fit::Tile, Fit::Center, Fit::Span] {
+            assert_eq!(Fit::from_position(fit.position()), fit);
+        }
     }
 
     #[test]
