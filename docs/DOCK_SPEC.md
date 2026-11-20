@@ -56,6 +56,17 @@ hidden. The dock still has to watch `TaskbarCreated` and call `hide_for_dock` ag
 - **Window menu**: hovering a running app shows live DWM thumbnails of its windows; click restores or
   minimises; right-click: new window, pin/unpin, move to stack, close all.
 
+## 4b. Dock themes (owner request 2026-11-20)
+- `glass` (default): macOS-style glass. The blur is the native DWM backdrop (Windows 11 22H2+:
+  `DWMWA_SYSTEMBACKDROP_TYPE` = transient/acrylic; Windows 10: `SetWindowCompositionAttribute`
+  acrylic), applied by the dock host to the dock window, clipped to the pill shape. CSS `backdrop-filter`
+  cannot blur the desktop behind a transparent WebView2 window, so it is not used for this.
+- `glass-lite`: used automatically when transparency effects are off, on battery saver, or when the
+  native backdrop is unavailable: semi-opaque tinted bar, same layout.
+- `obsidian`, `paper`, `aurum` (solid, matching the home-screen themes) and `minimal` (icons only).
+- The host tells the UI whether the area behind the dock is light or dark (`data-backdrop`) so text and
+  icons stay readable.
+
 ## 5. Automatic categories (the headline feature)
 - **Sources**: Start menu shortcuts (`%ProgramData%` and `%APPDATA%\Microsoft\Windows\Start Menu`) and
   installed Store apps (`shell:AppsFolder`), enumerated through `IShellItem` / `SHGetKnownFolderItem`.

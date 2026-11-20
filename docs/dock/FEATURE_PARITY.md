@@ -13,6 +13,7 @@ and date go in the status column. Status: **planned**, **built**, **accepted**. 
 | Bookmarks | Link items (open in the default browser) | Add a URL, click opens it | planned |
 | Quick actions | Action items (run a shortcut, lock, sleep display, empty bin) | Each action runs once, with confirm where destructive | planned |
 | Profiles | Dock profiles (Work, Home, Gaming), switch by shortcut, schedule or fullscreen game | Switch three ways; items and tiles change | planned |
+| Dock themes: glass (native acrylic), glass-lite, obsidian, paper, aurum, minimal | Themes | Each theme over three wallpapers; glass blurs what is really behind it; lite fallback on battery saver | planned |
 | Floating layouts | Float vs reserve space, any edge, per monitor | Maximise a window in both modes; two monitors | planned |
 | (not in CoolDock) Running windows | Dots, focus accent, thumbnails, window menu | Open, focus, minimise, restore, close from the dock | planned |
 | (not in CoolDock) Replaces the taskbar | Hidden taskbar, app bar work area, restore on every exit | `tools/test-taskbar-restore.cmd`, plus D4 checks | planned |
