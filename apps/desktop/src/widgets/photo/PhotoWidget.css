@@ -1,29 +1,116 @@
 /*
  * Photo widget. The image is laid out at its final pixel size (see frame.ts), so nothing here
  * scales it: filters and blending change colour only, never resolution.
+ *
+ * Geometry arrives as custom properties from look.ts (the photo window's insets and the corner
+ * radius, measured against the widget's real size); colours, radii and type come from the tokens.
  */
 .photo {
-  --photo-inset: 0px;
+  --photo-inset-t: 0px;
+  --photo-inset-r: 0px;
+  --photo-inset-b: 0px;
+  --photo-inset-l: 0px;
   --photo-radius: var(--radius-lg);
+  /* Border colour, and the ink that is legible on it (a polaroid's caption). */
+  --photo-line: var(--photo-mat);
+  --photo-line-ink: var(--photo-ink);
+  /* The photo window's corners. */
+  --photo-window-radius: calc(var(--photo-radius) - var(--hairline));
 }
-/* A mat is a pale paper border in every theme, like a print mounted for a frame. */
-.photo--mat {
-  --photo-inset: var(--space-3);
-  --photo-radius: var(--radius-sm);
-  background: var(--photo-mat);
+.photo--tint-ink {
+  --photo-line: var(--photo-ink);
+  --photo-line-ink: var(--photo-mat);
+}
+.photo--tint-text {
+  --photo-line: var(--text);
+  --photo-line-ink: var(--bg);
+}
+.photo--tint-dim {
+  --photo-line: var(--text-dim);
+  --photo-line-ink: var(--bg);
+}
+.photo--tint-accent {
+  --photo-line: var(--accent);
+  --photo-line-ink: var(--accent-ink);
+}
+
+/* Shape: the widget's silhouette. Everything inside is clipped to it. */
+.surface.photo {
+  border-radius: var(--photo-radius);
+}
+.surface.photo--shape-squircle {
+  corner-shape: squircle;
+}
+.surface.photo--shape-circle {
+  border-radius: 50%;
+}
+.surface.photo--flat {
+  box-shadow: none;
+}
+
+/* Borders. A mat and a polaroid are the widget's own fill, a keyline is its edge, dots sit on top. */
+.surface.photo--frame-hairline {
+  border-color: var(--photo-line);
+}
+.surface.photo--frame-mat,
+.surface.photo--frame-polaroid {
+  background: var(--photo-line);
   border-color: transparent;
+}
+/* Inside a band the photo's corners are concentric with the widget's, but never rounder than a soft corner. */
+.photo:not(.photo--frame-none) {
+  --photo-window-radius: max(0px, calc(min(calc(var(--photo-radius) - var(--photo-inset-l)), var(--radius-sm)) - var(--hairline)));
+}
+
+/* The stage fills the widget; its measured size drives the border layout. */
+.photo__stage {
+  position: absolute;
+  inset: 0;
+}
+.photo__dots {
+  position: absolute;
+  top: 0;
+  left: 0;
+  fill: var(--photo-line);
+  pointer-events: none;
 }
 
 .photo__frame {
   position: absolute;
-  inset: var(--photo-inset);
+  inset: var(--photo-inset-t) var(--photo-inset-r) var(--photo-inset-b) var(--photo-inset-l);
   overflow: hidden;
-  border-radius: calc(var(--photo-radius) - var(--hairline));
+  border-radius: var(--photo-window-radius);
   outline: none;
   isolation: isolate;
+  /* The empty state asks how much room the window has. */
+  container-type: size;
 }
-.photo--mat.has-photo .photo__frame {
+.photo--shape-squircle .photo__frame {
+  corner-shape: squircle;
+}
+.photo--shape-circle .photo__frame {
+  border-radius: 50%;
+}
+/* Behind a photo that does not cover its window (Fit) and behind the empty state. */
+.photo:not(.photo--frame-none) .photo__frame {
   background: var(--surface-2);
+}
+
+.photo__stage .photo__caption {
+  position: absolute;
+  right: var(--photo-inset-r);
+  bottom: 0;
+  left: var(--photo-inset-l);
+  height: var(--photo-inset-b);
+  margin: 0;
+  padding: 0 var(--space-2);
+  overflow: hidden;
+  color: var(--photo-line-ink);
+  line-height: var(--photo-inset-b);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .photo__img {
@@ -43,11 +130,11 @@
 }
 
 /* Black and white, and the duotone: shadows stay ink, highlights take the theme's accent. */
-.photo--mono .photo__img,
-.photo--duotone .photo__img {
+.photo--tone-mono .photo__img,
+.photo--tone-duotone .photo__img {
   filter: grayscale(1) contrast(var(--mono-contrast));
 }
-.photo--duotone.has-photo .photo__frame::after {
+.photo--tone-duotone.has-photo .photo__frame::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -77,8 +164,8 @@
 /* Controls fade in on hover or keyboard focus and sit on a dark pill so they read on any photo. */
 .photo__controls {
   position: absolute;
-  right: calc(var(--photo-inset) + var(--space-2));
-  bottom: calc(var(--photo-inset) + var(--space-2));
+  right: calc(var(--photo-inset-r) + var(--space-2));
+  bottom: calc(var(--photo-inset-b) + var(--space-2));
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -115,13 +202,20 @@
 
 .photo__problem {
   position: absolute;
-  left: calc(var(--photo-inset) + var(--space-3));
-  bottom: calc(var(--photo-inset) + var(--space-3));
+  left: calc(var(--photo-inset-l) + var(--space-3));
+  bottom: calc(var(--photo-inset-b) + var(--space-3));
   margin: 0;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--media-scrim);
   color: var(--media-ink);
+}
+/* A circle has no corner to tuck these into: they sit at the bottom centre instead. */
+.photo--shape-circle .photo__controls,
+.photo--shape-circle .photo__problem {
+  right: auto;
+  left: 50%;
+  translate: -50% 0;
 }
 
 .photo-empty {
@@ -176,6 +270,20 @@
 }
 .photo.is-dropping .photo-empty {
   color: var(--accent);
+}
+/* A border or a small widget leaves little room: drop the pictogram first, then the sentence. */
+@container (max-height: 168px) {
+  .photo-empty__icon {
+    display: none;
+  }
+}
+@container (max-height: 112px) {
+  .photo-empty__copy {
+    display: none;
+  }
+  .photo-empty {
+    padding: var(--space-2);
+  }
 }
 
 .photo__input {

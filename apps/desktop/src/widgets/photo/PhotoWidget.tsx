@@ -3,22 +3,25 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
+  type CSSProperties,
   type DragEvent,
   type KeyboardEvent,
   type PointerEvent,
   type RefObject,
   type WheelEvent,
 } from "react";
+import { flushSync } from "react-dom";
 import { DotIcon } from "../../design-system/DotMatrix";
 import { Caps, IconButton, Surface } from "../../design-system/primitives";
 import { isTauri } from "../../providers/bridge";
-import type { ConfigSchema } from "../configSchema";
 import { defineWidget, type WidgetProps } from "../definition";
-import { sizeSpec, type SizeId, type SizeSpec } from "../sizes";
+import { sizeSpec, type SizeId } from "../sizes";
 import { ACCEPTED_TYPES, loadPhoto, readPhotoFile, savePhoto, type PhotoProblem, type StoredPhoto } from "./blobs";
+import { DEFAULT_PHOTO_CONFIG, PHOTO_SCHEMA, PHOTO_SIZES, type PhotoConfig } from "./config";
 import {
   CENTRED,
   KEY_PAN_STEP,
@@ -29,64 +32,11 @@ import {
   zoomAt,
   type Box,
   type Framing,
-  type PhotoFit,
 } from "./frame";
+import { dotsPath, layoutFrame, lookOf, lookVars } from "./look";
 import { EMPTY_ENTRY, usePhotoStore } from "./store";
 import "./PhotoWidget.css";
 
-export type PhotoMat = "none" | "mat";
-export type PhotoTone = "colour" | "mono" | "duotone";
-
-export interface PhotoConfig {
-  readonly fit: PhotoFit;
-  readonly mat: PhotoMat;
-  readonly tone: PhotoTone;
-}
-
-/** Large is listed first so a new photo starts big; pickers sort by area. */
-export const PHOTO_SIZES: readonly SizeSpec[] = [
-  { id: "l", name: "Large", w: 4, h: 4 },
-  { id: "s", name: "Square", w: 2, h: 2 },
-  { id: "m", name: "Wide", w: 4, h: 2 },
-  { id: "xl", name: "Portrait", w: 3, h: 4 },
-];
-
-export const PHOTO_SCHEMA: ConfigSchema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    fit: {
-      type: "string",
-      title: "Fit",
-      default: "fill",
-      oneOf: [
-        { const: "fill", title: "Fill the frame" },
-        { const: "fit", title: "Show the whole photo" },
-      ],
-    },
-    mat: {
-      type: "string",
-      title: "Border",
-      default: "none",
-      oneOf: [
-        { const: "none", title: "Edge to edge" },
-        { const: "mat", title: "Mat" },
-      ],
-    },
-    tone: {
-      type: "string",
-      title: "Colour",
-      default: "colour",
-      oneOf: [
-        { const: "colour", title: "Original" },
-        { const: "mono", title: "Black and white" },
-        { const: "duotone", title: "Accent duotone" },
-      ],
-    },
-  },
-};
-
-const DEFAULT_CONFIG: PhotoConfig = { fit: "fill", mat: "none", tone: "colour" };
 /** Framing changes are saved this long after the last wheel step, not on every notch. */
 const SAVE_DELAY_MS = 300;
 
@@ -144,15 +94,23 @@ function usePhoto(id: string | undefined, rev: number): { readonly photo: Loaded
   return state;
 }
 
+/**
+ * The element's layout size in CSS px. A resize is applied before the next paint (flushSync), so
+ * the photo is never drawn for a moment at the old size inside the new frame.
+ */
 function useBox<T extends HTMLElement>(): [RefObject<T | null>, Box] {
   const ref = useRef<T>(null);
   const [box, setBox] = useState<Box>({ w: 0, h: 0 });
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    const measure = (): void => setBox({ w: el.clientWidth, h: el.clientHeight });
+    const measure = (): void => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      setBox((now) => (now.w === w && now.h === h ? now : { w, h }));
+    };
     measure();
-    const ro = new ResizeObserver(measure);
+    const ro = new ResizeObserver(() => flushSync(measure));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -166,11 +124,17 @@ export interface PhotoWidgetProps {
   readonly instanceId?: string | undefined;
 }
 
-export function PhotoWidget({ size = "l", config = DEFAULT_CONFIG, instanceId }: PhotoWidgetProps) {
+export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanceId }: PhotoWidgetProps) {
   const spec = sizeSpec(PHOTO_SIZES, size);
   const entry = usePhotoStore((s) => (instanceId ? s.entries[instanceId] : undefined)) ?? EMPTY_ENTRY;
   const { photo, ready } = usePhoto(instanceId, entry.rev);
-  const [frameRef, frame] = useBox<HTMLDivElement>();
+  // The stage fills the widget. Its measured size gives the border layout, and the layout gives the
+  // photo window, so a resize re-places the photo from the saved framing without losing it.
+  const [stageRef, card] = useBox<HTMLDivElement>();
+  const look = useMemo(() => lookOf(config), [config]);
+  const layout = useMemo(() => layoutFrame(look, card), [look, card]);
+  const frame = layout.window;
+  const frameRef = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const [problem, setProblem] = useState<PhotoProblem | null>(null);
   const [dropping, setDropping] = useState(false);
@@ -300,54 +264,66 @@ export function PhotoWidget({ size = "l", config = DEFAULT_CONFIG, instanceId }:
 
   const classes = [
     "photo",
-    `photo--${config.mat}`,
-    `photo--${config.tone}`,
+    `photo--frame-${look.frame}`,
+    `photo--shape-${look.shape}`,
+    `photo--tint-${look.tint}`,
+    `photo--tone-${config.tone}`,
+    look.shadow ? "" : "photo--flat",
     adjusting ? "is-adjusting" : "",
     dropping ? "is-dropping" : "",
     photo ? "has-photo" : "",
   ];
+  const vars = lookVars(look, layout) as CSSProperties;
 
   return (
-    <Surface shape="card" w={spec.w} h={spec.h} label="Photo" className={classes.filter(Boolean).join(" ")}>
-      <div
-        ref={frameRef}
-        className="photo__frame"
-        tabIndex={adjusting ? 0 : -1}
-        role={adjusting ? "application" : undefined}
-        aria-label={adjusting ? "Adjust the photo: arrow keys move it, plus and minus zoom, Enter finishes" : undefined}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        onWheel={onWheel}
-        onKeyDown={onKeyDown}
-        onDragOver={onDragOver}
-        onDragLeave={() => setDropping(false)}
-        onDrop={onDrop}
-        onDoubleClick={() => adjusting && fillable && commit(CENTRED)}
-      >
-        {photo && placed ? (
-          <img
-            className="photo__img"
-            src={photo.url}
-            alt=""
-            draggable={false}
-            decoding="async"
-            style={{ width: placed.width, height: placed.height, transform: `translate(${placed.left}px, ${placed.top}px)` }}
-          />
+    <Surface shape="card" w={spec.w} h={spec.h} label="Photo" className={classes.filter(Boolean).join(" ")} style={vars}>
+      <div ref={stageRef} className="photo__stage">
+        {layout.dots.length > 0 ? (
+          <svg className="photo__dots" width={card.w} height={card.h} aria-hidden="true">
+            <path d={dotsPath(layout.dots, layout.dotRadius)} />
+          </svg>
         ) : null}
-        {ready && !photo ? (
-          <div className="photo-empty">
-            <DotIcon name="photo" className="photo-empty__icon" />
-            <div className="photo-empty__copy">
-              <Caps>Photo</Caps>
-              <span className="photo-empty__text">{problem ? PROBLEM_TEXT[problem] : spec.w > 2 ? "Drop a photo here, or choose one" : "Add a photo"}</span>
+        <div
+          ref={frameRef}
+          className="photo__frame"
+          tabIndex={adjusting ? 0 : -1}
+          role={adjusting ? "application" : undefined}
+          aria-label={adjusting ? "Adjust the photo: arrow keys move it, plus and minus zoom, Enter finishes" : undefined}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          onWheel={onWheel}
+          onKeyDown={onKeyDown}
+          onDragOver={onDragOver}
+          onDragLeave={() => setDropping(false)}
+          onDrop={onDrop}
+          onDoubleClick={() => adjusting && fillable && commit(CENTRED)}
+        >
+          {photo && placed ? (
+            <img
+              className="photo__img"
+              src={photo.url}
+              alt=""
+              draggable={false}
+              decoding="async"
+              style={{ width: placed.width, height: placed.height, transform: `translate(${placed.left}px, ${placed.top}px)` }}
+            />
+          ) : null}
+          {ready && !photo ? (
+            <div className="photo-empty">
+              <DotIcon name="photo" className="photo-empty__icon" />
+              <div className="photo-empty__copy">
+                <Caps>Photo</Caps>
+                <span className="photo-empty__text">{problem ? PROBLEM_TEXT[problem] : spec.w > 2 ? "Drop a photo here, or choose one" : "Add a photo"}</span>
+              </div>
+              <button type="button" className="photo-empty__action" onClick={choose} disabled={!instanceId}>
+                Choose photo
+              </button>
             </div>
-            <button type="button" className="photo-empty__action" onClick={choose} disabled={!instanceId}>
-              Choose photo
-            </button>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
+        {look.frame === "polaroid" ? <p className="photo__caption caps">{look.caption}</p> : null}
       </div>
 
       {photo ? (
@@ -386,11 +362,11 @@ export function PhotoWidget({ size = "l", config = DEFAULT_CONFIG, instanceId }:
 export const photoWidget = defineWidget<PhotoConfig>({
   id: "photo",
   name: "Photo",
-  description: "A photo of your own on the desktop, at full quality. Frame it, crop it, tint it with your theme.",
+  description: "A photo of your own on the desktop, at full quality. Crop it, frame it as a mat, polaroid or dot border, tint it with your theme.",
   category: "media",
   sizes: PHOTO_SIZES,
   providers: [],
-  defaultConfig: DEFAULT_CONFIG,
+  defaultConfig: DEFAULT_PHOTO_CONFIG,
   settingsSchema: PHOTO_SCHEMA,
   component: ({ config, size, instanceId }: WidgetProps<PhotoConfig>) => <PhotoWidget size={size} config={config} instanceId={instanceId} />,
 });

@@ -80,8 +80,9 @@
   --media-blur: 12px;
   /* Black-and-white photos get a touch of contrast back after the colour is taken out. */
   --mono-contrast: 1.06;
-  /* Photo mat: warm paper, the same in every theme. */
+  /* Photo borders: warm paper and near-black ink, the same in every theme. */
   --photo-mat: #efede9;
+  --photo-ink: #111111;
 }
 
 @media (prefers-reduced-motion: reduce) {
