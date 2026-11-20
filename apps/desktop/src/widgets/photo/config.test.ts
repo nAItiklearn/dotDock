@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { spanPx } from "../../lib/layout/grid";
+import { sizesByProximity } from "../../lib/layout/gesture";
 import { fieldsForSize, normalizeConfig, schemaDefaults, type ConfigValue } from "../configSchema";
 import { sizesByArea } from "../sizes";
 import { DEFAULT_PHOTO_CONFIG, PHOTO_SCHEMA, PHOTO_SIZES, RADIUS, THICKNESS } from "./config";
@@ -120,6 +122,21 @@ describe("sizes", () => {
   it("never repeats a footprint, so a resize always lands on exactly one preset", () => {
     const shapes = PHOTO_SIZES.map((s) => `${s.w}x${s.h}`);
     expect(new Set(shapes).size).toBe(shapes.length);
+  });
+
+  it("gives the corner handle a ladder: dragging to a footprint's corner picks that footprint", () => {
+    const metrics = { cell: 76, gap: 12, edge: 28 };
+    for (const size of PHOTO_SIZES) {
+      const nearest = sizesByProximity(PHOTO_SIZES, spanPx(size.w, metrics), spanPx(size.h, metrics), metrics)[0];
+      expect(nearest?.id).toBe(size.id);
+    }
+  });
+
+  it("snaps a drag between two footprints to the closer one", () => {
+    const metrics = { cell: 76, gap: 12, edge: 28 };
+    // 5 cells wide, 2 high is between Wide (4x2) and Panorama (6x2): a little under 5 stays Wide.
+    expect(sizesByProximity(PHOTO_SIZES, spanPx(5, metrics) - 20, spanPx(2, metrics), metrics)[0]?.id).toBe("m");
+    expect(sizesByProximity(PHOTO_SIZES, spanPx(5, metrics) + 20, spanPx(2, metrics), metrics)[0]?.id).toBe("panorama");
   });
 
   it("lists smallest first for pickers without losing any", () => {

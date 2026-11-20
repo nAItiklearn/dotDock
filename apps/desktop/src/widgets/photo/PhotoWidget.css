@@ -27,12 +27,20 @@
 }
 .photo--tint-accent {
   --photo-line: var(--accent);
-  --photo-line-ink: var(--accent-ink);
+  /* Ink reads better than white on the red accents (4.8 : 1 against 3.9 : 1 on Obsidian). */
+  --photo-line-ink: var(--photo-ink);
 }
 
 /* Shape: the widget's silhouette. Everything inside is clipped to it. */
 .surface.photo {
   border-radius: var(--photo-radius);
+  /* Changing the shape, colour or shadow in the panel eases instead of snapping; the lift stays. */
+  transition:
+    transform var(--dur-med) var(--ease-out),
+    border-radius var(--dur-med) var(--ease-out),
+    background-color var(--dur-med) var(--ease-out),
+    border-color var(--dur-med) var(--ease-out),
+    box-shadow var(--dur-med) var(--ease-out);
 }
 .surface.photo--shape-squircle {
   corner-shape: squircle;
@@ -68,7 +76,13 @@
   top: 0;
   left: 0;
   fill: var(--photo-line);
+  /* A light dot on a light theme still reads: each dot casts the widget's own soft shadow. */
+  filter: drop-shadow(0 var(--hairline) var(--hairline) var(--drop-shadow));
   pointer-events: none;
+  animation: photo-in var(--dur-med) var(--ease-out);
+}
+.photo--flat .photo__dots {
+  filter: none;
 }
 
 .photo__frame {
@@ -80,6 +94,9 @@
   isolation: isolate;
   /* The empty state asks how much room the window has. */
   container-type: size;
+  transition:
+    border-radius var(--dur-med) var(--ease-out),
+    background-color var(--dur-med) var(--ease-out);
 }
 .photo--shape-squircle .photo__frame {
   corner-shape: squircle;
@@ -107,6 +124,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   pointer-events: none;
+  animation: photo-in var(--dur-med) var(--ease-out);
 }
 
 .photo__img {
@@ -293,7 +311,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .photo__img {
+  .photo__img,
+  .photo__dots,
+  .photo__stage .photo__caption {
     animation: none;
   }
 }
