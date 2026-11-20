@@ -613,6 +613,23 @@ impl CommandResult {
     }
 }
 
+/// Result of `tiles_subscribe`: the tile's current data, or why it could not start.
+#[derive(Serialize, Clone, PartialEq, Debug)]
+#[serde(untagged)]
+pub enum SubscribeResult {
+    Ok { ok: bool, data: TileData },
+    Failed { ok: bool, reason: String },
+}
+
+impl From<Result<TileData, String>> for SubscribeResult {
+    fn from(r: Result<TileData, String>) -> Self {
+        match r {
+            Ok(data) => SubscribeResult::Ok { ok: true, data },
+            Err(reason) => SubscribeResult::Failed { ok: false, reason },
+        }
+    }
+}
+
 impl From<Result<(), String>> for CommandResult {
     fn from(r: Result<(), String>) -> Self {
         match r {
@@ -654,6 +671,101 @@ mod tests {
     fn results_serialise_as_ok_or_failed() {
         assert_eq!(serde_json::to_value(CommandResult::done()).unwrap(), json!({ "ok": true, "value": null }));
         assert_eq!(serde_json::to_value(CommandResult::failed("no")).unwrap(), json!({ "ok": false, "reason": "no" }));
+    }
+
+    /// The TypeScript side of the contract, compiled in so the two cannot drift apart unnoticed.
+    const TS_PROTOCOL: &str = include_str!("../../../src/dock/tilesProtocol.ts");
+
+    fn ts_command_names() -> std::collections::BTreeSet<String> {
+        TS_PROTOCOL
+            .split("readonly command: \"")
+            .skip(1)
+            .filter_map(|rest| rest.split('"').next())
+            .map(str::to_owned)
+            .collect()
+    }
+
+    /// One example of every command, in the shape the dock sends it.
+    fn every_command() -> Vec<serde_json::Value> {
+        vec![
+            json!({ "command": "audioSetVolume", "volume": 0.5 }),
+            json!({ "command": "audioSetMuted", "muted": true }),
+            json!({ "command": "audioSetDefaultDevice", "deviceId": "x" }),
+            json!({ "command": "audioSetAppVolume", "appId": "x", "volume": 0.5 }),
+            json!({ "command": "audioSetAppMuted", "appId": "x", "muted": true }),
+            json!({ "command": "microphoneSetMuted", "muted": true }),
+            json!({ "command": "calendarSetIcsFile", "path": null }),
+            json!({ "command": "calendarJoin", "url": "https://zoom.us/j/123456789" }),
+            json!({ "command": "clipboardPaste", "id": 1 }),
+            json!({ "command": "clipboardPin", "id": 1, "pinned": true }),
+            json!({ "command": "clipboardRemove", "id": 1 }),
+            json!({ "command": "clipboardClear" }),
+            json!({ "command": "clipboardSetPersisted", "persisted": true }),
+            json!({ "command": "screenshotsCapture", "mode": "region", "hwnd": null, "rect": { "x": 0, "y": 0, "w": 10, "h": 10 } }),
+            json!({ "command": "screenshotsOpenSnip" }),
+            json!({ "command": "fileOpen", "path": "C:\\x" }),
+            json!({ "command": "fileReveal", "path": "C:\\x" }),
+            json!({ "command": "fileThumbnail", "path": "C:\\x", "size": 64 }),
+            json!({ "command": "shelfAdd", "paths": ["C:\\x"] }),
+            json!({ "command": "shelfRemove", "id": "a" }),
+            json!({ "command": "shelfClear" }),
+            json!({ "command": "togglesSetWifi", "on": true }),
+            json!({ "command": "togglesSetBluetooth", "on": true }),
+            json!({ "command": "togglesSetBrightness", "level": 0.5 }),
+            json!({ "command": "togglesOpenSettings", "page": "night-light" }),
+            json!({ "command": "contactsSave", "contact": { "id": "", "name": "A", "handles": [{ "channel": "phone", "value": "+15551234567" }] } }),
+            json!({ "command": "contactsRemove", "id": "a" }),
+            json!({ "command": "contactsLaunch", "id": "a", "channel": "teams", "action": "video" }),
+            json!({ "command": "voiceMemoRecord" }),
+            json!({ "command": "voiceMemoStop" }),
+            json!({ "command": "voiceMemoPlay", "path": "C:\\x" }),
+            json!({ "command": "voiceMemoStopPlayback" }),
+            json!({ "command": "voiceMemoDelete", "path": "C:\\x" }),
+            json!({ "command": "colourPickStart" }),
+            json!({ "command": "colourPickCancel" }),
+            json!({ "command": "colourCopy", "hex": "#112233" }),
+        ]
+    }
+
+    #[test]
+    fn the_typescript_and_rust_command_lists_match() {
+        let samples = every_command();
+        for s in &samples {
+            serde_json::from_value::<TileCommand>(s.clone()).unwrap_or_else(|e| panic!("{s} does not parse: {e}"));
+        }
+        let rust: std::collections::BTreeSet<String> =
+            samples.iter().map(|s| s["command"].as_str().unwrap().to_owned()).collect();
+        assert_eq!(rust, ts_command_names(), "tilesProtocol.ts and protocol.rs disagree about the commands");
+    }
+
+    #[test]
+    fn the_typescript_and_rust_tile_ids_match() {
+        let block = TS_PROTOCOL
+            .split("export type TileId =")
+            .nth(1)
+            .and_then(|b| b.split("\n\n").next())
+            .expect("TileId union");
+        let ts: std::collections::BTreeSet<String> =
+            block.split("| \"").skip(1).filter_map(|rest| rest.split('"').next()).map(str::to_owned).collect();
+        let rust: std::collections::BTreeSet<String> =
+            TileId::ALL.iter().map(|t| serde_json::to_value(t).unwrap().as_str().unwrap().to_owned()).collect();
+        assert_eq!(rust, ts);
+    }
+
+    #[test]
+    fn a_subscription_answers_with_the_data_or_the_reason() {
+        let data = TileData::MicrophoneLevel(MicrophoneLevel { peak: 0.0, listening: false, problem: None });
+        assert_eq!(
+            serde_json::to_value(SubscribeResult::from(Ok(data))).unwrap(),
+            json!({
+                "ok": true,
+                "data": { "tile": "microphone-level", "data": { "peak": 0.0, "listening": false, "problem": null } }
+            })
+        );
+        assert_eq!(
+            serde_json::to_value(SubscribeResult::from(Err("no microphone".to_owned()))).unwrap(),
+            json!({ "ok": false, "reason": "no microphone" })
+        );
     }
 
     #[test]
