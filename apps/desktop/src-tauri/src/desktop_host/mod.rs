@@ -5,10 +5,11 @@
 //! window's Win32 state directly instead of going through the windowing library's style
 //! model, because that model rewrites GWL_EXSTYLE on its own changes and drops our bits.
 
+use dotdock_shell::run_gate::RunGate;
 use serde::Deserialize;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
-use std::thread;
+use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 use windows::Win32::Foundation::{HWND, POINT, RECT};
 use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromPoint, MONITORINFO, MONITOR_DEFAULTTOPRIMARY};
@@ -150,6 +151,8 @@ fn enforce_geometry(hwnd: HWND) {
 
 /// Applies desktop-level behaviour once, right after the window exists.
 pub fn configure(hwnd: Hwnd) {
+    // A previous window of this process may have been closed while a field had focus.
+    TYPING.store(false, Ordering::Release);
     let h = hwnd.get();
     enforce_styles(h, true);
     enforce_geometry(h);
@@ -195,16 +198,16 @@ fn cursor_in_css(hwnd: HWND, cursor: POINT) -> Option<(f64, f64)> {
     Some((f64::from(cursor.x - rect.left) / scale, f64::from(cursor.y - rect.top) / scale))
 }
 
-/// One thread for click-through, style, z-order and geometry guards. Exits when the window dies.
-pub fn spawn_guard(hwnd: Hwnd, regions: HitRegions) -> std::io::Result<()> {
+/// One thread for click-through, style, z-order and geometry guards. Exits when `gate` is stopped,
+/// or when the window dies.
+pub fn spawn_guard(hwnd: Hwnd, regions: HitRegions, gate: RunGate) -> std::io::Result<JoinHandle<()>> {
     thread::Builder::new().name("desktop-host".into()).spawn(move || {
         let h = hwnd.get();
         let mut last_cursor = POINT { x: i32::MIN, y: i32::MIN };
         let mut last_generation = u64::MAX;
         let mut click_through = true;
         let mut last_guard = Instant::now();
-        loop {
-            thread::sleep(CURSOR_POLL);
+        while gate.pause(CURSOR_POLL) {
             // SAFETY: IsWindow is safe on any handle value.
             if !unsafe { IsWindow(Some(h)) }.as_bool() {
                 return;
@@ -232,6 +235,5 @@ pub fn spawn_guard(hwnd: Hwnd, regions: HitRegions) -> std::io::Result<()> {
                 enforce_styles(h, click_through);
             }
         }
-    })?;
-    Ok(())
+    })
 }

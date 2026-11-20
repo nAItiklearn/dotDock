@@ -1,36 +1,20 @@
 //! dotDock core: owns the desktop overlay window, providers and boot timing.
 
 mod desktop_host;
+mod home_host;
 mod island_host;
+mod lifecycle;
+mod modules_host;
 mod providers;
 mod tray;
 
-use desktop_host::{HitRect, HitRegions, Hwnd};
+use desktop_host::HitRegions;
 use dotdock_shell::crash_guard::{self, StartDecision};
 use dotdock_shell::providers::weather::{self, Place};
 use dotdock_shell::wallpaper;
 use dotdock_shell::{autostart, boot_log as boot, dock_guard, sentinel};
-use providers::{ProvidersReady, WeatherWake};
-use std::time::Duration;
-use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
-
-pub(crate) const OVERLAY_LABEL: &str = "overlay";
-/// If the UI never reports its first frame, show the window anyway rather than stay invisible.
-const SHOW_FALLBACK: Duration = Duration::from_secs(3);
-
-/// Called by the overlay once its listeners exist; providers replay current values.
-#[tauri::command]
-fn providers_ready(ready: State<'_, ProvidersReady>) {
-    boot::mark("providers-ready");
-    ready.mark();
-}
-
-/// Called after the first fully rendered frame (fonts loaded, cached data drawn).
-#[tauri::command]
-fn overlay_ready(app: AppHandle) {
-    boot::mark("overlay-ready");
-    show_overlay(&app);
-}
+use home_host::HomeState;
+use tauri::{AppHandle, Manager, State};
 
 /// Transport controls for the music widget. Runs off the UI thread (async command).
 #[tauri::command]
@@ -45,9 +29,9 @@ async fn weather_search(query: String, language: String) -> Result<Vec<Place>, S
 }
 
 #[tauri::command]
-fn weather_set_place(place: Place, wake: State<'_, WeatherWake>) -> Result<(), String> {
+fn weather_set_place(place: Place, home: State<'_, HomeState>) -> Result<(), String> {
     weather::save_place(&place).map_err(|e| e.to_string())?;
-    wake.wake();
+    home.wake_weather();
     Ok(())
 }
 
@@ -123,55 +107,6 @@ async fn autostart_set(enabled: bool) -> Result<(), String> {
     } else {
         autostart::disable().map_err(|e| e.to_string())
     }
-}
-
-/// A widget text field gained (`true`) or lost focus.
-#[tauri::command]
-fn overlay_set_typing(app: AppHandle, typing: bool) {
-    let Some(window) = app.get_webview_window(OVERLAY_LABEL) else { return };
-    if let Ok(hwnd) = window.hwnd() {
-        desktop_host::set_typing(Hwnd::from_raw(hwnd.0), typing);
-    }
-}
-
-#[tauri::command]
-fn set_hit_regions(rects: Vec<HitRect>, regions: State<'_, HitRegions>) {
-    regions.replace(rects);
-}
-
-fn show_overlay(app: &AppHandle) {
-    let Some(window) = app.get_webview_window(OVERLAY_LABEL) else { return };
-    if window.is_visible().unwrap_or(false) {
-        return;
-    }
-    let Ok(hwnd) = window.hwnd() else { return };
-    // Never steal focus from what the user is doing when the widgets appear.
-    if desktop_host::show_without_activating(Hwnd::from_raw(hwnd.0)) {
-        boot::mark("shown");
-    }
-}
-
-fn create_overlay(app: &AppHandle) -> tauri::Result<WebviewWindow> {
-    // Size and position come from Win32 in desktop_host (and are re-fitted on display changes).
-    let window = WebviewWindowBuilder::new(app, OVERLAY_LABEL, WebviewUrl::App("overlay.html".into()))
-        .title("Desktop")
-        .visible(false)
-        .transparent(true)
-        .decorations(false)
-        .shadow(false)
-        .resizable(false)
-        .skip_taskbar(true)
-        .focused(false)
-        .focusable(false)
-        .additional_browser_args(
-            "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required",
-        )
-        .always_on_bottom(true)
-        // Lets a photo dragged from Explorer reach the page (the photo widget's drop zone).
-        .disable_drag_drop_handler()
-        .build()?;
-    desktop_host::configure(Hwnd::from_raw(window.hwnd()?.0));
-    Ok(window)
 }
 
 /// One-shot commands handled before any window exists. Exits the process if one ran.
@@ -253,18 +188,17 @@ pub fn run() {
     if !launched_at_sign_in && crash_guard::take_tripped_notice().is_some() {
         notice("Earlier, dotDock stopped unexpectedly several times at sign-in, so it put your Windows desktop back and turned off starting with Windows.\n\nIt is starting normally now.");
     }
-    let ready = ProvidersReady::default();
-    let regions = HitRegions::default();
     let result = tauri::Builder::default()
         // A second launch opens Settings in the running instance (MASTER_SPEC 7.4).
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| tray::open_settings(app)))
-        .manage(ready.clone())
-        .manage(regions.clone())
+        .manage(HitRegions::default())
         .invoke_handler(tauri::generate_handler![
-            providers_ready,
-            overlay_ready,
-            set_hit_regions,
-            overlay_set_typing,
+            home_host::providers_ready,
+            home_host::overlay_ready,
+            home_host::set_hit_regions,
+            home_host::overlay_set_typing,
+            modules_host::modules_list,
+            modules_host::modules_set,
             island_host::island_ready,
             island_host::island_state,
             island_host::island_set_regions,
@@ -286,34 +220,29 @@ pub fn run() {
         .setup(move |app| {
             boot::mark("setup");
             let handle = app.handle().clone();
-            let window = create_overlay(&handle)?;
-            boot::mark("window-created");
             tray::install(&handle)?;
-            island_host::start(&handle)?;
-            let wake = providers::spawn(handle.clone(), ready)?;
-            app.manage(wake);
-            desktop_host::spawn_guard(Hwnd::from_raw(window.hwnd()?.0), regions)?;
+            modules_host::install(&handle);
+            // The parts start on their own thread: building a window waits for the main thread, which
+            // is only free once setup returns.
+            modules_host::start_enabled(&handle)?;
             std::thread::spawn(|| {
                 std::thread::sleep(crash_guard::stable_after());
                 crash_guard::mark_stable();
-            });
-            std::thread::spawn(move || {
-                std::thread::sleep(SHOW_FALLBACK);
-                if handle.get_webview_window(OVERLAY_LABEL).is_some_and(|w| !w.is_visible().unwrap_or(true)) {
-                    boot::mark("show-fallback");
-                }
-                show_overlay(&handle);
             });
             Ok(())
         })
         .build(tauri::generate_context!())
         .map(|app| {
-            app.run(|_, event| {
+            app.run(|_, event| match event {
+                // With every window closed (the home screen and notch off, Settings closed) the tray
+                // keeps dotDock running. Only an explicit exit, which carries a code, quits.
+                tauri::RunEvent::ExitRequested { api, code: None, .. } => api.prevent_exit(),
                 // A clean exit is never a crash, and never leaves the taskbar hidden.
-                if let tauri::RunEvent::Exit = event {
+                tauri::RunEvent::Exit => {
                     dock_guard::restore_after_dock();
                     crash_guard::mark_stable();
                 }
+                _ => {}
             })
         });
     if let Err(err) = result {

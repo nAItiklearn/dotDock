@@ -1,14 +1,20 @@
 //! Hosts the Agent Island window: a floating, never-focused, click-through-until-hovered
 //! pill at the top centre. Logic lives in the `dotdock-island` crate; this only wires it up.
 //! See docs/ISLAND_INTEGRATION.md.
+//!
+//! The island is the notch module: `Notch` starts and stops it at run time. Stopping drops the
+//! `IslandHandle`, which stops the session service and the pointer poller (both join their threads),
+//! and destroys the window.
 
+use crate::lifecycle;
 use dotdock_island::engine::{Alert, Snapshot};
 use dotdock_island::paths::ClaudeDirs;
 use dotdock_island::pointer::{self, PointerEvent, Poller, Regions, Target};
 use dotdock_island::service::{Host, IslandService, NotificationCopy, ServiceConfig};
 use dotdock_island::settings::IslandSettings;
-use std::sync::{Arc, Mutex, PoisonError};
-use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
+use dotdock_shell::modules::Lifecycle;
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use windows::Win32::Foundation::{HWND, RECT};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
 use windows::Win32::UI::WindowsAndMessaging::{
@@ -20,6 +26,8 @@ use windows::Win32::UI::WindowsAndMessaging::{
 pub const ISLAND_LABEL: &str = "island";
 /// Matches WINDOW_SIZE in src/island/protocol.ts.
 const WINDOW_SIZE: (f64, f64) = (520.0, 240.0);
+/// What a command says when the notch is switched off.
+const NOTCH_OFF: &str = "The notch is turned off.";
 
 struct TauriHost(AppHandle);
 
@@ -37,12 +45,30 @@ impl Host for TauriHost {
     }
 }
 
-/// Managed state: the service, UI-reported regions, the follow setting and the pointer thread.
-pub struct IslandState {
+/// Everything that exists only while the notch runs: the service, UI-reported regions, the follow
+/// setting and the pointer thread. Dropping it stops them all.
+pub struct IslandHandle {
     service: IslandService,
     regions: Arc<Mutex<Regions>>,
     follow: Arc<Mutex<bool>>,
     _poller: Poller,
+}
+
+type Res<T> = Result<T, String>;
+
+/// Managed state: the running notch, or nothing while it is off. Commands hold the lock for the
+/// length of their call, so stopping waits for a call in flight and then drops the handle at once.
+#[derive(Default)]
+pub struct IslandSlot(Mutex<Option<IslandHandle>>);
+
+impl IslandSlot {
+    fn lock(&self) -> MutexGuard<'_, Option<IslandHandle>> {
+        self.0.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    fn with<T>(&self, call: impl FnOnce(&IslandHandle) -> T) -> Res<T> {
+        self.lock().as_ref().map(call).ok_or_else(|| NOTCH_OFF.to_owned())
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -96,13 +122,37 @@ fn move_to_top_centre(h: HWND, monitor: pointer::Rect) {
     }
 }
 
-/// Creates the island window and starts the session service. Without a Claude configuration
-/// folder, or if the service cannot start, the island simply does not appear (logged).
-pub fn start(app: &AppHandle) -> tauri::Result<()> {
-    let Some(dirs) = ClaudeDirs::from_env() else {
-        dotdock_shell::boot_log::record("island: no Claude folder, not started");
-        return Ok(());
-    };
+/// The notch as a module. Without a Claude configuration folder, or if the service cannot start,
+/// it does not start, and says why.
+pub struct Notch {
+    app: AppHandle,
+}
+
+impl Notch {
+    pub fn new(app: AppHandle) -> Self {
+        Self { app }
+    }
+}
+
+impl Lifecycle for Notch {
+    fn start(&mut self) -> Result<(), String> {
+        let handle = launch(&self.app)?;
+        *self.app.state::<IslandSlot>().lock() = Some(handle);
+        Ok(())
+    }
+
+    fn stop(&mut self) {
+        // Taken out of the slot first, then dropped here: the service and the poller join their threads.
+        let handle = self.app.state::<IslandSlot>().lock().take();
+        drop(handle);
+        lifecycle::destroy_window(&self.app, ISLAND_LABEL);
+    }
+}
+
+/// Creates the island window and starts the session service. Leaves nothing behind when it fails.
+fn launch(app: &AppHandle) -> Res<IslandHandle> {
+    let dirs =
+        ClaudeDirs::from_env().ok_or("No Claude Code folder was found, so there is nothing for the notch to watch.")?;
     let window = WebviewWindowBuilder::new(app, ISLAND_LABEL, WebviewUrl::App("island.html".into()))
         .title("Agent Island")
         .inner_size(WINDOW_SIZE.0, WINDOW_SIZE.1)
@@ -115,23 +165,22 @@ pub fn start(app: &AppHandle) -> tauri::Result<()> {
         .focused(false)
         .focusable(false)
         .always_on_top(true)
-        .build()?;
-    let raw = Raw(window.hwnd()?.0 as isize);
+        .build()
+        .map_err(|e| format!("The notch window could not be created: {e}"))?;
+    launch_into(app, &window, dirs).inspect_err(|_| lifecycle::destroy_window(app, ISLAND_LABEL))
+}
+
+fn launch_into(app: &AppHandle, window: &WebviewWindow, dirs: ClaudeDirs) -> Res<IslandHandle> {
+    let raw = Raw(window.hwnd().map_err(|e| e.to_string())?.0 as isize);
     set_click_through(hwnd(raw), true);
     if let Some(m) = pointer::monitor_at((0, 0)) {
         move_to_top_centre(hwnd(raw), m);
     }
 
-    let data_dir = dotdock_shell::app_data_dir().ok_or(tauri::Error::WindowNotFound)?;
-    let hook_source = std::env::current_exe()?.with_file_name("dotdock-island-hook.exe");
-    let service = match IslandService::start(ServiceConfig { dirs, data_dir, hook_source }, TauriHost(app.clone())) {
-        Ok(s) => s,
-        Err(err) => {
-            dotdock_shell::boot_log::record(&format!("island: service failed: {err}"));
-            let _ = window.destroy();
-            return Ok(());
-        }
-    };
+    let data_dir = dotdock_shell::app_data_dir().ok_or("There is no folder to keep the notch's settings in.")?;
+    let hook_source = std::env::current_exe().map_err(|e| e.to_string())?.with_file_name("dotdock-island-hook.exe");
+    let service = IslandService::start(ServiceConfig { dirs, data_dir, hook_source }, TauriHost(app.clone()))
+        .map_err(|e| format!("The notch could not start: {e}"))?;
 
     let regions = Arc::new(Mutex::new(Regions::default()));
     let follow = Arc::new(Mutex::new(service.settings().follow_cursor));
@@ -153,12 +202,10 @@ pub fn start(app: &AppHandle) -> tauri::Result<()> {
             }
             PointerEvent::TopEdge(monitor) => move_to_top_centre(hwnd(raw), monitor),
         },
-    )?;
-    app.manage(IslandState { service, regions, follow, _poller: poller });
-    Ok(())
+    )
+    .map_err(|e| format!("The notch could not follow the pointer: {e}"))?;
+    Ok(IslandHandle { service, regions, follow, _poller: poller })
 }
-
-type Res<T> = Result<T, String>;
 
 #[tauri::command]
 pub fn island_ready(app: AppHandle) {
@@ -170,43 +217,46 @@ pub fn island_ready(app: AppHandle) {
 }
 
 #[tauri::command]
-pub fn island_state(s: State<'_, IslandState>) -> dotdock_island::service::InitialState {
-    s.service.initial_state()
+pub fn island_state(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::InitialState> {
+    s.with(|h| h.service.initial_state())
 }
 
 #[tauri::command]
-pub fn island_set_regions(regions: Regions, s: State<'_, IslandState>) {
-    *s.regions.lock().unwrap_or_else(PoisonError::into_inner) = regions;
+pub fn island_set_regions(regions: Regions, s: State<'_, IslandSlot>) {
+    // The window may report once more as it closes; with the notch off there is nobody to tell.
+    let _ = s.with(|h| *h.regions.lock().unwrap_or_else(PoisonError::into_inner) = regions);
 }
 
 #[tauri::command]
-pub fn island_focus(id: String, s: State<'_, IslandState>) -> dotdock_island::focus::FocusOutcome {
-    s.service.focus(&id)
+pub fn island_focus(id: String, s: State<'_, IslandSlot>) -> Res<dotdock_island::focus::FocusOutcome> {
+    s.with(|h| h.service.focus(&id))
 }
 
 #[tauri::command]
-pub fn island_dismiss(id: String, s: State<'_, IslandState>) {
-    s.service.dismiss(&id);
+pub fn island_dismiss(id: String, s: State<'_, IslandSlot>) {
+    let _ = s.with(|h| h.service.dismiss(&id));
 }
 
 #[tauri::command]
-pub fn island_connect(s: State<'_, IslandState>) -> Res<dotdock_island::service::ConnectionStatus> {
-    s.service.connect().map_err(|e| e.to_string())
+pub fn island_connect(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
+    s.with(|h| h.service.connect().map_err(|e| e.to_string()))?
 }
 
 #[tauri::command]
-pub fn island_disconnect(s: State<'_, IslandState>) -> Res<dotdock_island::service::ConnectionStatus> {
-    s.service.disconnect().map_err(|e| e.to_string())
+pub fn island_disconnect(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
+    s.with(|h| h.service.disconnect().map_err(|e| e.to_string()))?
 }
 
 #[tauri::command]
-pub fn island_connection(s: State<'_, IslandState>) -> dotdock_island::service::ConnectionStatus {
-    s.service.connection()
+pub fn island_connection(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
+    s.with(|h| h.service.connection())
 }
 
 #[tauri::command]
-pub fn island_set_settings(settings: IslandSettings, s: State<'_, IslandState>) -> Res<IslandSettings> {
-    let saved = s.service.set_settings(settings).map_err(|e| e.to_string())?;
-    *s.follow.lock().unwrap_or_else(PoisonError::into_inner) = saved.follow_cursor;
-    Ok(saved)
+pub fn island_set_settings(settings: IslandSettings, s: State<'_, IslandSlot>) -> Res<IslandSettings> {
+    s.with(|h| {
+        let saved = h.service.set_settings(settings).map_err(|e| e.to_string())?;
+        *h.follow.lock().unwrap_or_else(PoisonError::into_inner) = saved.follow_cursor;
+        Ok(saved)
+    })?
 }
