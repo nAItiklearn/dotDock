@@ -28,6 +28,7 @@ import { issueText } from "./shell";
 import { useSystemHistory } from "./systemHistory";
 import { ColourBody, ConvertBody, EmojiBody, NetworkBody, NotesBody, TogglesBody, WorldBody } from "./toolsPopovers";
 import type { ContactAction, TileIssue } from "./ui-types";
+import { CurrencyBody, HistoryBody, MemoBody, SearchBody, SunBody } from "./morePopovers";
 import { hydrationFill } from "./wave";
 import "../panels.css";
 import "./popovers.css";
@@ -506,6 +507,11 @@ const BODY: Record<PopoverTileId, () => ReactNode> = {
   world: () => <WorldBody />,
   network: () => <NetworkBody />,
   toggles: () => <TogglesBody />,
+  sun: () => <SunBody />,
+  currency: () => <CurrencyBody />,
+  search: () => <SearchBody />,
+  history: () => <HistoryBody />,
+  memo: () => <MemoBody />,
 };
 
 /** The popover of one live tile: its full controls, opened beside the tile. Esc, a click away or the close button shuts it. */

@@ -28,6 +28,13 @@ export const TILE_IDS = [
   "world",
   "network",
   "toggles",
+  "flip",
+  "sun",
+  "wind",
+  "currency",
+  "search",
+  "history",
+  "memo",
 ] as const;
 export type TileId = (typeof TILE_IDS)[number];
 export const isTileId = (id: string): id is TileId => (TILE_IDS as readonly string[]).includes(id);

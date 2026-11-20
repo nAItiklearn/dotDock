@@ -93,10 +93,10 @@ describe("tile length on the dock", () => {
 describe("tile popovers", () => {
   it("exist for the tiles that have more to show, and for no others", () => {
     expect(Object.keys(TILE_POPOVER_SIZE).sort()).toEqual(
-      ["agenda", "audio", "colour", "contacts", "convert", "emoji", "focus", "hydration", "meeting", "network", "notes", "progress", "reminders", "stopwatch", "system", "toggles", "world"].sort(),
+      ["agenda", "audio", "colour", "contacts", "convert", "emoji", "focus", "hydration", "meeting", "network", "notes", "progress", "reminders", "stopwatch", "system", "toggles", "world", "sun", "currency", "search", "history", "memo"].sort(),
     );
     for (const id of Object.keys(TILE_POPOVER_SIZE)) expect(isTileId(id)).toBe(true);
-    for (const id of ["clock", "media", "mic", "cpu", "battery", "analog"]) expect(isPopoverTile(id)).toBe(false);
+    for (const id of ["clock", "media", "mic", "cpu", "battery", "analog", "flip", "wind"]) expect(isPopoverTile(id)).toBe(false);
   });
 
   it("have room for a header and a body inside every size", () => {

@@ -132,3 +132,18 @@ Numbered D-019 because D-017 and D-018 exist on `main`; the backend track's bran
 - **Persistence.** `dock.json` (settings, categories, the user's filings, first-seen times) and `catalogue-cache.json` are written atomically (temporary file renamed over the old one) and at most once per second; a file that does not parse is kept as `.bad`, never overwritten. Apps present at the very first scan get `firstSeen = 0`, so only apps installed later are "new".
 - **App bar and thumbnails are spikes behind explicit calls.** `AppBar::register` is only called from `examples/appbar_probe.rs`; its guard removes the bar on `Drop`. Thumbnails are `DwmRegisterThumbnail` into the host window, laid out by pure arithmetic (`thumbnail::layout`). Nothing in `DockService::start` hides the taskbar or registers a bar.
 - **Tests that hide the taskbar** (allowed by the owner for this milestone) hold a guard that shows it again and restores the auto-hide state, plus a panic hook for the release profile (which aborts and never runs `Drop`).
+
+## D-024 CoolDock-gap tiles: where each one's data comes from (dock UI, 2026-11-21)
+- **Sun arc** computes sunrise and sunset locally (sunrise equation, within a few minutes) for a bundled city. It
+  follows the city in the device's own time zone unless the user picks one; no location permission, no network.
+- **Wind** reads optional `windKmh`, `windFromDeg`, `gustKmh` on the weather provider. Until the core fetches them the
+  tile says "Not available" rather than guessing (blocker B-002).
+- **Currency** reads a new `rates` tile feed (European Central Bank reference rates, cached by the core so it works
+  offline). Not a field of the unit converter: rates change and have a source date, units do not.
+- **Web search** opens addresses through a new `dock_open_url` command that accepts http(s) only; a typed site opens
+  directly. Engines: DuckDuckGo (default, no account, no tracking), Google, Bing, Ecosia, Brave.
+- **History** is the dock's own record of apps it opened (launches that succeeded), newest first, on this device only.
+  CoolDock's history is browser history; reading another app's history is out of scope for a local-first dock.
+- **Voice memo** records with the WebView's microphone access and keeps audio in this device's IndexedDB, at most 12
+  memos and 10 minutes each, with a 40-bar peak waveform per memo. Nothing is uploaded.
+- **Flip clock** is a face only: a new minute mounts a new card whose top folds once (none with reduced motion).

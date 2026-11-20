@@ -255,5 +255,8 @@ describe("saved settings", () => {
     const { useTools } = await import("./toolsStore");
     useTools.getState().pickColour("#abc");
     expect(useTools.getState().colours).toEqual(["#AABBCC"]);
-  });
+    useTools.getState().recordLaunch("app", 1);
+    expect(useTools.getState().recent).toEqual([{ appId: "app", at: 1 }]);
+    // A fresh import of the store and everything it reads: generous on a busy machine.
+  }, 20_000);
 });

@@ -9,6 +9,7 @@ import { t } from "../strings";
 import { AgendaFace, AudioFace, ContactsFace, FocusFace, HydrationFace, MeetingFace, MicFace, ProgressFace, RemindersFace, StopwatchFace, SystemFace } from "./faces";
 import { useMinuteClock } from "./hooks";
 import { AnalogFace, BatteryFace, ColourFace, ConvertFace, CpuFace, EmojiFace, NetworkFace, NotesFace, TogglesFace, WorldFace } from "./toolsFaces";
+import { CurrencyFace, FlipFace, HistoryFace, MemoFace, SearchFace, SunFace, WindFace } from "./moreFaces";
 import type { TileControls } from "./shell";
 
 const LOW_BATTERY = 20;
@@ -124,6 +125,20 @@ export function Tile({ id, controls }: { readonly id: TileId; readonly controls:
       return <NetworkFace controls={controls} />;
     case "toggles":
       return <TogglesFace controls={controls} />;
+    case "flip":
+      return <FlipFace />;
+    case "sun":
+      return <SunFace controls={controls} />;
+    case "wind":
+      return <WindFace />;
+    case "currency":
+      return <CurrencyFace controls={controls} />;
+    case "search":
+      return <SearchFace controls={controls} />;
+    case "history":
+      return <HistoryFace controls={controls} />;
+    case "memo":
+      return <MemoFace controls={controls} />;
   }
 }
 
