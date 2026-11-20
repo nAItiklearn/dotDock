@@ -13,6 +13,7 @@ import { CENTRED } from "../photo/frame";
 import { WIDGETS } from "../registry";
 import { WidgetView } from "../WidgetView";
 import { applyGalleryState, GALLERY_STATES, type GalleryState } from "./fixtures";
+import { BENCH_ID, PerfBench } from "./perfBench";
 import { DEFAULT_SAMPLE_PHOTO, seedPhotos } from "./photoFixture";
 import "./gallery.css";
 
@@ -27,6 +28,7 @@ import "./gallery.css";
  *   ?panel=1                      the photo widget next to its live settings panel
  *   ?empty=1                      the photo widget without a picture
  *   ?wallpaper=<url>              a desktop wallpaper behind the page instead of the theme background
+ *   ?perf=<url>,<url>,…           one photo widget for the frame-time bench, swapping these pictures
  */
 const params = new URLSearchParams(location.search);
 const stateParam = params.get("state") ?? "live";
@@ -94,6 +96,7 @@ const photoFraming =
     ? CENTRED
     : { x: focusX, y: focusY, zoom: focusZoom };
 const showPhotoEmpty = params.get("empty") === "1";
+const benchPhotos = params.get("perf")?.split(",") ?? null;
 /**
  * Placement id of one photo case in the gallery; the picture is stored under it like a real
  * widget's. Empty cases use ids that are never stored, so they stay empty across reloads.
@@ -103,7 +106,10 @@ const photoId = (...parts: readonly string[]): string =>
 
 applyTheme(themeById(params.get("theme") ?? "obsidian"));
 const wallpaper = params.get("wallpaper");
-if (wallpaper) document.body.style.setProperty("--gallery-wallpaper", `url("${CSS.escape(wallpaper)}")`);
+if (wallpaper) {
+  document.documentElement.style.setProperty("--gallery-wallpaper", `url("${CSS.escape(wallpaper)}")`);
+  document.documentElement.classList.add("gallery--wallpaper");
+}
 const weatherCode = params.get("code");
 applyGalleryState(state, {
   ...(weatherCode === null ? {} : { code: Number(weatherCode) }),
@@ -183,6 +189,13 @@ function photoPlacements(): readonly string[] {
 }
 
 function Gallery() {
+  if (benchPhotos) {
+    return (
+      <main className="gallery">
+        <PerfBench photos={benchPhotos} config={{ frame: "dots", tint: "accent" }} />
+      </main>
+    );
+  }
   const widgets = WIDGETS.filter((w) => !showIcons && (only === null || only.includes(w.id)));
   return (
     <main className="gallery">
@@ -227,7 +240,8 @@ function Gallery() {
 /** Photos are stored before the first render so no case flashes its empty state. */
 async function prepare(): Promise<void> {
   await document.fonts.ready;
-  if (!showPhotoEmpty) await seedPhotos(photoPlacements(), photoUrl, photoFraming);
+  if (benchPhotos?.[0]) await seedPhotos([BENCH_ID], benchPhotos[0]);
+  else if (!showPhotoEmpty) await seedPhotos(photoPlacements(), photoUrl, photoFraming);
 }
 
 void prepare().then(() => {

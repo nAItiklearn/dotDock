@@ -3,11 +3,22 @@ body {
   overflow: auto;
   background: var(--bg);
 }
-/* ?wallpaper=: the widgets over a real desktop picture, fixed like a wallpaper. */
-body {
-  background-image: var(--gallery-wallpaper, none);
-  background-size: cover;
-  background-attachment: fixed;
+/* ?wallpaper=: the widgets over a real desktop picture that covers the whole page. */
+html.gallery--wallpaper .gallery {
+  width: max-content;
+  min-width: 100vw;
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--gallery-wallpaper) center / cover;
+}
+/* Case labels sit on a plate so they stay readable over a busy picture. */
+html.gallery--wallpaper .gallery__caption,
+html.gallery--wallpaper .gallery__name,
+html.gallery--wallpaper .gallery__bar {
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
 }
 .gallery {
   display: flex;
