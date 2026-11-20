@@ -202,3 +202,41 @@ html:not([data-theme="paper"]) .hero__scape .art__mid {
     --band-w: 720px;
   }
 }
+
+/* Art behind a section (components/SectionArt.astro): full width, behind the text, fading out towards the middle. */
+.section {
+  isolation: isolate;
+}
+.section-art {
+  position: absolute;
+  z-index: -1;
+  inset-inline: 0;
+  overflow: clip;
+  pointer-events: none;
+}
+.section-art > .art {
+  --band-w: max(100%, 1200px);
+  width: var(--band-w);
+  margin-left: calc(50% - var(--band-w) / 2);
+}
+@media (max-width: 899px) {
+  .section-art > .art {
+    --band-w: 720px;
+  }
+}
+.section-art--top {
+  top: 0;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 35%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 35%, transparent 100%);
+}
+.section-art--bottom {
+  bottom: 0;
+  -webkit-mask-image: linear-gradient(to top, #000 0, #000 35%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 0, #000 35%, transparent 100%);
+}
+
+/* The page itself is paper with a faint lattice of dots, never a flat white. */
+body {
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--text) 11%, transparent) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+}

@@ -686,3 +686,49 @@ html[data-theme="paper"] .w-clock__digits {
   height: 100%;
   object-fit: cover;
 }
+
+/* Ring: a round picture inside a ring of accent dots. */
+.w--photo-ring {
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.w--photo-ring .w-photo__frame {
+  inset: 9%;
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+}
+.w-photo__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: var(--accent);
+}
+
+/* Polaroid: a paper print with a typed caption, set a little askew. */
+.w--photo-polaroid {
+  --photo-mat: #f4f1ea;
+  border-radius: calc(var(--k) * 6);
+  transform: rotate(-2deg);
+}
+.w--photo-polaroid:hover {
+  transform: rotate(-2deg) translateY(-2px);
+}
+.w--photo-polaroid .w-photo__frame {
+  inset: 7% 7% 24%;
+  border-radius: calc(var(--k) * 2);
+}
+.w-photo__caption {
+  position: absolute;
+  inset: auto 7% 6%;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: max(9px, calc(var(--k) * 11));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #55534e;
+}

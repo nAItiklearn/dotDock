@@ -9,6 +9,9 @@ import Scaled from "../components/Scaled.astro";
 import Widget from "../components/Widget.astro";
 import VideoSlot from "../components/VideoSlot.astro";
 import Cta from "../components/Cta.astro";
+import Art from "../components/Art.astro";
+import Band from "../components/Band.astro";
+import SectionArt from "../components/SectionArt.astro";
 import { PRODUCT_NAME, ROUTES } from "../brand";
 import { THEMES } from "../lib/themes";
 
@@ -61,11 +64,16 @@ const themes: Bullet[] = [
 <Base title={title} description={description}>
   <Nav current={ROUTES.features} />
   <main id="main">
+    <div class="features-top">
+      <SectionArt piece="band-sky" edge="top" />
+      <div class="features-bloom features-bloom--l" aria-hidden="true"><Art piece="bouquet-left" /></div>
+      <div class="features-bloom features-bloom--r" aria-hidden="true"><Art piece="bouquet-right" /></div>
     <header class="features-head wrap">
       <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>Features</p>
       <h1 class="h2 h1">One desktop that fits together.</h1>
       <p class="lede">The dock, the island, the home screen and the themes are designed together, as one environment for your Windows desktop.</p>
     </header>
+    </div>
 
     <FeatureSection id="dock" large label="The dock" status="In development" scene="scene-dock" bullets={dock} shotLabel="The dock with the Development stack open above it">
       <Fragment slot="title">A dock that <span class="dim">files your apps for you.</span></Fragment>
@@ -74,6 +82,8 @@ const themes: Bullet[] = [
       <VideoSlot slot="after" name="dock" label="The dock in use: magnification, a stack opening, the App Library and window previews" caption="The dock, recorded from the app." />
     </FeatureSection>
 
+    <Band piece="band-sea" />
+
     <FeatureSection id="island" label="The agent island" status="In development" scene="scene-island" bullets={island} shotLabel="A desktop with the island at the top of the screen">
       <Fragment slot="title">An island for <span class="dim">your AI coding agents.</span></Fragment>
       <Fragment slot="lede">A notch at the top of the screen shows what your coding agent is doing, so you can look away from the terminal and still know.</Fragment>
@@ -81,17 +91,21 @@ const themes: Bullet[] = [
       <VideoSlot slot="after" name="notch" label="The island following a real coding session from thinking to done" caption="The island, recorded from the app." />
     </FeatureSection>
 
+    <Band piece="band-field" />
+
     <FeatureSection id="widgets" label="The home screen" status="In development" scene="scene-home" bullets={widgets} shotLabel="A board of home-screen widgets">
       <Fragment slot="title">Widgets that <span class="dim">live on your desktop.</span></Fragment>
       <Fragment slot="lede">Clocks, rings, grids, a calendar, media controls and your own photos, placed on a grid and drawn in dots. Time, date, calendar and battery are live on this page; a hollow dot marks a sample value.</Fragment>
       <div class="cluster">
         <Widget kind="clock" clockStyle="blocks" place="--w:4" />
-        <Widget kind="photo" photo="ridge" />
+        <Widget kind="photo" photo="ridge" frame="polaroid" caption="Screen Ridge" />
         <Widget kind="ring" />
         <Widget kind="calendar" />
         <Widget kind="music" />
       </div>
     </FeatureSection>
+
+    <Band piece="band-sky" />
 
     <FeatureSection id="themes" label="Themes" status="In development" scene="scene-themes" bullets={themes} shotLabel="The same desktop in Obsidian, Paper and Aurum">
       <Fragment slot="title">Yours, <span class="dim">down to the dot.</span></Fragment>

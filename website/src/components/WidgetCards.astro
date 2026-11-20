@@ -1,4 +1,5 @@
 ---
+import SectionArt from "./SectionArt.astro";
 import SectionHead from "./SectionHead.astro";
 import Widget from "./Widget.astro";
 
@@ -50,6 +51,7 @@ const cards = [
 ---
 
 <section class="section" id="widgets" aria-labelledby="widgets-title">
+  <SectionArt piece="band-field" edge="bottom" />
   <div class="wrap">
     <SectionHead label="The home screen" titleId="widgets-title">
       <Fragment slot="title">Made to be <span class="dim">glanced at.</span></Fragment>

@@ -1,5 +1,6 @@
 /** Page chrome: the sticky nav state, section reveals and copy-to-clipboard buttons. */
 import { requireEl } from "../lib/dom";
+import "./visits";
 
 const STUCK_AFTER_PX = 8;
 const COPIED_MS = 1600;

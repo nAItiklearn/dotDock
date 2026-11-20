@@ -1,0 +1,17 @@
+---
+/**
+ * Pixel art in the background of a section: a band of sky, sea or field that runs the full width of the page,
+ * behind the text, at the top or the foot of the section and fading out towards the middle so the words stay
+ * clear. Decorative; its masks load as it nears the screen.
+ */
+import Art from "./Art.astro";
+import type { ArtName } from "../lib/art";
+
+interface Props {
+  piece: Extract<ArtName, `band-${string}`>;
+  edge: "top" | "bottom";
+}
+const { piece, edge } = Astro.props;
+---
+
+<div class={`section-art section-art--${edge}`} aria-hidden="true"><Art piece={piece} /></div>

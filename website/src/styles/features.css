@@ -1,4 +1,29 @@
 /* The Features page: sections with a pixel-art scene and a list of bullets, the video slots and the module switches. */
+.features-top {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+}
+.features-bloom {
+  position: absolute;
+  z-index: -1;
+  top: calc(var(--nav-h) + 24px);
+  width: 420px;
+  /* The stems fade out into the page instead of ending on an edge. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 62%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 62%, transparent 100%);
+}
+.features-bloom--l {
+  left: min(-60px, calc(50vw - 780px));
+}
+.features-bloom--r {
+  right: min(-60px, calc(50vw - 780px));
+}
+@media (max-width: 899px) {
+  .features-bloom {
+    display: none;
+  }
+}
 .features-head {
   padding-top: calc(var(--nav-h) + clamp(48px, 7vw, 104px));
   text-align: center;
