@@ -55,7 +55,7 @@ Merged on main:
 - Logo and icon set; six desktop wallpapers at 4.5+; island verified live with real Claude Code sessions (plate made opaque).
 - Specs: DOCK_SPEC, DOCK_BENCHMARK (incl. stack input-to-visible under 50 ms), DOCK_MARKET, FEATURE_PARITY, WEBSITE_SYSTEM, LAUNCH_VIDEO, V2_TEST_PLAN.
 
-Running (worktree tracks): dock UI (latency fix, every feature testable, CoolDock tiles, themes incl. glass), native tiles (real data), dock host integration (window, glass backdrop, app bar, taskbar replacement), notch for any AI agent (Copilot CLI, OpenCode, generic protocol), modules on/off + theme from own wallpaper, website redesign (Inter Display, art-led hero, Features page, showcase strip).
+Running (worktree tracks): dock UI (latency fix, every feature testable, CoolDock tiles, themes incl. glass), native tiles (real data), dock host integration (window, glass backdrop, app bar, taskbar replacement), notch for any AI agent (Copilot CLI, OpenCode, generic protocol), the environment as one unit with two Settings switches and a theme from the user's own wallpaper (branch worktree-agent-aa4d6d019cc73921a, D-021 and D-022), website redesign (Inter Display, art-led hero, Features page, showcase strip).
 
 ## Machine notes that affect boot time
 - 22 apps autostart from `HKCU\Run` and compete at sign-in.
