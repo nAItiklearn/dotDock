@@ -139,6 +139,16 @@ export interface GlassShape {
 
 export type CommandResult = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 
+/** What the core knows about the area behind the dock: whether the native blur can be applied and how light it is. */
+export interface DockBackdrop {
+  /** The native blur can be applied: Windows 11 22H2 or later, or the Windows 10 acrylic fallback. */
+  readonly available: boolean;
+  /** Whether the desktop behind the dock is light or dark; null while the core has not measured it. */
+  readonly tone: "light" | "dark" | null;
+  /** Windows battery saver is on: the dock drops transparency to save power. */
+  readonly saver: boolean;
+}
+
 /**
  * When the dock should stop rendering: the session is locked, the display is off, or a fullscreen app
  * (a game, a presentation) has the foreground. Any true means freeze all animation loops.
@@ -156,12 +166,15 @@ export interface DockEvents {
   "dock://apps": readonly DockApp[];
   "dock://windows": readonly DockWindow[];
   "dock://settings": DockSettings;
-  /** The global App Library shortcut (Ctrl+Alt+Space) was pressed. */
+  /** The global App Library shortcut was pressed. */
   "dock://library": "toggle" | "open" | "close";
   /**
    * The cursor entered or left the rectangles from `dock_set_regions`. A click-through window gets no `pointerleave`
    * from the WebView, so the core, which already polls the cursor, reports it.
    */
   "dock://pointer": { readonly inside: boolean };
+  /** The core froze the dock: the UI stops every frame loop and timer while any field is true, so a hidden dock costs nothing. */
   "dock://frozen": FrozenState;
+  /** The blur and tone of what is behind the dock changed (a new wallpaper, battery saver, a transparency setting). */
+  "dock://backdrop": DockBackdrop;
 }
