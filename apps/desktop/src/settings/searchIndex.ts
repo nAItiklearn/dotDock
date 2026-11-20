@@ -23,11 +23,6 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("home", "edge", "Screen edge margin", "safe area padding border"),
   e("home", "display-layouts", "Layouts per display", "monitor screen clear copy"),
 
-  e("modules", "module-home", "Home screen", "module widgets overlay desktop turn off disable enable switch on"),
-  e("modules", "module-dock", "Dock", "module launcher apps stacks bar turn off disable enable switch on"),
-  e("modules", "module-taskbar", "Replace the taskbar", "module hide windows taskbar dock restore turn off disable enable"),
-  e("modules", "module-notch", "Notch", "module agent island claude codex ai coding pill turn off disable enable"),
-
   e("appearance", "theme", "Theme", "obsidian paper aurum colour color dark light palette"),
   e("appearance", "theme-switch", "Switch automatically", "system windows schedule time day night light dark follow"),
   e("appearance", "custom-themes", "Your themes", "editor create import export json accent oklch contrast custom"),
@@ -44,6 +39,8 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("startup", "use-desktop", "Use this desktop", "windows stock switch back replace"),
   e("startup", "launch", "Launch at sign-in", "startup autostart boot login"),
   e("startup", "desktop-icons", "Hide desktop icons", "shortcuts files clutter"),
+  e("startup", "environment-on", "Use the dotDock desktop", "turn off disable enable whole environment widgets dock notch plain windows stock switch advanced"),
+  e("startup", "windows-taskbar", "Use the Windows taskbar", "hide replace dock taskbar real native bar restore advanced"),
   e("startup", "restore", "Restore Windows desktop", "panic undo revert original wallpaper icons"),
   e("startup", "boot-timing", "Boot timing", "speed startup seconds measure"),
 

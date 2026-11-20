@@ -1,8 +1,7 @@
 import type {
   AppInfo,
   DisplayInfo,
-  ModuleId,
-  ModuleStatus,
+  EnvironmentState,
   NativeApi,
   PerformanceSettings,
   RestoreReport,
@@ -49,21 +48,14 @@ function sampleWallpaper(): Promise<Blob> {
   return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("no image"))), "image/png"));
 }
 
-/** This build has the home screen and the notch; the dock and the taskbar replacement arrive with the dock host. */
-const MOCK_MODULES: readonly ModuleStatus[] = [
-  { id: "home", enabled: true, state: "running", requires: null, error: null },
-  { id: "dock", enabled: false, state: "unavailable", requires: null, error: null },
-  { id: "taskbar", enabled: false, state: "unavailable", requires: "dock", error: null },
-  { id: "notch", enabled: true, state: "running", requires: null, error: null },
-];
-
 export function createMockNativeApi(): NativeApi {
-  let modules = MOCK_MODULES;
-  const listeners = new Set<(statuses: readonly ModuleStatus[]) => void>();
-  const setModule = (id: ModuleId, enabled: boolean): readonly ModuleStatus[] => {
-    modules = modules.map((m) => (m.id === id ? { ...m, enabled, state: enabled ? "running" : "stopped" } : m));
-    listeners.forEach((listener) => listener(modules));
-    return modules;
+  // This build has no taskbar replacement yet, so the Windows taskbar always stays.
+  let environment: EnvironmentState = { on: true, windowsTaskbar: true, taskbarReplacement: false, problems: [] };
+  const listeners = new Set<(state: EnvironmentState) => void>();
+  const setEnvironment = (patch: Partial<EnvironmentState>): EnvironmentState => {
+    environment = { ...environment, ...patch };
+    listeners.forEach((listener) => listener(environment));
+    return environment;
   };
   let startup: StartupState = {
     useOurDesktop: true,
@@ -118,9 +110,10 @@ export function createMockNativeApi(): NativeApi {
 
   return {
     available: true,
-    modules: {
-      list: () => later(modules),
-      set: (id, enabled) => later(setModule(id, enabled)),
+    environment: {
+      get: () => later(environment),
+      setOn: (on) => later(setEnvironment({ on })),
+      setWindowsTaskbar: (windowsTaskbar) => later(setEnvironment({ windowsTaskbar: windowsTaskbar || !environment.taskbarReplacement })),
       onChange: (handler) => {
         listeners.add(handler);
         return Promise.resolve(() => listeners.delete(handler));

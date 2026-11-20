@@ -116,35 +116,33 @@ export interface UpdateStatus {
   readonly available: { readonly version: string; readonly notes: string | null } | null;
 }
 
-/** The parts of dotDock that can be switched on and off on their own. */
-export type ModuleId = "home" | "dock" | "taskbar" | "notch";
-
 /**
- * `running`: up. `stopped`: off by choice. `waiting`: on, but the part it needs is not running.
- * `failed`: on, and starting it failed (`error` says why). `unavailable`: this build does not have it.
+ * The dotDock environment, which runs as one unit: home screen, dock, taskbar replacement and notch.
+ * The user has two choices over it, both applied at once and remembered.
  */
-export type ModuleState = "running" | "stopped" | "waiting" | "failed" | "unavailable";
-
-export interface ModuleStatus {
-  readonly id: ModuleId;
-  /** The user's choice. Always false for a part that is not in this build. */
-  readonly enabled: boolean;
-  readonly state: ModuleState;
-  /** The part that has to be on for this one to make sense. */
-  readonly requires: ModuleId | null;
-  readonly error: string | null;
+export interface EnvironmentState {
+  /** The whole environment is switched on. Off is plain Windows. */
+  readonly on: boolean;
+  /** The Windows taskbar stays: by choice, or because this build has no replacement for it. */
+  readonly windowsTaskbar: boolean;
+  /** This build has a taskbar replacement the user can switch to. */
+  readonly taskbarReplacement: boolean;
+  /** Parts that are meant to run and did not start, each with its reason in words. */
+  readonly problems: readonly string[];
 }
 
 export interface NativeApi {
   readonly available: boolean;
 
-  modules: {
-    /** `modules_list` () → ModuleStatus[], in start order */
-    list(): Promise<readonly ModuleStatus[]>;
-    /** `modules_set` { id, enabled } → ModuleStatus[]. Starts or stops the part now; rejects with the reason when it cannot. */
-    set(id: ModuleId, enabled: boolean): Promise<readonly ModuleStatus[]>;
-    /** Hears the `modules://changed` event, which carries the full list. Resolves with the way to stop listening. */
-    onChange(handler: (statuses: readonly ModuleStatus[]) => void): Promise<() => void>;
+  environment: {
+    /** `environment_get` () → EnvironmentState */
+    get(): Promise<EnvironmentState>;
+    /** `environment_set` { on } → EnvironmentState. Starts or stops everything now. */
+    setOn(on: boolean): Promise<EnvironmentState>;
+    /** `taskbar_set` { useWindows } → EnvironmentState. Rejects with the reason when the replacement cannot start. */
+    setWindowsTaskbar(useWindows: boolean): Promise<EnvironmentState>;
+    /** Hears the `environment://changed` event, which carries the full state. Resolves with the way to stop listening. */
+    onChange(handler: (state: EnvironmentState) => void): Promise<() => void>;
   };
 
   startup: {
@@ -227,7 +225,7 @@ const unavailable = (): Promise<never> => Promise.reject(new NativeUnavailableEr
 
 export const unavailableNativeApi: NativeApi = {
   available: false,
-  modules: { list: unavailable, set: unavailable, onChange: unavailable },
+  environment: { get: unavailable, setOn: unavailable, setWindowsTaskbar: unavailable, onChange: unavailable },
   startup: { get: unavailable, set: unavailable, restoreWindows: unavailable },
   displays: { list: unavailable },
   wallpapers: {
@@ -277,14 +275,15 @@ function toRestoreReport(raw: unknown): RestoreReport {
   };
 }
 
-const MODULES_CHANGED = "modules://changed";
+const ENVIRONMENT_CHANGED = "environment://changed";
 
 export const tauriNativeApi: NativeApi = {
   available: true,
-  modules: {
-    list: () => call("modules_list"),
-    set: (id, enabled) => call("modules_set", { id, enabled }),
-    onChange: (handler) => listen<readonly ModuleStatus[]>(MODULES_CHANGED, (event) => handler(event.payload)),
+  environment: {
+    get: () => call("environment_get"),
+    setOn: (on) => call("environment_set", { on }),
+    setWindowsTaskbar: (useWindows) => call("taskbar_set", { useWindows }),
+    onChange: (handler) => listen<EnvironmentState>(ENVIRONMENT_CHANGED, (event) => handler(event.payload)),
   },
   startup: {
     get: () => call("startup_get"),

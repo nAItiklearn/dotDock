@@ -4,6 +4,7 @@ import type { RestoreReport, StartupState, StartupToggle } from "../../lib/nativ
 import { getNativeApi } from "../../lib/native/api";
 import { Button, Segmented, Switch } from "../../lib/ui/controls";
 import { Icon } from "../../lib/ui/Icon";
+import { EnvironmentSwitches } from "../ui/EnvironmentSwitches";
 import { NativeGate, useNativeResource, type NativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
 import { pageById } from "../pageMeta";
@@ -185,6 +186,7 @@ export function StartupPage() {
       >
         {(state) => <StartupBody resource={resource} state={state} />}
       </NativeGate>
+      <EnvironmentSwitches />
     </>
   );
 }
