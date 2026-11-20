@@ -20,6 +20,7 @@ pub mod hook;
 pub mod hookexe;
 #[cfg(feature = "watch")]
 pub mod monitor;
+pub mod opencode;
 pub mod paths;
 pub mod phase;
 pub mod pointer;

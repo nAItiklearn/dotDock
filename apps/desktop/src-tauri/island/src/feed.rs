@@ -11,6 +11,7 @@
 
 use crate::describe::{redact_command, DETAIL_LIMIT};
 use crate::hook::{first_line, project_name};
+use crate::opencode;
 use crate::phase::{AgentKind, Phase};
 use crate::problem::{Problem, ProblemKind};
 use crate::state::SessionState;
@@ -268,12 +269,16 @@ pub fn prune(dir: &Path, max_age: Duration) -> usize {
 #[derive(Default)]
 struct FeedFile {
     tail: Tail,
+    opencode: opencode::Translator,
 }
 
 impl FeedFile {
     fn translate(&mut self, line: &Value) -> Option<FeedEvent> {
         match text(line, "adapter") {
             None => FeedEvent::parse(line),
+            Some("opencode") if line.get("v").and_then(Value::as_u64).is_none_or(|v| v == PROTOCOL_VERSION) => {
+                self.opencode.translate(line)
+            }
             Some(_) => None,
         }
     }
@@ -541,6 +546,35 @@ mod tests {
         assert_eq!(prune(dir.path(), FILE_MAX_AGE), 1);
         assert!(fresh.exists() && !old.exists());
         assert!(dir.path().join("notes.txt").exists(), "files that are not feed files are never deleted");
+    }
+
+    #[test]
+    fn opencode_adapter_lines_and_protocol_lines_share_a_file_and_a_reader() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let at = |kind: &str, data: &str| {
+            format!(
+                r#"{{"v":1,"adapter":"opencode","pid":4242,"event":{{"type":"{kind}","created":1795062601000,"location":{{"directory":"D:\\work\\dotDock"}},"data":{data}}}}}"#
+            )
+        };
+        let path = write_feed(
+            dir.path(),
+            "opencode-4242.jsonl",
+            &[
+                &at("session.created", r#"{"sessionID":"ses_1","title":"Fix the header"}"#),
+                &at("session.execution.started", r#"{"sessionID":"ses_1"}"#),
+                &at("session.tool.input.started", r#"{"sessionID":"ses_1","id":"c1","name":"edit"}"#),
+                &at("session.tool.called", r#"{"sessionID":"ses_1","id":"c1","input":{"filePath":"C:\\x\\app.css"}}"#),
+                r#"{"agent":"aider","session":"s","at":1000,"phase":"thinking"}"#,
+            ],
+        );
+        let mut reader = FeedReader::new();
+        let mut states = reader.read(&path, NOW);
+        states.sort_by(|a, b| a.session_id.cmp(&b.session_id));
+        let by_id = |id: &str| states.iter().find(|s| s.session_id == id).unwrap_or_else(|| panic!("no {id}"));
+        let opencode = by_id("feed-opencode-ses_1");
+        assert_eq!((opencode.agent, opencode.phase, opencode.detail.as_deref()), (AgentKind::OpenCode, Phase::Editing, Some("app.css")));
+        assert_eq!((opencode.project.as_str(), opencode.title.as_deref(), opencode.pid), ("dotDock", Some("Fix the header"), Some(4_242)));
+        assert_eq!(by_id("feed-aider-s").phase, Phase::Thinking);
     }
 
     #[test]
