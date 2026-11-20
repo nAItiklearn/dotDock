@@ -243,8 +243,12 @@ pub fn describe_agent_tool(name: &str, args: &Value) -> Described {
             let patch = arg(args, &["patchText", "patch", "input"]).and_then(patch_file);
             described(Phase::Editing, "Edit", patch.or_else(file))
         }
-        "grep" | "glob" | "codesearch" => described(Phase::Searching, name, arg(args, &["pattern", "query"]).map(str::to_owned)),
-        "web_search" | "websearch" => described(Phase::Searching, "WebSearch", arg(args, &["query", "q"]).map(str::to_owned)),
+        "grep" | "glob" | "codesearch" => {
+            described(Phase::Searching, name, arg(args, &["pattern", "query"]).map(str::to_owned))
+        }
+        "web_search" | "websearch" => {
+            described(Phase::Searching, "WebSearch", arg(args, &["query", "q"]).map(str::to_owned))
+        }
         "web_fetch" | "webfetch" => described(Phase::Reading, "WebFetch", arg(args, &["url"]).map(url_detail)),
         "bash" | "powershell" | "shell" => {
             let command = arg(args, &["command", "cmd"]);
@@ -283,7 +287,10 @@ mod tests {
         let d = call("edit", r#"{"path":"C:\\x\\app.css","old_str":"a","new_str":"b"}"#);
         assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Editing, Some("Edit"), Some("app.css")));
         let d = call("create", r#"{"path":"C:\\x\\notes.md","file_text":"hello"}"#);
-        assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Editing, Some("Write"), Some("notes.md")));
+        assert_eq!(
+            (d.phase, d.tool.as_deref(), d.detail.as_deref()),
+            (Phase::Editing, Some("Write"), Some("notes.md"))
+        );
         let d = call("apply_patch", r#"{"patchText":"*** Begin Patch\n*** Update File: src/app.ts\n@@\n"}"#);
         assert_eq!((d.phase, d.detail.as_deref()), (Phase::Editing, Some("app.ts")));
     }
@@ -293,7 +300,10 @@ mod tests {
         let d = call("grep", r#"{"pattern":"fn main","path":"src"}"#);
         assert_eq!((d.phase, d.detail.as_deref()), (Phase::Searching, Some("fn main")));
         let d = call("web_fetch", r#"{"url":"https://docs.github.com/en/copilot?x=1"}"#);
-        assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Reading, Some("WebFetch"), Some("docs.github.com/en/copilot")));
+        assert_eq!(
+            (d.phase, d.tool.as_deref(), d.detail.as_deref()),
+            (Phase::Reading, Some("WebFetch"), Some("docs.github.com/en/copilot"))
+        );
         let d = call("websearch", r#"{"query":"tauri window flags"}"#);
         assert_eq!((d.phase, d.detail.as_deref()), (Phase::Searching, Some("tauri window flags")));
     }
@@ -301,7 +311,10 @@ mod tests {
     #[test]
     fn lower_case_agents_run_shell_commands() {
         let d = call("powershell", r#"{"command":"cargo test -p island","description":"Run island tests"}"#);
-        assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Running, Some("powershell"), Some("Run island tests")));
+        assert_eq!(
+            (d.phase, d.tool.as_deref(), d.detail.as_deref()),
+            (Phase::Running, Some("powershell"), Some("Run island tests"))
+        );
         let d = call("bash", r#"{"command":"rg --files -g *.tsx"}"#);
         assert_eq!(d.phase, Phase::Searching, "a search command is shown as a search");
         let d = call("shell", r#"{"command":"curl -H 'Authorization: Bearer abc123def' https://x"}"#);
@@ -314,7 +327,10 @@ mod tests {
         assert_eq!(call("ask_user", r#"{"question":"Which branch?"}"#).phase, Phase::Waiting);
         assert_eq!(call("question", "{}").phase, Phase::Waiting);
         let d = call("task", r#"{"description":"Explore the repo","prompt":"long text"}"#);
-        assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Thinking, Some("Task"), Some("Explore the repo")));
+        assert_eq!(
+            (d.phase, d.tool.as_deref(), d.detail.as_deref()),
+            (Phase::Thinking, Some("Task"), Some("Explore the repo"))
+        );
         let d = call("github-mcp-server/get_commit", "{}");
         assert_eq!((d.phase, d.tool.as_deref()), (Phase::Thinking, Some("mcp__github-mcp-server__get_commit")));
         assert_eq!(call("todowrite", "{}").tool.as_deref(), Some("todowrite"));

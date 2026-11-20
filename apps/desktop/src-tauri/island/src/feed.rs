@@ -347,7 +347,10 @@ mod tests {
             r#"{"v":1,"agent":"Aider","name":"Aider","session":"s-1","at":1795062601000,"phase":"running","tool":"shell","detail":"pytest -q","cwd":"D:\\work\\dotDock","project":"dotDock","title":"Fix header","summary":"Done it","tokens_out":812,"context":40960,"problem":{"kind":"usage_limit","message":"Session limit","resets":"5pm"},"pid":4242}"#,
         );
         assert_eq!((e.agent.as_str(), e.session.as_str(), e.at), ("aider", "s-1", Some(1_795_062_601_000)));
-        assert_eq!((e.phase, e.tool.as_deref(), e.detail.as_deref()), (Some(Phase::Running), Some("shell"), Some("pytest -q")));
+        assert_eq!(
+            (e.phase, e.tool.as_deref(), e.detail.as_deref()),
+            (Some(Phase::Running), Some("shell"), Some("pytest -q"))
+        );
         assert_eq!((e.tokens_out, e.context, e.pid), (Some(812), Some(40_960), Some(4_242)));
         let problem = e.problem.expect("problem");
         assert_eq!((problem.kind, problem.resets.as_deref()), (ProblemKind::UsageLimit, Some("5pm")));
@@ -402,11 +405,16 @@ mod tests {
             r#"{"agent":"aider","session":"s","at":3000,"phase":"editing","tool":"edit","detail":"main.rs","tokens_out":120}"#,
         ]);
         assert_eq!((s.phase, s.turn_started_at, s.tokens_out), (Phase::Editing, Some(2_000), Some(120)));
-        assert_eq!((s.project.as_str(), s.pid, s.agent, s.agent_name.as_deref()), ("dotDock", Some(9), AgentKind::Other, Some("aider")));
+        assert_eq!(
+            (s.project.as_str(), s.pid, s.agent, s.agent_name.as_deref()),
+            ("dotDock", Some(9), AgentKind::Other, Some("aider"))
+        );
         assert_eq!(s.session_id, "feed-aider-s");
         let done = reduce(
             Some(&s),
-            &event(r#"{"agent":"aider","session":"s","at":4000,"phase":"done","summary":"**Fixed** the header layout.\nMore."}"#),
+            &event(
+                r#"{"agent":"aider","session":"s","at":4000,"phase":"done","summary":"**Fixed** the header layout.\nMore."}"#,
+            ),
             NOW,
         );
         assert_eq!(
@@ -414,14 +422,18 @@ mod tests {
             (Phase::Done, Some("Fixed the header layout."), None, None)
         );
         assert_eq!(done.turn_started_at, Some(2_000), "the finished turn keeps its start");
-        let next_turn = reduce(Some(&done), &event(r#"{"agent":"aider","session":"s","at":9000,"phase":"thinking"}"#), NOW);
+        let next_turn =
+            reduce(Some(&done), &event(r#"{"agent":"aider","session":"s","at":9000,"phase":"thinking"}"#), NOW);
         assert_eq!((next_turn.turn_started_at, next_turn.tokens_out, next_turn.summary), (Some(9_000), Some(0), None));
     }
 
     #[test]
     fn known_agents_get_their_kind_and_others_their_own_name() {
         let s = reduce_all(&[r#"{"agent":"copilot","session":"s","phase":"thinking"}"#]);
-        assert_eq!((s.agent, s.agent_name.as_deref(), s.agent_label()), (AgentKind::Copilot, None, "GitHub Copilot CLI".to_owned()));
+        assert_eq!(
+            (s.agent, s.agent_name.as_deref(), s.agent_label()),
+            (AgentKind::Copilot, None, "GitHub Copilot CLI".to_owned())
+        );
         let s = reduce_all(&[r#"{"agent":"my-agent","name":"My Agent","session":"s","phase":"thinking"}"#]);
         assert_eq!(s.agent_label(), "My Agent");
         let s = reduce_all(&[r#"{"agent":"codex","session":"s","phase":"thinking"}"#]);
@@ -438,7 +450,11 @@ mod tests {
             r#"{"agent":"a","session":"s","phase":"limit","problem":{"kind":"usage_limit","message":"Session limit","resets":"5pm"}}"#,
         ]);
         assert_eq!(limit.problem.as_ref().map(|p| p.kind), Some(ProblemKind::UsageLimit));
-        let recovered = reduce(Some(&limit), &event(r#"{"agent":"a","session":"s","phase":"thinking","problem":{"message":"stale"}}"#), NOW);
+        let recovered = reduce(
+            Some(&limit),
+            &event(r#"{"agent":"a","session":"s","phase":"thinking","problem":{"message":"stale"}}"#),
+            NOW,
+        );
         assert_eq!(recovered.problem, None);
     }
 
@@ -447,7 +463,8 @@ mod tests {
         let far_future = event(r#"{"agent":"a","session":"s","at":99999999999999,"phase":"thinking"}"#);
         let s = reduce(None, &far_future, NOW);
         assert_eq!(s.updated_at, NOW);
-        let later = reduce(Some(&s), &event(r#"{"agent":"a","session":"s","at":1795062650000,"phase":"reading"}"#), NOW + 1);
+        let later =
+            reduce(Some(&s), &event(r#"{"agent":"a","session":"s","at":1795062650000,"phase":"reading"}"#), NOW + 1);
         assert_eq!(later.phase, Phase::Reading);
         assert!(later.seq >= s.seq, "stamps never go backwards");
     }
@@ -494,7 +511,8 @@ mod tests {
     #[test]
     fn oversized_lines_and_foreign_files_are_ignored() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let huge = format!(r#"{{"agent":"a","session":"s","phase":"thinking","detail":"{}"}}"#, "x".repeat(MAX_LINE_BYTES));
+        let huge =
+            format!(r#"{{"agent":"a","session":"s","phase":"thinking","detail":"{}"}}"#, "x".repeat(MAX_LINE_BYTES));
         let path = write_feed(dir.path(), "a.jsonl", &[&huge]);
         let mut reader = FeedReader::new();
         assert!(reader.read(&path, NOW).is_empty());
@@ -572,8 +590,14 @@ mod tests {
         states.sort_by(|a, b| a.session_id.cmp(&b.session_id));
         let by_id = |id: &str| states.iter().find(|s| s.session_id == id).unwrap_or_else(|| panic!("no {id}"));
         let opencode = by_id("feed-opencode-ses_1");
-        assert_eq!((opencode.agent, opencode.phase, opencode.detail.as_deref()), (AgentKind::OpenCode, Phase::Editing, Some("app.css")));
-        assert_eq!((opencode.project.as_str(), opencode.title.as_deref(), opencode.pid), ("dotDock", Some("Fix the header"), Some(4_242)));
+        assert_eq!(
+            (opencode.agent, opencode.phase, opencode.detail.as_deref()),
+            (AgentKind::OpenCode, Phase::Editing, Some("app.css"))
+        );
+        assert_eq!(
+            (opencode.project.as_str(), opencode.title.as_deref(), opencode.pid),
+            ("dotDock", Some("Fix the header"), Some(4_242))
+        );
         assert_eq!(by_id("feed-aider-s").phase, Phase::Thinking);
     }
 

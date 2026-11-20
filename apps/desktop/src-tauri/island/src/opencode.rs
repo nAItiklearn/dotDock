@@ -141,7 +141,9 @@ impl Translator {
                 let number = |pointer: &str| tokens.pointer(pointer).and_then(Value::as_f64).unwrap_or(0.0).max(0.0);
                 session.tokens_out += number("/output") as u64;
                 out.tokens_out = Some(session.tokens_out);
-                out.context = Some((number("/input") + number("/output") + number("/cache/read") + number("/cache/write")) as u64);
+                out.context = Some(
+                    (number("/input") + number("/output") + number("/cache/read") + number("/cache/write")) as u64,
+                );
             }
             "session.execution.succeeded" => {
                 out.phase = Some(Phase::Done);
@@ -155,9 +157,11 @@ impl Translator {
             "session.execution.interrupted" => out.phase = Some(Phase::Paused),
             "permission.asked" => {
                 let action = str_at(data, "/action").unwrap_or("tool");
-                let what = data.get("resources").and_then(Value::as_array).and_then(|r| r.first()).and_then(Value::as_str);
+                let what =
+                    data.get("resources").and_then(Value::as_array).and_then(|r| r.first()).and_then(Value::as_str);
                 out.phase = Some(Phase::Waiting);
-                out.detail = Some(clip(&what.map_or_else(|| action.to_owned(), |w| format!("{action}: {w}")), NOTICE_LIMIT));
+                out.detail =
+                    Some(clip(&what.map_or_else(|| action.to_owned(), |w| format!("{action}: {w}")), NOTICE_LIMIT));
             }
             "permission.replied" => out.phase = Some(Phase::Thinking),
             "session.deleted" => out.phase = Some(Phase::Idle),
@@ -193,22 +197,41 @@ mod tests {
     fn a_turn_from_prompt_to_done() {
         let mut t = Translator::default();
         let created = run(&mut t, "session.created", &format!(r#"{{{SES},"projectID":"prj_1","location":{{"directory":"D:\\work\\dotDock"}},"slug":"calm-fox","title":"Fix the header","version":"2.2.1"}}"#)).expect("created");
-        assert_eq!((created.phase, created.title.as_deref(), created.cwd.as_deref()), (None, Some("Fix the header"), Some("D:\\work\\dotDock")));
-        assert_eq!((created.agent.as_str(), created.session.as_str(), created.pid), ("opencode", "ses_01JABC", Some(4_242)));
+        assert_eq!(
+            (created.phase, created.title.as_deref(), created.cwd.as_deref()),
+            (None, Some("Fix the header"), Some("D:\\work\\dotDock"))
+        );
+        assert_eq!(
+            (created.agent.as_str(), created.session.as_str(), created.pid),
+            ("opencode", "ses_01JABC", Some(4_242))
+        );
 
         let started = run(&mut t, "session.execution.started", &format!("{{{SES}}}")).expect("started");
         assert_eq!((started.phase, started.at), (Some(Phase::Thinking), Some(1_795_062_601_000)));
 
-        assert!(run(&mut t, "session.tool.input.started", &format!(r#"{{{SES},"assistantMessageID":"msg_1","id":"call_1","name":"read"}}"#)).is_none());
+        assert!(run(
+            &mut t,
+            "session.tool.input.started",
+            &format!(r#"{{{SES},"assistantMessageID":"msg_1","id":"call_1","name":"read"}}"#)
+        )
+        .is_none());
         let read = run(&mut t, "session.tool.called", &format!(r#"{{{SES},"assistantMessageID":"msg_1","id":"call_1","input":{{"filePath":"D:\\work\\dotDock\\src\\lib.rs"}},"executed":true}}"#)).expect("called");
-        assert_eq!((read.phase, read.tool.as_deref(), read.detail.as_deref()), (Some(Phase::Reading), Some("Read"), Some("lib.rs")));
+        assert_eq!(
+            (read.phase, read.tool.as_deref(), read.detail.as_deref()),
+            (Some(Phase::Reading), Some("Read"), Some("lib.rs"))
+        );
 
         let back = run(&mut t, "session.tool.success", &format!(r#"{{{SES},"id":"call_1"}}"#)).expect("success");
         assert_eq!(back.phase, Some(Phase::Thinking));
 
         let step = run(&mut t, "session.step.ended", &format!(r#"{{{SES},"assistantMessageID":"msg_1","finish":"stop","tokens":{{"input":3000,"output":412,"reasoning":10,"cache":{{"read":9000,"write":0}}}}}}"#)).expect("step");
         assert_eq!((step.phase, step.tokens_out, step.context), (None, Some(412), Some(12_412)));
-        let step2 = run(&mut t, "session.step.ended", &format!(r#"{{{SES},"tokens":{{"input":100,"output":88,"reasoning":0,"cache":{{"read":0,"write":0}}}}}}"#)).expect("step 2");
+        let step2 = run(
+            &mut t,
+            "session.step.ended",
+            &format!(r#"{{{SES},"tokens":{{"input":100,"output":88,"reasoning":0,"cache":{{"read":0,"write":0}}}}}}"#),
+        )
+        .expect("step 2");
         assert_eq!(step2.tokens_out, Some(500), "output tokens add up over the turn");
 
         assert!(run(&mut t, "session.text.ended", &format!(r#"{{{SES},"assistantMessageID":"msg_1","ordinal":0,"text":"Fixed the header layout.\nDetails follow."}}"#)).is_none());
@@ -216,7 +239,12 @@ mod tests {
         assert_eq!((done.phase, done.summary.as_deref()), (Some(Phase::Done), Some("Fixed the header layout.")));
 
         run(&mut t, "session.execution.started", &format!("{{{SES}}}")).expect("second turn");
-        let again = run(&mut t, "session.step.ended", &format!(r#"{{{SES},"tokens":{{"input":1,"output":5,"reasoning":0,"cache":{{"read":0,"write":0}}}}}}"#)).expect("step");
+        let again = run(
+            &mut t,
+            "session.step.ended",
+            &format!(r#"{{{SES},"tokens":{{"input":1,"output":5,"reasoning":0,"cache":{{"read":0,"write":0}}}}}}"#),
+        )
+        .expect("step");
         assert_eq!(again.tokens_out, Some(5), "a new turn restarts the count");
     }
 
@@ -225,53 +253,94 @@ mod tests {
         let mut t = Translator::default();
         let mut call = |id: &str, name: &str, input: &str| {
             run(&mut t, "session.tool.input.started", &format!(r#"{{{SES},"id":"{id}","name":"{name}"}}"#));
-            run(&mut t, "session.tool.called", &format!(r#"{{{SES},"id":"{id}","input":{input},"executed":true}}"#)).expect("called")
+            run(&mut t, "session.tool.called", &format!(r#"{{{SES},"id":"{id}","input":{input},"executed":true}}"#))
+                .expect("called")
         };
         let shell = call("c1", "shell", r#"{"command":"cargo test -p island","description":"Run island tests"}"#);
         assert_eq!((shell.phase, shell.detail.as_deref()), (Some(Phase::Running), Some("Run island tests")));
         let edit = call("c2", "edit", r#"{"filePath":"C:\\x\\app.css"}"#);
-        assert_eq!((edit.phase, edit.tool.as_deref(), edit.detail.as_deref()), (Some(Phase::Editing), Some("Edit"), Some("app.css")));
+        assert_eq!(
+            (edit.phase, edit.tool.as_deref(), edit.detail.as_deref()),
+            (Some(Phase::Editing), Some("Edit"), Some("app.css"))
+        );
         let grep = call("c3", "grep", r#"{"pattern":"fn main"}"#);
         assert_eq!((grep.phase, grep.detail.as_deref()), (Some(Phase::Searching), Some("fn main")));
         let fetch = call("c4", "webfetch", r#"{"url":"https://opencode.ai/docs/plugins?x=1"}"#);
-        assert_eq!((fetch.phase, fetch.tool.as_deref(), fetch.detail.as_deref()), (Some(Phase::Reading), Some("WebFetch"), Some("opencode.ai/docs/plugins")));
-        let unknown = run(&mut t, "session.tool.called", &format!(r#"{{{SES},"id":"never-announced","input":{{}}}}"#)).expect("called");
+        assert_eq!(
+            (fetch.phase, fetch.tool.as_deref(), fetch.detail.as_deref()),
+            (Some(Phase::Reading), Some("WebFetch"), Some("opencode.ai/docs/plugins"))
+        );
+        let unknown = run(&mut t, "session.tool.called", &format!(r#"{{{SES},"id":"never-announced","input":{{}}}}"#))
+            .expect("called");
         assert_eq!((unknown.phase, unknown.tool.as_deref()), (Some(Phase::Thinking), Some("tool")));
     }
 
     #[test]
     fn permission_prompts_wait_for_the_user() {
         let mut t = Translator::default();
-        let asked = run(&mut t, "permission.asked", &format!(r#"{{"id":"per_1",{SES},"action":"bash","resources":["npm test","npm run lint"],"save":["npm *"]}}"#)).expect("asked");
+        let asked = run(
+            &mut t,
+            "permission.asked",
+            &format!(
+                r#"{{"id":"per_1",{SES},"action":"bash","resources":["npm test","npm run lint"],"save":["npm *"]}}"#
+            ),
+        )
+        .expect("asked");
         assert_eq!((asked.phase, asked.detail.as_deref()), (Some(Phase::Waiting), Some("bash: npm test")));
-        let replied = run(&mut t, "permission.replied", &format!(r#"{{{SES},"requestID":"per_1","reply":"once"}}"#)).expect("replied");
+        let replied = run(&mut t, "permission.replied", &format!(r#"{{{SES},"requestID":"per_1","reply":"once"}}"#))
+            .expect("replied");
         assert_eq!(replied.phase, Some(Phase::Thinking));
     }
 
     #[test]
     fn interruptions_and_failures_become_paused_limit_and_error() {
         let mut t = Translator::default();
-        let paused = run(&mut t, "session.execution.interrupted", &format!(r#"{{{SES},"reason":"user"}}"#)).expect("interrupted");
+        let paused = run(&mut t, "session.execution.interrupted", &format!(r#"{{{SES},"reason":"user"}}"#))
+            .expect("interrupted");
         assert_eq!(paused.phase, Some(Phase::Paused));
 
         let limit = run(&mut t, "session.execution.failed", &format!(r#"{{{SES},"error":{{"type":"provider.rate-limit","message":"You've hit your usage limit · resets 5pm","status":429}}}}"#)).expect("limit");
         assert_eq!(limit.phase, Some(Phase::Limit));
-        assert_eq!(limit.problem.as_ref().map(|p| (p.kind, p.resets.as_deref())), Some((ProblemKind::UsageLimit, Some("5pm"))));
+        assert_eq!(
+            limit.problem.as_ref().map(|p| (p.kind, p.resets.as_deref())),
+            Some((ProblemKind::UsageLimit, Some("5pm")))
+        );
 
-        let busy = run(&mut t, "session.execution.failed", &format!(r#"{{{SES},"error":{{"type":"provider.rate-limit","message":"Too many requests","status":429}}}}"#)).expect("busy");
+        let busy = run(
+            &mut t,
+            "session.execution.failed",
+            &format!(
+                r#"{{{SES},"error":{{"type":"provider.rate-limit","message":"Too many requests","status":429}}}}"#
+            ),
+        )
+        .expect("busy");
         assert_eq!((busy.phase, busy.problem.map(|p| p.kind)), (Some(Phase::Error), Some(ProblemKind::Overloaded)));
 
-        let login = run(&mut t, "session.execution.failed", &format!(r#"{{{SES},"error":{{"type":"provider.auth","message":"Invalid API key","status":401}}}}"#)).expect("login");
+        let login = run(
+            &mut t,
+            "session.execution.failed",
+            &format!(r#"{{{SES},"error":{{"type":"provider.auth","message":"Invalid API key","status":401}}}}"#),
+        )
+        .expect("login");
         assert_eq!(login.problem.map(|p| p.kind), Some(ProblemKind::Login));
 
-        let offline = run(&mut t, "session.execution.failed", &format!(r#"{{{SES},"error":{{"type":"network","message":"connect ECONNREFUSED 127.0.0.1:443"}}}}"#)).expect("offline");
+        let offline = run(
+            &mut t,
+            "session.execution.failed",
+            &format!(r#"{{{SES},"error":{{"type":"network","message":"connect ECONNREFUSED 127.0.0.1:443"}}}}"#),
+        )
+        .expect("offline");
         assert_eq!(offline.problem.map(|p| p.kind), Some(ProblemKind::Connection));
     }
 
     #[test]
     fn sub_agent_sessions_and_duplicate_events_do_not_show_up() {
         let mut t = Translator::default();
-        let child = run(&mut t, "session.created", r#"{"sessionID":"ses_child","parentID":"ses_01JABC","slug":"x","version":"2.2.1"}"#);
+        let child = run(
+            &mut t,
+            "session.created",
+            r#"{"sessionID":"ses_child","parentID":"ses_01JABC","slug":"x","version":"2.2.1"}"#,
+        );
         assert!(child.is_none());
         assert!(run(&mut t, "session.execution.started", r#"{"sessionID":"ses_child"}"#).is_none());
 
@@ -280,7 +349,13 @@ mod tests {
         let second = t.translate(&line_with("session.execution.started", r#","id":"evt_1""#, &format!("{{{SES}}}")));
         assert!(second.is_none(), "a second plugin instance reports the same event again");
         let step = |t: &mut Translator, id: &str| {
-            t.translate(&line_with("session.step.ended", &format!(r#","id":"{id}""#), &format!(r#"{{{SES},"tokens":{{"input":0,"output":100,"reasoning":0,"cache":{{"read":0,"write":0}}}}}}"#)))
+            t.translate(&line_with(
+                "session.step.ended",
+                &format!(r#","id":"{id}""#),
+                &format!(
+                    r#"{{{SES},"tokens":{{"input":0,"output":100,"reasoning":0,"cache":{{"read":0,"write":0}}}}}}"#
+                ),
+            ))
         };
         assert_eq!(step(&mut t, "evt_2").and_then(|e| e.tokens_out), Some(100));
         assert!(step(&mut t, "evt_2").is_none());

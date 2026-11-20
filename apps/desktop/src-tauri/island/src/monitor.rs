@@ -261,7 +261,10 @@ impl Worker {
         if std::fs::create_dir_all(&self.feed_dir).is_ok() {
             let feed_dir = self.feed_dir.clone();
             self.watch(&feed_dir);
-            let dirty = Dirty { feed_logs: feed::recent_files(&feed_dir, FEED_RECENT).into_iter().collect(), ..Dirty::default() };
+            let dirty = Dirty {
+                feed_logs: feed::recent_files(&feed_dir, FEED_RECENT).into_iter().collect(),
+                ..Dirty::default()
+            };
             self.process(dirty);
         }
         let enabled = *lock(&self.codex_enabled);
@@ -604,7 +607,10 @@ mod tests {
         report(Phase::Running, Some("pytest -q"), None);
         let running = next_snapshot_where(&rx, |s| s.sessions.len() == 1);
         let view = &running.sessions[0];
-        assert_eq!((view.agent, view.agent_label.as_str(), view.phase), (crate::phase::AgentKind::Other, "Aider", Phase::Running));
+        assert_eq!(
+            (view.agent, view.agent_label.as_str(), view.phase),
+            (crate::phase::AgentKind::Other, "Aider", Phase::Running)
+        );
         assert_eq!((view.detail.as_deref(), view.project.as_str()), (Some("pytest -q"), "dotDock"));
         report(Phase::Done, None, Some("All tests pass"));
         let done = next_snapshot_where(&rx, |s| s.sessions.first().is_some_and(|v| v.phase == Phase::Done));

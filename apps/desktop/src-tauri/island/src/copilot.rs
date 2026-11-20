@@ -187,7 +187,8 @@ mod tests {
     use super::*;
 
     /// Payloads as GitHub's hooks reference and the CLI's own hook input types (1.0.83) define them.
-    const SESSION: &str = r#""sessionId":"3f1c8e52-93d6-4c61-8d0a-6b1e2f7a9c10","timestamp":1795062601000,"cwd":"D:\\work\\dotDock""#;
+    const SESSION: &str =
+        r#""sessionId":"3f1c8e52-93d6-4c61-8d0a-6b1e2f7a9c10","timestamp":1795062601000,"cwd":"D:\\work\\dotDock""#;
 
     fn payload(extra: &str) -> Value {
         serde_json::from_str(&format!("{{{SESSION}{extra}}}")).expect("fixture json")
@@ -222,12 +223,21 @@ mod tests {
     #[test]
     fn tool_calls_show_the_file_command_or_pattern() {
         let e = translated("preToolUse", r#","toolName":"view","toolArgs":{"path":"D:\\work\\dotDock\\src\\lib.rs"}"#);
-        assert_eq!((e.phase, e.tool.as_deref(), e.detail.as_deref()), (Some(Phase::Reading), Some("Read"), Some("lib.rs")));
-        let e = translated("preToolUse", r#","toolName":"powershell","toolArgs":{"command":"cargo test","description":"Run the tests"}"#);
+        assert_eq!(
+            (e.phase, e.tool.as_deref(), e.detail.as_deref()),
+            (Some(Phase::Reading), Some("Read"), Some("lib.rs"))
+        );
+        let e = translated(
+            "preToolUse",
+            r#","toolName":"powershell","toolArgs":{"command":"cargo test","description":"Run the tests"}"#,
+        );
         assert_eq!((e.phase, e.detail.as_deref()), (Some(Phase::Running), Some("Run the tests")));
         let e = translated("preToolUse", r#","toolName":"grep","toolArgs":{"pattern":"fn main","path":"src"}"#);
         assert_eq!((e.phase, e.detail.as_deref()), (Some(Phase::Searching), Some("fn main")));
-        let e = translated("preToolUse", r#","toolName":"edit","toolArgs":{"path":"C:\\x\\app.css","old_str":"a","new_str":"b"}"#);
+        let e = translated(
+            "preToolUse",
+            r#","toolName":"edit","toolArgs":{"path":"C:\\x\\app.css","old_str":"a","new_str":"b"}"#,
+        );
         assert_eq!((e.phase, e.detail.as_deref()), (Some(Phase::Editing), Some("app.css")));
         let e = translated("preToolUse", r#","toolName":"ask_user","toolArgs":{"question":"Which branch?"}"#);
         assert_eq!(e.phase, Some(Phase::Waiting));
@@ -241,9 +251,19 @@ mod tests {
 
     #[test]
     fn a_finished_tool_goes_back_to_thinking_and_a_stop_is_done() {
-        assert_eq!(translated("postToolUse", r#","toolName":"view","toolArgs":{},"toolResult":{"resultType":"success"}"#).phase, Some(Phase::Thinking));
-        assert_eq!(translated("postToolUseFailure", r#","toolName":"bash","toolArgs":{},"error":"exit 1""#).phase, Some(Phase::Thinking));
-        let stop = translated("agentStop", r#","transcriptPath":"C:\\x\\t.jsonl","stopReason":"end_turn","stop_hook_active":false"#);
+        assert_eq!(
+            translated("postToolUse", r#","toolName":"view","toolArgs":{},"toolResult":{"resultType":"success"}"#)
+                .phase,
+            Some(Phase::Thinking)
+        );
+        assert_eq!(
+            translated("postToolUseFailure", r#","toolName":"bash","toolArgs":{},"error":"exit 1""#).phase,
+            Some(Phase::Thinking)
+        );
+        let stop = translated(
+            "agentStop",
+            r#","transcriptPath":"C:\\x\\t.jsonl","stopReason":"end_turn","stop_hook_active":false"#,
+        );
         assert_eq!((stop.phase, stop.summary), (Some(Phase::Done), None));
     }
 
@@ -256,12 +276,28 @@ mod tests {
 
     #[test]
     fn errors_map_to_limit_login_or_a_plain_error_and_recoverable_ones_are_ignored() {
-        let e = translated("errorOccurred", r#","error":{"message":"You've hit your session limit · resets 5pm","name":"RateLimitError"},"errorContext":"model_call","recoverable":false"#);
+        let e = translated(
+            "errorOccurred",
+            r#","error":{"message":"You've hit your session limit · resets 5pm","name":"RateLimitError"},"errorContext":"model_call","recoverable":false"#,
+        );
         assert_eq!(e.phase, Some(Phase::Limit));
-        assert_eq!(e.problem.as_ref().map(|p| (p.kind, p.resets.as_deref())), Some((ProblemKind::UsageLimit, Some("5pm"))));
-        let e = translated("errorOccurred", r#","error":"Please run /login","errorContext":"model_call","recoverable":false"#);
+        assert_eq!(
+            e.problem.as_ref().map(|p| (p.kind, p.resets.as_deref())),
+            Some((ProblemKind::UsageLimit, Some("5pm")))
+        );
+        let e = translated(
+            "errorOccurred",
+            r#","error":"Please run /login","errorContext":"model_call","recoverable":false"#,
+        );
         assert_eq!((e.phase, e.problem.map(|p| p.kind)), (Some(Phase::Error), Some(ProblemKind::Login)));
-        assert!(translate("errorOccurred", &payload(r#","error":{"message":"timed out","name":"E"},"errorContext":"tool_execution","recoverable":true"#), None).is_none());
+        assert!(translate(
+            "errorOccurred",
+            &payload(
+                r#","error":{"message":"timed out","name":"E"},"errorContext":"tool_execution","recoverable":true"#
+            ),
+            None
+        )
+        .is_none());
     }
 
     #[test]
@@ -270,7 +306,10 @@ mod tests {
         assert_eq!(translated("sessionEnd", r#","reason":"abort""#).phase, Some(Phase::Paused));
         let e = translated("sessionEnd", r#","reason":"error","error":"connect ECONNRESET""#);
         assert_eq!((e.phase, e.problem.map(|p| p.kind)), (Some(Phase::Error), Some(ProblemKind::Connection)));
-        assert!(translate("sessionEnd", &payload(r#","reason":"complete""#), None).is_none(), "agentStop already said Done");
+        assert!(
+            translate("sessionEnd", &payload(r#","reason":"complete""#), None).is_none(),
+            "agentStop already said Done"
+        );
     }
 
     #[test]
@@ -279,9 +318,17 @@ mod tests {
             "notification",
             r#","hook_event_name":"Notification","message":"Copilot needs permission to run powershell","title":"Permission","notification_type":"permission_prompt""#,
         );
-        assert_eq!((e.phase, e.detail.as_deref()), (Some(Phase::Waiting), Some("Copilot needs permission to run powershell")));
+        assert_eq!(
+            (e.phase, e.detail.as_deref()),
+            (Some(Phase::Waiting), Some("Copilot needs permission to run powershell"))
+        );
         for quiet in ["shell_completed", "agent_idle"] {
-            assert!(translate("notification", &payload(&format!(r#","message":"x","notification_type":"{quiet}""#)), None).is_none());
+            assert!(translate(
+                "notification",
+                &payload(&format!(r#","message":"x","notification_type":"{quiet}""#)),
+                None
+            )
+            .is_none());
         }
     }
 
@@ -292,8 +339,14 @@ mod tests {
         )
         .expect("json");
         let e = translate("PreToolUse", &payload, None).expect("event");
-        assert_eq!((e.session.as_str(), e.at, e.phase, e.detail.as_deref()), ("abc", Some(1_795_062_601_000), Some(Phase::Reading), Some("main.rs")));
-        let stop: Value = serde_json::from_str(r#"{"hook_event_name":"Stop","session_id":"abc","timestamp":"2026-11-19T04:31:00.000Z"}"#).expect("json");
+        assert_eq!(
+            (e.session.as_str(), e.at, e.phase, e.detail.as_deref()),
+            ("abc", Some(1_795_062_601_000), Some(Phase::Reading), Some("main.rs"))
+        );
+        let stop: Value = serde_json::from_str(
+            r#"{"hook_event_name":"Stop","session_id":"abc","timestamp":"2026-11-19T04:31:00.000Z"}"#,
+        )
+        .expect("json");
         assert_eq!(translate("Stop", &stop, None).and_then(|e| e.phase), Some(Phase::Done));
     }
 
@@ -301,15 +354,22 @@ mod tests {
     fn payloads_without_a_session_and_unknown_events_are_dropped() {
         assert!(translate("agentStop", &serde_json::json!({"cwd": "D:\\x"}), None).is_none());
         assert!(translate("preCompact", &payload(r#","trigger":"auto""#), None).is_none());
-        assert!(translate("preToolUse", &payload(r#","toolArgs":{}"#), None).is_none(), "a tool call without a tool name");
+        assert!(
+            translate("preToolUse", &payload(r#","toolArgs":{}"#), None).is_none(),
+            "a tool call without a tool name"
+        );
     }
 
     #[test]
     fn the_command_line_names_the_event_and_the_feed_folder() {
-        let args: Vec<String> = ["--agent", "copilot", "--event", "preToolUse", "--spool", r"C:\data\agents", "--later", "x"]
-            .map(String::from)
-            .to_vec();
-        assert_eq!(HookArgs::parse(&args), HookArgs { event: Some("preToolUse".into()), spool: Some(PathBuf::from(r"C:\data\agents")) });
+        let args: Vec<String> =
+            ["--agent", "copilot", "--event", "preToolUse", "--spool", r"C:\data\agents", "--later", "x"]
+                .map(String::from)
+                .to_vec();
+        assert_eq!(
+            HookArgs::parse(&args),
+            HookArgs { event: Some("preToolUse".into()), spool: Some(PathBuf::from(r"C:\data\agents")) }
+        );
         assert_eq!(HookArgs::parse(&[]), HookArgs::default());
     }
 

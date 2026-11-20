@@ -1,0 +1,11 @@
+{"at":1795062600500,"input":{"session_id":"cl-alpha","hook_event_name":"UserPromptSubmit","cwd":"D:\\work\\dotDock","prompt":"never stored"}}
+{"at":1795062601500,"input":{"session_id":"cl-beta","hook_event_name":"UserPromptSubmit","cwd":"D:\\work\\website","prompt":"never stored either"}}
+{"at":1795062602500,"input":{"session_id":"cl-alpha","hook_event_name":"PreToolUse","cwd":"D:\\work\\dotDock","tool_name":"Read","tool_input":{"file_path":"D:\\work\\dotDock\\src\\island\\Island.tsx"}}}
+{"at":1795062603500,"input":{"session_id":"cl-beta","hook_event_name":"PreToolUse","cwd":"D:\\work\\website","tool_name":"Bash","tool_input":{"command":"pnpm build","description":"Build the site"}}}
+{"at":1795062604500,"input":{"session_id":"cl-alpha","hook_event_name":"PostToolUse","cwd":"D:\\work\\dotDock","tool_name":"Read","tool_response":{"content":"never stored"}}}
+{"at":1795062605000,"input":"not an object"}
+{"at":1795062605500,"input":{"session_id":"cl-alpha","hook_event_name":"Notification","cwd":"D:\\work\\dotDock","notification_type":"permission_prompt","message":"Claude needs your permission to use Edit"}}
+{"at":1795062606000,"input":{"session_id":"cl-alpha","hook_event_name":"SomeFutureEvent","cwd":"D:\\work\\dotDock"}}
+{"at":1795062608500,"input":{"session_id":"cl-alpha","hook_event_name":"PreToolUse","cwd":"D:\\work\\dotDock","tool_name":"Edit","tool_input":{"file_path":"D:\\work\\dotDock\\src\\island\\Island.css"}}}
+{"at":1795062609500,"input":{"session_id":"cl-beta","hook_event_name":"StopFailure","cwd":"D:\\work\\website","error":"rate_limit","error_details":"You've hit your session limit · resets 5pm"}}
+{"at":1795062610500,"input":{"session_id":"cl-alpha","hook_event_name":"Stop","cwd":"D:\\work\\dotDock","last_assistant_message":"**Done.** The island border now uses the hairline token."}}

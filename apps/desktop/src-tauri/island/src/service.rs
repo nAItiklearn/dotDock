@@ -217,7 +217,8 @@ impl IslandService {
     /// Entries and files that are ours but point at a vanished or older hook or feed folder are repointed.
     /// Nothing happens for agents that were never connected.
     fn repair_if_moved(&self) {
-        let ours = |state: AgentState| matches!(state, AgentState::Connected | AgentState::Outdated | AgentState::HookMissing);
+        let ours =
+            |state: AgentState| matches!(state, AgentState::Connected | AgentState::Outdated | AgentState::HookMissing);
         let claude = matches!(
             self.connector(self.current_hook()).status(),
             Ok(Status::Connected | Status::Outdated | Status::HookMissing)
@@ -413,7 +414,8 @@ mod tests {
         let hook_source = dir.path().join("app").join("dotdock-island-hook.exe");
         std::fs::create_dir_all(hook_source.parent().expect("parent")).expect("app dir");
         std::fs::write(&hook_source, b"hook v1").expect("hook");
-        let homes = AgentHomes { copilot: Some(dir.path().join(".copilot")), opencode: Some(dir.path().join("opencode")) };
+        let homes =
+            AgentHomes { copilot: Some(dir.path().join(".copilot")), opencode: Some(dir.path().join("opencode")) };
         for home in [&homes.copilot, &homes.opencode].into_iter().flatten() {
             std::fs::create_dir_all(home).expect("agent home");
         }
@@ -452,7 +454,12 @@ mod tests {
         drop(first);
         std::fs::write(&source, b"hook v2, rebuilt").expect("update");
         let second = IslandService::start(
-            ServiceConfig { dirs: dirs.clone(), data_dir: data.clone(), hook_source: source.clone(), homes: homes.clone() },
+            ServiceConfig {
+                dirs: dirs.clone(),
+                data_dir: data.clone(),
+                hook_source: source.clone(),
+                homes: homes.clone(),
+            },
             Arc::new(Recorder::default()),
         )
         .expect("restart");
@@ -477,7 +484,8 @@ mod tests {
     #[test]
     fn copilot_and_opencode_connect_and_disconnect_without_touching_any_file_of_theirs() {
         let (dir, cfg) = fixture();
-        let (copilot, opencode) = (cfg.homes.copilot.clone().expect("copilot"), cfg.homes.opencode.clone().expect("opencode"));
+        let (copilot, opencode) =
+            (cfg.homes.copilot.clone().expect("copilot"), cfg.homes.opencode.clone().expect("opencode"));
         std::fs::write(copilot.join("config.json"), b"{ \"model\": \"gpt\" }\r\n").expect("copilot config");
         std::fs::write(opencode.join("opencode.json"), b"{ \"model\": \"x\" }\r\n").expect("opencode config");
         let claude_settings = cfg.dirs.settings_file();
@@ -496,21 +504,32 @@ mod tests {
         assert_eq!(states(&status)[1], (Connectable::OpenCode, AgentState::Connected));
         assert!(opencode.join("plugins").join("dotdock-island.js").is_file());
         assert!(status.feed_dir.ends_with("agents"));
-        assert_eq!(std::fs::read(&claude_settings).expect("claude settings"), claude_before, "Claude Code's settings are not part of this");
+        assert_eq!(
+            std::fs::read(&claude_settings).expect("claude settings"),
+            claude_before,
+            "Claude Code's settings are not part of this"
+        );
 
         service.disconnect_agent(Connectable::Copilot).expect("disconnect copilot");
         let status = service.disconnect_agent(Connectable::OpenCode).expect("disconnect opencode");
-        assert_eq!(states(&status), vec![(Connectable::Copilot, AgentState::Disconnected), (Connectable::OpenCode, AgentState::Disconnected)]);
+        assert_eq!(
+            states(&status),
+            vec![(Connectable::Copilot, AgentState::Disconnected), (Connectable::OpenCode, AgentState::Disconnected)]
+        );
         assert_eq!(std::fs::read(copilot.join("config.json")).expect("read"), b"{ \"model\": \"gpt\" }\r\n");
         assert_eq!(std::fs::read(opencode.join("opencode.json")).expect("read"), b"{ \"model\": \"x\" }\r\n");
-        assert!(!copilot.join("hooks").join("dotdock-island.json").exists() && !opencode.join("plugins").join("dotdock-island.js").exists());
+        assert!(
+            !copilot.join("hooks").join("dotdock-island.json").exists()
+                && !opencode.join("plugins").join("dotdock-island.js").exists()
+        );
         drop(dir);
     }
 
     #[test]
     fn connected_agents_are_repointed_after_an_update_and_disconnected_ones_stay_alone() {
         let (_dir, cfg) = fixture();
-        let (source, dirs, data, homes) = (cfg.hook_source.clone(), cfg.dirs.clone(), cfg.data_dir.clone(), cfg.homes.clone());
+        let (source, dirs, data, homes) =
+            (cfg.hook_source.clone(), cfg.dirs.clone(), cfg.data_dir.clone(), cfg.homes.clone());
         let first = IslandService::start(cfg, Arc::new(Recorder::default())).expect("start");
         first.connect_agent(Connectable::Copilot).expect("connect");
         drop(first);
@@ -537,8 +556,14 @@ mod tests {
             homes: AgentHomes { copilot: Some(dir.path().join("no-copilot")), opencode: None },
         };
         let service = IslandService::start(cfg, Arc::new(Recorder::default())).expect("start");
-        assert!(matches!(service.connect_agent(Connectable::Copilot), Err(ServiceError::Agent(AgentConnectError::NotInstalled(_)))));
-        assert!(matches!(service.connect_agent(Connectable::OpenCode), Err(ServiceError::Agent(AgentConnectError::NotInstalled(_)))));
+        assert!(matches!(
+            service.connect_agent(Connectable::Copilot),
+            Err(ServiceError::Agent(AgentConnectError::NotInstalled(_)))
+        ));
+        assert!(matches!(
+            service.connect_agent(Connectable::OpenCode),
+            Err(ServiceError::Agent(AgentConnectError::NotInstalled(_)))
+        ));
         assert!(service.connection().agents.iter().all(|a| a.state == AgentState::NotFound));
         assert!(!dir.path().join("no-copilot").exists());
     }

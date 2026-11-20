@@ -49,7 +49,9 @@ fn events_append_in_order_to_the_same_session_file() {
     let dir = tempfile::tempdir().expect("tempdir");
     let spool = dir.path().join("agents");
     let spool_arg = spool.to_str().expect("utf-8 path");
-    for (event, extra) in [("userPromptSubmitted", r#","prompt":"private words""#), ("agentStop", r#","stopReason":"end_turn""#)] {
+    for (event, extra) in
+        [("userPromptSubmitted", r#","prompt":"private words""#), ("agentStop", r#","stopReason":"end_turn""#)]
+    {
         let payload = format!(r#"{{"sessionId":"{SESSION}","timestamp":1795062601000,"cwd":"D:\\work"{extra}}}"#);
         assert!(run(&copilot_args(event, spool_arg), &[], &payload).status.success());
     }
@@ -78,9 +80,10 @@ fn unreadable_input_still_exits_zero_and_writes_nothing() {
 fn without_arguments_it_is_still_the_claude_code_hook() {
     let dir = tempfile::tempdir().expect("tempdir");
     let config = dir.path().join(".claude");
-    let payload = format!(r#"{{"session_id":"abc-123","hook_event_name":"UserPromptSubmit","cwd":"D:\\work\\dotDock"}}"#);
-    let out = run(&[], &[("CLAUDE_CONFIG_DIR", &config)], &payload);
+    let payload = r#"{"session_id":"abc-123","hook_event_name":"UserPromptSubmit","cwd":"D:\\work\\dotDock"}"#;
+    let out = run(&[], &[("CLAUDE_CONFIG_DIR", &config)], payload);
     assert!(out.status.success());
-    let state = std::fs::read_to_string(config.join("tools").join("island").join("sessions").join("abc-123.json")).expect("state file");
+    let state = std::fs::read_to_string(config.join("tools").join("island").join("sessions").join("abc-123.json"))
+        .expect("state file");
     assert!(state.contains(r#""phase":"thinking""#) && state.contains(r#""agent":"claude""#), "{state}");
 }

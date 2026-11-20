@@ -195,7 +195,8 @@ mod tests {
 
     fn fixture() -> Fixture {
         let dir = tempfile::tempdir().expect("tempdir");
-        let homes = AgentHomes { copilot: Some(dir.path().join(".copilot")), opencode: Some(dir.path().join("opencode")) };
+        let homes =
+            AgentHomes { copilot: Some(dir.path().join(".copilot")), opencode: Some(dir.path().join("opencode")) };
         for home in [&homes.copilot, &homes.opencode].into_iter().flatten() {
             std::fs::create_dir_all(home).expect("home");
         }
@@ -238,11 +239,16 @@ mod tests {
         for event in copilot::EVENTS {
             let entry = &hooks[event][0];
             assert_eq!(entry["type"], "command");
-            assert!(entry["exec"].as_str().is_some_and(|p| p.ends_with("dotdock-island-hook-abc123.exe") && !p.contains('\\')));
+            assert!(entry["exec"]
+                .as_str()
+                .is_some_and(|p| p.ends_with("dotdock-island-hook-abc123.exe") && !p.contains('\\')));
             let args: Vec<&str> = entry["args"].as_array().expect("args").iter().filter_map(Value::as_str).collect();
             assert_eq!(&args[..4], ["--agent", "copilot", "--event", event]);
             assert_eq!(args[4], "--spool");
-            assert!(entry.get("bash").is_none() && entry.get("powershell").is_none(), "exec is never mixed with shell fields");
+            assert!(
+                entry.get("bash").is_none() && entry.get("powershell").is_none(),
+                "exec is never mixed with shell fields"
+            );
             assert_eq!(entry["timeoutSec"], HOOK_TIMEOUT_SECS);
         }
     }
@@ -279,7 +285,8 @@ mod tests {
         let copilot = f.homes.copilot.clone().expect("copilot home");
         std::fs::write(copilot.join("config.json"), br#"{"trusted_folders":["D:\\work"]}"#).expect("config");
         std::fs::create_dir_all(copilot.join("hooks")).expect("hooks dir");
-        std::fs::write(copilot.join("hooks").join("mine.json"), b"{\n  \"version\": 1, \"hooks\": {}\r\n}").expect("user hook");
+        std::fs::write(copilot.join("hooks").join("mine.json"), b"{\n  \"version\": 1, \"hooks\": {}\r\n}")
+            .expect("user hook");
         let opencode = f.homes.opencode.clone().expect("opencode home");
         std::fs::write(opencode.join("opencode.json"), b"{ \"model\": \"x\" }\r\n").expect("opencode config");
         let before = (snapshot(&copilot), snapshot(&opencode));
@@ -298,7 +305,8 @@ mod tests {
         let f = fixture();
         let old = file(&f, Connectable::OpenCode);
         old.connect().expect("connect");
-        let moved = owned_file(Connectable::OpenCode, &f.homes, &f.hook, &f._dir.path().join("elsewhere")).expect("file");
+        let moved =
+            owned_file(Connectable::OpenCode, &f.homes, &f.hook, &f._dir.path().join("elsewhere")).expect("file");
         assert_eq!(moved.status(), AgentState::Outdated);
         moved.connect().expect("reconnect");
         assert_eq!(moved.status(), AgentState::Connected);

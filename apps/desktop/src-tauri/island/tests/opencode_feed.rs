@@ -42,8 +42,14 @@ fn at(seen: &[(usize, dotdock_island::SessionState)], line: usize) -> &dotdock_i
 fn the_session_moves_through_the_phases_the_user_would_see() {
     let seen = replay();
     let s = at(&seen, 1);
-    assert_eq!((s.session_id.as_str(), s.agent, s.phase), ("feed-opencode-ses_01JABC", AgentKind::OpenCode, Phase::Idle));
-    assert_eq!((s.title.as_deref(), s.project.as_str(), s.pid), (Some("Fix the header layout"), "dotDock", Some(4_242)));
+    assert_eq!(
+        (s.session_id.as_str(), s.agent, s.phase),
+        ("feed-opencode-ses_01JABC", AgentKind::OpenCode, Phase::Idle)
+    );
+    assert_eq!(
+        (s.title.as_deref(), s.project.as_str(), s.pid),
+        (Some("Fix the header layout"), "dotDock", Some(4_242))
+    );
 
     let s = at(&seen, 2);
     assert_eq!((s.phase, s.turn_started_at), (Phase::Thinking, Some(1_795_062_601_000)));
@@ -70,7 +76,10 @@ fn the_session_moves_through_the_phases_the_user_would_see() {
 fn a_rate_limit_ends_the_next_turn_with_the_reset_time() {
     let seen = replay();
     let started = at(&seen, 20);
-    assert_eq!((started.phase, started.tokens_out, started.turn_started_at), (Phase::Thinking, Some(0), Some(1_795_062_620_000)));
+    assert_eq!(
+        (started.phase, started.tokens_out, started.turn_started_at),
+        (Phase::Thinking, Some(0), Some(1_795_062_620_000))
+    );
     let failed = at(&seen, 21);
     assert_eq!(failed.phase, Phase::Limit);
     let problem = failed.problem.as_ref().expect("problem");

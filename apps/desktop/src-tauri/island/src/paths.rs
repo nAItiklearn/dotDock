@@ -45,9 +45,14 @@ impl ClaudeDirs {
     }
 }
 
-/// `%USERPROFILE%\.codex\sessions`, where Codex writes its rollout logs.
+/// `$CODEX_HOME\sessions`, otherwise `%USERPROFILE%\.codex\sessions`: where Codex writes its rollout logs. Codex
+/// itself honours `CODEX_HOME`, so a relocated Codex is followed too.
 pub fn codex_sessions_dir() -> Option<PathBuf> {
-    home_dir().map(|h| h.join(".codex").join("sessions"))
+    codex_sessions_dir_from(non_empty_env("CODEX_HOME"), home_dir())
+}
+
+fn codex_sessions_dir_from(codex_home: Option<PathBuf>, home: Option<PathBuf>) -> Option<PathBuf> {
+    codex_home.or_else(|| home.map(|h| h.join(".codex"))).map(|root| root.join("sessions"))
 }
 
 fn home_dir() -> Option<PathBuf> {
@@ -82,5 +87,19 @@ mod tests {
             dirs.sessions_dir(),
             PathBuf::from(r"C:\Users\me\.claude").join("tools").join("island").join("sessions")
         );
+    }
+
+    #[test]
+    fn codex_home_relocates_the_rollout_logs() {
+        let home = Some(PathBuf::from(r"C:\Users\me"));
+        assert_eq!(
+            codex_sessions_dir_from(None, home.clone()),
+            Some(PathBuf::from(r"C:\Users\me").join(".codex").join("sessions"))
+        );
+        assert_eq!(
+            codex_sessions_dir_from(Some(PathBuf::from(r"D:\codex")), home),
+            Some(PathBuf::from(r"D:\codex").join("sessions"))
+        );
+        assert_eq!(codex_sessions_dir_from(None, None), None);
     }
 }
