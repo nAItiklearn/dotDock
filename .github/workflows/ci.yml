@@ -45,6 +45,8 @@ jobs:
       - run: pnpm typecheck
       # --passWithNoTests: vitest exits 1 when no test files exist yet.
       - run: pnpm test --passWithNoTests
+      # Repository tools written in plain Node (the island session replay).
+      - run: node --test ../../tools/island-replay.test.mjs
       - run: pnpm build
 
   rust:
