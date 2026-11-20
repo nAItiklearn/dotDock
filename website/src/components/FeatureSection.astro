@@ -1,0 +1,62 @@
+---
+/**
+ * One section of the Features page: a heading, a scene (pixel-art garden, see tools/site-art) with the
+ * product shot in front of it, and the features as a list of short bullets. The first section is drawn larger.
+ */
+import Art from "./Art.astro";
+import type { ArtName } from "../lib/art";
+
+export interface Bullet {
+  readonly title: string;
+  readonly text: string;
+}
+
+interface Props {
+  id: string;
+  label: string;
+  /** Where the part stands: shown beside the label. */
+  status: string;
+  scene: ArtName;
+  bullets: readonly Bullet[];
+  /** The first section is the biggest. */
+  large?: boolean;
+  /** Describes the shot for people who cannot see it. */
+  shotLabel: string;
+}
+const { id, label, status, scene, bullets, large = false, shotLabel } = Astro.props;
+---
+
+<section class:list={["section", "feature", large && "feature--large"]} id={id} aria-labelledby={`${id}-title`}>
+  <div class="wrap">
+    <div class="section__head reveal">
+      <p class="caps caps-row chip-label">
+        <span class="dot" aria-hidden="true"></span>{label}
+        <span class="feature__status">{status}</span>
+      </p>
+      <h2 class="h2" id={`${id}-title`}><slot name="title" /></h2>
+      <p class="lede"><slot name="lede" /></p>
+    </div>
+
+    <figure class="scene reveal" aria-label={shotLabel}>
+      <div class="scene__art" aria-hidden="true">
+        <Art piece={scene} />
+      </div>
+      <div class="scene__shot">
+        <slot />
+      </div>
+    </figure>
+
+    <slot name="after" />
+
+    <ul class="bullets">
+      {
+        bullets.map((b, i) => (
+          <li class="bullet reveal" style={`--i:${i % 3}`}>
+            <h3 class="bullet__title">{b.title}</h3>
+            <p class="bullet__text">{b.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

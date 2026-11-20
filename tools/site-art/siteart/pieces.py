@@ -70,7 +70,7 @@ PIECES: dict[str, Piece] = {
     "tuft-right": Piece(42, {"wide": (280, 190), "narrow": (150, 110)}, _tuft(42, "right"), _colour_stack, _FLAT),
     **{
         f"scene-{kind}": Piece(61 + i, {"wide": (1200, 560), "narrow": (560, 440)}, _scene(kind, 61 + i), _colour_stack, _SCENE_Q)
-        for i, kind in enumerate(("dock", "island", "home", "themes"))
+        for i, kind in enumerate(("dock", "island", "home", "themes", "modular"))
     },
     "meadow": Piece(71, {"wide": (1920, 420), "narrow": (720, 300)}, _scene("meadow", 71), _colour_stack, _SCENE_Q),
 }

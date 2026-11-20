@@ -5,6 +5,7 @@
  * Sizes are in grid cells, like the product's grid. Visuals follow apps/desktop/src/widgets.
  */
 import DotMatrix from "./DotMatrix.astro";
+import cake from "../assets/photos/painted-flower-cake.webp";
 
 import type { WidgetKind } from "../lib/widgets";
 
@@ -30,11 +31,13 @@ const SIZE: Record<WidgetKind, [number, number]> = {
   music: [4, 1],
   timer: [3, 1],
   todo: [3, 2],
+  photo: [2, 2],
 };
 const [w, h] = SIZE[kind];
 const style = `--w:${w};--h:${h};${place}`;
 
-// Sample values for what a web page cannot measure. They are labelled as samples on screen.
+// Sample values for what a web page cannot measure. Each such widget carries a hollow dot, and its label says
+// "sample" to assistive technology; the page text explains the dot.
 const SAMPLE = {
   ramPercent: 58,
   diskPercent: 61,
@@ -142,7 +145,7 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
 {
   kind === "ram" && (
     <section class="w w--card w--sample" style={style} aria-label={`Memory, sample value ${SAMPLE.ramPercent} percent`}>
-      <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+      <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
       <div class="w-ram">
         <div class="w-ram__head">
           <span class="w-ram__pct tabular">{SAMPLE.ramPercent}%</span>
@@ -165,7 +168,7 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
         <circle class="ring__value" cx="50" cy="50" r={RING_R} stroke-dasharray={RING_LEN} stroke-dashoffset={diskDash} />
       </svg>
       <div class="w__center">
-        <span class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+        <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
         <span class="w-pct">
           <DotMatrix class="dm w-ring__pct" text={String(SAMPLE.diskPercent)} matrixStyle="blocks" height={26} label={`${SAMPLE.diskPercent} percent used`} />
           <span class="w-pct__sign" aria-hidden="true">%</span>
@@ -185,7 +188,7 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
           <span class="w-weather__cond">
             {SAMPLE.weatherText} <span class="w-weather__range tabular">{SAMPLE.weatherHigh}&deg; / {SAMPLE.weatherLow}&deg;</span>
           </span>
-          <span class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+          <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
         </div>
       </div>
     </section>
@@ -195,7 +198,7 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
 {
   kind === "forecast" && (
     <section class="w w--card w--sample" style={style} aria-label="Five-day forecast, sample values">
-      <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+      <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
       <div class="w-fc">
         <span class="caps w-fc__title">5 days</span>
         <ul class="w-fc__days">
@@ -267,7 +270,7 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
 {
   kind === "todo" && (
     <section class="w w--card w--sample" style={style} aria-label="To-do list, sample items">
-      <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+      <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
       <div class="w-todo">
         <span class="caps w-todo__title">To-do</span>
         <ul class="w-todo__list">
@@ -284,6 +287,22 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
           }
         </ul>
       </div>
+    </section>
+  )
+}
+{
+  kind === "photo" && (
+    <section class="w w--photo" style={style} aria-label="Photo widget">
+      <figure class="w-photo__frame">
+        <img
+          src={cake.src}
+          width={cake.width}
+          height={cake.height}
+          alt="A round cake painted with orange, red and yellow flowers on a deep blue ground, lit by one candle"
+          loading="lazy"
+          decoding="async"
+        />
+      </figure>
     </section>
   )
 }

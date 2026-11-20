@@ -1,0 +1,26 @@
+---
+/**
+ * The modular parts as the switches the app gives them: each one on or off on its own. An illustration of the
+ * settings page in the site's own markup; the labels are the parts' names.
+ */
+const parts = [
+  { name: "Home screen", note: "Widgets and wallpaper", on: true },
+  { name: "Dock", note: "Apps, stacks and tiles", on: true },
+  { name: "Taskbar replacement", note: "Hides the Windows taskbar", on: false },
+  { name: "Agent island", note: "Your coding agents at the top", on: true },
+];
+---
+
+<ul class="modules" aria-hidden="true">
+  {
+    parts.map((p) => (
+      <li class="modules__row">
+        <span class="modules__text">
+          <span class="modules__name">{p.name}</span>
+          <span class="modules__note">{p.note}</span>
+        </span>
+        <span class:list={["switch", p.on && "switch--on"]}><span class="switch__knob"></span></span>
+      </li>
+    ))
+  }
+</ul>

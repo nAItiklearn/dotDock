@@ -1,39 +1,47 @@
 ---
 /**
- * The dock, drawn with the site's own markup in the product's design (docs/DOCK_SPEC.md section 4): a
- * floating glass pill with pinned apps, a category stack under the pointer (magnified, its popover open
- * in the large shot), a divider, running apps with a dot under each (the focused one in the accent), a
- * divider and a live tile. The marks on the tiles are abstract dot patterns, not brand icons. It is an
- * illustration, so it is hidden from assistive technology; the page text carries the meaning.
+ * The dock, drawn in markup from the product's own design (apps/desktop/src/dock: dock.css, cells.css,
+ * geometry.ts): one solid pill, round discs a step above it, a dotted divider, category stacks tinted by
+ * their tone with a 2 x 2 preview, running apps with a dot (the focused one in the accent), the App Library
+ * button (nine dots, the middle one in the accent) and the status capsule. The pointer rests on a stack, so
+ * it peaks at 1.25 with its neighbours following. Icons are the product's dot-matrix language, not brand
+ * marks. It is an illustration, so it is hidden from assistive technology; the page text carries the meaning.
  */
-import { DOCK_GLYPHS, glyphPaths } from "../lib/dockGlyphs";
+import { dotIcon, type DockIconName } from "../lib/dockIcons";
 
 interface Props {
-  /** Show the stack popover above the pill. */
+  /** Show the Development stack's popover above the bar. */
   open?: boolean;
-  /** Size of one tile: any CSS length. */
+  /** Size of one icon: any CSS length. */
   unit: string;
   class?: string;
 }
 const { open = false, unit, class: className = "" } = Astro.props;
 
-const marks = DOCK_GLYPHS.map(glyphPaths);
-const pinned = [0, 1, 2];
-const running = [3, 4];
-const stackMarks = [5, 6, 7, 2];
-const popover = [0, 1, 2, 3, 4, 5, 6, 7];
-const FOCUSED = 4;
+type Tone = "red" | "amber" | "green" | "teal" | "blue" | "violet" | "pink";
+const app = (icon: DockIconName, tone: Tone) => ({ icon, tone, art: dotIcon(icon) });
+
+const pinned = [app("browser", "teal"), app("files", "amber"), app("terminal", "blue")];
+const running = [{ ...app("chat", "violet"), windows: 2, focus: false }, { ...app("music", "pink"), windows: 1, focus: true }];
+const development = [app("terminal", "blue"), app("code", "blue"), app("branch", "blue"), app("box", "blue"), app("database", "blue"), app("browser", "blue")];
+const names = ["Terminal", "Editor", "Version control", "Containers", "Databases", "Browser"];
+const stackPreview = development.slice(0, 4);
+const library = Array.from({ length: 9 }, (_, i) => i);
+const FOCUS_CELL = 4;
 ---
 
-<div class:list={["dock", open && "dock--open", className]} style={`--d:${unit}`} aria-hidden="true">
+<div class:list={["dock", open && "dock--open", className]} style={`--d-icon:${unit}`} aria-hidden="true">
   {
     open && (
-      <div class="dock__pop">
+      <div class="dock__pop" style="--tone:var(--tone-blue)">
         <p class="dock__pop-title">Development</p>
         <div class="dock__pop-grid">
-          {popover.map((i) => (
-            <span class="dock__tile">
-              <svg viewBox="0 0 3 3"><path d={marks[i]!.off} fill="var(--dot-off)" /><path d={marks[i]!.on} fill="var(--text)" /></svg>
+          {development.map((a, i) => (
+            <span class="dock__cell">
+              <span class="dock__disc">
+                <svg class="dock__art" viewBox="0 0 9 9"><path d={a.art.off} fill="var(--dot-off)" /><path d={a.art.on} fill="var(--tone-blue)" /></svg>
+              </span>
+              <span class="dock__name">{names[i]}</span>
             </span>
           ))}
         </div>
@@ -41,40 +49,54 @@ const FOCUSED = 4;
     )
   }
   <div class="dock__bar">
-    {
-      pinned.map((i) => (
-        <span class="dock__item">
-          <span class="dock__tile">
-            <svg viewBox="0 0 3 3"><path d={marks[i]!.off} fill="var(--dot-off)" /><path d={marks[i]!.on} fill="var(--text)" /></svg>
-          </span>
-        </span>
-      ))
-    }
-    <span class="dock__item dock__item--peak">
-      <span class="dock__tile dock__tile--stack">
-        {stackMarks.map((i) => (
-          <svg viewBox="0 0 3 3"><path d={marks[i]!.off} fill="var(--dot-off)" /><path d={marks[i]!.on} fill="var(--text)" /></svg>
-        ))}
-      </span>
-    </span>
-    <i class="dock__sep"></i>
-    {
-      running.map((i) => (
-        <span class:list={["dock__item", "dock__item--running", i === FOCUSED && "dock__item--focus"]}>
-          <span class="dock__tile">
-            <svg viewBox="0 0 3 3"><path d={marks[i]!.off} fill="var(--dot-off)" /><path d={marks[i]!.on} fill="var(--text)" /></svg>
-          </span>
-        </span>
-      ))
-    }
-    <i class="dock__sep"></i>
     <span class="dock__item">
-      <span class="dock__tile dock__tile--ring">
-        <svg viewBox="0 0 36 36">
-          <circle cx="18" cy="18" r="13" fill="none" stroke="var(--dot-off)" stroke-width="4" />
-          <circle cx="18" cy="18" r="13" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="52 82" transform="rotate(-90 18 18)" />
+      <span class="dock__disc dock__disc--library">
+        <svg class="dock__art dock__art--grid" viewBox="0 0 5 5">
+          {library.map((i) => <circle cx={(i % 3) * 1.5 + 1} cy={Math.floor(i / 3) * 1.5 + 1} r="0.42" fill={i === FOCUS_CELL ? "var(--accent)" : "currentColor"} />)}
         </svg>
       </span>
+    </span>
+    {
+      pinned.map((a) => (
+        <span class="dock__item">
+          <span class="dock__disc">
+            <svg class="dock__art" viewBox="0 0 9 9"><path d={a.art.off} fill="var(--dot-off)" /><path d={a.art.on} fill={`var(--tone-${a.tone})`} /></svg>
+          </span>
+        </span>
+      ))
+    }
+    <i class="dock__divider"></i>
+    <span class="dock__item dock__item--peak">
+      <span class="dock__disc dock__disc--stack" style="--tone:var(--tone-blue)">
+        <span class="dock__stack-grid">
+          {stackPreview.map((a) => (
+            <svg viewBox="0 0 9 9"><path d={a.art.off} fill="var(--dot-off)" /><path d={a.art.on} fill="var(--tone-blue)" /></svg>
+          ))}
+        </span>
+      </span>
+    </span>
+    <span class="dock__item">
+      <span class="dock__disc dock__disc--stack" style="--tone:var(--tone-pink)">
+        <span class="dock__stack-grid">
+          <svg viewBox="0 0 9 9"><path d={dotIcon("music").off} fill="var(--dot-off)" /><path d={dotIcon("music").on} fill="var(--tone-pink)" /></svg>
+          <svg viewBox="0 0 9 9"><path d={dotIcon("calendar").off} fill="var(--dot-off)" /><path d={dotIcon("calendar").on} fill="var(--tone-pink)" /></svg>
+        </span>
+      </span>
+    </span>
+    <i class="dock__divider"></i>
+    {
+      running.map((a) => (
+        <span class:list={["dock__item", "dock__item--running", a.focus && "dock__item--focus"]} data-windows={a.windows}>
+          <span class="dock__disc">
+            <svg class="dock__art" viewBox="0 0 9 9"><path d={a.art.off} fill="var(--dot-off)" /><path d={a.art.on} fill={`var(--tone-${a.tone})`} /></svg>
+          </span>
+        </span>
+      ))
+    }
+    <i class="dock__divider"></i>
+    <span class="dock__status">
+      <svg class="dock__status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 18v-3M10 18v-6M15 18V9M20 18V5" /></svg>
+      <svg class="dock__status-icon dock__status-icon--battery" viewBox="0 0 28 16" fill="none"><rect x="1" y="1.5" width="22" height="13" rx="4" stroke="currentColor" stroke-width="1.8" /><path d="M25.5 6v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" /><rect x="3.6" y="4.1" width="14.2" height="7.8" rx="2" fill="currentColor" /></svg>
     </span>
   </div>
 </div>

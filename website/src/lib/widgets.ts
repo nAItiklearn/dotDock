@@ -11,4 +11,5 @@ export type WidgetKind =
   | "forecast"
   | "music"
   | "timer"
-  | "todo";
+  | "todo"
+  | "photo";

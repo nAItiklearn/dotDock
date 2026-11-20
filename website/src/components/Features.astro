@@ -1,5 +1,6 @@
 ---
 import SectionHead from "./SectionHead.astro";
+import { ROUTES } from "../brand";
 
 // Each part is a miniature screen on a 20 x 11 dot lattice; "#" marks the cells that part owns,
 // so the row reads as a map of where on the screen each one lives.
@@ -61,9 +62,9 @@ function dots(list: readonly Cell[], r: number): string {
 }
 
 const parts = [
-  { name: "Home screen", line: "Widgets, wallpapers and themes that live on the desktop.", status: "In development", live: true, own: cells(HOME), context: [] as Cell[] },
-  { name: "Dock", line: "Replaces the taskbar, with a launcher built in.", status: "Coming", live: false, own: cells(DOCK), context: cells(HOME) },
-  { name: "Agent island", line: "Shows your AI coding work live, at the top of the screen.", status: "In development", live: true, own: cells(ISLAND), context: [...cells(HOME), ...cells(DOCK)] },
+  { name: "Home screen", line: "Widgets, a photo frame and themes that live on the desktop.", status: "In development", live: true, own: cells(HOME), context: [] as Cell[] },
+  { name: "Dock", line: "Replaces the taskbar, files your apps into stacks and keeps a few live tiles at hand.", status: "In development", live: true, own: cells(DOCK), context: cells(HOME) },
+  { name: "Agent island", line: "Shows what your AI coding agents are doing, at the top of the screen.", status: "In development", live: true, own: cells(ISLAND), context: [...cells(HOME), ...cells(DOCK)] },
 ];
 ---
 
@@ -100,6 +101,8 @@ const parts = [
         ))
       }
     </ol>
+
+    <p class="parts__more reveal"><a class="btn btn--primary" href={ROUTES.features}>See every feature<svg class="btn__arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg></a></p>
 
   </div>
 </section>

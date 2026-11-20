@@ -59,7 +59,8 @@
 }
 html[data-theme="obsidian"] :is(.stage__wp, .safety__wp)[data-for="obsidian"],
 html[data-theme="paper"] :is(.stage__wp, .safety__wp)[data-for="paper"],
-html[data-theme="aurum"] :is(.stage__wp, .safety__wp)[data-for="aurum"] {
+html[data-theme="aurum"] :is(.stage__wp, .safety__wp)[data-for="aurum"],
+.desk[data-theme] .stage__wp {
   display: block;
 }
 
@@ -375,23 +376,21 @@ html[data-theme="paper"] .w-clock__digits {
   text-overflow: ellipsis;
 }
 
-.sample-tag {
+/* A hollow dot marks a sample value; time, date, calendar and battery are live and carry none. */
+.sample-mark {
   position: absolute;
   z-index: 1;
-  top: calc(var(--k) * 14);
-  right: calc(var(--k) * 20);
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  top: calc(var(--k) * 16);
+  right: calc(var(--k) * 22);
+  width: max(6px, calc(var(--k) * 9));
+  height: max(6px, calc(var(--k) * 9));
+  border: max(1px, calc(var(--k) * 1.5)) solid var(--text-dim);
+  border-radius: 50%;
+  opacity: 0.7;
 }
-.w .sample-tag {
-  font-size: max(8px, calc(var(--k) * 10));
-}
-.sample-tag--circle {
-  top: calc(var(--k) * 24);
-  right: auto;
-  left: 50%;
-  transform: translateX(-50%);
+.w--circle .sample-mark {
+  top: 15%;
+  right: 15%;
 }
 
 /* ---------- Music, timer, to-do, forecast ---------- */
@@ -663,4 +662,27 @@ html[data-theme="paper"] .w-clock__digits {
   font-weight: 450;
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
+}
+
+/* ---------- Photo: the product's paper mat (widgets/photo/PhotoWidget.css), the picture filling its frame ---------- */
+.w--photo {
+  --photo-mat: #efede9;
+  --photo-inset: calc(var(--k) * 12);
+  border-radius: calc(var(--k) * 18);
+  border-color: transparent;
+  background: var(--photo-mat);
+}
+.w-photo__frame {
+  position: absolute;
+  inset: var(--photo-inset);
+  margin: 0;
+  overflow: hidden;
+  border-radius: calc(var(--k) * 12);
+  background: var(--surface-2);
+}
+.w-photo__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

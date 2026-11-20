@@ -1378,6 +1378,247 @@
    }
   }
  },
+ "scene-modular": {
+  "seed": 65,
+  "variants": {
+   "wide": {
+    "w": 1200,
+    "h": 560,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "scene-modular-wide-far-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 18862
+      },
+      "2": {
+       "file": "scene-modular-wide-far-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 46500
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "scene-modular-wide-mid-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 29738
+      },
+      "2": {
+       "file": "scene-modular-wide-mid-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 71676
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scene-modular-wide-near-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 37222
+      },
+      "2": {
+       "file": "scene-modular-wide-near-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 89566
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-modular-wide-stalk-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 928
+      },
+      "2": {
+       "file": "scene-modular-wide-stalk-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 1232
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-modular-wide-petal-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 578
+      },
+      "2": {
+       "file": "scene-modular-wide-petal-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 914
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-modular-wide-gold-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 504
+      },
+      "2": {
+       "file": "scene-modular-wide-gold-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 858
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-modular-wide-heart-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 366
+      },
+      "2": {
+       "file": "scene-modular-wide-heart-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 716
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-modular-wide-grain-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 29414
+      },
+      "2": {
+       "file": "scene-modular-wide-grain-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 75916
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 560,
+    "h": 440,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "scene-modular-narrow-far-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 7372
+      },
+      "2": {
+       "file": "scene-modular-narrow-far-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 16844
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "scene-modular-narrow-mid-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 11228
+      },
+      "2": {
+       "file": "scene-modular-narrow-mid-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 26196
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scene-modular-narrow-near-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 15452
+      },
+      "2": {
+       "file": "scene-modular-narrow-near-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 35438
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-modular-narrow-stalk-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 520
+      },
+      "2": {
+       "file": "scene-modular-narrow-stalk-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 632
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-modular-narrow-petal-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 404
+      },
+      "2": {
+       "file": "scene-modular-narrow-petal-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 516
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-modular-narrow-gold-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 342
+      },
+      "2": {
+       "file": "scene-modular-narrow-gold-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 456
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-modular-narrow-heart-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 246
+      },
+      "2": {
+       "file": "scene-modular-narrow-heart-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 354
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-modular-narrow-grain-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 18740
+      },
+      "2": {
+       "file": "scene-modular-narrow-grain-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 47142
+      }
+     }
+    }
+   }
+  }
+ },
  "scene-themes": {
   "seed": 64,
   "variants": {

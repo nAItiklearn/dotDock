@@ -1,122 +1,191 @@
 /*
- * The dock illustration (components/Dock.astro). Everything is a multiple of --d, the size of one tile, so the
- * same markup serves the small shot inside the hero screen and the large one on the Features page.
+ * The dock illustration (components/Dock.astro), written from the product's dock styles
+ * (apps/desktop/src/dock/dock.css and cells.css) with the same ratios of the icon size (geometry.ts RATIO):
+ * gap 0.14, padding 0.17, divider 0.3, art 0.66. Everything is a multiple of --d-icon, so the one markup
+ * serves the small dock in the hero screen and the large one on the Features page.
  */
+:root {
+  /* Category tones, one pair per theme mode (the product's tones). */
+  --tone-red: light-dark(#e2363d, #e94248);
+  --tone-amber: light-dark(#c98f1a, #e2b453);
+  --tone-green: light-dark(#5f9a55, #8fb58a);
+  --tone-teal: light-dark(#2f8f86, #5fb3a8);
+  --tone-blue: light-dark(#3d68d1, #6f93e6);
+  --tone-violet: light-dark(#6e55c9, #9a86e0);
+  --tone-pink: light-dark(#c9508a, #e07fb0);
+}
 .dock {
+  --d-gap: calc(var(--d-icon) * 0.14);
+  --d-pad: calc(var(--d-icon) * 0.17);
+  --disc: color-mix(in srgb, var(--surface-2) 74%, var(--surface));
+  --disc-edge: color-mix(in srgb, var(--text) 9%, transparent);
+  --top-light: inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent);
   position: relative;
   display: inline-grid;
   justify-items: center;
-  gap: calc(var(--d) * 0.3);
+  gap: calc(var(--d-icon) * 0.3);
 }
 .dock__bar {
   display: flex;
-  align-items: flex-end;
-  gap: calc(var(--d) * 0.2);
-  padding: calc(var(--d) * 0.2);
-  border: var(--hairline) solid var(--line-strong);
-  border-radius: calc(var(--d) * 0.55);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(18px) saturate(1.3);
-  backdrop-filter: blur(18px) saturate(1.3);
+  align-items: center;
+  gap: var(--d-gap);
+  padding: var(--d-pad);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: rgb(from var(--surface) r g b / 1);
+  box-shadow: var(--top-light), var(--shadow);
 }
 .dock__item {
   position: relative;
-  display: grid;
-  width: var(--d);
-  height: var(--d);
+  flex: none;
+  width: var(--d-icon);
+  height: var(--d-icon);
   transform-origin: 50% 100%;
 }
-/* The pointer rests on the stack: it peaks at 1.25 and its neighbours follow (docs/DOCK_SPEC.md, hover). */
+/* The pointer rests on a stack: it peaks at 1.25 and its neighbours follow. */
 .dock__item--peak {
   transform: scale(1.25);
-  margin-inline: calc(var(--d) * 0.14);
+  margin-inline: calc(var(--d-icon) * 0.1);
 }
 .dock__item:has(+ .dock__item--peak),
-.dock__item--peak + .dock__sep + .dock__item {
+.dock__item--peak + .dock__item {
   transform: scale(1.1);
 }
-.dock__tile {
+.dock__disc {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  border: var(--hairline) solid var(--line);
-  border-radius: 26%;
-  background: var(--surface-2);
+  border: var(--hairline) solid var(--disc-edge);
+  border-radius: 50%;
+  background: var(--disc);
+  color: var(--text);
+  box-shadow: var(--top-light), 0 1px 2px rgb(0 0 0 / 0.22);
 }
-.dock__item > .dock__tile {
+.dock__art {
+  width: 66%;
+  height: 66%;
+}
+.dock__disc--library {
+  color: var(--text-dim);
+}
+.dock__art--grid {
+  width: 46%;
+  height: 46%;
+}
+/* Stacks are tinted by their category and show up to four of its apps. */
+.dock__disc--stack {
+  background: color-mix(in srgb, var(--disc) 80%, var(--tone));
+  border-color: color-mix(in srgb, var(--tone) 42%, var(--border));
+}
+.dock__stack-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: calc(var(--d-icon) * 0.05);
+  width: 60%;
+  align-content: center;
+}
+.dock__stack-grid > svg {
   width: 100%;
-  height: 100%;
+  aspect-ratio: 1;
 }
-.dock__tile > svg {
-  width: 54%;
-  height: 54%;
+.dock__divider {
+  flex: none;
+  align-self: stretch;
+  width: 0;
+  margin-block: calc(var(--d-icon) * 0.1);
+  border-left: 2px dotted var(--dot-off);
 }
-.dock__tile--stack {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 6%;
-  padding: 13%;
-  place-items: stretch;
-}
-.dock__tile--stack > svg {
-  width: 100%;
-  height: 100%;
-}
-.dock__tile--ring > svg {
-  width: 68%;
-  height: 68%;
-}
-.dock__sep {
-  align-self: center;
-  width: var(--hairline);
-  height: calc(var(--d) * 0.7);
-  margin-inline: calc(var(--d) * 0.06);
-  background: var(--line-strong);
-}
-/* Running apps carry a dot; the focused one carries the accent. */
+/* A running app has a dot under it, two for several windows, and the focused one wears the accent. */
 .dock__item--running::after {
   content: "";
   position: absolute;
-  bottom: calc(var(--d) * -0.14);
+  bottom: calc(var(--d-icon) * -0.15);
   left: 50%;
-  width: calc(var(--d) * 0.09);
-  height: calc(var(--d) * 0.09);
+  width: calc(var(--d-icon) * 0.08);
+  height: calc(var(--d-icon) * 0.08);
   min-width: 3px;
   min-height: 3px;
-  margin-left: calc(var(--d) * -0.045);
+  margin-left: calc(var(--d-icon) * -0.04);
   border-radius: 50%;
   background: var(--text-dim);
+}
+.dock__item--running[data-windows="2"]::after {
+  margin-left: calc(var(--d-icon) * -0.04 - var(--d-icon) * 0.07);
+  box-shadow: calc(var(--d-icon) * 0.14) 0 0 var(--text-dim);
 }
 .dock__item--focus::after {
   background: var(--accent);
 }
+.dock__item--focus[data-windows="2"]::after {
+  box-shadow: calc(var(--d-icon) * 0.14) 0 0 var(--accent);
+}
+/* The status capsule: network and battery. */
+.dock__status {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--d-icon) * 0.16);
+  height: calc(var(--d-icon) * 0.78);
+  padding-inline: calc(var(--d-icon) * 0.26);
+  border: var(--hairline) solid var(--disc-edge);
+  border-radius: var(--radius-pill);
+  background: var(--disc);
+  color: var(--text-dim);
+}
+.dock__status-icon {
+  height: calc(var(--d-icon) * 0.3);
+  width: auto;
+}
+.dock__status-icon--battery {
+  height: calc(var(--d-icon) * 0.24);
+}
 
-/* The stack popover: the category name over a grid of its apps. */
+/* The stack popover: the category over a grid of its apps, each a disc with its name. */
 .dock__pop {
   display: grid;
-  gap: calc(var(--d) * 0.2);
-  padding: calc(var(--d) * 0.3);
-  border: var(--hairline) solid var(--line-strong);
-  border-radius: calc(var(--d) * 0.5);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(18px) saturate(1.3);
-  backdrop-filter: blur(18px) saturate(1.3);
+  gap: calc(var(--d-icon) * 0.16);
+  padding: calc(var(--d-icon) * 0.3);
+  border: var(--hairline) solid color-mix(in srgb, var(--tone) 42%, var(--border));
+  border-radius: calc(var(--d-icon) * 0.5);
+  background: color-mix(in srgb, var(--surface-2) 88%, rgb(from var(--surface) r g b / 1));
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.25);
 }
 .dock__pop-title {
   font-family: var(--font-mono);
-  font-size: calc(var(--d) * 0.2);
+  font-size: max(10px, calc(var(--d-icon) * 0.19));
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: color-mix(in srgb, var(--tone) 70%, var(--text-dim));
 }
 .dock__pop-grid {
   display: grid;
-  grid-template-columns: repeat(4, var(--d));
-  gap: calc(var(--d) * 0.16);
+  grid-template-columns: repeat(3, calc(var(--d-icon) * 1.5));
+  gap: calc(var(--d-icon) * 0.12);
 }
-.dock__pop-grid .dock__tile {
-  width: var(--d);
-  height: var(--d);
+.dock__cell {
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--d-icon) * 0.1);
+}
+.dock__cell .dock__disc {
+  position: relative;
+  inset: auto;
+  width: var(--d-icon);
+  height: var(--d-icon);
+}
+.dock__name {
+  max-width: 100%;
+  font-size: max(11px, calc(var(--d-icon) * 0.22));
+  line-height: 1.2;
+  text-align: center;
+  color: var(--text);
+}
+
+/* In the small hero screen the dock gives up its status capsule and the last stack first. */
+@container (max-width: 640px) {
+  .dock__status,
+  .dock__item--running + .dock__divider {
+    display: none;
+  }
 }

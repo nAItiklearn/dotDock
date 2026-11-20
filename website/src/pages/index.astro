@@ -3,6 +3,7 @@ import Base from "../layouts/Base.astro";
 import Nav from "../components/Nav.astro";
 import Hero from "../components/Hero.astro";
 import Features from "../components/Features.astro";
+import VideoSlot from "../components/VideoSlot.astro";
 import WidgetCards from "../components/WidgetCards.astro";
 import Customize from "../components/Customize.astro";
 import Wall from "../components/Wall.astro";
@@ -14,13 +15,14 @@ import Footer from "../components/Footer.astro";
 import { LICENSE_SPDX, PRODUCT_NAME, TAGLINE } from "../brand";
 
 const title = `${PRODUCT_NAME}: ${TAGLINE}`;
-const description = `${PRODUCT_NAME} is a free, open-source desktop environment for Windows: a living home screen, a dock (coming) and an agent island, on a native Rust core with no telemetry. ${LICENSE_SPDX}.`;
+const description = `${PRODUCT_NAME} is a free, open-source desktop environment for Windows: a living home screen, a dock and an agent island, on a native Rust core with no telemetry. ${LICENSE_SPDX}.`;
 ---
 
 <Base title={title} description={description} structuredData>
   <Nav />
   <main id="main">
     <Hero />
+    <div class="wrap"><VideoSlot name="tour" label="A tour of dotDock: the home screen, the dock and the island" caption="A tour of the whole desktop, recorded from the app." /></div>
     <Features />
     <WidgetCards />
     <Customize />
