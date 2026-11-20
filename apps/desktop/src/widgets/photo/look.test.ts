@@ -210,14 +210,34 @@ describe("dotsPath and lookVars", () => {
     expect(path).toBe("M8 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M28 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0");
   });
 
-  it("hands the stylesheet the insets and the radius in px", () => {
+  it("hands the stylesheet the insets and both radii as lengths", () => {
     const l = look({ frame: "polaroid", thickness: 12, radius: 20 });
-    expect(lookVars(l, layoutFrame(l, large))).toEqual({
+    expect(lookVars(l, layoutFrame(l, large), large)).toEqual({
       "--photo-inset-t": "12px",
       "--photo-inset-r": "12px",
       "--photo-inset-b": "48px",
       "--photo-inset-l": "12px",
-      "--photo-radius": "20px",
+      "--photo-rx": "20px",
+      "--photo-ry": "20px",
+      "--photo-window-rx": "max(0px, calc(min(8px, var(--radius-sm)) - var(--hairline)))",
+      "--photo-window-ry": "max(0px, calc(min(8px, var(--radius-sm)) - var(--hairline)))",
     });
+  });
+
+  it("follows the widget's corner exactly when there is no band", () => {
+    const l = look({ frame: "none", radius: 28 });
+    const vars = lookVars(l, layoutFrame(l, large), large);
+    expect(vars["--photo-window-rx"]).toBe("max(0px, calc(28px - var(--hairline)))");
+  });
+
+  it("makes a circle a true ellipse, outside and inside the band", () => {
+    const wide = { w: 340, h: 164 };
+    const l = look({ frame: "mat", shape: "circle", thickness: 12 });
+    const layout = layoutFrame(l, wide);
+    const vars = lookVars(l, layout, wide);
+    expect(vars["--photo-rx"]).toBe("calc(170px + var(--hairline))");
+    expect(vars["--photo-ry"]).toBe("calc(82px + var(--hairline))");
+    expect(vars["--photo-window-rx"]).toBe(`${layout.window.w / 2}px`);
+    expect(vars["--photo-window-ry"]).toBe(`${layout.window.h / 2}px`);
   });
 });

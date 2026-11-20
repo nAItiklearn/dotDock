@@ -209,16 +209,39 @@ export function layoutFrame(look: Look, card: Box): FrameLayout {
   };
 }
 
-/** Custom properties the stylesheet reads: the photo window's insets and the corner radius. */
-export function lookVars(look: Look, layout: FrameLayout): Readonly<Record<string, string>> {
+const px = (n: number): string => `${round2(n)}px`;
+
+/**
+ * Custom properties the stylesheet reads: the photo window's insets and the corner radii of the
+ * widget and of the window, horizontal and vertical. They are lengths, so a change of border or
+ * shape eases between two values (they are registered in PhotoWidget.css). `card` is the inside of
+ * the widget's hairline border, which the outer radius adds back so a circle is a true ellipse.
+ */
+export function lookVars(look: Look, layout: FrameLayout, card: Box): Readonly<Record<string, string>> {
   const { top, right, bottom, left } = layout.insets;
-  return {
-    "--photo-inset-t": `${round2(top)}px`,
-    "--photo-inset-r": `${round2(right)}px`,
-    "--photo-inset-b": `${round2(bottom)}px`,
-    "--photo-inset-l": `${round2(left)}px`,
-    "--photo-radius": `${look.radius}px`,
+  const vars: Record<string, string> = {
+    "--photo-inset-t": px(top),
+    "--photo-inset-r": px(right),
+    "--photo-inset-b": px(bottom),
+    "--photo-inset-l": px(left),
   };
+  if (look.shape === "circle") {
+    vars["--photo-rx"] = `calc(${px(card.w / 2)} + var(--hairline))`;
+    vars["--photo-ry"] = `calc(${px(card.h / 2)} + var(--hairline))`;
+    vars["--photo-window-rx"] = px(layout.window.w / 2);
+    vars["--photo-window-ry"] = px(layout.window.h / 2);
+    return vars;
+  }
+  vars["--photo-rx"] = px(look.radius);
+  vars["--photo-ry"] = px(look.radius);
+  // Inside a band the window's corners are concentric with the widget's, but never rounder than a soft corner.
+  const inner = (inset: number): string =>
+    look.frame === "none"
+      ? `max(0px, calc(${px(look.radius)} - var(--hairline)))`
+      : `max(0px, calc(min(${px(look.radius - inset)}, var(--radius-sm)) - var(--hairline)))`;
+  vars["--photo-window-rx"] = inner(left);
+  vars["--photo-window-ry"] = inner(top);
+  return vars;
 }
 
 /** SVG path data drawing every dot as a circle, in one element. */

@@ -17,13 +17,16 @@ import {
 import { flushSync } from "react-dom";
 import { DotIcon } from "../../design-system/DotMatrix";
 import { Caps, IconButton, Surface } from "../../design-system/primitives";
+import { watchTheme } from "../../design-system/themes";
 import { isTauri } from "../../providers/bridge";
 import { defineWidget, type WidgetProps } from "../definition";
 import { sizeSpec, type SizeId } from "../sizes";
 import { ACCEPTED_TYPES, loadPhoto, readPhotoFile, savePhoto, type PhotoProblem, type StoredPhoto } from "./blobs";
 import { DEFAULT_PHOTO_CONFIG, PHOTO_SCHEMA, PHOTO_SIZES, type PhotoConfig } from "./config";
+import { bitmapCache, bucketWidth, type CopyCache } from "./decode";
 import {
   CENTRED,
+  clampFraming,
   KEY_PAN_STEP,
   KEY_ZOOM_STEP,
   pan,
@@ -33,7 +36,8 @@ import {
   type Box,
   type Framing,
 } from "./frame";
-import { dotsPath, layoutFrame, lookOf, lookVars } from "./look";
+import { captionInk, readInkInputs, type CaptionInk } from "./ink";
+import { dotsPath, layoutFrame, lookOf, lookVars, type PhotoTint } from "./look";
 import { EMPTY_ENTRY, usePhotoStore } from "./store";
 import "./PhotoWidget.css";
 
@@ -56,31 +60,28 @@ function holdForeground(on: boolean): void {
 }
 
 interface Loaded {
-  readonly url: string;
+  /** Decoded copies of the stored file, one per size bucket it has been shown at. */
+  readonly copies: CopyCache<ImageBitmap>;
   readonly width: number;
   readonly height: number;
 }
 
-/** The stored photo for an instance as an object URL, reloaded whenever its revision changes. */
+/** The stored photo for an instance, reloaded whenever its revision changes. */
 function usePhoto(id: string | undefined, rev: number): { readonly photo: Loaded | null; readonly ready: boolean } {
   const [state, setState] = useState<{ photo: Loaded | null; ready: boolean }>({ photo: null, ready: id === undefined });
   useEffect(() => {
     if (id === undefined) return undefined;
-    let url: string | null = null;
+    let copies: CopyCache<ImageBitmap> | null = null;
     let live = true;
     loadPhoto(id)
-      .then(async (stored) => {
+      .then((stored) => {
         if (!live) return;
         if (!stored) {
           setState({ photo: null, ready: true });
           return;
         }
-        url = URL.createObjectURL(stored.blob);
-        // Decode before swapping so the new photo never flashes in half drawn.
-        const probe = new Image();
-        probe.src = url;
-        await probe.decode().catch(() => undefined);
-        if (live) setState({ photo: { url, width: stored.width, height: stored.height }, ready: true });
+        copies = bitmapCache(stored.blob, stored.width, stored.height);
+        setState({ photo: { copies, width: stored.width, height: stored.height }, ready: true });
       })
       .catch((err: unknown) => {
         console.error("photo load failed", err);
@@ -88,10 +89,70 @@ function usePhoto(id: string | undefined, rev: number): { readonly photo: Loaded
       });
     return () => {
       live = false;
-      if (url) URL.revokeObjectURL(url);
+      copies?.dispose();
     };
   }, [id, rev]);
   return state;
+}
+
+/**
+ * Draws the copy of the photo decoded for `width` device px into the canvas. The copy is decoded
+ * off the main thread; until it is ready the canvas keeps the copy it already shows, which the
+ * compositor scales, so a new size never blocks a frame. Returns whether anything is drawn yet.
+ */
+function useCopy(canvas: RefObject<HTMLCanvasElement | null>, photo: Loaded | null, width: number, failed: () => void): boolean {
+  const [shown, setShown] = useState(false);
+  // A new photo gets a new canvas, which fades in once its first copy is drawn.
+  useEffect(() => setShown(false), [photo]);
+  useEffect(() => {
+    if (!photo || width <= 0) return undefined;
+    let live = true;
+    photo.copies
+      .get(width)
+      // The cache keeps its copy for later sizes; the canvas takes a clone it can own.
+      .then((copy) => createImageBitmap(copy))
+      .then((clone) => {
+        const target = canvas.current;
+        const context = live && target ? target.getContext("bitmaprenderer") : null;
+        if (!target || !context) {
+          clone.close();
+          return;
+        }
+        target.width = clone.width;
+        target.height = clone.height;
+        context.transferFromImageBitmap(clone);
+        setShown(true);
+      })
+      .catch((err: unknown) => {
+        if (!live) return;
+        console.error("photo decode failed", err);
+        failed();
+      });
+    return () => {
+      live = false;
+    };
+  }, [canvas, photo, width, failed]);
+  return shown;
+}
+
+/**
+ * The token a polaroid's caption is printed in, measured against the border colour the stylesheet
+ * resolved, and again whenever the theme changes. Null until measured, or when a colour is not a
+ * plain one; the stylesheet's default ink applies then.
+ */
+function useCaptionInk(stage: RefObject<HTMLElement | null>, tint: PhotoTint): CaptionInk | null {
+  const [ink, setInk] = useState<CaptionInk | null>(null);
+  useLayoutEffect(() => {
+    const el = stage.current;
+    if (!el) return undefined;
+    const measure = (): void => {
+      const inputs = readInkInputs(getComputedStyle(el));
+      setInk(inputs ? captionInk(inputs.line, inputs.backdrop, inputs.palette) : null);
+    };
+    measure();
+    return watchTheme(measure);
+  }, [stage, tint]);
+  return ink;
 }
 
 /**
@@ -135,6 +196,14 @@ export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanc
   const layout = useMemo(() => layoutFrame(look, card), [look, card]);
   const frame = layout.window;
   const frameRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ink = useCaptionInk(stageRef, look.tint);
+  // A resize is a snap between footprints and is drawn at once; only a change of look eases.
+  const lastCard = useRef<Box | null>(null);
+  const resized = lastCard.current?.w !== card.w || lastCard.current.h !== card.h;
+  useLayoutEffect(() => {
+    lastCard.current = card;
+  }, [card]);
   const input = useRef<HTMLInputElement>(null);
   const [problem, setProblem] = useState<PhotoProblem | null>(null);
   const [dropping, setDropping] = useState(false);
@@ -209,7 +278,10 @@ export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanc
   };
 
   const photoBox: Box = photo ? { w: photo.width, h: photo.height } : { w: 0, h: 0 };
-  const placed = photo ? place(frame, photoBox, config.fit, framing) : null;
+  // The copy is decoded for the size the photo fills once any border change has settled.
+  const drawnWidth = photo ? place(frame, photoBox, config.fit, framing).width * window.devicePixelRatio : 0;
+  const decodeFailed = useCallback(() => setProblem("decode"), []);
+  const shown = useCopy(canvasRef, photo, photo ? bucketWidth(drawnWidth, photo.width) : 0, decodeFailed);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>): void => {
     if (!adjusting || !fillable || e.button !== 0) return;
@@ -268,18 +340,32 @@ export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanc
     `photo--shape-${look.shape}`,
     `photo--tint-${look.tint}`,
     `photo--tone-${config.tone}`,
+    `photo--fit-${config.fit}`,
+    resized ? "photo--snap" : "",
     look.shadow ? "" : "photo--flat",
     adjusting ? "is-adjusting" : "",
     dropping ? "is-dropping" : "",
     photo ? "has-photo" : "",
   ];
-  const vars = lookVars(look, layout) as CSSProperties;
+  const vars = { ...lookVars(look, layout, card), ...(ink ? { "--photo-line-ink": `var(${ink})` } : {}) } as CSSProperties;
+  // The stylesheet places the photo from these against the window's live size, so the photo
+  // covers its window in every frame while a border change eases (the same rule as `place`).
+  const shownFraming = config.fit === "fill" ? clampFraming(framing) : CENTRED;
+  const photoVars = photo
+    ? ({
+        "--photo-aspect": photo.width / photo.height,
+        "--photo-zoom": shownFraming.zoom,
+        "--photo-fx": shownFraming.x,
+        "--photo-fy": shownFraming.y,
+      } as CSSProperties)
+    : undefined;
 
   return (
     <Surface shape="card" w={spec.w} h={spec.h} label="Photo" className={classes.filter(Boolean).join(" ")} style={vars}>
       <div ref={stageRef} className="photo__stage">
         {layout.dots.length > 0 ? (
-          <svg className="photo__dots" width={card.w} height={card.h} aria-hidden="true">
+          // A changed ring fades in rather than jumping; a resize redraws it in place.
+          <svg key={`${look.shape}-${look.radius}-${look.thickness}`} className="photo__dots" width={card.w} height={card.h} aria-hidden="true">
             <path d={dotsPath(layout.dots, layout.dotRadius)} />
           </svg>
         ) : null}
@@ -300,15 +386,8 @@ export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanc
           onDrop={onDrop}
           onDoubleClick={() => adjusting && fillable && commit(CENTRED)}
         >
-          {photo && placed ? (
-            <img
-              className="photo__img"
-              src={photo.url}
-              alt=""
-              draggable={false}
-              decoding="async"
-              style={{ width: placed.width, height: placed.height, transform: `translate(${placed.left}px, ${placed.top}px)` }}
-            />
+          {photo ? (
+            <canvas key={entry.rev} ref={canvasRef} className={`photo__img${shown ? " is-shown" : ""}`} style={photoVars} aria-hidden="true" />
           ) : null}
           {ready && !photo ? (
             <div className="photo-empty">
