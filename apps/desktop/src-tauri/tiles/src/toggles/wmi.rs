@@ -69,10 +69,27 @@ fn first_instance_path(services: &IWbemServices) -> Result<BSTR, String> {
     }
 }
 
-/// Sets the built-in panel's brightness to `percent` immediately.
-pub fn set_brightness(percent: u8) -> Result<(), String> {
-    let services = connect()?;
-    let path = first_instance_path(&services)?;
+/// A connection to the built-in panel's brightness method. Connecting takes about a second, so callers that set
+/// the brightness repeatedly (a slider drag) keep one `Panel` and reuse it.
+pub struct Panel {
+    services: IWbemServices,
+    path: BSTR,
+}
+
+impl Panel {
+    pub fn open() -> Result<Self, String> {
+        let services = connect()?;
+        let path = first_instance_path(&services)?;
+        Ok(Self { services, path })
+    }
+
+    /// Sets the brightness to `percent` immediately.
+    pub fn set(&self, percent: u8) -> Result<(), String> {
+        set_on(&self.services, &self.path, percent)
+    }
+}
+
+fn set_on(services: &IWbemServices, path: &BSTR, percent: u8) -> Result<(), String> {
     // SAFETY: the class, signature and instance objects are COM objects released on drop; names are NUL-terminated.
     unsafe {
         let mut class: Option<IWbemClassObject> = None;
@@ -95,7 +112,7 @@ pub fn set_brightness(percent: u8) -> Result<(), String> {
             .Put(PCWSTR(crate::com::wide("Brightness").as_ptr()), 0, &VARIANT::from(i32::from(percent)), 0)
             .map_err(|e| format!("WMI Brightness: {e}"))?;
         services
-            .ExecMethod(&path, &BSTR::from(METHOD), Default::default(), None, &params, None, None)
+            .ExecMethod(path, &BSTR::from(METHOD), Default::default(), None, &params, None, None)
             .map_err(|e| format!("Windows would not change the brightness: {e}"))
     }
 }
