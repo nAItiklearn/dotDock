@@ -47,16 +47,15 @@
 - **Dock backend (milestones D1 and D2), branch `worktree-agent-a175321c268719d26`:** crate `dotdock-dock` with the app catalogue (214 apps on this machine), classifier (98.1 % on the first judged run, `docs/spikes/DOCK_CLASSIFIER.md`), 256 px icon cache, push-driven window list, launch, DWM thumbnails, the app-bar spike and the `DockService` facade. Idle CPU 0.08 to 0.13 %, warm start 140 to 240 ms with nothing scanned or extracted (`docs/spikes/DOCK_D1.md`, D-019). Not wired into the app yet; the host (`dock_host.rs`) and UI are the other tracks.
 
 ## v2: the dock (in progress)
-- Spec `docs/DOCK_SPEC.md`, research `docs/design/DOCK_RESEARCH.md`, benchmark vs the macOS Dock and CoolDock `docs/design/DOCK_BENCHMARK.md`, contract `docs/dock/CONTRACT.md` + `apps/desktop/src/dock/protocol.ts`.
-- D0 safety: done so far: both restore paths show the taskbar and restore auto-hide (tested live). Running: sentinel watchdog and hard-kill test (safety track).
-- D1 + D2 running (backend track): app catalogue, automatic category classifier, icons, running windows, launch, thumbnail and app-bar spikes.
-- D3 running (UI track): dock bar, magnification, category stacks, App Library, edit mode, three themes.
-- Rule: the Windows taskbar is never hidden for real use until D4 passes and the owner reviews it (`replaceTaskbar` defaults to off).
+**Release rule (owner, 2026-11-20):** release the app and the website once everything averages 4.8 on the rubric and every phase of `docs/QA/V2_TEST_PLAN.md` has passed.
 
-### D0: taskbar restore guarantees (safety track)
-- Marker file, `dock_guard` (the only path that hides the taskbar), `dotdock-sentinel` watchdog, recovery at start and in the panic hook: D-017, `docs/DOCK_SPEC.md` section 3.
-- Real hard-kill test against the real taskbar: `tools/test-taskbar-restore.cmd` (build with `-Build -Toolchain stable-x86_64-pc-windows-gnu`); results in `docs/QA/DOCK_D0_RESTORE.md`.
-- Nothing in the app hides the taskbar yet: that is D4, behind `replaceTaskbar`.
+Merged on main:
+- D0 safety: taskbar marker, sentinel watchdog, recovery at start; 120/120 real restore tests; sentinel bundled in the MSVC installer.
+- D1/D2 backend `dotdock-dock`: 214 apps, classifier 98 %, 256 px icons, running windows, launch, DWM thumbnails, app-bar spike; idle 0.08 to 0.13 % CPU.
+- Logo and icon set; six desktop wallpapers at 4.5+; island verified live with real Claude Code sessions (plate made opaque).
+- Specs: DOCK_SPEC, DOCK_BENCHMARK (incl. stack input-to-visible under 50 ms), DOCK_MARKET, FEATURE_PARITY, WEBSITE_SYSTEM, LAUNCH_VIDEO, V2_TEST_PLAN.
+
+Running (worktree tracks): dock UI (latency fix, every feature testable, CoolDock tiles, themes incl. glass), native tiles (real data), dock host integration (window, glass backdrop, app bar, taskbar replacement), notch for any AI agent (Copilot CLI, OpenCode, generic protocol), modules on/off + theme from own wallpaper, website redesign (Inter Display, art-led hero, Features page, showcase strip).
 
 ## Machine notes that affect boot time
 - 22 apps autostart from `HKCU\Run` and compete at sign-in.
