@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { INITIAL_TIMER, type TimerState } from "../../widgets/timerModel";
 import type { TileId } from "../model";
+import { TILE_IDS } from "../model";
 import type { AgendaView, AudioView, ContactsView, HydrationView, MeetingView, StopwatchView, TileFeed, TileFeeds, TileIssue } from "./ui-types";
 
 /**
@@ -18,6 +19,7 @@ vi.stubGlobal("navigator", { onLine: true });
 
 const { Tile } = await import("./Tile");
 const { TilePopover } = await import("./popovers");
+const { Gallery } = await import("../Gallery");
 const { useFeedStore } = await import("./feeds");
 const { useDockStore } = await import("../store");
 const { useTimerStore } = await import("../../widgets/timerStore");
@@ -461,5 +463,90 @@ describe("the popover itself", () => {
     expect(html).toContain('aria-label="Sound"');
     expect(html).toContain('aria-label="Close"');
     expect(html).toMatch(/transform:translate3d\(/);
+  });
+});
+
+describe("the widget gallery", () => {
+  const from = { x: 700, y: 980, w: 520, h: 70 };
+  const category = (id: string, order: number) => ({ id: id as never, name: null, tone: "blue" as const, order });
+  const app = (id: string, cat: string) => ({ id, name: id, category: cat as never, filedBy: "known" as const, icon: "", publisher: null, firstSeen: 0 });
+  const gallery = (tiles: readonly string[] = ["clock"]): string => {
+    seed(useDockStore, {
+      settings: { ...useDockStore.getInitialState().settings, tiles, pinned: [{ kind: "stack", category: "media" }] },
+      categories: [category("media", 0), category("games", 1)],
+      apps: [app("a", "media"), app("b", "games")],
+    });
+    return renderToStaticMarkup(<Gallery open={{ from }} />);
+  };
+
+  it("is a labelled dialog with a search field and a close button", () => {
+    const html = gallery();
+    expect(html).toContain('role="dialog"');
+    expect(html).toContain('aria-label="Add a widget"');
+    expect(html).toContain('type="search"');
+    expect(html).toContain('placeholder="Search widgets"');
+    expect(html).toContain('aria-label="Close"');
+  });
+
+  it("has a card with a live preview and an Add button for every tile that is not on the dock", () => {
+    const html = gallery(["clock"]);
+    for (const id of TILE_IDS.filter((tile) => tile !== "clock")) {
+      expect(html).toContain(`tile--${id}`);
+    }
+    expect(html).toContain('aria-label="Add Next meeting"');
+    expect(html).toContain('aria-label="Add Stopwatch"');
+    expect(html.match(/gcard__tile/g)?.length).toBe(TILE_IDS.length);
+  });
+
+  it("makes a preview something to look at, not to press", () => {
+    expect(gallery()).toMatch(/class="gcard__tile"[^>]*inert/);
+  });
+
+  it("offers Remove, and says it is on the dock, for a tile that is", () => {
+    const html = gallery(["clock", "focus"]);
+    expect(html).toContain('aria-label="Remove Focus"');
+    expect(html).toContain("On the dock");
+    expect(html).toContain('aria-label="Remove Clock"');
+  });
+
+  it("lets tiles be dragged onto the dock, but not ones already there", () => {
+    const html = gallery(["clock"]);
+    expect(button(html, "Add Focus")).toBeDefined();
+    expect(html).toMatch(/<li class="gcard" data-kind="tile" draggable="true"/);
+    expect(html).toMatch(/<li class="gcard" data-kind="tile" data-on="true" draggable="false"/);
+  });
+
+  it("lists stacks, with their apps, beside the tiles", () => {
+    const html = gallery();
+    expect(html).toContain("Games");
+    expect(html).toContain("1 app");
+    expect(button(html, "Remove Media")).toBeDefined();
+    expect(button(html, "Add Games")).toBeDefined();
+  });
+
+  it("keeps a closed slot for GitHub, Linear and Vercel, which cannot be added yet", () => {
+    const html = gallery();
+    for (const name of ["GitHub", "Linear", "Vercel"]) {
+      const add = button(html, `Add ${name}`);
+      expect(add).toContain('disabled=""');
+      expect(add).toContain("aria-describedby");
+    }
+    expect(html).toContain("Needs an account. It stays off until you connect it in the dock settings.");
+  });
+
+  it("shows the groups with how many cards each holds", () => {
+    const html = gallery();
+    for (const words of ["All", "Time", "Focus and health", "Media and sound", "System", "People", "Developer", "Stacks"]) expect(html).toContain(words);
+    expect(html).toContain('role="tablist"');
+    expect(html).toMatch(/aria-selected="true"[^>]*>All/);
+  });
+
+  it("says what each tile is and how it sits on the dock", () => {
+    const html = gallery();
+    expect(html).toContain("A countdown to your next meeting, with Join when it has a link.");
+    expect(html).toContain("Wide");
+    expect(html).toContain("Round");
+    expect(html).toContain("Opens a panel");
+    expect(html).toContain("One tap switches it");
   });
 });

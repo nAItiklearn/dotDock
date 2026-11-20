@@ -1,6 +1,6 @@
 import { MENU } from "./geometry";
 import { categoryLabel, t } from "./strings";
-import { appsInCategory, isTileId, pin, TILE_IDS, unpin, type TileId } from "./model";
+import { isTileId, pin, unpin } from "./model";
 import type { Category, CategoryId, CategoryTone, DockApp, DockSettings, DockWindow, PinnedItem } from "./protocol";
 export interface MenuItem {
   readonly id: string;
@@ -23,6 +23,8 @@ export interface MenuActions {
   readonly openStack: (category: CategoryId) => void;
   readonly setLibrary: (open: boolean) => void;
   readonly setEditing: (editing: boolean) => void;
+  /** Opens the widget gallery, where tiles and stacks are added to the dock. */
+  readonly openGallery: () => void;
 }
 
 export interface MenuContext {
@@ -35,50 +37,15 @@ export interface MenuContext {
 }
 
 const separator = (id: string): MenuItem => ({ id, label: "", kind: "separator" });
-const heading = (id: string, label: string): MenuItem => ({ id, label, kind: "heading" });
 
 function barMenu(ctx: MenuContext): MenuItem[] {
   return [
+    { id: "widgets", label: t("menu.addWidget"), kind: "item", run: () => ctx.do.openGallery() },
     { id: "library", label: t("menu.library"), kind: "item", run: () => ctx.do.setLibrary(true) },
     ctx.editing
       ? { id: "edit", label: t("menu.doneEditing"), kind: "item", run: () => ctx.do.setEditing(false) }
       : { id: "edit", label: t("menu.editDock"), kind: "item", run: () => ctx.do.setEditing(true) },
   ];
-}
-
-/** Stacks that are not on the dock yet, and live tiles that are not shown yet. */
-export function addable(ctx: Pick<MenuContext, "settings" | "categories" | "apps">): { stacks: Category[]; tiles: TileId[] } {
-  const pinnedStacks = new Set(ctx.settings.pinned.flatMap((p) => (p.kind === "stack" ? [p.category] : [])));
-  const stacks = ctx.categories
-    .filter((c) => !pinnedStacks.has(c.id) && appsInCategory(ctx.apps, c.id).length > 0)
-    .sort((a, b) => a.order - b.order);
-  const tiles = TILE_IDS.filter((id) => !ctx.settings.tiles.includes(id));
-  return { stacks, tiles };
-}
-
-function addMenu(ctx: MenuContext): MenuItem[] {
-  const { stacks, tiles } = addable(ctx);
-  const items: MenuItem[] = [];
-  if (stacks.length > 0) {
-    items.push(heading("h-stacks", t("edit.add.stacks")));
-    for (const c of stacks) {
-      items.push({
-        id: `stack:${c.id}`,
-        label: categoryLabel(c),
-        kind: "item",
-        tone: c.tone,
-        run: () => ctx.do.updateSettings({ pinned: pin(ctx.settings.pinned, { kind: "stack", category: c.id }) }),
-      });
-    }
-  }
-  if (tiles.length > 0) {
-    if (items.length > 0) items.push(separator("s-tiles"));
-    items.push(heading("h-tiles", t("edit.add.tiles")));
-    for (const id of tiles) {
-      items.push({ id: `tile:${id}`, label: t(`tile.${id}`), kind: "item", run: () => ctx.do.updateSettings({ tiles: [...ctx.settings.tiles, id] }) });
-    }
-  }
-  return items;
 }
 
 function moveToStack(app: DockApp, ctx: MenuContext): MenuItem {
@@ -128,7 +95,6 @@ function appMenu(app: DockApp, windows: readonly DockWindow[], ctx: MenuContext)
  * library). `null` is the bar itself; unknown keys fall back to it.
  */
 export function menuFor(key: string | null, ctx: MenuContext): MenuItem[] {
-  if (key === "add") return addMenu(ctx);
   if (key === null || key === "library" || key === "status") return barMenu(ctx);
 
   if (key.startsWith("stack:")) {

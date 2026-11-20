@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fitIconSize, ICON_LIMITS, isPopoverTile, LENGTH_RATIO, lengthOf, MAGNIFICATION_LIMITS, MENU, metricsFor, RATIO, TILE_POPOVER, TILE_POPOVER_SIZE } from "../geometry";
-import { addable, menuFor, type MenuContext } from "../menu";
+import { menuFor, type MenuContext } from "../menu";
 import { buildEntries, isTileId, lengthKind, magnifyWeight, TILE_IDS, type BarEntry } from "../model";
 import type { DockSettings } from "../protocol";
 import { plural, t, type StringKey } from "../strings";
@@ -37,12 +37,12 @@ describe("every live tile is wired up", () => {
     expect(isTileId("weather")).toBe(false);
   });
 
-  it("lets every tile be added from the chooser and removed from its own menu", () => {
-    const ctx = { settings: settings([]), categories: [], apps: [] };
-    expect(addable(ctx).tiles).toEqual([...TILE_IDS]);
+  it("lets every tile be removed from its own menu", () => {
     const calls: string[] = [];
     const menu: MenuContext = {
-      ...ctx,
+      settings: settings([]),
+      categories: [],
+      apps: [],
       windows: [],
       editing: false,
       do: {
@@ -53,13 +53,11 @@ describe("every live tile is wired up", () => {
         openStack: () => undefined,
         setLibrary: () => undefined,
         setEditing: () => undefined,
+        openGallery: () => undefined,
       },
     };
     for (const id of TILE_IDS) {
-      menuFor("add", menu).find((i) => i.id === `tile:${id}`)?.run?.();
-      expect(calls.at(-1)).toBe(JSON.stringify({ tiles: [id] }));
-      const onDock: MenuContext = { ...menu, settings: settings([id]) };
-      menuFor(`tile:${id}`, onDock).find((i) => i.id === "remove")?.run?.();
+      menuFor(`tile:${id}`, { ...menu, settings: settings([id]) }).find((i) => i.id === "remove")?.run?.();
       expect(calls.at(-1)).toBe(JSON.stringify({ tiles: [] }));
     }
   });
@@ -142,6 +140,35 @@ describe("opening a tile's popover", () => {
     store.showTile({ id: "stopwatch", from });
     store.showTile(null);
     expect(useDockStore.getState().tile).toBeNull();
+  });
+});
+
+describe("opening the widget gallery", () => {
+  const from = { x: 10, y: 10, w: 40, h: 40 };
+
+  it("shuts the other panels out, and each of them shuts it", () => {
+    const store = useDockStore.getState();
+    store.showTile({ id: "focus", from });
+    store.showGallery({ from });
+    expect(useDockStore.getState()).toMatchObject({ tile: null, stack: null, menu: null, libraryOpen: false, gallery: { from } });
+    useDockStore.getState().showTile({ id: "audio", from });
+    expect(useDockStore.getState().gallery).toBeNull();
+    useDockStore.getState().showGallery({ from });
+    useDockStore.getState().setLibrary(true);
+    expect(useDockStore.getState().gallery).toBeNull();
+    useDockStore.getState().showGallery({ from });
+    useDockStore.getState().openStack({ category: "media", from, fresh: new Set() });
+    expect(useDockStore.getState().gallery).toBeNull();
+  });
+
+  it("stays open while the dock is being edited, and closes with null", () => {
+    const store = useDockStore.getState();
+    store.showGallery({ from });
+    store.setEditing(true);
+    expect(useDockStore.getState().gallery).not.toBeNull();
+    store.showGallery(null);
+    store.setEditing(false);
+    expect(useDockStore.getState().gallery).toBeNull();
   });
 });
 

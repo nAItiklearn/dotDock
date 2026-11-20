@@ -275,6 +275,9 @@ export const TILE_POPOVER_SIZE = {
 export type PopoverTileId = keyof typeof TILE_POPOVER_SIZE;
 export const isPopoverTile = (id: string): id is PopoverTileId => Object.hasOwn(TILE_POPOVER_SIZE, id);
 
+/** The widget gallery popover, in px: its size, and the icon size its live previews are drawn at. */
+export const GALLERY = { w: 660, h: 560, pad: 16, head: 52, icon: 40, cardMin: 190, gap: 12, gapToDock: 12 } as const;
+
 /** Context menus, in px. */
 export const MENU = { w: 236, row: 34, heading: 30, separator: 9, pad: 6, gap: 4 } as const;
 

@@ -495,6 +495,12 @@ body {
   width: calc(var(--d-badge) * 0.7);
 }
 
+/* A widget dragged from the gallery over the dock: the bar lights its edge. */
+.dock[data-drop="true"] .plate__cap,
+.dock[data-drop="true"] .plate__mid {
+  border-color: var(--accent);
+}
+
 /* Edit mode. */
 .face[data-editing="true"] .disc,
 .face--tile[data-editing="true"] .tile {

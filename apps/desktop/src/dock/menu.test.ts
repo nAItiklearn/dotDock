@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { actionable, addable, heightBefore, menuFor, menuSize, type MenuActions, type MenuContext, type MenuItem } from "./menu";
+import { actionable, heightBefore, menuFor, menuSize, type MenuActions, type MenuContext, type MenuItem } from "./menu";
 import { MENU } from "./geometry";
-import { TILE_IDS } from "./model";
 import type { Category, DockApp, DockSettings, DockWindow } from "./protocol";
 
 const categories: Category[] = [
@@ -38,6 +37,7 @@ function recorder(): { calls: string[]; actions: MenuActions } {
       openStack: (c) => calls.push(`stack ${c}`),
       setLibrary: (open) => calls.push(`library ${open}`),
       setEditing: (editing) => calls.push(`editing ${editing}`),
+      openGallery: () => calls.push("gallery"),
     },
   };
 }
@@ -56,8 +56,8 @@ const find = (items: readonly MenuItem[], id: string): MenuItem => {
 
 describe("menuFor the bar", () => {
   it("offers the library and edit mode, and flips the edit entry while editing", () => {
-    expect(labels(menuFor(null, context().ctx))).toEqual(["Show App Library", "Edit dock"]);
-    expect(labels(menuFor(null, context({ editing: true }).ctx))).toEqual(["Show App Library", "Done editing"]);
+    expect(labels(menuFor(null, context().ctx))).toEqual(["Add widget…", "Show App Library", "Edit dock"]);
+    expect(labels(menuFor(null, context({ editing: true }).ctx))).toEqual(["Add widget…", "Show App Library", "Done editing"]);
   });
 
   it("runs the actions", () => {
@@ -120,7 +120,7 @@ describe("menuFor stacks, tiles and windows without an entry", () => {
     const { ctx, calls } = context();
     find(menuFor("tile:clock", ctx), "remove").run?.();
     expect(calls).toEqual([`settings ${JSON.stringify({ tiles: [] })}`]);
-    expect(labels(menuFor("tile:weather", ctx))).toEqual(["Show App Library", "Edit dock"]);
+    expect(labels(menuFor("tile:weather", ctx))).toEqual(["Add widget…", "Show App Library", "Edit dock"]);
   });
 
   it("closes a group of windows that has no Start menu entry", () => {
@@ -132,40 +132,15 @@ describe("menuFor stacks, tiles and windows without an entry", () => {
   });
 
   it("falls back to the bar menu for unknown keys", () => {
-    expect(labels(menuFor("app:gone", context().ctx))).toEqual(["Show App Library", "Edit dock"]);
+    expect(labels(menuFor("app:gone", context().ctx))).toEqual(["Add widget…", "Show App Library", "Edit dock"]);
   });
 });
 
-describe("the add chooser", () => {
-  it("offers the stacks and tiles that are not on the dock yet", () => {
+describe("the add widget entry", () => {
+  it("opens the gallery from the bar's menu", () => {
     const { ctx, calls } = context();
-    const items = menuFor("add", ctx);
-    expect(labels(items)).toEqual([
-      "Stacks",
-      "Development",
-      "Games",
-      "Live tiles",
-      "Now playing",
-      "System",
-      "Today",
-      "Next meeting",
-      "Focus",
-      "Stopwatch",
-      "Water",
-      "Reminders",
-      "Progress",
-      "Contacts",
-      "Microphone",
-      "Sound",
-    ]);
-    find(items, "stack:games").run?.();
-    expect(calls[0]).toContain('"category":"games"');
-  });
-
-  it("is empty when everything is on the dock", () => {
-    const full = { ...settings, pinned: categories.map((c) => ({ kind: "stack" as const, category: c.id })), tiles: [...TILE_IDS] };
-    expect(menuFor("add", context({ settings: full }).ctx)).toEqual([]);
-    expect(addable({ settings: full, categories, apps }).stacks).toEqual([]);
+    find(menuFor(null, ctx), "widgets").run?.();
+    expect(calls).toEqual(["gallery"]);
   });
 });
 

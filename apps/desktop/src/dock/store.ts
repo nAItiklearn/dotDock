@@ -41,6 +41,11 @@ export interface OpenTile {
   readonly from: Rect;
 }
 
+export interface OpenGallery {
+  /** Where it was opened from (the "+" in edit mode, or the bar): the gallery sits beside it. */
+  readonly from: Rect;
+}
+
 export interface MenuTarget {
   /** Entry key the menu belongs to, or null for the bar itself. */
   readonly key: string | null;
@@ -79,6 +84,7 @@ interface DockStore {
 
   readonly stack: OpenStack | null;
   readonly tile: OpenTile | null;
+  readonly gallery: OpenGallery | null;
   readonly libraryOpen: boolean;
   readonly editing: boolean;
   readonly menu: MenuTarget | null;
@@ -105,6 +111,8 @@ interface DockStore {
   openStack: (stack: OpenStack | null) => void;
   /** Opens a live tile's popover beside the tile, or closes it with null. */
   showTile: (tile: OpenTile | null) => void;
+  /** Opens the widget gallery, or closes it with null. */
+  showGallery: (gallery: OpenGallery | null) => void;
   /** Opens a category's stack: notes which of its apps are new, then marks them seen. */
   showStack: (category: CategoryId, from: Rect) => void;
   setLibrary: (open: boolean) => void;
@@ -131,6 +139,7 @@ export const useDockStore = create<DockStore>((set, get) => ({
 
   stack: null,
   tile: null,
+  gallery: null,
   libraryOpen: false,
   editing: false,
   menu: null,
@@ -155,16 +164,17 @@ export const useDockStore = create<DockStore>((set, get) => ({
     writeSeen(next);
     set({ seen: next });
   },
-  openStack: (stack) => set(stack === null ? { stack, menu: null } : { stack, menu: null, tile: null }),
-  showTile: (tile) => set(tile === null ? { tile } : { tile, stack: null, menu: null }),
+  openStack: (stack) => set(stack === null ? { stack, menu: null } : { stack, menu: null, tile: null, gallery: null }),
+  showTile: (tile) => set(tile === null ? { tile } : { tile, stack: null, menu: null, gallery: null }),
+  showGallery: (gallery) => set(gallery === null ? { gallery } : { gallery, stack: null, tile: null, menu: null, libraryOpen: false }),
   showStack: (category, from) => {
     const { apps, seen } = get();
     const inStack = appsInCategory(apps, category);
     const fresh = freshAppIds(inStack, seen, Date.now());
     get().markSeen(inStack.map((a) => a.id));
-    set({ stack: { category, from, fresh }, menu: null, tile: null });
+    set({ stack: { category, from, fresh }, menu: null, tile: null, gallery: null });
   },
-  setLibrary: (libraryOpen) => set({ libraryOpen, stack: null, tile: null, menu: null }),
+  setLibrary: (libraryOpen) => set({ libraryOpen, stack: null, tile: null, gallery: null, menu: null }),
   setEditing: (editing) => set(editing ? { editing, menu: null, tile: null } : { editing, menu: null }),
   setMenu: (menu) => set(menu === null ? { menu } : { menu, tile: null }),
   setNotice: (text) => set({ notice: text === null ? null : { id: ++noticeId, text } }),

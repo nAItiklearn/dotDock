@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useReducedMotion } from "./useReducedMotion";
 import { useViewport } from "./useViewport";
 import { actions } from "./bridge";
@@ -16,9 +16,10 @@ import {
   type Metrics,
   type Rect,
 } from "./geometry";
+import { dropIndex, GALLERY_MIME, placeTile } from "./galleryItems";
 import { isDraggable, Slot, type SlotHandlers } from "./items";
 import { maxGrowth } from "./magnify";
-import { activationTarget, buildEntries, lengthKind, pinKey, pinOf, reorderBy, tileKey, unpin, type AppEntry, type BarEntry, type StackEntry } from "./model";
+import { activationTarget, buildEntries, isTileId, lengthKind, pinKey, pinOf, reorderBy, tileKey, unpin, type AppEntry, type BarEntry, type StackEntry } from "./model";
 import { markOpenStart } from "./openMarks";
 import type { DockEdge } from "./protocol";
 import { leavePreview, onBarHover } from "./previewIntent";
@@ -72,11 +73,13 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const editing = useDockStore((s) => s.editing);
   const stack = useDockStore((s) => s.stack);
   const tile = useDockStore((s) => s.tile);
+  const gallery = useDockStore((s) => s.gallery);
   const menu = useDockStore((s) => s.menu);
   const pointerInside = useDockStore((s) => s.pointerInside);
   const reduced = useReducedMotion();
   const viewport = useViewport();
   const [roving, setRoving] = useState<string>("library");
+  const [dropReady, setDropReady] = useState(false);
 
   const { edge } = settings;
   const vertical = isVertical(edge);
@@ -126,7 +129,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
     const sub = labelSub.current;
     if (root && name && sub) engine.attachLabel({ root, name, sub });
   }, [engine]);
-  const labelBlocked = editing || stack !== null || tile !== null || menu !== null;
+  const labelBlocked = editing || stack !== null || tile !== null || gallery !== null || menu !== null;
   useEffect(() => engine.setLabelBlocked(labelBlocked), [engine, labelBlocked]);
   useEffect(() => engine.setPreviewKey(previewKey), [engine, previewKey]);
   useEffect(() => {
@@ -289,14 +292,13 @@ export function Bar({ hidden, onLayout }: BarProps) {
     /** Opens the panel an item stands for, or launches or focuses the app. */
     const open = (entry: BarEntry, face: HTMLElement): void => {
       const store = useDockStore.getState();
-      const { edge: side, editing: isEditing } = latest.current;
+      const { editing: isEditing } = latest.current;
       switch (entry.kind) {
         case "library":
           store.setLibrary(true);
           return;
         case "add":
-          store.openStack(null);
-          store.setMenu({ key: entry.key, at: anchorPoint(rectOf(face), side) });
+          store.showGallery(store.gallery === null ? { from: rectOf(face) } : null);
           return;
         case "stack":
           if (store.stack?.category === entry.category.id) {
@@ -335,7 +337,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
 
     /** Set from the press that opened a panel until the click that ends it has passed, so that click does not toggle the panel shut. */
     let openedOnPress = false;
-    const panelOf = (entry: BarEntry): string => (entry.kind === "library" ? "library" : entry.kind === "stack" ? "stack" : entry.kind === "tile" ? "tile" : "menu");
+    const panelOf = (entry: BarEntry): string => (entry.kind === "library" ? "library" : entry.kind === "stack" ? "stack" : entry.kind === "tile" ? "tile" : entry.kind === "add" ? "gallery" : "menu");
     const openOnPress = (entry: BarEntry, face: HTMLElement, startedAt: number): void => {
       markOpenStart(panelOf(entry), startedAt);
       open(entry, face);
@@ -422,6 +424,30 @@ export function Bar({ hidden, onLayout }: BarProps) {
     stops[to]?.focus();
   };
 
+  /** A card dragged from the gallery over the dock: it may be dropped here, and shows where. */
+  const onGalleryDrag = (e: DragEvent<HTMLDivElement>): void => {
+    if (!e.dataTransfer.types.includes(GALLERY_MIME)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setDropReady(true);
+  };
+
+  /** Drops a tile from the gallery among the tiles on the dock, before the first one whose middle is past the pointer. */
+  const onGalleryDrop = (e: DragEvent<HTMLDivElement>): void => {
+    setDropReady(false);
+    const id = e.dataTransfer.getData(GALLERY_MIME).replace(/^tile:/, "");
+    if (!e.dataTransfer.types.includes(GALLERY_MIME) || !isTileId(id)) return;
+    e.preventDefault();
+    const { settings: current, vertical: v } = latest.current;
+    const middles = current.tiles
+      .filter((tileId): tileId is typeof id => isTileId(tileId) && tileId !== id)
+      .flatMap((tileId) => {
+        const placed = items.current.find((i) => i.key === tileKey(tileId));
+        return placed ? [origin.current + placed.start + placed.size / 2] : [];
+      });
+    void actions.updateSettings({ tiles: placeTile(current.tiles, id, dropIndex(middles, v ? e.clientY : e.clientX)) });
+  };
+
   const onBarContext = (e: MouseEvent): void => {
     e.preventDefault();
     const store = useDockStore.getState();
@@ -446,7 +472,17 @@ export function Bar({ hidden, onLayout }: BarProps) {
 
   return (
     <div className="dock-anchor" data-edge={edge} data-axis={vertical ? "y" : "x"} data-mag={peak > 1 && !reduced ? "on" : "off"} style={vars}>
-      <div ref={dockRef} className="dock" data-hidden={hidden ? "true" : undefined} data-editing={editing ? "true" : undefined} onContextMenu={onBarContext}>
+      <div
+        ref={dockRef}
+        className="dock"
+        data-hidden={hidden ? "true" : undefined}
+        data-editing={editing ? "true" : undefined}
+        data-drop={dropReady ? "true" : undefined}
+        onContextMenu={onBarContext}
+        onDragOver={onGalleryDrag}
+        onDragLeave={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setDropReady(false)}
+        onDrop={onGalleryDrop}
+      >
         <div className="plate" aria-hidden="true">
           <div ref={plateMid} className="plate__mid" />
           <div ref={plateStart} className="plate__cap plate__cap--start" />
@@ -463,7 +499,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
               editing={editing}
               roving={entry.key === rovingKey}
               peak={peak}
-              open={(entry.kind === "stack" && stack?.category === entry.category.id) || (entry.kind === "add" && menu?.key === entry.key) || (entry.kind === "tile" && tile?.id === entry.id)}
+              open={(entry.kind === "stack" && stack?.category === entry.category.id) || (entry.kind === "add" && gallery !== null) || (entry.kind === "tile" && tile?.id === entry.id)}
               handlers={handlers}
             />
           ))}
