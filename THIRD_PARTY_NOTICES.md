@@ -26,6 +26,7 @@ Every dependency, font, sound, image and data source is listed here with its lic
 | serde, serde_json | MIT OR Apache-2.0 |
 | thiserror | MIT OR Apache-2.0 |
 | base64 | MIT OR Apache-2.0 |
+| png | MIT OR Apache-2.0 |
 | ureq | MIT OR Apache-2.0 |
 
 Transitive crate licences are checked by `cargo audit` in CI; a full generated list ships with releases.
@@ -114,6 +115,20 @@ No icon, art, code or table is taken from another dock, launcher or Start menu r
 project. The icons shown in the dock are extracted at run time from the user's own installed apps and stay on the user's machine
 (`%LOCALAPPDATA%\dev.dotdock.desktop\dock-icons`); none is shipped or committed.
 
+
+## Dependencies added for the dock's live tiles
+
+The native data providers for the dock's tiles live in `apps/desktop/src-tauri/tiles/`.
+
+| Crate | Used for | Licence |
+| --- | --- | --- |
+| `png` 0.18 (with `fdeflate`, `simd-adler32`, `crc32fast`, `flate2`, `miniz_oxide`, `bitflags`) | encoding screenshots and clipboard thumbnails as PNG | MIT OR Apache-2.0 (`simd-adler32`: MIT; `miniz_oxide`: MIT OR Zlib OR Apache-2.0) |
+| `notify` 8 | watching the Downloads and Screenshots folders and the chosen `.ics` calendar file | CC0-1.0 (listed above) |
+| `base64` 0.23 | thumbnails sent to the dock as data URLs | MIT OR Apache-2.0 (listed above) |
+| `sysinfo` 0.40 | CPU, memory and network readings for the system graph | MIT (listed above) |
+| `tempfile` (dev only) | temporary folders in unit tests | MIT OR Apache-2.0 (listed above) |
+
+Audio, Wi-Fi, Bluetooth, brightness, calendar, clipboard and screenshot access go through the `windows` crate that is already listed. No font, sound or image is added: the two tests that listen to the speakers play `C:\Windows\Media\ding.wav` from the user's own Windows install and never copy or ship it.
 
 ## Website (`website/`)
 The showcase site is a static Astro project. These packages are build-time only; the published site is plain HTML, CSS and one small script bundle. It loads no third-party scripts, fonts, analytics or CDNs.

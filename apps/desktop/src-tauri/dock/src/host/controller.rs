@@ -9,8 +9,8 @@
 //! Other threads talk to it through a channel and a wake-up message; they never touch its state.
 
 use super::plan::{plan, Inputs, Plan};
-use super::replace::{Outcome, Replacement};
 use super::pointer::Pause;
+use super::replace::{Outcome, Replacement};
 use super::{window, Hooks, Styles};
 use crate::appbar::{primary_monitor, work_area, AppBar};
 use crate::com::{pcwstr, wide};
@@ -27,7 +27,9 @@ use std::thread::JoinHandle;
 use windows::core::w;
 use windows::Win32::Foundation::{HMODULE, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
-use windows::Win32::UI::Input::KeyboardAndMouse::{RegisterHotKey, UnregisterHotKey, MOD_ALT, MOD_CONTROL, MOD_NOREPEAT, VK_SPACE};
+use windows::Win32::UI::Input::KeyboardAndMouse::{
+    RegisterHotKey, UnregisterHotKey, MOD_ALT, MOD_CONTROL, MOD_NOREPEAT, VK_SPACE,
+};
 use windows::Win32::UI::Shell::ABN_POSCHANGED;
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, GetMessageW, PostMessageW, PostQuitMessage,
@@ -328,7 +330,8 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, message: u32, wparam: WPARAM, lpa
             LRESULT(0)
         }
         _ => {
-            let created = CONTROLLER.with(|cell| cell.try_borrow().ok().and_then(|c| c.as_ref().map(|c| c.taskbar_created)));
+            let created =
+                CONTROLLER.with(|cell| cell.try_borrow().ok().and_then(|c| c.as_ref().map(|c| c.taskbar_created)));
             if created == Some(message) {
                 with_controller(Controller::on_taskbar_created, || {});
                 return LRESULT(0);
@@ -359,9 +362,8 @@ impl Handle {
         let published = Arc::clone(&hwnd);
         let (ready_tx, ready_rx) = sync_channel::<io::Result<()>>(1);
         let parts = Parts { commands: rx, reporter: tx.clone(), hooks, styles, pause, settings };
-        let thread = std::thread::Builder::new()
-            .name("dock-host".into())
-            .spawn(move || run(parts, &published, &ready_tx))?;
+        let thread =
+            std::thread::Builder::new().name("dock-host".into()).spawn(move || run(parts, &published, &ready_tx))?;
         ready_rx.recv().map_err(io::Error::other)??;
         Ok(Handle { tx, hwnd, thread: Some(thread) })
     }
@@ -432,22 +434,20 @@ fn run(parts: Parts, published: &AtomicIsize, ready: &std::sync::mpsc::SyncSende
         let name = wide("TaskbarCreated");
         let apply_hooks = Arc::clone(&hooks);
         let raw = hwnd.0 as isize;
-        let taskbar = Replacement::start(
-            Arc::new(move |hide| apply_hooks.set_taskbar_hidden(hide)),
-            move |outcome| {
-                // The worker is not the window thread: it reports the way every other thread does.
-                if reporter.send(Command::Taskbar(outcome)).is_ok() {
-                    // Wakes the host window; a window that is gone just refuses the message.
-                    let _ = PostMessageW(Some(HWND(raw as *mut _)), WM_WAKE, WPARAM(0), LPARAM(0));
-                }
-            },
-        );
+        let taskbar = Replacement::start(Arc::new(move |hide| apply_hooks.set_taskbar_hidden(hide)), move |outcome| {
+            // The worker is not the window thread: it reports the way every other thread does.
+            if reporter.send(Command::Taskbar(outcome)).is_ok() {
+                // Wakes the host window; a window that is gone just refuses the message.
+                let _ = PostMessageW(Some(HWND(raw as *mut _)), WM_WAKE, WPARAM(0), LPARAM(0));
+            }
+        });
         let Ok(taskbar) = taskbar else {
             let _ = ready.send(Err(io::Error::other("could not start the taskbar worker")));
             let _ = DestroyWindow(hwnd);
             return;
         };
-        let hotkey = RegisterHotKey(Some(hwnd), HOTKEY_ID, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, u32::from(VK_SPACE.0)).is_ok();
+        let hotkey =
+            RegisterHotKey(Some(hwnd), HOTKEY_ID, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, u32::from(VK_SPACE.0)).is_ok();
         if !hotkey {
             hooks.log("the App Library shortcut (Ctrl+Alt+Space) is taken by another program");
         }
@@ -489,4 +489,3 @@ fn run(parts: Parts, published: &AtomicIsize, ready: &std::sync::mpsc::SyncSende
         let _ = UnregisterClassW(CLASS_NAME, Some(instance.into()));
     }
 }
-

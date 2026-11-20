@@ -203,7 +203,8 @@ mod tests {
 
     #[test]
     fn a_crafted_request_path_still_names_no_file() {
-        for path in ["/../../secrets.png", "//server/share.png", "/..%2f..%2fsecrets.png", "/0123456789abcdef.exe", "/"] {
+        for path in ["/../../secrets.png", "//server/share.png", "/..%2f..%2fsecrets.png", "/0123456789abcdef.exe", "/"]
+        {
             assert_eq!(key_from_url(&url_from_request_path(path)), None, "{path}");
         }
     }

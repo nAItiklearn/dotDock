@@ -16,7 +16,9 @@ use dotdock_shell::{boot_log, dock_guard};
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::http::{Request, Response, StatusCode};
-use tauri::{AppHandle, Emitter, Manager, State, UriSchemeContext, UriSchemeResponder, WebviewUrl, WebviewWindowBuilder};
+use tauri::{
+    AppHandle, Emitter, Manager, State, UriSchemeContext, UriSchemeResponder, WebviewUrl, WebviewWindowBuilder,
+};
 
 pub const DOCK_LABEL: &str = "dock";
 /// Folder of the dock's own files (`dock.json`, the catalogue cache) inside the app data folder.

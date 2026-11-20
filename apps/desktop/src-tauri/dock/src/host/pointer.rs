@@ -282,13 +282,11 @@ mod tests {
         regions.replace(vec![BAR]);
         let events = Arc::new(Mutex::new(Vec::new()));
         let sink = Arc::clone(&events);
-        let poller = Poller::start(
-            Arc::clone(&probe),
-            Arc::clone(&regions),
-            Arc::new(Pause::default()),
-            move |inside| sink.lock().unwrap().push(inside),
-        )
-        .expect("poller");
+        let poller =
+            Poller::start(Arc::clone(&probe), Arc::clone(&regions), Arc::new(Pause::default()), move |inside| {
+                sink.lock().unwrap().push(inside)
+            })
+            .expect("poller");
 
         *probe.cursor.lock().unwrap() = (900.0, 1000.0);
         assert!(wait_for(|| events.lock().unwrap().as_slice() == [true]));

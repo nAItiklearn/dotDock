@@ -44,7 +44,11 @@ pub fn plan(settings: &DockSettings, inputs: Inputs) -> Plan {
 mod tests {
     use super::*;
 
-    const READY: Inputs = Inputs { window: true, ui_ready: true, frozen: FrozenState { locked: false, display_off: false, fullscreen: false } };
+    const READY: Inputs = Inputs {
+        window: true,
+        ui_ready: true,
+        frozen: FrozenState { locked: false, display_off: false, fullscreen: false },
+    };
 
     fn settings(change: impl FnOnce(&mut DockSettings)) -> DockSettings {
         let mut settings = DockSettings::default();

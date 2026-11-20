@@ -251,7 +251,8 @@ fn region_of(shapes: &[Shape], scale: f64) -> io::Result<HRGN> {
         let union = CreateRectRgn(0, 0, 0, 0);
         for shape in shapes {
             let (left, top) = ((shape.x * scale).round() as i32, (shape.y * scale).round() as i32);
-            let (right, bottom) = (((shape.x + shape.w) * scale).round() as i32, ((shape.y + shape.h) * scale).round() as i32);
+            let (right, bottom) =
+                (((shape.x + shape.w) * scale).round() as i32, ((shape.y + shape.h) * scale).round() as i32);
             let diameter = (2.0 * shape.radius * scale).round() as i32;
             let piece = CreateRoundRectRgn(left, top, right + 1, bottom + 1, diameter, diameter);
             CombineRgn(Some(union), Some(union), Some(piece), RGN_OR);
@@ -270,7 +271,8 @@ fn set_accent_policy(hwnd: HWND, tint: u32) {
             return;
         };
         let set: SetCompositionAttribute = std::mem::transmute(entry);
-        let mut policy = AccentPolicy { state: ACCENT_ENABLE_ACRYLIC, flags: 0, gradient_colour: tint, animation_id: 0 };
+        let mut policy =
+            AccentPolicy { state: ACCENT_ENABLE_ACRYLIC, flags: 0, gradient_colour: tint, animation_id: 0 };
         let mut attribute = CompositionAttribute {
             attribute: WCA_ACCENT_POLICY,
             data: std::ptr::from_mut(&mut policy).cast(),

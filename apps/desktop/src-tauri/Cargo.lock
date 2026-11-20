@@ -968,6 +968,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotdock-tiles"
+version = "0.1.0"
+dependencies = [
+ "base64 0.23.1",
+ "dotdock-shell",
+ "notify",
+ "png",
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "tempfile",
+ "windows",
+ "windows-core",
+]
+
+[[package]]
 name = "dpi"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

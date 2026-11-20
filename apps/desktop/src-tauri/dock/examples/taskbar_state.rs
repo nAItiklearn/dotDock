@@ -17,7 +17,13 @@ fn main() {
     println!("taskbar visible: {:?}", taskbar::is_visible());
     println!("taskbar auto-hide: {}", taskbar::auto_hide());
     println!("marker present: {marker}");
-    println!("monitor: {}x{} at {},{}", monitor.right - monitor.left, monitor.bottom - monitor.top, monitor.left, monitor.top);
+    println!(
+        "monitor: {}x{} at {},{}",
+        monitor.right - monitor.left,
+        monitor.bottom - monitor.top,
+        monitor.left,
+        monitor.top
+    );
     println!(
         "work area: {}x{} at {},{} (reserved: top {}, bottom {}, left {}, right {})",
         work.right - work.left,
