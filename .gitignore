@@ -16,3 +16,6 @@ target/
 
 # Read-only study clones of third-party reference code (never committed)
 /references/
+
+# Local GNU-toolchain build output (D-005)
+target-gnu/
