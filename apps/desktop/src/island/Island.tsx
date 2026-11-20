@@ -78,7 +78,6 @@ export function Island() {
   }, [flash, flashId]);
 
   const swipe = useRef({ travel: 0, at: 0 });
-  if (mode === "off") return null;
 
   const focusCurrent = (): void => {
     if (current) void actions.focus(current.id);

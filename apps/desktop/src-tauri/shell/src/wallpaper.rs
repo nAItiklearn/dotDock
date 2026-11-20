@@ -134,6 +134,24 @@ pub fn monitors() -> Result<Vec<String>, WallpaperError> {
     }
 }
 
+/// The wallpaper file of every monitor, by device path. Monitors showing a solid colour are left out.
+pub fn assignments() -> Result<Vec<(String, PathBuf)>, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply(); each returned PWSTR is freed by take_pwstr.
+    unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        let mut out = Vec::new();
+        for i in 0..wp.GetMonitorDevicePathCount()? {
+            let id = take_pwstr(wp.GetMonitorDevicePathAt(i)?);
+            let path = take_pwstr(wp.GetWallpaper(&HSTRING::from(id.as_str()))?);
+            if !path.is_empty() {
+                out.push((id, PathBuf::from(path)));
+            }
+        }
+        Ok(out)
+    }
+}
+
 /// The wallpaper file Windows is showing on the primary monitor: the one at the origin of the virtual
 /// screen, or the first listed when none is. None when the wallpaper is a solid colour.
 pub fn current() -> Result<Option<PathBuf>, WallpaperError> {

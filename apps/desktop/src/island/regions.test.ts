@@ -22,7 +22,7 @@ describe("computeRegions", () => {
     expect(regions.interactive).toHaveLength(1);
   });
 
-  it.each(["off", "hidden", "tiny"] as const)("asks for nothing in %s mode", (mode) => {
+  it.each(["hidden", "tiny"] as const)("asks for nothing in %s mode", (mode) => {
     expect(computeRegions({ rest: REST, mode, moveAside: true, aside: false })).toEqual({ interactive: [], hover: null });
   });
 

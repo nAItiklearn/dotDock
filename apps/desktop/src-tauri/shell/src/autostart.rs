@@ -103,6 +103,11 @@ fn register_task(exe: &str) -> bool {
     ok
 }
 
+/// dotDock starts at sign-in, by the logon task or the Run key.
+pub fn is_enabled() -> bool {
+    task_exists() || registry::get_string(RUN_KEY, AUTOSTART_NAME).ok().flatten().is_some()
+}
+
 /// Restores StartupDelayInMSec to its snapshotted original.
 fn restore_startup_delay(snapshot: &snapshot::Snapshot) -> Result<(), AutostartError> {
     match snapshot.startup_delay_in_m_sec {

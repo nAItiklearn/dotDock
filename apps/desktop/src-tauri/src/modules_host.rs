@@ -10,8 +10,8 @@
 use crate::home_host::{Home, HomeState};
 use crate::island_host::{IslandSlot, Notch};
 use crate::tray;
-use dotdock_shell::dock_guard;
 use dotdock_shell::modules::{Environment, ModuleId, Modules};
+use dotdock_shell::{boot_log as boot, dock_guard, handover};
 use tauri::{AppHandle, Emitter, Manager};
 
 /// Emitted to every window with the `Environment` whenever any part starts or stops.
@@ -47,13 +47,28 @@ pub async fn environment_get(modules: tauri::State<'_, Modules>) -> Result<Envir
     Ok(modules.environment())
 }
 
-/// Switches the whole dotDock environment on or off. Starting or stopping waits for windows and
-/// threads, so it runs off the async workers.
+/// Switches the dotDock theme, the whole environment, on or off. Off stops every part, then hands the
+/// desktop back to Windows: dotDock's wallpapers and launch at sign-in are recorded, and Windows is
+/// restored as `tools/restore-windows.ps1` does it. On puts the recorded desktop back first, then starts
+/// the parts. Starting or stopping waits for windows, threads and the shell, so it runs off the async workers.
 #[tauri::command]
 pub async fn environment_set(app: AppHandle, on: bool) -> Result<Environment, String> {
-    tauri::async_runtime::spawn_blocking(move || app.state::<Modules>().set_environment(on).map_err(|e| e.to_string()))
-        .await
-        .map_err(|e| e.to_string())?
+    tauri::async_runtime::spawn_blocking(move || switch_theme(&app, on)).await.map_err(|e| e.to_string())?
+}
+
+fn switch_theme(app: &AppHandle, on: bool) -> Result<Environment, String> {
+    let modules = app.state::<Modules>();
+    let dir = dotdock_shell::app_data_dir().ok_or("LOCALAPPDATA is not set")?;
+    if on {
+        let taken = handover::take_over(&dir, &handover::Windows).map_err(|e| e.to_string())?;
+        boot::record(&format!("theme on: {taken:?}"));
+        modules.set_environment(true).map_err(|e| e.to_string())
+    } else {
+        let environment = modules.set_environment(false).map_err(|e| e.to_string())?;
+        let handed = handover::hand_back(&dir, &handover::Windows);
+        boot::record(&format!("theme off: {handed:?}"));
+        handed.map(|()| environment).map_err(|e| e.to_string())
+    }
 }
 
 /// Keeps the Windows taskbar (`use_windows`), or lets the dock's replacement take its place.

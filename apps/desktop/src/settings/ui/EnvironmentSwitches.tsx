@@ -19,7 +19,7 @@ const WAITING_CHIP = { loading: "Reading…", unavailable: "Needs the desktop ap
 
 /**
  * The only two switches over the dotDock environment, kept low-key at the very end of Settings:
- * the whole environment on or off, and the Windows taskbar instead of the dock's replacement.
+ * the dotDock theme (the whole environment) on or off, and the Windows taskbar instead of the dock's replacement.
  * A self-contained section, so it can sit at the end of whichever page or group closes Settings.
  */
 export function EnvironmentSwitches() {
@@ -32,14 +32,14 @@ export function EnvironmentSwitches() {
   const waiting = state.env.status === "ready" ? null : WAITING_CHIP[state.env.status];
 
   return (
-    <Section title="Advanced" description="Rarely needed. Both take effect at once and are remembered.">
+    <Section title="dotDock and Windows" description="Rarely needed. Both take effect at once and are remembered.">
       <Row
         id="environment-on"
-        label="Use the dotDock desktop"
+        label="dotDock theme"
         description={
           <>
-            Widgets, dock and notch run together, and stop together. Off leaves plain Windows; your settings and layouts are kept, and
-            turning it on brings everything back.
+            Widgets, dock, notch and wallpaper, as one. Off puts Windows back as it was before dotDock: its wallpaper, its taskbar
+            and its startup list. On brings dotDock back as you left it. Your settings and layouts are kept either way.
             {shown?.problems.map((problem) => (
               <span key={problem} className="row__warn">
                 {" "}
@@ -57,7 +57,7 @@ export function EnvironmentSwitches() {
         ) : null}
         <Switch
           checked={shown?.on ?? false}
-          label="Use the dotDock desktop"
+          label="dotDock theme"
           disabled={!shown || state.pending.on !== undefined}
           onChange={(on) => void store.setOn(on)}
         />
