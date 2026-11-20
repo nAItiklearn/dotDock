@@ -14,6 +14,7 @@ pub mod clock;
 pub mod colour;
 pub mod com;
 pub mod contacts;
+pub mod dock;
 pub mod emit;
 pub mod folder;
 pub mod history;
@@ -37,6 +38,7 @@ pub mod winloop;
 pub mod wire;
 pub mod zone;
 
+pub use dock::{DockEvent, DockTiles, EVENT_FEEDS, EVENT_MIC_LEVEL};
 pub use emit::Emitter;
 pub use hub::TileHub;
 pub use paths::DataDir;

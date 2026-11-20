@@ -14,7 +14,7 @@ use crate::folder::{FolderProvider, Kind};
 use crate::history::History;
 use crate::microphone::{self, Microphone, MicrophoneLevelProvider};
 use crate::paths::{self, DataDir};
-use crate::protocol::{CommandResult, TileCommand, TileData, TileId};
+use crate::protocol::{CommandResult, ContactAction, TileCommand, TileData, TileId};
 use crate::settings::Settings;
 use crate::shelf::Shelf;
 use crate::thumbs::Thumbs;
@@ -188,6 +188,11 @@ impl TileHub {
             lock(&self.inner.subscriptions).remove(&tile);
             self.stop(tile);
         }
+    }
+
+    /// The link that performs `action` for a saved contact, over the first of their ways that can.
+    pub(crate) fn contact_link(&self, id: &str, action: ContactAction) -> Result<String, String> {
+        self.inner.contacts.link_for_action(id, action)
     }
 
     /// Files the tiles may open: inside the downloads, screenshots and voice memo folders, or on the shelf.
