@@ -47,6 +47,33 @@ pub enum AgentKind {
     #[default]
     Claude,
     Codex,
+    Copilot,
+    #[serde(rename = "opencode")]
+    OpenCode,
+    /// Any other agent that writes to the feed (`docs/ISLAND_PROTOCOL.md`); its own name travels with the session.
+    Other,
+}
+
+impl AgentKind {
+    /// The agent's product name, as shown in toasts.
+    pub fn label(self) -> &'static str {
+        match self {
+            AgentKind::Claude => "Claude Code",
+            AgentKind::Codex => "Codex",
+            AgentKind::Copilot => "GitHub Copilot CLI",
+            AgentKind::OpenCode => "OpenCode",
+            AgentKind::Other => "Agent",
+        }
+    }
+
+    /// The kind a feed agent id stands for. Claude Code and Codex have their own sources, so a feed never claims them.
+    pub fn from_feed_id(id: &str) -> Self {
+        match id {
+            "copilot" => AgentKind::Copilot,
+            "opencode" => AgentKind::OpenCode,
+            _ => AgentKind::Other,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -70,5 +97,18 @@ mod tests {
         assert_eq!(serde_json::to_string(&Phase::Limit).expect("json"), "\"limit\"");
         assert_eq!(serde_json::to_string(&Phase::Running).expect("json"), "\"running\"");
         assert_eq!(serde_json::to_string(&AgentKind::Codex).expect("json"), "\"codex\"");
+        assert_eq!(serde_json::to_string(&AgentKind::Copilot).expect("json"), "\"copilot\"");
+        assert_eq!(serde_json::to_string(&AgentKind::OpenCode).expect("json"), "\"opencode\"");
+        assert_eq!(serde_json::to_string(&AgentKind::Other).expect("json"), "\"other\"");
+    }
+
+    #[test]
+    fn feed_ids_map_to_kinds_and_never_to_the_built_in_sources() {
+        assert_eq!(AgentKind::from_feed_id("copilot"), AgentKind::Copilot);
+        assert_eq!(AgentKind::from_feed_id("opencode"), AgentKind::OpenCode);
+        assert_eq!(AgentKind::from_feed_id("aider"), AgentKind::Other);
+        assert_eq!(AgentKind::from_feed_id("claude"), AgentKind::Other);
+        assert_eq!(AgentKind::from_feed_id("codex"), AgentKind::Other);
+        assert_eq!(AgentKind::Copilot.label(), "GitHub Copilot CLI");
     }
 }

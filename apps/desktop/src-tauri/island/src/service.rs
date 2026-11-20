@@ -83,10 +83,7 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
 
 /// Copy for a system toast. Short, specific, no exclamation marks.
 pub fn notification_copy(alert: &Alert) -> NotificationCopy {
-    let agent = match alert.agent {
-        crate::phase::AgentKind::Claude => "Claude Code",
-        crate::phase::AgentKind::Codex => "Codex",
-    };
+    let agent = alert.agent_label.as_str();
     let (title, body) = match alert.kind {
         AlertKind::Done => (format!("{agent} finished"), alert.text.clone().unwrap_or_else(|| alert.project.clone())),
         AlertKind::Waiting => {
@@ -98,7 +95,10 @@ pub fn notification_copy(alert: &Alert) -> NotificationCopy {
         }
         AlertKind::Error => {
             let body = match alert.problem.as_ref().map(|p| p.kind) {
-                Some(ProblemKind::Login) => "Signed out. Run /login in the terminal.".to_owned(),
+                Some(ProblemKind::Login) if alert.agent == crate::phase::AgentKind::Claude => {
+                    "Signed out. Run /login in the terminal.".to_owned()
+                }
+                Some(ProblemKind::Login) => format!("Signed out. Sign in to {agent} again."),
                 Some(ProblemKind::Connection) => "Cannot reach the API. Check the connection and resend.".to_owned(),
                 _ => alert.problem.as_ref().map_or_else(|| alert.project.clone(), |p| p.message.clone()),
             };
@@ -293,6 +293,7 @@ mod tests {
         Alert {
             session_id: "s".into(),
             agent: AgentKind::Claude,
+            agent_label: "Claude Code".into(),
             kind,
             project: "dotDock".into(),
             text: text.map(str::to_owned),
@@ -320,6 +321,19 @@ mod tests {
         );
         let bare = notification_copy(&alert(AlertKind::Done, None, None));
         assert_eq!(bare.body, "dotDock");
+    }
+
+    #[test]
+    fn toast_copy_names_the_agent_that_spoke() {
+        let mut copilot = alert(AlertKind::Done, Some("Added the dock tests."), None);
+        copilot.agent = AgentKind::Copilot;
+        copilot.agent_label = "GitHub Copilot CLI".into();
+        assert_eq!(notification_copy(&copilot).title, "GitHub Copilot CLI finished · dotDock");
+        let login = Problem { kind: ProblemKind::Login, message: "Signed out".into(), resets: None };
+        let mut aider = alert(AlertKind::Error, None, Some(login));
+        aider.agent = AgentKind::Other;
+        aider.agent_label = "Aider".into();
+        assert_eq!(notification_copy(&aider).body, "Signed out. Sign in to Aider again.");
     }
 
     fn fixture() -> (tempfile::TempDir, ServiceConfig) {

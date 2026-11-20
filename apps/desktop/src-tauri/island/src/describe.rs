@@ -7,9 +7,10 @@ use crate::hook::lenient_string;
 use crate::phase::Phase;
 use crate::util::{basename, clip};
 use serde::Deserialize;
+use serde_json::Value;
 
 /// Longest detail line stored in a state file.
-const DETAIL_LIMIT: usize = 80;
+pub(crate) const DETAIL_LIMIT: usize = 80;
 const MASK: &str = "…";
 
 /// The fields of `tool_input` the island reads. Everything else in the payload is skipped unparsed.
@@ -215,12 +216,116 @@ pub fn describe_codex(name: &str, input: &str) -> Described {
     described(Phase::Thinking, name, None)
 }
 
+/// The first string among `keys` in a JSON object.
+fn arg<'a>(args: &'a Value, keys: &[&str]) -> Option<&'a str> {
+    keys.iter().find_map(|key| args.get(*key).and_then(Value::as_str))
+}
+
+/// Maps a tool call of an agent whose tool names are lower case (GitHub Copilot CLI: `view`, `bash`, `web_fetch`;
+/// OpenCode: `read`, `shell`, `webfetch`). `args` is the tool's input, or a JSON string holding it as older
+/// Copilot releases sent. The tool name is returned in the spelling the island's labels know (`Write`,
+/// `WebFetch`, `Task`, `mcp__...`).
+pub fn describe_agent_tool(name: &str, args: &Value) -> Described {
+    let decoded;
+    let args = match args {
+        Value::String(text) => {
+            decoded = serde_json::from_str::<Value>(text).unwrap_or(Value::Null);
+            &decoded
+        }
+        other => other,
+    };
+    let file = || arg(args, &["filePath", "file_path", "path"]).map(|p| basename(p).to_owned());
+    match name {
+        "view" | "read" | "list" | "ls" => described(Phase::Reading, "Read", file()),
+        "create" | "write" => described(Phase::Editing, "Write", file()),
+        "edit" | "str_replace_editor" | "str_replace" | "multiedit" => described(Phase::Editing, "Edit", file()),
+        "patch" | "apply_patch" => {
+            let patch = arg(args, &["patchText", "patch", "input"]).and_then(patch_file);
+            described(Phase::Editing, "Edit", patch.or_else(file))
+        }
+        "grep" | "glob" | "codesearch" => described(Phase::Searching, name, arg(args, &["pattern", "query"]).map(str::to_owned)),
+        "web_search" | "websearch" => described(Phase::Searching, "WebSearch", arg(args, &["query", "q"]).map(str::to_owned)),
+        "web_fetch" | "webfetch" => described(Phase::Reading, "WebFetch", arg(args, &["url"]).map(url_detail)),
+        "bash" | "powershell" | "shell" => {
+            let command = arg(args, &["command", "cmd"]);
+            let (phase, from_command) = command.map_or((Phase::Running, None), describe_command);
+            let note = arg(args, &["description"]).map(str::trim).filter(|d| !d.is_empty()).map(str::to_owned);
+            described(phase, name, note.or(from_command))
+        }
+        "read_bash" | "write_bash" | "stop_bash" | "read_powershell" | "write_powershell" | "stop_powershell" => {
+            described(Phase::Running, name, None)
+        }
+        "task" => described(Phase::Thinking, "Task", arg(args, &["description"]).map(str::to_owned)),
+        "ask_user" | "question" | "exit_plan_mode" | "plan_exit" => described(Phase::Waiting, name, None),
+        other if other.contains('/') => described(Phase::Thinking, &format!("mcp__{}", other.replace('/', "__")), None),
+        other => described(Phase::Thinking, other, None),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn input(json: &str) -> ToolInput {
         serde_json::from_str(json).expect("tool input")
+    }
+
+    fn call(name: &str, args: &str) -> Described {
+        describe_agent_tool(name, &serde_json::from_str(args).expect("args"))
+    }
+
+    #[test]
+    fn lower_case_agents_read_and_edit_files() {
+        let d = call("view", r#"{"path":"D:\\work\\dotDock\\src\\lib.rs"}"#);
+        assert_eq!(d, Described { phase: Phase::Reading, tool: Some("Read".into()), detail: Some("lib.rs".into()) });
+        let d = call("read", r#"{"filePath":"/home/me/app/main.ts","offset":10}"#);
+        assert_eq!((d.phase, d.detail.as_deref()), (Phase::Reading, Some("main.ts")));
+        let d = call("edit", r#"{"path":"C:\\x\\app.css","old_str":"a","new_str":"b"}"#);
+        assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Editing, Some("Edit"), Some("app.css")));
+        let d = call("create", r#"{"path":"C:\\x\\notes.md","file_text":"hello"}"#);
+        assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Editing, Some("Write"), Some("notes.md")));
+        let d = call("apply_patch", r#"{"patchText":"*** Begin Patch\n*** Update File: src/app.ts\n@@\n"}"#);
+        assert_eq!((d.phase, d.detail.as_deref()), (Phase::Editing, Some("app.ts")));
+    }
+
+    #[test]
+    fn lower_case_agents_search_and_fetch() {
+        let d = call("grep", r#"{"pattern":"fn main","path":"src"}"#);
+        assert_eq!((d.phase, d.detail.as_deref()), (Phase::Searching, Some("fn main")));
+        let d = call("web_fetch", r#"{"url":"https://docs.github.com/en/copilot?x=1"}"#);
+        assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Reading, Some("WebFetch"), Some("docs.github.com/en/copilot")));
+        let d = call("websearch", r#"{"query":"tauri window flags"}"#);
+        assert_eq!((d.phase, d.detail.as_deref()), (Phase::Searching, Some("tauri window flags")));
+    }
+
+    #[test]
+    fn lower_case_agents_run_shell_commands() {
+        let d = call("powershell", r#"{"command":"cargo test -p island","description":"Run island tests"}"#);
+        assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Running, Some("powershell"), Some("Run island tests")));
+        let d = call("bash", r#"{"command":"rg --files -g *.tsx"}"#);
+        assert_eq!(d.phase, Phase::Searching, "a search command is shown as a search");
+        let d = call("shell", r#"{"command":"curl -H 'Authorization: Bearer abc123def' https://x"}"#);
+        assert_eq!(d.detail.as_deref(), Some("curl -H 'Authorization: Bearer … https://x"));
+        assert_eq!(call("read_powershell", r#"{"shellId":"1"}"#).phase, Phase::Running);
+    }
+
+    #[test]
+    fn lower_case_agents_wait_delegate_and_call_mcp_tools() {
+        assert_eq!(call("ask_user", r#"{"question":"Which branch?"}"#).phase, Phase::Waiting);
+        assert_eq!(call("question", "{}").phase, Phase::Waiting);
+        let d = call("task", r#"{"description":"Explore the repo","prompt":"long text"}"#);
+        assert_eq!((d.phase, d.tool.as_deref(), d.detail.as_deref()), (Phase::Thinking, Some("Task"), Some("Explore the repo")));
+        let d = call("github-mcp-server/get_commit", "{}");
+        assert_eq!((d.phase, d.tool.as_deref()), (Phase::Thinking, Some("mcp__github-mcp-server__get_commit")));
+        assert_eq!(call("todowrite", "{}").tool.as_deref(), Some("todowrite"));
+    }
+
+    #[test]
+    fn arguments_sent_as_a_json_string_are_decoded() {
+        let d = describe_agent_tool("view", &Value::String(r#"{"path":"C:\\a\\lib.rs"}"#.to_owned()));
+        assert_eq!(d.detail.as_deref(), Some("lib.rs"));
+        let d = describe_agent_tool("view", &Value::String("not json".to_owned()));
+        assert_eq!((d.phase, d.detail), (Phase::Reading, None));
     }
 
     #[test]

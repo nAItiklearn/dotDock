@@ -55,6 +55,8 @@ impl EngineConfig {
 pub struct SessionView {
     pub id: String,
     pub agent: AgentKind,
+    /// The agent's name for labels and toasts.
+    pub agent_label: String,
     pub phase: Phase,
     pub tool: Option<String>,
     pub detail: Option<String>,
@@ -92,6 +94,7 @@ pub enum AlertKind {
 pub struct Alert {
     pub session_id: String,
     pub agent: AgentKind,
+    pub agent_label: String,
     pub kind: AlertKind,
     pub project: String,
     /// What was finished, or what the agent is asking for.
@@ -294,6 +297,7 @@ impl Engine {
                 views.push(SessionView {
                     id: id.clone(),
                     agent: s.agent,
+                    agent_label: s.agent_label(),
                     phase: e.phase,
                     tool: s.tool.clone(),
                     detail: s.detail.clone(),
@@ -315,6 +319,7 @@ impl Engine {
                 alerts.push(Alert {
                     session_id: id.clone(),
                     agent: t.state.agent,
+                    agent_label: t.state.agent_label(),
                     kind,
                     project: t.state.project.clone(),
                     text: match kind {
