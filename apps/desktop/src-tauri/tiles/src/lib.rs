@@ -1,7 +1,10 @@
 //! Native data providers for the dock's live tiles.
 //!
-//! `TileHub` is the entry point; `protocol` holds the wire types, mirrored by `apps/desktop/src/dock/tilesProtocol.ts`.
-//! See `docs/dock/TILES.md` for what each tile reads, when it runs and what was measured.
+//! `DockTiles` is the door for the tiles the dock UI shows first: seven feeds and six commands in the shapes of
+//! `wire`, which follow the UI's `tiles/ui-types.ts`. `TileHub` is the generic door for the other tiles (clipboard,
+//! screenshots, downloads, shelf, toggles, system history, voice memo, colour picker); its `protocol` types are
+//! mirrored by `apps/desktop/src/dock/tilesProtocol.ts`. See `docs/dock/TILES.md` for what each tile reads, when it
+//! runs and what was measured.
 #![cfg(windows)]
 
 pub mod appname;
