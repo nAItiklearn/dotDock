@@ -43,7 +43,11 @@ export interface DockApp {
   readonly name: string;
   readonly category: CategoryId;
   readonly filedBy: FiledBy;
-  /** `dock-icon://<hash>.png` URL served by the core (256 px PNG, cached in %LOCALAPPDATA%). */
+  /**
+   * URL of the 256 px PNG icon, served by the core from its cache in %LOCALAPPDATA%. WebView2 has no custom schemes, so the
+   * core sends the form it can load, `http://dock-icon.localhost/<hash>.png`; an app whose icon is not extracted yet still has
+   * its URL (the request waits for the extraction), and an empty string means no icon at all.
+   */
   readonly icon: string;
   /** Publisher or company name when known, for search and the info line. */
   readonly publisher: string | null;
@@ -111,6 +115,26 @@ export interface DockCommands {
   dock_set_regions(args: { rects: readonly { x: number; y: number; w: number; h: number }[] }): void;
   /** Show or hide live DWM thumbnails of an app's windows above a rect of the dock window. */
   dock_preview(args: { hwnds: readonly string[]; anchor: { x: number; y: number; w: number; h: number } } | { hwnds: [] }): void;
+  /**
+   * The dock window never activates on its own. While a text field, a popover or edit mode needs keys the UI asks
+   * for the foreground with `active: true` and hands it back with `false` (same idea as the overlay's `overlay_set_typing`).
+   */
+  dock_set_focus(args: { active: boolean }): void;
+  /**
+   * Where the native glass goes (theme `glass`). The window is transparent and CSS `backdrop-filter` cannot blur the desktop
+   * behind it, so the core draws Windows' own acrylic behind these rounded rectangles (CSS px, window-relative) just below the
+   * window: the pill, and any popover that wants it. `dark` picks the dark or the light tint. An empty list takes the glass away.
+   */
+  dock_set_glass(args: { shapes: readonly GlassShape[]; dark: boolean }): void;
+}
+
+export interface GlassShape {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  /** Corner radius; half the shorter side makes a pill. */
+  readonly radius: number;
 }
 
 export type CommandResult = { readonly ok: true } | { readonly ok: false; readonly reason: string };
@@ -123,6 +147,8 @@ export interface FrozenState {
   readonly locked: boolean;
   readonly displayOff: boolean;
   readonly fullscreen: boolean;
+  /** True when any of the three is. The core sends it so the window need not combine them. */
+  readonly frozen: boolean;
 }
 
 /** Events the core emits to the dock window. */
@@ -130,5 +156,12 @@ export interface DockEvents {
   "dock://apps": readonly DockApp[];
   "dock://windows": readonly DockWindow[];
   "dock://settings": DockSettings;
+  /** The global App Library shortcut (Ctrl+Alt+Space) was pressed. */
+  "dock://library": "toggle" | "open" | "close";
+  /**
+   * The cursor entered or left the rectangles from `dock_set_regions`. A click-through window gets no `pointerleave`
+   * from the WebView, so the core, which already polls the cursor, reports it.
+   */
+  "dock://pointer": { readonly inside: boolean };
   "dock://frozen": FrozenState;
 }

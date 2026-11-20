@@ -182,7 +182,7 @@ pub struct DockApp {
     pub name: String,
     pub category: CategoryId,
     pub filed_by: FiledBy,
-    /// `dock-icon://<hash>.png`, served by the host from the icon cache.
+    /// `dock-icon://<hash>.png` as the backend names it; the host turns it into `http://dock-icon.localhost/...` for the window.
     pub icon: String,
     pub publisher: Option<String>,
     /// Epoch ms the app was first seen.
