@@ -53,6 +53,20 @@ describe("registry", () => {
       }
     });
 
+    it("only makes a field depend on settings and values it really has", () => {
+      const fields = def.settingsSchema.properties;
+      for (const field of Object.values(fields)) {
+        for (const clause of field.appliesWhen ?? []) {
+          for (const [key, values] of Object.entries(clause)) {
+            const target = fields[key];
+            expect(target, `${def.id}: ${key}`).toBeDefined();
+            const allowed = target && "oneOf" in target ? target.oneOf.map((o) => o.const) : [];
+            for (const value of values) expect(allowed, `${def.id}: ${key}=${value}`).toContain(value);
+          }
+        }
+      }
+    });
+
     it("describes itself", () => {
       expect(def.name.trim()).not.toBe("");
       expect(def.description.trim().length).toBeGreaterThan(20);

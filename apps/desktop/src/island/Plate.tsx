@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform, type MotionValue } from "motion/react";
 import type { Size } from "./geometry";
-import { watchTheme } from "./icons/palette";
+import { watchTheme } from "../design-system/themes";
 import { parseShadow, settledAmount, squashedChrome, type ShadowSpec } from "./squash";
 
 /** Slightly underdamped: the plate overshoots by a hair and settles, like a drop of liquid. */

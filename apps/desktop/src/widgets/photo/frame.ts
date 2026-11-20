@@ -42,8 +42,15 @@ export interface Placed {
 
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
+const finite = (v: number, fallback: number): number => (Number.isFinite(v) ? v : fallback);
+
+/** A framing inside its limits; a value that is not a number (damaged storage) becomes the centred default. */
 export function clampFraming(f: Framing): Framing {
-  return { x: clamp(f.x, 0, 1), y: clamp(f.y, 0, 1), zoom: clamp(f.zoom, MIN_ZOOM, MAX_ZOOM) };
+  return {
+    x: clamp(finite(f.x, CENTRED.x), 0, 1),
+    y: clamp(finite(f.y, CENTRED.y), 0, 1),
+    zoom: clamp(finite(f.zoom, CENTRED.zoom), MIN_ZOOM, MAX_ZOOM),
+  };
 }
 
 /** The image rectangle for a frame, a photo size, a fit mode and a framing. */

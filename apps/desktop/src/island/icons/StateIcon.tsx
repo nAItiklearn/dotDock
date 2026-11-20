@@ -3,7 +3,8 @@ import { useReducedMotion } from "motion/react";
 import type { IconStyle } from "../protocol";
 import { drawIcon, type Layer } from "./draw";
 import { ICONS, LATTICE, type IconKind } from "./frames";
-import { readPalette, watchTheme, type Palette } from "./palette";
+import { watchTheme } from "../../design-system/themes";
+import { readPalette, type Palette } from "./palette";
 
 /** Frames per second. Dot icons read as ticking, so 30 is plenty and keeps the island nearly free. */
 const FRAME_MS = 1000 / 30;

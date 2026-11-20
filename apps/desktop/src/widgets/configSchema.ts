@@ -2,21 +2,34 @@
  * Widget settings described as data, so a settings UI can render any widget's form
  * without widget-specific code. A strict subset of JSON Schema (draft 2020-12):
  * booleans, titled enums (`oneOf` of `const`/`title`), bounded numbers and
- * bounded lists of strings. `appliesToSizes` is the one extension: it hides a
- * field for sizes where it changes nothing.
+ * bounded lists of strings. Three extensions keep forms honest and old data safe:
+ * `appliesToSizes` and `appliesWhen` hide a field where it changes nothing, and `replaces`
+ * reads a setting that an older version stored under another key.
  */
 import type { SizeId } from "./sizes";
+
+/** One clause of `appliesWhen`: every named sibling field must hold one of the listed values. */
+export type FieldCondition = Readonly<Record<string, readonly string[]>>;
 
 interface FieldBase {
   readonly title: string;
   readonly description?: string;
   /** Sizes this field affects. Omitted means every size. */
   readonly appliesToSizes?: readonly SizeId[];
+  /**
+   * Other settings this field depends on. The field shows when any clause matches in full
+   * (clauses are alternatives, the fields inside a clause all have to match). Omitted means always.
+   */
+  readonly appliesWhen?: readonly FieldCondition[];
+  /** The key an older version stored this setting under; used when the current key is absent. */
+  readonly replaces?: string;
 }
 
 export interface TitledOption {
   readonly const: string;
   readonly title: string;
+  /** Name of a CSS custom property holding a colour. When every option has one, forms offer swatches. */
+  readonly swatch?: string;
 }
 
 export interface BooleanField extends FieldBase {
@@ -128,11 +141,35 @@ export function schemaDefaults(schema: ConfigSchema): Record<string, ConfigValue
 export function normalizeConfig(schema: ConfigSchema, raw: unknown): Record<string, ConfigValue> {
   const source: RawConfig = typeof raw === "object" && raw !== null ? (raw as RawConfig) : {};
   return Object.fromEntries(
-    Object.entries(schema.properties).map(([key, field]) => [key, normalizeField(field, source[key])]),
+    Object.entries(schema.properties).map(([key, field]) => {
+      const stored = source[key] === undefined && field.replaces !== undefined ? source[field.replaces] : source[key];
+      return [key, normalizeField(field, stored)];
+    }),
   );
 }
 
-/** Fields a settings form should show for one size. */
-export function fieldsForSize(schema: ConfigSchema, size: SizeId): readonly (readonly [string, ConfigField])[] {
-  return Object.entries(schema.properties).filter(([, field]) => !field.appliesToSizes || field.appliesToSizes.includes(size));
+/** True when one of the field's `appliesWhen` clauses matches the resolved config (or it has none). */
+export function appliesWhenMet(field: ConfigField, config: Readonly<Record<string, ConfigValue>>): boolean {
+  const clauses = field.appliesWhen;
+  if (!clauses) return true;
+  return clauses.some((clause) =>
+    Object.entries(clause).every(([key, allowed]) => {
+      const value = config[key];
+      return typeof value === "string" && allowed.includes(value);
+    }),
+  );
+}
+
+/**
+ * Fields a settings form should show for one size. Pass the resolved config to also hide fields
+ * whose `appliesWhen` is not met by it.
+ */
+export function fieldsForSize(
+  schema: ConfigSchema,
+  size: SizeId,
+  config?: Readonly<Record<string, ConfigValue>>,
+): readonly (readonly [string, ConfigField])[] {
+  return Object.entries(schema.properties).filter(
+    ([, field]) => (!field.appliesToSizes || field.appliesToSizes.includes(size)) && (!config || appliesWhenMet(field, config)),
+  );
 }
