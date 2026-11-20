@@ -26,7 +26,9 @@
   --solid: rgb(from var(--surface) r g b / 1);
   --bar-fill: var(--solid);
   --panel: color-mix(in srgb, var(--surface-2) 88%, var(--solid));
-  --lattice: radial-gradient(circle, color-mix(in srgb, var(--dot-off) 42%, transparent) 0.85px, transparent 1.2px);
+  /* One dot per cell, drawn as a mask over the dot colour: a hard-edged lattice, never a gradient. */
+  --lattice: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='0.95'/%3E%3C/svg%3E");
+  --lattice-ink: color-mix(in srgb, var(--dot-off) 42%, transparent);
   --lattice-step: 6px;
   --row-h: 34px;
   /* How far the longest shadow reaches; the bar's pieces clip their shadows to this so a piece never shades its neighbour. */
