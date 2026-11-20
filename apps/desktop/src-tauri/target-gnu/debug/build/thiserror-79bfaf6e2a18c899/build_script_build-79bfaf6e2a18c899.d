@@ -1,5 +1,0 @@
-D:\dotDock\apps\desktop\src-tauri\target-gnu\debug\build\thiserror-79bfaf6e2a18c899\build_script_build-79bfaf6e2a18c899.d: C:\Users\Lenovo\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.21\build.rs
-
-D:\dotDock\apps\desktop\src-tauri\target-gnu\debug\build\thiserror-79bfaf6e2a18c899\build_script_build-79bfaf6e2a18c899.exe: C:\Users\Lenovo\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.21\build.rs
-
-C:\Users\Lenovo\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.21\build.rs:
