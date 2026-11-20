@@ -16,7 +16,7 @@
 
 ### Home screen
 - Design system: tokens, three themes (Obsidian, Paper, Aurum), dot-matrix glyphs and pictograms, line icons.
-- Widgets offered (all scored 4.5 or more): clock, date, battery, system, music, fun fact, timer, world clocks, **photo** (D-015). The photo widget has eight sizes and borders (keyline, mat, polaroid with caption, dot matrix) with rounded, squircle and circle masks, colour, width, radius and shadow in its settings panel (4.79 on the rubric, `docs/QA/photo-frames.md`).
+- Widgets offered (all scored 4.5 or more): clock, date, battery, system, music, fun fact, timer, world clocks, **photo** (D-015). The photo widget has eight sizes and borders (keyline, mat, polaroid with caption, dot matrix) with rounded, squircle and circle-or-pill masks (D-021), colour, width, radius and shadow in its settings panel. Visual QA over seven wallpapers, 0 dropped frames resizing, reviewer B fixes: 4.83 on the rubric, lowest 4.8 (`docs/QA/photo-widget.md`).
 - Held below the 4.5 bar, code present but not offered: weather 4.0, quote 4.2 (D-016), calendar 4.4, notes, to-do.
 - Edit mode: transform-only drag, snapping, guides, undo and redo, widget drawer, per-widget settings, profiles.
 - 24 original procedural wallpapers (12 styles, dark and light) with thumbnails; desktop versions of the owner's phone mood images are in progress (see below).
