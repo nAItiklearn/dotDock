@@ -3,6 +3,8 @@
 
 pub mod appname;
 pub mod audio;
+#[cfg(test)]
+mod audible;
 pub mod calendar;
 pub mod clipboard;
 pub mod clock;

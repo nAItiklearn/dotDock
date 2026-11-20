@@ -13,7 +13,9 @@ use crate::com::{coalesce, ComGuard, Worker};
 use crate::emit::{lock, shared, Emitter, Shared};
 use crate::protocol::{AudioState, TileData};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
+use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
 use windows::core::BOOL;
@@ -36,13 +38,32 @@ const START_TIMEOUT: Duration = Duration::from_secs(3);
 
 pub(crate) use crate::com::Refresh;
 
+/// How callbacks wake the worker. A volume or mute change only needs the two numbers re-read, which keeps the
+/// tile's reaction to a slider drag fast; anything else (devices, sessions) asks for the full re-read.
 #[derive(Clone)]
-pub(crate) struct Poke(pub(crate) Sender<Option<Refresh>>);
+pub(crate) struct Poke {
+    tx: Sender<Option<Refresh>>,
+    full: Arc<AtomicBool>,
+}
 
 impl Poke {
+    pub(crate) fn new(tx: Sender<Option<Refresh>>) -> Self {
+        Self { tx, full: Arc::new(AtomicBool::new(false)) }
+    }
+
     fn poke(&self) {
+        self.full.store(true, Ordering::SeqCst);
         // The worker is gone only while shutting down; a lost poke then does not matter.
-        let _ = self.0.send(Some(Refresh));
+        let _ = self.tx.send(Some(Refresh));
+    }
+
+    pub(crate) fn poke_volume(&self) {
+        let _ = self.tx.send(Some(Refresh));
+    }
+
+    /// True if anything besides volume changed since the last call.
+    fn take_full(&self) -> bool {
+        self.full.swap(false, Ordering::SeqCst)
     }
 }
 
@@ -76,7 +97,7 @@ pub(crate) struct VolumeEvents(pub(crate) Poke);
 
 impl IAudioEndpointVolumeCallback_Impl for VolumeEvents_Impl {
     fn OnNotify(&self, _: *mut AUDIO_VOLUME_NOTIFICATION_DATA) -> windows::core::Result<()> {
-        self.0.poke();
+        self.0.poke_volume();
         Ok(())
     }
 }
@@ -223,7 +244,7 @@ impl Audio {
         let emitter = self.emitter.clone();
         let worker = Worker::spawn("tiles-audio", move |rx, tx| {
             let _com = ComGuard::new();
-            let poke = Poke(tx);
+            let poke = Poke::new(tx);
             let client: IMMNotificationClient = DeviceEvents(poke.clone()).into();
             let enumerator = devices::enumerator();
             if let Ok(e) = &enumerator {
@@ -231,14 +252,15 @@ impl Audio {
                 let _ = unsafe { e.RegisterEndpointNotificationCallback(&client) };
             }
             let mut engine = Engine { binding: None, names: NameCache::default(), poke, state, emitter };
-            engine.refresh();
+            engine.refresh(true);
             // The receiver lives in `start` until the first reading, then is dropped.
             let _ = ready_tx.send(());
             while let Ok(Some(_)) = rx.recv() {
                 if !coalesce(&rx, COALESCE) {
                     break;
                 }
-                engine.refresh();
+                let full = engine.poke.take_full();
+                engine.refresh(full);
             }
             drop(engine);
             if let Ok(e) = &enumerator {
@@ -278,7 +300,20 @@ struct Engine {
 }
 
 impl Engine {
-    fn refresh(&mut self) {
+    /// Reads the state and pushes it if it changed. Without `full`, only volume and mute are re-read.
+    fn refresh(&mut self, full: bool) {
+        if !full {
+            let last = lock(&self.state).clone();
+            if let (Some(binding), Some(mut last)) = (&self.binding, last) {
+                let (volume, muted) = devices::read_volume(&binding.volume);
+                if (volume, muted) != (last.volume, last.muted) {
+                    (last.volume, last.muted) = (volume, muted);
+                    *lock(&self.state) = Some(last.clone());
+                    self.emitter.emit(TileData::Audio(last));
+                }
+                return;
+            }
+        }
         let default_id = devices::default_device(eRender).map(|d| devices::device_id(&d)).ok();
         let stale = match (&self.binding, &default_id) {
             (Some(b), Some(id)) => &b.device_id != id,
@@ -356,4 +391,31 @@ pub fn set_app_muted(app_id: &str, muted: bool) -> Result<(), String> {
     let manager = sessions::manager_for(&devices::default_device(eRender)?)?;
     // SAFETY: plain setter; null event context.
     sessions::for_app(&manager, app_id, |v| unsafe { v.SetMute(muted, std::ptr::null()) })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_volume_change_alone_does_not_ask_for_the_full_re_read() {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let poke = Poke::new(tx);
+        poke.poke_volume();
+        assert!(!poke.take_full(), "only the two volume numbers need reading");
+        poke.poke();
+        assert!(poke.take_full(), "a device or session change needs the full read");
+        assert!(!poke.take_full(), "the request is used up once it is taken");
+        assert_eq!(rx.try_iter().count(), 2, "both pokes woke the worker");
+    }
+
+    #[test]
+    fn a_full_request_made_beside_volume_changes_is_not_lost() {
+        let (tx, _rx) = std::sync::mpsc::channel();
+        let poke = Poke::new(tx);
+        poke.poke_volume();
+        poke.poke();
+        poke.poke_volume();
+        assert!(poke.take_full());
+    }
 }

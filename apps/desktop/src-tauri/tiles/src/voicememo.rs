@@ -17,13 +17,16 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
-use windows::core::{PCWSTR, GUID};
+use windows::core::{GUID, PCWSTR};
 use windows::Win32::Media::Audio::{
-    eCapture, IAudioCaptureClient, IAudioClient, PlaySoundW, AUDCLNT_BUFFERFLAGS_SILENT, AUDCLNT_SHAREMODE_SHARED,
-    AUDCLNT_STREAMFLAGS_EVENTCALLBACK, SND_ASYNC, SND_FILENAME, SND_PURGE, WAVEFORMATEX, WAVEFORMATEXTENSIBLE,
+    eCapture, IAudioCaptureClient, IAudioClient, IMMDevice, PlaySoundW, AUDCLNT_BUFFERFLAGS_SILENT,
+    AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, SND_ASYNC, SND_FILENAME, SND_PURGE, WAVEFORMATEX,
+    WAVEFORMATEXTENSIBLE,
 };
 use windows::Win32::System::Com::{CoTaskMemFree, CLSCTX_ALL};
-use windows::Win32::UI::Shell::{SHFileOperationW, FOF_ALLOWUNDO, FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT, FO_DELETE, SHFILEOPSTRUCTW};
+use windows::Win32::UI::Shell::{
+    SHFileOperationW, FOF_ALLOWUNDO, FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT, FO_DELETE, SHFILEOPSTRUCTW,
+};
 
 /// Memos listed, newest first.
 const LIST_LIMIT: usize = 50;
@@ -176,7 +179,7 @@ impl VoiceMemo {
         let join = thread::Builder::new()
             .name("tiles-voice-memo".to_owned())
             .spawn(move || {
-                let outcome = record(&path, &stop_for_thread, &ready_tx, &state, &emitter);
+                let outcome = record(&path, &stop_for_thread, &ready_tx, &state, &emitter, &default_microphone);
                 let mut s = lock(&state);
                 s.recording = None;
                 match outcome {
@@ -224,14 +227,20 @@ impl VoiceMemo {
     }
 
     pub fn play(&self, path: &str) -> Result<(), String> {
-        let memo = lock(&self.state).memos.iter().find(|m| m.path.eq_ignore_ascii_case(path)).cloned().ok_or("That memo is not in the list")?;
+        let memo = lock(&self.state)
+            .memos
+            .iter()
+            .find(|m| m.path.eq_ignore_ascii_case(path))
+            .cloned()
+            .ok_or("That memo is not in the list")?;
         self.stop_playback();
         let wide = crate::com::wide(&memo.path);
         // SAFETY: the path is NUL-terminated; SND_ASYNC returns at once and Windows reads the file itself.
         if !unsafe { PlaySoundW(PCWSTR(wide.as_ptr()), None, SND_FILENAME | SND_ASYNC) }.as_bool() {
             return Err("Windows could not play that memo".to_owned());
         }
-        lock(&self.state).playing = Some(Playback { path: memo.path.clone(), started_ms: now_ms(), duration_ms: memo.duration_ms });
+        lock(&self.state).playing =
+            Some(Playback { path: memo.path.clone(), started_ms: now_ms(), duration_ms: memo.duration_ms });
         self.publish();
         // One short-lived timer thread ends the "playing" state when the memo is over.
         let (tx, rx) = std::sync::mpsc::channel::<()>();
@@ -266,7 +275,12 @@ impl VoiceMemo {
 
     /// Moves a memo to the Recycle Bin.
     pub fn delete(&self, path: &str) -> Result<(), String> {
-        let memo = lock(&self.state).memos.iter().find(|m| m.path.eq_ignore_ascii_case(path)).cloned().ok_or("That memo is not in the list")?;
+        let memo = lock(&self.state)
+            .memos
+            .iter()
+            .find(|m| m.path.eq_ignore_ascii_case(path))
+            .cloned()
+            .ok_or("That memo is not in the list")?;
         if lock(&self.state).playing.as_ref().is_some_and(|p| p.path == memo.path) {
             self.stop_playback();
         }
@@ -290,6 +304,11 @@ impl VoiceMemo {
     }
 }
 
+/// The default microphone, opened as a normal capture stream.
+fn default_microphone() -> Result<(IMMDevice, u32), String> {
+    crate::audio::devices::default_device(eCapture).map(|d| (d, 0)).map_err(|_| "No microphone is connected".to_owned())
+}
+
 /// Runs one recording until `stop` is signalled, the memo is an hour long, or the device fails.
 fn record(
     path: &Path,
@@ -297,10 +316,10 @@ fn record(
     ready: &std::sync::mpsc::Sender<Result<(), String>>,
     state: &Arc<Mutex<VoiceMemoState>>,
     emitter: &Emitter,
+    source: &dyn Fn() -> Result<(IMMDevice, u32), String>,
 ) -> Result<(), String> {
     let _com = ComGuard::new();
-    let device = crate::audio::devices::default_device(eCapture)
-        .map_err(|_| "No microphone is connected".to_owned())?;
+    let (device, source_flags) = source()?;
     // SAFETY: standard WASAPI shared-mode capture; every interface is released on drop, the mix format is freed,
     // and the stream is stopped before the file is finalised.
     unsafe {
@@ -311,15 +330,25 @@ fn record(
             CoTaskMemFree(Some(mix.cast_const().cast()));
             return Err("This microphone uses a sample format voice memos cannot record".to_owned());
         };
-        let init = client.Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, 0, 0, mix, None);
+        let init = client.Initialize(
+            AUDCLNT_SHAREMODE_SHARED,
+            AUDCLNT_STREAMFLAGS_EVENTCALLBACK | source_flags,
+            0,
+            0,
+            mix,
+            None,
+        );
         CoTaskMemFree(Some(mix.cast_const().cast()));
-        init.map_err(|e| format!("Windows would not open the microphone ({e}). Check Settings > Privacy > Microphone."))?;
+        init.map_err(|e| {
+            format!("Windows would not open the microphone ({e}). Check Settings > Privacy > Microphone.")
+        })?;
         let arrived = Event::new()?;
         client.SetEventHandle(arrived.handle()).map_err(|e| format!("microphone events: {e}"))?;
         let reader = client.GetService::<IAudioCaptureClient>().map_err(|e| format!("microphone reader: {e}"))?;
 
         let mut out = BufWriter::new(File::create(path).map_err(|e| format!("could not create the memo: {e}"))?);
-        out.write_all(&wav::header(capture.channels, capture.rate, 0)).map_err(|e| format!("could not write the memo: {e}"))?;
+        out.write_all(&wav::header(capture.channels, capture.rate, 0))
+            .map_err(|e| format!("could not write the memo: {e}"))?;
         client.Start().map_err(|e| format!("microphone start: {e}"))?;
         let _ = ready.send(Ok(()));
         let started = now_ms();
@@ -341,7 +370,9 @@ fn record(
                     break;
                 }
                 let (mut data, mut got, mut flags) = (std::ptr::null_mut(), 0u32, 0u32);
-                reader.GetBuffer(&mut data, &mut got, &mut flags, None, None).map_err(|e| format!("microphone read: {e}"))?;
+                reader
+                    .GetBuffer(&mut data, &mut got, &mut flags, None, None)
+                    .map_err(|e| format!("microphone read: {e}"))?;
                 let samples = if flags & (AUDCLNT_BUFFERFLAGS_SILENT.0 as u32) != 0 || data.is_null() {
                     (vec![0i16; got as usize * usize::from(capture.channels)], 0.0)
                 } else {
@@ -373,7 +404,8 @@ fn record(
         out.flush().map_err(|e| format!("could not write the memo: {e}"))?;
         let mut file = out.into_inner().map_err(|e| format!("could not write the memo: {e}"))?;
         let len = u32::try_from(data_len).map_err(|_| "The memo is too long".to_owned())?;
-        file.seek(SeekFrom::Start(0)).and_then(|_| file.write_all(&wav::header(capture.channels, capture.rate, len)))
+        file.seek(SeekFrom::Start(0))
+            .and_then(|_| file.write_all(&wav::header(capture.channels, capture.rate, len)))
             .and_then(|()| file.sync_all())
             .map_err(|e| format!("could not finish the memo: {e}"))?;
         Ok(())
@@ -401,6 +433,62 @@ mod tests {
         assert_eq!(memos[0].name, "Voice memo b");
         assert_eq!(memos[0].duration_ms, 2000);
         assert_eq!(memos[1].duration_ms, 1000);
+    }
+
+    /// The capture path end to end on real audio. The speakers' loopback stands in for the microphone, because
+    /// Windows can block microphone access machine-wide; everything after the device is opened (format conversion,
+    /// streaming to disk, the WAV header, levels) is the production code. Audible, so it runs on request.
+    #[test]
+    #[ignore = "plays a short system sound on the speakers; run with --ignored"]
+    fn recording_real_audio_writes_a_valid_wav() {
+        use windows::Win32::Media::Audio::{eRender, AUDCLNT_STREAMFLAGS_LOOPBACK};
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("loopback.wav");
+        let levels = Arc::new(Mutex::new(Vec::new()));
+        let seen = levels.clone();
+        let emitter = Emitter::new(move |d| {
+            if let TileData::VoiceMemo(s) = d {
+                if let Some(r) = s.recording {
+                    lock(&seen).push(r.peak);
+                }
+            }
+        });
+        let state = Arc::new(Mutex::new(VoiceMemoState {
+            folder: String::new(),
+            memos: vec![],
+            recording: None,
+            playing: None,
+            problem: None,
+        }));
+        let stop = Arc::new(Event::new().unwrap());
+        let (ready_tx, ready_rx) = std::sync::mpsc::channel();
+        let (p, s, st) = (path.clone(), stop.clone(), state.clone());
+        let worker = thread::spawn(move || {
+            let source = || crate::audio::devices::default_device(eRender).map(|d| (d, AUDCLNT_STREAMFLAGS_LOOPBACK));
+            record(&p, &s, &ready_tx, &st, &emitter, &source)
+        });
+        assert!(ready_rx.recv_timeout(Duration::from_secs(5)).unwrap().is_ok(), "the capture stream opens");
+        let mut speakers = crate::audible::Speakers::take();
+        let waited = std::time::Instant::now();
+        while !lock(&levels).iter().any(|p| *p > 0.0) && waited.elapsed() < crate::audible::HEAR_WITHIN {
+            thread::sleep(LEVEL_EVERY);
+            speakers.keep_playing();
+        }
+        drop(speakers);
+        stop.signal();
+        worker.join().unwrap().expect("the recording finishes cleanly");
+        let bytes = fs::read(&path).unwrap();
+        let duration = wav::duration_ms(&bytes[..wav::HEADER_LEN], bytes.len() as u64).expect("a valid WAV header");
+        assert!(duration > 0 && duration < 15_000, "duration {duration} ms");
+        let loudest = bytes[wav::HEADER_LEN..]
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|c| i16::from_le_bytes([c[0], c[1]]).unsigned_abs())
+            .max()
+            .unwrap_or(0);
+        assert!(loudest > 0, "the sound reached the file ({} bytes)", bytes.len());
+        assert!(lock(&levels).iter().any(|p| *p > 0.0), "level events carried the sound");
     }
 
     #[test]

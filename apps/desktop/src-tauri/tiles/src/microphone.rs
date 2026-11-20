@@ -106,7 +106,7 @@ impl Microphone {
         let emitter = self.emitter.clone();
         let worker = Worker::spawn("tiles-microphone", move |rx, tx| {
             let _com = ComGuard::new();
-            let poke = Poke(tx);
+            let poke = Poke::new(tx);
             let client: IMMNotificationClient = DeviceEvents(poke.clone()).into();
             let enumerator = devices::enumerator();
             if let Ok(e) = &enumerator {
@@ -170,14 +170,18 @@ struct Meter {
 
 impl Meter {
     fn open() -> Result<Self, String> {
-        let device = devices::default_device(eCapture)?;
+        Self::open_on(&devices::default_device(eCapture)?, 0)
+    }
+
+    /// Opens a metering stream on `device` with extra stream flags (none for a microphone).
+    fn open_on(device: &windows::Win32::Media::Audio::IMMDevice, flags: u32) -> Result<Self, String> {
         // SAFETY: activation returns owned interfaces; the mix format is CoTaskMem memory freed below; the stream
         // is stopped in Drop.
         unsafe {
             let client =
                 device.Activate::<IAudioClient>(CLSCTX_ALL, None).map_err(|e| format!("microphone stream: {e}"))?;
             let format = client.GetMixFormat().map_err(|e| format!("microphone format: {e}"))?;
-            let init = client.Initialize(AUDCLNT_SHAREMODE_SHARED, 0, METER_BUFFER_HNS, 0, format, None);
+            let init = client.Initialize(AUDCLNT_SHAREMODE_SHARED, flags, METER_BUFFER_HNS, 0, format, None);
             CoTaskMemFree(Some(format.cast_const().cast()));
             init.map_err(|e| {
                 format!("Windows would not open the microphone ({e}). Check Settings > Privacy > Microphone.")
@@ -225,7 +229,7 @@ impl MicrophoneLevelProvider {
         let emitter = self.emitter.clone();
         let worker = Worker::spawn("tiles-mic-level", move |rx, tx| {
             let _com = ComGuard::new();
-            let poke = Poke(tx);
+            let poke = Poke::new(tx);
             let client: IMMNotificationClient = DeviceEvents(poke.clone()).into();
             let enumerator = devices::enumerator();
             if let Ok(e) = &enumerator {
@@ -331,5 +335,25 @@ mod tests {
     #[test]
     fn reading_without_a_provider_does_not_panic() {
         let _ = read_once();
+    }
+
+    /// The level meter on real audio. The speakers' loopback stands in for the microphone, which Windows can
+    /// block machine-wide; the stream and the meter are the production code. Audible, so it runs on request.
+    #[test]
+    #[ignore = "plays a short system sound on the speakers; run with --ignored"]
+    fn the_meter_follows_real_sound() {
+        use windows::Win32::Media::Audio::{eRender, AUDCLNT_STREAMFLAGS_LOOPBACK};
+        crate::com::ensure();
+        let device = devices::default_device(eRender).expect("the speakers exist");
+        let meter = Meter::open_on(&device, AUDCLNT_STREAMFLAGS_LOOPBACK).expect("the stream opens");
+        let mut speakers = crate::audible::Speakers::take();
+        let heard = std::time::Instant::now();
+        let mut peak = 0.0f32;
+        while peak == 0.0 && heard.elapsed() < crate::audible::HEAR_WITHIN {
+            std::thread::sleep(LEVEL_INTERVAL);
+            peak = meter.peak();
+            speakers.keep_playing();
+        }
+        assert!(peak > 0.0, "the meter saw the sound");
     }
 }
