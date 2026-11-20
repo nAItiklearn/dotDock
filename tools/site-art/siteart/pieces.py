@@ -25,11 +25,11 @@ class Piece:
 
 # Preview colours of the layers per theme: the same values as the art tokens in website/src/lib/themes.ts.
 _COLOURS = {
-    "paper": {"far": "#b3c0ae", "mid": "#86a37e", "near": "#4d7a47", "stalk": "#4d7a47", "petal": "#da3038", "gold": "#f0b43c", "heart": "#2b2b27", "grain": "#2b2b27", "cloud": "#c3cfdb", "sea": "#8fb0c9"},
-    "obsidian": {"far": "#2f3f35", "mid": "#476650", "near": "#6f9a76", "stalk": "#6f9a76", "petal": "#e94248", "gold": "#f2c75c", "heart": "#8a5a35", "grain": "#d8d4cb", "cloud": "#3a4756", "sea": "#3d5f78"},
-    "aurum": {"far": "#3d3422", "mid": "#6e5828", "near": "#b08a38", "stalk": "#b08a38", "petal": "#f4efe4", "gold": "#e3b456", "heart": "#8a6a2c", "grain": "#e8dcc0", "cloud": "#5a4a2a", "sea": "#8c6d2a"},
+    "paper": {"far": "#b3c0ae", "mid": "#86a37e", "near": "#4d7a47", "stalk": "#4d7a47", "petal": "#da3038", "gold": "#f0b43c", "heart": "#2b2b27", "grain": "#2b2b27", "cloud": "#c3cfdb", "sea": "#8fb0c9", "line": "#da3038"},
+    "obsidian": {"far": "#2f3f35", "mid": "#476650", "near": "#6f9a76", "stalk": "#6f9a76", "petal": "#e94248", "gold": "#f2c75c", "heart": "#8a5a35", "grain": "#d8d4cb", "cloud": "#3a4756", "sea": "#3d5f78", "line": "#e94248"},
+    "aurum": {"far": "#3d3422", "mid": "#6e5828", "near": "#b08a38", "stalk": "#b08a38", "petal": "#f4efe4", "gold": "#e3b456", "heart": "#8a6a2c", "grain": "#e8dcc0", "cloud": "#5a4a2a", "sea": "#8c6d2a", "line": "#e3b456"},
 }
-_ORDER = ("grain", "cloud", "sea", "far", "mid", "near", "stalk", "petal", "gold", "heart")
+_ORDER = ("grain", "cloud", "sea", "far", "mid", "near", "stalk", "line", "petal", "gold", "heart")
 
 
 def _colour_stack(layers: Layers, theme: str) -> list:
@@ -80,8 +80,8 @@ PIECES: dict[str, Piece] = {
         for i, kind in enumerate(("dock", "island", "home", "themes"))
     },
     **{
-        f"band-{kind}": Piece(81 + i, {"wide": (1920, 300), "narrow": (720, 240)}, _band(kind, 81 + i), _colour_stack, _SCENE_Q | {"cloud": (100, 100), "sea": (78, 60)})
-        for i, kind in enumerate(("sky", "sea", "field"))
+        f"band-{kind}": Piece(81 + i, {"wide": (1920, 300), "narrow": (720, 240)}, _band(kind, 81 + i), _colour_stack, _SCENE_Q | {"cloud": (100, 100), "sea": (78, 60), "line": (80, 80)})
+        for i, kind in enumerate(("sky", "sea", "field", "night"))
     },
     "meadow": Piece(71, {"wide": (1920, 420), "narrow": (720, 300)}, _scene("meadow", 71), _colour_stack, _SCENE_Q),
 }

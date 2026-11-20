@@ -5,11 +5,9 @@
  * Sizes are in grid cells, like the product's grid. Visuals follow apps/desktop/src/widgets.
  */
 import DotMatrix from "./DotMatrix.astro";
-import cake from "../assets/photos/painted-flower-cake.webp";
 import ridge from "../assets/wallpapers/halftone-ridge-light-640.webp";
-import meadow from "../assets/wallpapers/meadow-dots-dark-640.webp";
 
-import type { PhotoFrame, PhotoName, WidgetKind } from "../lib/widgets";
+import type { WidgetKind } from "../lib/widgets";
 
 interface Props {
   kind: WidgetKind;
@@ -17,27 +15,11 @@ interface Props {
   place?: string;
   /** Clock digits style. */
   clockStyle?: "dots" | "blocks" | "stripes";
-  /** Which picture the photo widget shows. */
-  photo?: PhotoName | undefined;
-  /** Frame of the photo widget. */
-  frame?: PhotoFrame | undefined;
-  /** Typed caption of a polaroid. */
-  caption?: string | undefined;
 }
-const { kind, place = "", clockStyle = "blocks", photo = "cake", frame = "mat", caption = "" } = Astro.props;
+const { kind, place = "", clockStyle = "blocks" } = Astro.props;
 
-// A ring of dots round a round picture: 48 dots on a circle.
-const RING_DOTS = Array.from({ length: 48 }, (_, i) => {
-  const a = (i / 48) * Math.PI * 2;
-  return { x: 50 + 46.5 * Math.cos(a), y: 50 + 46.5 * Math.sin(a) };
-});
-
-const PHOTOS = {
-  cake: { image: cake, alt: "A round cake painted with orange, red and yellow flowers on a deep blue ground, lit by one candle" },
-  ridge: { image: ridge, alt: "Misty ridges drawn in halftone dots" },
-  meadow: { image: meadow, alt: "Rolling meadow hills drawn in dots under a night sky" },
-};
-const picture = PHOTOS[photo];
+// The photo widget shows one of this project's own pictures, edge to edge, with the widget's usual corner radius.
+const picture = { image: ridge, alt: "Misty ridges drawn in halftone dots" };
 
 const SIZE: Record<WidgetKind, [number, number]> = {
   clock: [6, 2],
@@ -313,23 +295,8 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
 }
 {
   kind === "photo" && (
-    <section class:list={["w", "w--photo", `w--photo-${frame}`]} style={style} aria-label="Photo widget">
-      <figure class="w-photo__frame">
-        <img
-          src={picture.image.src}
-          width={picture.image.width}
-          height={picture.image.height}
-          alt={picture.alt}
-          loading="lazy"
-          decoding="async"
-        />
-      </figure>
-      {frame === "ring" && (
-        <svg class="w-photo__ring" viewBox="0 0 100 100" aria-hidden="true">
-          {RING_DOTS.map((d) => <circle cx={d.x} cy={d.y} r="1.5" />)}
-        </svg>
-      )}
-      {frame === "polaroid" && <figcaption class="w-photo__caption">{caption}</figcaption>}
+    <section class="w w--photo" style={style} aria-label="Photo widget">
+      <img src={picture.image.src} width={picture.image.width} height={picture.image.height} alt={picture.alt} loading="lazy" decoding="async" />
     </section>
   )
 }

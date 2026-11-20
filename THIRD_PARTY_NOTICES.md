@@ -123,6 +123,9 @@ The showcase site is a static Astro project. These packages are build-time only;
 |---|---|
 | astro | MIT |
 | @astrojs/check | MIT |
+| @astrojs/vercel (the one on-demand route, the visit counter) | MIT |
+| @upstash/redis (REST client for the visit counter) | MIT |
+| @types/node (types only) | MIT |
 | typescript | Apache-2.0 |
 | sharp (used by hand in `website/tools/make-wallpapers.mjs`, not at build or runtime) | Apache-2.0 (prebuilt binaries include libvips, LGPL-3.0-or-later) |
 
@@ -130,6 +133,9 @@ Transitive package licences are pinned by `website/pnpm-lock.yaml`.
 
 - Fonts: Doto and Geist Mono as above, plus Inter 4.1 (Inter 400 and 500 for text, Inter Display 700 and 800 for headlines), subset to Latin by `tools/site-art/subset_fonts.py` (fontTools, MIT, and brotli, MIT; build-time only). The files are in `website/src/assets/fonts`, their OFL texts in `website/public/licenses`. The website no longer uses Geist (sans); that face stays only in the outlined brand artwork above.
 - Site art: the dot landscapes, pixel flowers and grass on the website are generated from code and fixed seeds by `tools/site-art` (GPL-3.0-or-later, part of this project; numpy, Pillow and opencv as in `tools/wallpaper-gen`). They are original; the owner's mood images were only looked at, never used as input.
+- Photo widget: the picture in the website's photo widget is this project's generated halftone ridge (`website/src/assets/wallpapers/halftone-ridge-light-640.webp`). The website carries no photograph of a person or of anyone's property.
+- Dock captures: `website/public/media/dock/` holds screenshots of this project's own dock UI running in its test harness (sample apps named in the harness are fictional, the wallpaper is this project's generated art). The icons on the website's dock illustration are original dot-matrix drawings.
+- Visit counter: stores one number in Upstash Redis (through the Vercel Marketplace). No personal data; see the privacy page.
 - Navigation icon: the GitHub mark (Invertocat) in the header is the unmodified mark published by GitHub at https://github.com/logos, used under GitHub's logo and usage guidelines to link to this project's repository on GitHub. It is a trademark of GitHub, Inc.; the project is not affiliated with or endorsed by GitHub.
 - Wallpapers: downscaled WebP copies of three of the original wallpapers in `assets/wallpapers`, made by `website/tools/make-wallpapers.mjs`. Original, GPL-3.0-or-later like the rest of the project.
 - Theme tokens and dot-matrix glyph geometry are copied from `apps/desktop/src/design-system` (this project's own code).

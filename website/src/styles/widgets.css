@@ -60,7 +60,8 @@
 html[data-theme="obsidian"] :is(.stage__wp, .safety__wp)[data-for="obsidian"],
 html[data-theme="paper"] :is(.stage__wp, .safety__wp)[data-for="paper"],
 html[data-theme="aurum"] :is(.stage__wp, .safety__wp)[data-for="aurum"],
-.desk[data-theme] .stage__wp {
+.desk[data-theme] .stage__wp,
+.desk[data-wallpaper] .stage__wp {
   display: block;
 }
 
@@ -664,71 +665,15 @@ html[data-theme="paper"] .w-clock__digits {
   text-transform: uppercase;
 }
 
-/* ---------- Photo: the product's paper mat (widgets/photo/PhotoWidget.css), the picture filling its frame ---------- */
+/* ---------- Photo: the picture fills the widget edge to edge (widgets/photo/PhotoWidget.css, no mat) ---------- */
 .w--photo {
-  --photo-mat: #efede9;
-  --photo-inset: calc(var(--k) * 12);
-  border-radius: calc(var(--k) * 18);
   border-color: transparent;
-  background: var(--photo-mat);
 }
-.w-photo__frame {
+.w--photo img {
   position: absolute;
-  inset: var(--photo-inset);
-  margin: 0;
-  overflow: hidden;
-  border-radius: calc(var(--k) * 12);
-  background: var(--surface-2);
-}
-.w-photo__frame img {
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-/* Ring: a round picture inside a ring of accent dots. */
-.w--photo-ring {
-  overflow: visible;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-.w--photo-ring .w-photo__frame {
-  inset: 9%;
-  border-radius: 50%;
-  box-shadow: var(--shadow);
-}
-.w-photo__ring {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  fill: var(--accent);
-}
-
-/* Polaroid: a paper print with a typed caption, set a little askew. */
-.w--photo-polaroid {
-  --photo-mat: #f4f1ea;
-  border-radius: calc(var(--k) * 6);
-  transform: rotate(-2deg);
-}
-.w--photo-polaroid:hover {
-  transform: rotate(-2deg) translateY(-2px);
-}
-.w--photo-polaroid .w-photo__frame {
-  inset: 7% 7% 24%;
-  border-radius: calc(var(--k) * 2);
-}
-.w-photo__caption {
-  position: absolute;
-  inset: auto 7% 6%;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: max(9px, calc(var(--k) * 11));
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #55534e;
 }

@@ -1,5 +1,4 @@
 ---
-import SectionArt from "./SectionArt.astro";
 import SectionHead from "./SectionHead.astro";
 import Widget from "./Widget.astro";
 
@@ -30,12 +29,6 @@ const cards = [
     items: [{ kind: "music" }],
   },
   {
-    id: "photo",
-    title: "Photo",
-    line: "Your own picture in a frame, filled or fitted, in colour or black and white.",
-    items: [{ kind: "photo", photo: "meadow" }],
-  },
-  {
     id: "focus",
     title: "Focus",
     line: "A timer that really counts, and a list that really ticks.",
@@ -51,7 +44,6 @@ const cards = [
 ---
 
 <section class="section" id="widgets" aria-labelledby="widgets-title">
-  <SectionArt piece="band-field" edge="bottom" />
   <div class="wrap">
     <SectionHead label="The home screen" titleId="widgets-title">
       <Fragment slot="title">Made to be <span class="dim">glanced at.</span></Fragment>
@@ -75,7 +67,6 @@ const cards = [
                     kind={item.kind}
                     place={"place" in item ? item.place : ""}
                     clockStyle={"style" in item ? item.style : "blocks"}
-                    photo={"photo" in item ? item.photo : undefined}
                   />
                 ))
               }

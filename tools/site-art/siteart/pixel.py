@@ -22,7 +22,7 @@ THRESHOLDS = (0.16, 0.36, 0.58, 0.80)
 LIGHT_ANGLE = math.radians(-125.0)             # light comes from the upper left
 GOLDEN_ANGLE = math.pi * (3.0 - math.sqrt(5.0))
 
-LAYERS = ("stalk", "petal", "gold", "heart", "cloud")
+LAYERS = ("stalk", "petal", "gold", "heart", "cloud", "line")
 
 
 class Canvas:
@@ -267,3 +267,77 @@ def butterfly(cv: Canvas, gx: int, gy: int, gold_wings: bool = False) -> None:
 
 def bee(cv: Canvas, gx: int, gy: int) -> None:
     _pattern(cv, _BEE, gx, gy, {"G": "gold", "H": "heart"})
+
+
+# --- more subjects: dragonfly, fish, sparkles, and two drawn with fine lines (peony, lily) ----------
+
+_DRAGONFLY = ("....P....",
+              "WWW.B.WWW",
+              "WWWWBWWWW",
+              "WWW.B.WWW",
+              ".WWWBWWW.",
+              "WWWWBWWWW",
+              "WWW.B.WWW",
+              "....B....",
+              "....B....")
+_FISH = ("...FFFF...",
+         ".FFFFFFF.T",
+         "FFEFFFFFTT",
+         ".FFFFFFF.T",
+         "...FFFF...")
+
+
+def dragonfly(cv: Canvas, gx: int, gy: int) -> None:
+    """Seen from above: two pairs of pale wings spread either side of a slim body."""
+    for j, row in enumerate(_DRAGONFLY):
+        for i, ch in enumerate(row):
+            if ch == "W":
+                cv.fill_cell("cloud", gx + i, gy + j, LIT if j % 4 < 3 else MID)
+            elif ch == "B":
+                cv.fill_cell("heart", gx + i, gy + j, LIT)
+            elif ch == "P":
+                cv.fill_cell("petal", gx + i, gy + j, LIT)
+
+
+def fish(cv: Canvas, gx: int, gy: int, layer: str = "gold") -> None:
+    for j, row in enumerate(_FISH):
+        for i, ch in enumerate(row):
+            if ch in "FT":
+                cv.fill_cell(layer, gx + i, gy + j, LIT if j < 2 else MID)
+            elif ch == "E":
+                cv.fill_cell("heart", gx + i, gy + j, LIT)
+
+
+def sparkle(cv: Canvas, gx: int, gy: int, big: bool = False) -> None:
+    """A plus of gold cells, or a single cell."""
+    cv.fill_cell("gold", gx, gy, LIT)
+    if big:
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            cv.fill_cell("gold", gx + dx, gy + dy, MID)
+
+
+def peony(cv: Canvas, cx: float, cy: float, r: float) -> None:
+    """A rosette of concentric, wavering lines, like a peony drawn with a single pen. Drawn on the 'line' layer, not in cells."""
+    rng = cv.rng
+    phase = rng.uniform(0.0, 2.0 * math.pi)
+    for k in range(1, 11):
+        rad = r * k / 10.0
+        pts = []
+        for a in np.linspace(0.0, 2.0 * math.pi, 120):
+            wob = 1.0 + 0.10 * math.sin(5 * a + phase + k * 0.35) * (k / 10.0) + 0.05 * math.sin(9 * a + k)
+            pts.append((cx + rad * wob * math.cos(a), cy + rad * wob * math.sin(a)))
+        cv.draws["line"].line([(cv._px(x), cv._px(y)) for x, y in pts + [pts[0]]], fill=255, width=max(1, int(cv._px(1.5))))
+    cv.disc("line", cx, cy, r * 0.06, 1.0)
+
+
+def lily(cv: Canvas, cx: float, cy: float, r: float) -> None:
+    """Six curling petals, each a line of dots that grow smaller towards the tip, round a golden eye."""
+    start = cv.rng.uniform(0.0, 2.0 * math.pi)
+    for k in range(6):
+        a0 = start + 2.0 * math.pi * k / 6
+        for i in range(1, 15):
+            t = i / 14.0
+            a = a0 + 0.45 * t * t                        # the petal curls as it goes out
+            d = r * t
+            cv.disc("line", cx + d * math.cos(a), cy + d * math.sin(a), max(0.7, 2.8 * (1.0 - 0.7 * t)), 1.0)
+    cv.disc("gold", cx, cy, 0.14 * r, 1.0)

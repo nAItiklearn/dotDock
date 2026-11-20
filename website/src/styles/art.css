@@ -38,6 +38,9 @@
 .art__sea {
   background: var(--art-sea);
 }
+.art__line {
+  background: var(--art-petal);
+}
 .art__accent {
   background: var(--art-sun);
 }
@@ -189,6 +192,7 @@ html:not([data-theme="paper"]) .hero__scape .art__mid {
 .band {
   position: relative;
   width: 100%;
+  margin-top: clamp(40px, 6vw, 88px);
   overflow: clip;
   pointer-events: none;
 }
@@ -203,36 +207,9 @@ html:not([data-theme="paper"]) .hero__scape .art__mid {
   }
 }
 
-/* Art behind a section (components/SectionArt.astro): full width, behind the text, fading out towards the middle. */
+/* Sections stay on their own: art never sits behind text, it stands between sections or beside them. */
 .section {
   isolation: isolate;
-}
-.section-art {
-  position: absolute;
-  z-index: -1;
-  inset-inline: 0;
-  overflow: clip;
-  pointer-events: none;
-}
-.section-art > .art {
-  --band-w: max(100%, 1200px);
-  width: var(--band-w);
-  margin-left: calc(50% - var(--band-w) / 2);
-}
-@media (max-width: 899px) {
-  .section-art > .art {
-    --band-w: 720px;
-  }
-}
-.section-art--top {
-  top: 0;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 35%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0, #000 35%, transparent 100%);
-}
-.section-art--bottom {
-  bottom: 0;
-  -webkit-mask-image: linear-gradient(to top, #000 0, #000 35%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0, #000 35%, transparent 100%);
 }
 
 /* The page itself is paper with a faint lattice of dots, never a flat white. */

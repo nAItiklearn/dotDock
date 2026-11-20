@@ -13,9 +13,3 @@ export type WidgetKind =
   | "timer"
   | "todo"
   | "photo";
-
-/** The pictures the photo widget can show on the site. */
-export type PhotoName = "cake" | "ridge" | "meadow";
-
-/** How the photo widget frames its picture: a paper mat, a round picture in a ring of dots, or a polaroid with a caption. */
-export type PhotoFrame = "mat" | "ring" | "polaroid";

@@ -16,7 +16,7 @@
   display: grid;
   justify-items: center;
   gap: clamp(16px, 1.8vw, 24px);
-  max-width: calc(840px + 2 * var(--page-margin));
+  max-width: calc(756px + 2 * var(--page-margin));
   text-align: center;
 }
 /* Small pill used by the section heads. */
@@ -64,7 +64,7 @@
 /* The screen: it stays whole, its foot resting on the meadow, and tufts of flowers stand at its lower corners. */
 .hero__frame {
   position: relative;
-  max-width: calc(1180px + 2 * var(--page-margin));
+  max-width: calc(1062px + 2 * var(--page-margin));
   margin-top: clamp(48px, 5vw, 72px);
 }
 @media (max-width: 899px) {

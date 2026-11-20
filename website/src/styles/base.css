@@ -10,32 +10,32 @@
   --font-dot: "Doto", "Doto Fallback", "Geist Mono", monospace;
 
   --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --space-24: 96px;
+  --space-2: 7px;
+  --space-3: 11px;
+  --space-4: 14px;
+  --space-5: 18px;
+  --space-6: 22px;
+  --space-8: 29px;
+  --space-10: 36px;
+  --space-12: 43px;
+  --space-16: 58px;
+  --space-24: 86px;
 
   --radius-pill: 999px;
-  --radius-art: 28px;
-  --radius-card: 18px;
-  --radius-lg: 18px;
-  --radius-md: 14px;
-  --radius-sm: 12px;
+  --radius-art: 25px;
+  --radius-card: 16px;
+  --radius-lg: 16px;
+  --radius-md: 13px;
+  --radius-sm: 11px;
 
   --text-caps: 11px;
   --tracking-caps: 0.12em;
   --hairline: 1px;
 
-  --page-margin: clamp(16px, 4vw, 64px);
-  --page-max: 1248px;
-  --page-wide: 1408px;
-  --nav-h: 72px;
+  --page-margin: clamp(14px, 3.6vw, 58px);
+  --page-max: 1124px;
+  --page-wide: 1268px;
+  --nav-h: 65px;
 
   /* Flat slate used to illustrate an unthemed Windows desktop in the safety demo. Not a theme colour. */
   --stock: #5d6f84;
@@ -72,12 +72,14 @@
 }
 
 html {
+  /* The whole design is drawn at nine tenths of the old scale: rem sizes follow this, the px tokens above were cut by the same tenth. */
+  font-size: 90%;
   background: var(--bg);
   color: var(--text);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-behavior: smooth;
-  scroll-padding-top: calc(var(--nav-h) + 24px);
+  scroll-padding-top: calc(var(--nav-h) + 22px);
 }
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -291,11 +293,11 @@ button {
 /* ---------- Nav: a floating pill ---------- */
 .nav {
   position: fixed;
-  top: 14px;
+  top: 12px;
   left: 50%;
   z-index: 50;
-  width: min(calc(100% - 24px), 940px);
-  height: 58px;
+  width: min(calc(100% - 22px), 846px);
+  height: 52px;
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--bg) 74%, transparent);
@@ -481,7 +483,7 @@ button {
 /* ---------- Sections ---------- */
 .section {
   position: relative;
-  padding-block: clamp(96px, 11vw, 160px) 0;
+  padding-block: clamp(86px, 10vw, 144px) 0;
 }
 .section__head {
   display: grid;

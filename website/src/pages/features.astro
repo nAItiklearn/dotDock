@@ -3,7 +3,6 @@ import Base from "../layouts/Base.astro";
 import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
 import FeatureSection, { type Bullet } from "../components/FeatureSection.astro";
-import Dock from "../components/Dock.astro";
 import Desktop from "../components/Desktop.astro";
 import Scaled from "../components/Scaled.astro";
 import Widget from "../components/Widget.astro";
@@ -11,7 +10,6 @@ import VideoSlot from "../components/VideoSlot.astro";
 import Cta from "../components/Cta.astro";
 import Art from "../components/Art.astro";
 import Band from "../components/Band.astro";
-import SectionArt from "../components/SectionArt.astro";
 import { PRODUCT_NAME, ROUTES } from "../brand";
 import { THEMES } from "../lib/themes";
 
@@ -45,7 +43,7 @@ const island: Bullet[] = [
 const widgets: Bullet[] = [
   { title: "Three clock styles", text: "Dots, blocks or stripes, always in step with your PC." },
   { title: "The system at a glance", text: "Battery, memory and disk as rings and dot grids." },
-  { title: "Photo widget", text: "Your own picture in a paper mat or a plain frame, filled or fitted, in colour, black and white or in the theme's accent." },
+  { title: "Photo widget", text: "Your own picture, edge to edge or fitted, in colour, black and white or in the theme's accent." },
   { title: "Media", text: "What is playing, with controls, from any player on your PC." },
   { title: "Focus", text: "A timer that really counts and a to-do list that really ticks." },
   { title: "Weather", text: "The forecast for the place you choose, from Open-Meteo, fetched only after you pick one." },
@@ -65,7 +63,6 @@ const themes: Bullet[] = [
   <Nav current={ROUTES.features} />
   <main id="main">
     <div class="features-top">
-      <SectionArt piece="band-sky" edge="top" />
       <div class="features-bloom features-bloom--l" aria-hidden="true"><Art piece="bouquet-left" /></div>
       <div class="features-bloom features-bloom--r" aria-hidden="true"><Art piece="bouquet-right" /></div>
     <header class="features-head wrap">
@@ -78,7 +75,7 @@ const themes: Bullet[] = [
     <FeatureSection id="dock" large label="The dock" status="In development" scene="scene-dock" bullets={dock} shotLabel="The dock with the Development stack open above it">
       <Fragment slot="title">A dock that <span class="dim">files your apps for you.</span></Fragment>
       <Fragment slot="lede">It replaces the Windows taskbar with a floating dock, a full-screen App Library and a few live tiles, all drawn in the same dots as the home screen.</Fragment>
-      <Dock open unit="clamp(40px, 7vw, 88px)" />
+      <img class="shot-img" src="/media/dock/dock-stack.webp" width="1500" height="814" alt="The dock running in its test harness on a windswept-grass wallpaper, with the Development stack open above it" loading="lazy" decoding="async" />
       <VideoSlot slot="after" name="dock" label="The dock in use: magnification, a stack opening, the App Library and window previews" caption="The dock, recorded from the app." />
     </FeatureSection>
 
@@ -98,14 +95,14 @@ const themes: Bullet[] = [
       <Fragment slot="lede">Clocks, rings, grids, a calendar, media controls and your own photos, placed on a grid and drawn in dots. Time, date, calendar and battery are live on this page; a hollow dot marks a sample value.</Fragment>
       <div class="cluster">
         <Widget kind="clock" clockStyle="blocks" place="--w:4" />
-        <Widget kind="photo" photo="ridge" frame="polaroid" caption="Screen Ridge" />
+        <Widget kind="photo" />
         <Widget kind="ring" />
         <Widget kind="calendar" />
         <Widget kind="music" />
       </div>
     </FeatureSection>
 
-    <Band piece="band-sky" />
+    <Band piece="band-night" />
 
     <FeatureSection id="themes" label="Themes" status="In development" scene="scene-themes" bullets={themes} shotLabel="The same desktop in Obsidian, Paper and Aurum">
       <Fragment slot="title">Yours, <span class="dim">down to the dot.</span></Fragment>

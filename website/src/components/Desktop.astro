@@ -6,9 +6,8 @@
  * is the product's design drawn in markup (Dock.astro), so it is an illustration. The widgets are the same ones the
  * rest of the page uses (live where the browser can supply the data, labelled otherwise).
  */
-import Dock from "./Dock.astro";
 import Widget from "./Widget.astro";
-import type { PhotoFrame, PhotoName, WidgetKind } from "../lib/widgets";
+import type { WidgetKind } from "../lib/widgets";
 import { THEMES, type ThemeId } from "../lib/themes";
 import { WALLPAPERS } from "../lib/wallpapers";
 
@@ -17,14 +16,13 @@ interface Props {
   layout?: "a" | "b";
   /** Pin the screen to one theme (its colours and its wallpaper) whatever theme the page is in. */
   theme?: ThemeId;
-  /** Put a photo widget on the screen; without it the screen has none. */
-  photo?: PhotoName;
-  /** Frame of that photo widget. */
-  photoFrame?: PhotoFrame;
+  /** Show the wallpaper of this theme whatever theme the page is in (the windswept grass is Aurum's). */
+  wallpaper?: ThemeId;
   class?: string;
 }
-const { layout = "a", theme, photo, photoFrame, class: className = "" } = Astro.props;
-const wallpapers = theme ? THEMES.filter((t) => t.id === theme) : THEMES;
+const { layout = "a", theme, wallpaper, class: className = "" } = Astro.props;
+const pinned = wallpaper ?? theme;
+const wallpapers = pinned ? THEMES.filter((t) => t.id === pinned) : THEMES;
 
 const COLS = 12;
 /** x, y, w, h on the 12-column desktop grid; `small` is the [x, y, w, h] on narrow screens, or null to hide. */
@@ -38,7 +36,6 @@ const items: { kind: WidgetKind; x: number; y: number; w: number; h: number; sma
   { kind: "weather", x: 4, y: 4, w: 3, h: 1, small: [0, 4, 4, 1] },
   { kind: "batpill", x: 4, y: 5, w: 3, h: 1, small: null },
   { kind: "music", x: 7, y: 5, w: 4, h: 1, small: null },
-  { kind: "photo", x: 9, y: 1, w: 3, h: 3, small: null },
 ];
 
 function place(item: (typeof items)[number]): string {
@@ -49,7 +46,7 @@ function place(item: (typeof items)[number]): string {
 
 ---
 
-<div class={`desk ${className}`.trim()} data-layout={layout} data-theme={theme}>
+<div class={`desk ${className}`.trim()} data-layout={layout} data-theme={theme} data-wallpaper={wallpaper}>
   <div class="desk__bezel">
     <div class="stage desk__screen" data-stage>
       {
@@ -79,15 +76,21 @@ function place(item: (typeof items)[number]): string {
 
       <div class="stage__grid">
         {
-          items.filter((item) => item.kind !== "photo" || photo).map((item) => (
+          items.map((item) => (
             <div class:list={["desk__slot", item.small === null && "desk__slot--hide-s"]}>
-              <Widget kind={item.kind} place={place(item)} clockStyle="blocks" photo={photo} frame={photoFrame} />
+              <Widget kind={item.kind} place={place(item)} clockStyle="blocks" />
             </div>
           ))
         }
       </div>
 
-      <div class="desk__dock"><Dock unit="max(34px, 5cqw)" /></div>
+      <div class="desk__dock">
+        {
+          wallpapers.map((t) => (
+            <img class="desk__dock-img" data-for={t.id} src={`/media/dock/dock-bar-${t.id}.webp`} width="1820" height="100" alt="" loading="lazy" decoding="async" />
+          ))
+        }
+      </div>
     </div>
   </div>
 </div>

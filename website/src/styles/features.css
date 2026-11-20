@@ -129,3 +129,12 @@
 .scaled__inner {
   transform-origin: 0 0;
 }
+
+/* A real capture inside a scene: a screenshot with rounded corners and a soft shadow. */
+.shot-img {
+  display: block;
+  width: min(100%, 860px);
+  height: auto;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+}

@@ -1,7 +1,8 @@
 """Bands: wide, low pictures that sit between sections of a page. A pixel sky, a sea under mountains, a field of trees.
 
 Same pixel scale, palette and halftone shading as the hero's flowers (pixel.py). Layers: far, mid, near (halftone
-hills), sea (halftone water), cloud, stalk (trees, grass), petal, gold (sun, glints), heart (trunks, birds), grain.
+hills), sea (halftone water), cloud, stalk (trees, grass), petal, gold (sun, glints), heart (trunks, birds), line (fine
+concentric and dotted lines), grain.
 """
 from __future__ import annotations
 
@@ -10,10 +11,10 @@ import math
 import numpy as np
 
 from .dots import F32, fbm, halftone
-from .pixel import LIT, MID, SHADE, Canvas, butterfly, daisy, grass, tulip
+from .pixel import LIT, MID, SHADE, Canvas, butterfly, daisy, dragonfly, fish, grass, lily, peony, sparkle, tulip
 from .scape import render_scape
 
-KINDS = ("sky", "sea", "field")
+KINDS = ("sky", "sea", "field", "night")
 
 
 def _blob(cv: Canvas, layer: str, gx: int, gy: int, w: int, h: int) -> None:
@@ -86,8 +87,10 @@ def render_band(width: int, height: int, scale: float, seed: int, kind: str, nar
                 continue
             _cloud(cv, int(fx * cols), int(fy * rows), fw if not narrow else fw * 2 // 3)
         _sun(cv, int(0.70 * cols), int(0.30 * rows), 4.6 if not narrow else 3.6)
-        for fx, fy in ((0.22, 0.14), (0.27, 0.22), (0.47, 0.10), (0.88, 0.50), (0.93, 0.44)):
+        for fx, fy in ((0.22, 0.14), (0.27, 0.22), (0.47, 0.10)):
             _bird(cv, int(fx * cols), int(fy * rows))
+        for fx, fy in ((0.86, 0.46), (0.12, 0.56)):
+            dragonfly(cv, int(fx * cols), int(fy * rows))
         hills = render_scape(width, height, scale, seed, narrow=narrow, hidden=None)
         out["far"] = hills["far"] * np.clip((np.arange(cv.h)[:, None] / cv.h - 0.62) * 6.0, 0.0, 1.0).astype(F32)
     elif kind == "sea":
@@ -104,8 +107,26 @@ def render_band(width: int, height: int, scale: float, seed: int, kind: str, nar
                 cv.fill_cell("gold", cx + i, j, LIT if (i + j) % 4 else MID)
         for fx, fy in ((0.62, 0.16), (0.67, 0.24), (0.84, 0.10)):
             _bird(cv, int(fx * cols), int(fy * rows))
+        for k in range(4 if not narrow else 2):
+            fish(cv, int((0.55 + 0.1 * k) * cols), int((0.66 + 0.07 * (k % 2)) * rows), "gold" if k % 2 else "petal")
+        for _ in range(26 if not narrow else 10):
+            sparkle(cv, int(rng.uniform(0.02, 0.98) * cols), int(rng.uniform(0.54, 0.95) * rows))
         for k in range(3 if not narrow else 1):
             _cloud(cv, int((0.50 + 0.18 * k) * cols), int((0.05 + 0.06 * k) * rows), 11)
+    elif kind == "night":
+        hills = render_scape(width, height, scale, seed, narrow=narrow, hidden=None)
+        mask = (np.arange(cv.h)[:, None] / cv.h > 0.58).astype(F32)
+        out["mid"] = hills["mid"] * mask
+        out["near"] = hills["near"] * mask
+        for _ in range(70 if not narrow else 30):
+            sparkle(cv, int(rng.uniform(0.01, 0.99) * cols), int(rng.uniform(0.02, 0.52) * rows), big=bool(rng.random() < 0.12))
+        _sun(cv, int(0.78 * cols), int(0.24 * rows), 4.0 if not narrow else 3.2)
+        for _ in range(22 if not narrow else 9):
+            sparkle(cv, int(rng.uniform(0.05, 0.95) * cols), int(rng.uniform(0.60, 0.92) * rows))
+        lily(cv, 0.14 * width, 0.78 * height, 0.075 * width)
+        dragonfly(cv, int(0.40 * cols), int(0.40 * rows))
+        for _ in range(50 if not narrow else 20):
+            grass(cv, rng.uniform(0.0, 1.0) * width, height * 1.02, height * rng.uniform(0.06, 0.18), rng.uniform(-0.02, 0.02) * width, 0.85 * g)
     else:  # field
         hills = render_scape(width, height, scale, seed, narrow=narrow, hidden=None)
         mask = (np.arange(cv.h)[:, None] / cv.h > 0.34).astype(F32)
@@ -122,10 +143,14 @@ def render_band(width: int, height: int, scale: float, seed: int, kind: str, nar
                 tulip(cv, x, y - 3)
         for k in range(3 if not narrow else 1):
             butterfly(cv, int(rng.uniform(0.1, 0.9) * cols), int(rng.uniform(0.10, 0.34) * rows), gold_wings=bool(k % 2))
+        peony(cv, 0.12 * width, 0.74 * height, 0.06 * width)
+        peony(cv, 0.84 * width, 0.70 * height, 0.045 * width)
+        lily(cv, 0.50 * width, 0.80 * height, 0.05 * width)
         for _ in range(60 if not narrow else 24):
             grass(cv, rng.uniform(0.0, 1.0) * width, height * 1.02, height * rng.uniform(0.06, 0.16), rng.uniform(-0.02, 0.02) * width, 0.85 * g)
     for name in layers:
         out[name] = cv.mosaic(name)
-    silhouette = np.clip(sum(out[n] for n in layers), 0.0, 1.0)
+    out["line"] = cv._coverage("line")
+    silhouette = np.clip(sum(out[n] for n in (*layers, "line")), 0.0, 1.0)
     out["grain"] = cv.stipple(silhouette, 6.0, 8.0, 3.4)
     return {k: v.astype(F32) for k, v in out.items()}

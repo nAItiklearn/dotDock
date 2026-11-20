@@ -151,6 +151,18 @@
 }
 
 /* Dock: a pill of apps along the bottom. */
+.desk__dock-img {
+  display: none;
+  width: min(78cqw, 880px);
+  height: auto;
+}
+html[data-theme="obsidian"] .desk__dock-img[data-for="obsidian"],
+html[data-theme="paper"] .desk__dock-img[data-for="paper"],
+html[data-theme="aurum"] .desk__dock-img[data-for="aurum"],
+.desk[data-theme] .desk__dock-img,
+.desk[data-wallpaper] .desk__dock-img {
+  display: block;
+}
 .desk__dock {
   position: absolute;
   z-index: 2;

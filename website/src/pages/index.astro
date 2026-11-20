@@ -4,6 +4,7 @@ import Nav from "../components/Nav.astro";
 import Hero from "../components/Hero.astro";
 import Features from "../components/Features.astro";
 import VideoSlot from "../components/VideoSlot.astro";
+import Band from "../components/Band.astro";
 import WidgetCards from "../components/WidgetCards.astro";
 import Customize from "../components/Customize.astro";
 import Wall from "../components/Wall.astro";
@@ -24,11 +25,14 @@ const description = `${PRODUCT_NAME} is a free, open-source desktop environment 
     <Hero />
     <div class="wrap"><VideoSlot name="tour" label="A tour of dotDock: the home screen, the dock and the island" caption="A tour of the whole desktop, recorded from the app." /></div>
     <Features />
+    <Band piece="band-sky" />
     <WidgetCards />
     <Customize />
     <Wall />
+    <Band piece="band-sea" />
     <Boot />
     <Safety />
+    <Band piece="band-night" />
     <FaqSection />
     <Cta />
   </main>
