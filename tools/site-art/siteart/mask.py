@@ -25,13 +25,17 @@ def to_alpha8(cov: np.ndarray) -> np.ndarray:
 
 
 def save_mask(cov: np.ndarray, path: Path, quality: int = 80, alpha_quality: int = 70) -> int:
-    """Lossy WebP of white pixels whose alpha is the coverage. Returns the file size in bytes."""
+    """WebP of white pixels whose alpha is the coverage; ``quality`` 100 is lossless (flat pixel art).
+
+    Returns the file size in bytes.
+    """
     a = to_alpha8(cov)
     rgba = np.empty(a.shape + (4,), dtype=np.uint8)
     rgba[..., :3] = 255
     rgba[..., 3] = a
     path.parent.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(rgba, "RGBA").save(path, "WEBP", quality=quality, alpha_quality=alpha_quality, method=6, exact=True)
+    Image.fromarray(rgba, "RGBA").save(path, "WEBP", lossless=quality >= 100, quality=quality, alpha_quality=alpha_quality,
+                                       method=6, exact=True)
     return path.stat().st_size
 
 

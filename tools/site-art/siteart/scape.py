@@ -1,22 +1,23 @@
-"""The hero landscape: misty ridges and rolling meadow in a halftone screen, with a sun and wild flowers.
+"""The hero landscape: misty ridges and rolling meadow in a halftone screen.
 
 Layers are painted far to near. Each has its own skyline, its own dot pitch (the screen gets coarser as
 the ground comes closer) and a tone that is full at the crest and thins out downhill, so mist lies in
 the folds. Where a nearer ridge covers a farther one the farther dots are removed, so the dots of each
 ridge stay readable. The ridges are written to three colour masks (far, mid, near) so the page can paint
-atmospheric perspective in three greens; the sun and the flowers have masks of their own. All masks share
-one frame and move as one piece.
+atmospheric perspective in three greens. The flowers that stand on this ground are a piece of their own
+(bloom.py). The middle of the lower frame is left empty on the wide render: the screen of the hero stands
+there and covers it, so drawing it would only cost bytes.
 """
 from __future__ import annotations
 
 import math
 
 import numpy as np
-from PIL import Image, ImageDraw
-
 from .dots import F32, fbm, halftone, noise1d, smoothstep
 
-SUPER = 4
+# Hero, wide render: the part of the frame the screen hides at every viewport width from 1240 px up,
+# as (left, right, first row) fractions of the frame.
+HERO_HIDDEN = (0.24, 0.76, 0.42)
 
 
 def _alps(rng, w: int, peaks, sharp: float = 5.0, crag: float = 0.22) -> np.ndarray:
@@ -61,43 +62,8 @@ def _layer(rng, w: int, h: int, scale: float, line: np.ndarray, tone: float, pit
     return cov, inside
 
 
-def _flowers(rng, w: int, h: int, scale: float, crest: np.ndarray, count: int, centre_gap: float) -> tuple[np.ndarray, np.ndarray]:
-    """Wild flowers on the near ground: five petal dots round a pale eye, bigger the nearer they are.
-
-    ``crest`` is the row (0..1) where the flowered ground starts, per column. Flowers keep out of the
-    middle of the frame (``centre_gap``), where the screen sits.
-    """
-    petals = Image.new("L", (w * SUPER, h * SUPER), 0)
-    eyes = Image.new("L", (w * SUPER, h * SUPER), 0)
-    dp, de = ImageDraw.Draw(petals), ImageDraw.Draw(eyes)
-    s = SUPER
-    placed = 0
-    tries = 0
-    while placed < count and tries < count * 40:
-        tries += 1
-        u = rng.uniform(0.0, 1.0)
-        if abs(u - 0.5) < centre_gap:
-            continue
-        x = int(u * w)
-        top = crest[min(w - 1, x)]
-        v = rng.uniform(top + 0.02, 0.985)
-        depth = (v - top) / max(1e-3, 1.0 - top)
-        r = (2.1 + 5.4 * depth ** 1.2) * scale * rng.uniform(0.8, 1.2)
-        cx, cy = x, v * h
-        rot = rng.uniform(0, 2 * math.pi)
-        for k in range(5):
-            a = rot + 2 * math.pi * k / 5
-            px, py = cx + math.cos(a) * r * 1.05, cy + math.sin(a) * r * 1.05
-            pr = r * 0.62
-            dp.ellipse(((px - pr) * s, (py - pr) * s, (px + pr) * s, (py + pr) * s), fill=255)
-        er = r * 0.46
-        de.ellipse(((cx - er) * s, (cy - er) * s, (cx + er) * s, (cy + er) * s), fill=255)
-        placed += 1
-    to = lambda im: np.asarray(im.resize((w, h), Image.Resampling.BOX), dtype=F32) / 255.0  # noqa: E731
-    return to(petals), to(eyes)
-
-
-def render_scape(width: int, height: int, scale: float, seed: int, narrow: bool = False) -> dict[str, np.ndarray]:
+def render_scape(width: int, height: int, scale: float, seed: int, narrow: bool = False,
+                 hidden: tuple[float, float, float] | None = HERO_HIDDEN) -> dict[str, np.ndarray]:
     """``width`` x ``height`` are CSS pixels; the arrays are ``scale`` times larger."""
     w, h = int(round(width * scale)), int(round(height * scale))
     rng = np.random.default_rng(seed)
@@ -126,24 +92,16 @@ def render_scape(width: int, height: int, scale: float, seed: int, narrow: bool 
         (r3, 0.70, 10.0, 0.08, 0.34, 0.18, 4.0, 45.0, 0.08, "near"),
     ]
     groups = {g: np.zeros((h, w), dtype=F32) for g in ("far", "mid", "near")}
-    union = np.zeros((h, w), dtype=F32)
     for k, spec in enumerate(specs):
         group = spec[-1]
         cov, inside = _layer(rng, w, h, scale, *spec[:-1])
         for g in groups.values():
             g *= 1.0 - inside
         groups[group] += cov * inside
-        if k < 2:
-            union = np.maximum(union, inside)
 
-    # the sun: dense in the middle, thinning to a soft rim, hidden by the far ridges
-    cx, cy, r = (0.865, 0.105, 0.045) if not narrow else (0.70, 0.22, 0.150)
-    yy = ((np.arange(h, dtype=F32) + 0.5) / h)[:, None]
-    xx = ((np.arange(w, dtype=F32) + 0.5) / w)[None, :]
-    rho = np.hypot((xx - cx) * w, (yy - cy) * h) / (r * w)
-    sun_tone = np.clip(1.0 - rho**2.6, 0.0, 1.0) * 0.98
-    sun = halftone(sun_tone.astype(F32), 7.0 * scale, 45.0, rmax=0.56, gamma=0.6, floor=0.02) * (1.0 - union)
-
-    # wild flowers on the two nearest hills, kept clear of the middle where the screen stands
-    petals, eyes = _flowers(rng, w, h, scale, np.minimum(r2, r3), 150 if not narrow else 70, 0.0 if narrow else 0.20)
-    return {k: v.astype(F32) for k, v in {**groups, "sun": sun, "flower": petals, "eye": eyes}.items()}
+    if hidden is not None and not narrow:
+        # A screen stands in front of the middle of the lower frame and covers it: nothing is drawn behind it.
+        x0, x1, y0 = int(w * hidden[0]), int(w * hidden[1]), int(h * hidden[2])
+        for g in groups.values():
+            g[y0:, x0:x1] = 0.0
+    return {k: v.astype(F32) for k, v in groups.items()}

@@ -1,0 +1,122 @@
+/*
+ * The dock illustration (components/Dock.astro). Everything is a multiple of --d, the size of one tile, so the
+ * same markup serves the small shot inside the hero screen and the large one on the Features page.
+ */
+.dock {
+  position: relative;
+  display: inline-grid;
+  justify-items: center;
+  gap: calc(var(--d) * 0.3);
+}
+.dock__bar {
+  display: flex;
+  align-items: flex-end;
+  gap: calc(var(--d) * 0.2);
+  padding: calc(var(--d) * 0.2);
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: calc(var(--d) * 0.55);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+}
+.dock__item {
+  position: relative;
+  display: grid;
+  width: var(--d);
+  height: var(--d);
+  transform-origin: 50% 100%;
+}
+/* The pointer rests on the stack: it peaks at 1.25 and its neighbours follow (docs/DOCK_SPEC.md, hover). */
+.dock__item--peak {
+  transform: scale(1.25);
+  margin-inline: calc(var(--d) * 0.14);
+}
+.dock__item:has(+ .dock__item--peak),
+.dock__item--peak + .dock__sep + .dock__item {
+  transform: scale(1.1);
+}
+.dock__tile {
+  display: grid;
+  place-items: center;
+  border: var(--hairline) solid var(--line);
+  border-radius: 26%;
+  background: var(--surface-2);
+}
+.dock__item > .dock__tile {
+  width: 100%;
+  height: 100%;
+}
+.dock__tile > svg {
+  width: 54%;
+  height: 54%;
+}
+.dock__tile--stack {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 6%;
+  padding: 13%;
+  place-items: stretch;
+}
+.dock__tile--stack > svg {
+  width: 100%;
+  height: 100%;
+}
+.dock__tile--ring > svg {
+  width: 68%;
+  height: 68%;
+}
+.dock__sep {
+  align-self: center;
+  width: var(--hairline);
+  height: calc(var(--d) * 0.7);
+  margin-inline: calc(var(--d) * 0.06);
+  background: var(--line-strong);
+}
+/* Running apps carry a dot; the focused one carries the accent. */
+.dock__item--running::after {
+  content: "";
+  position: absolute;
+  bottom: calc(var(--d) * -0.14);
+  left: 50%;
+  width: calc(var(--d) * 0.09);
+  height: calc(var(--d) * 0.09);
+  min-width: 3px;
+  min-height: 3px;
+  margin-left: calc(var(--d) * -0.045);
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+.dock__item--focus::after {
+  background: var(--accent);
+}
+
+/* The stack popover: the category name over a grid of its apps. */
+.dock__pop {
+  display: grid;
+  gap: calc(var(--d) * 0.2);
+  padding: calc(var(--d) * 0.3);
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: calc(var(--d) * 0.5);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+}
+.dock__pop-title {
+  font-family: var(--font-mono);
+  font-size: calc(var(--d) * 0.2);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.dock__pop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, var(--d));
+  gap: calc(var(--d) * 0.16);
+}
+.dock__pop-grid .dock__tile {
+  width: var(--d);
+  height: var(--d);
+}

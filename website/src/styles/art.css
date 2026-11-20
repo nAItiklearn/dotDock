@@ -28,25 +28,29 @@
 .art__mid {
   background: var(--art-mid);
 }
-.art__near {
+.art__near,
+.art__stalk {
   background: var(--art-near);
 }
-.art__sun,
 .art__accent {
   background: var(--art-sun);
 }
-.art__flower {
-  background: var(--art-flower);
+.art__petal {
+  background: var(--art-petal);
 }
-.art__eye {
-  background: var(--art-eye);
+.art__gold {
+  background: var(--art-gold);
 }
-/* The solid shape painted behind a dotted object so what lies behind it does not show through. */
-.art__body {
-  background: color-mix(in srgb, var(--bg) 80%, var(--art-stone));
+.art__heart {
+  background: var(--art-heart);
+}
+/* The stippled shadow of the flowers: a light touch of grain, not an outline. */
+.art__grain {
+  background: var(--art-stone);
+  opacity: 0.4;
 }
 
-/* ---------- Hero: a full-bleed landscape, the screen rising into it ---------- */
+/* ---------- Hero: flowers either side of the headline, hills behind, the screen in front ---------- */
 .hero__land {
   position: absolute;
   z-index: -1;
@@ -81,34 +85,96 @@ html:not([data-theme="paper"]) .hero__scape .art__far,
 html:not([data-theme="paper"]) .hero__scape .art__mid {
   opacity: 0.85;
 }
-/* The boulders stand in front of the screen's lower corners, half outside its frame. */
-.hero__rock {
-  --rw: clamp(110px, 15vw, 250px);
+
+/*
+ * The bouquets rise from behind the screen. On wide pages they stand either side of the headline and slide
+ * out past the page edge as the page narrows, so they stay clear of the text; on narrow pages they hang
+ * below the call to action, in the gap above the screen.
+ */
+.hero__bloom {
+  --bloom-w: 480px;
+  position: absolute;
+  z-index: -1;
+  top: calc(var(--nav-h) * -1 + 24px);
+  width: var(--bloom-w);
+}
+.hero__bloom--l {
+  left: clamp(-130px, calc(50vw - 640px), 60px);
+}
+.hero__bloom--r {
+  right: clamp(-130px, calc(50vw - 640px), 60px);
+}
+@media (max-width: 899px) {
+  .hero__bloom {
+    --bloom-w: min(190px, 48vw);
+    top: auto;
+    bottom: -250px;
+  }
+  .hero__bloom--l {
+    left: 0;
+  }
+  .hero__bloom--r {
+    right: 0;
+  }
+}
+/* The tufts stand against the screen's lower corners, in front of its frame. */
+.hero__tuft {
+  --tuft-w: clamp(130px, 18vw, 280px);
   position: absolute;
   z-index: 3;
-  bottom: calc(var(--rw) * -0.14);
-  width: var(--rw);
+  bottom: calc(var(--tuft-w) * -0.1);
+  width: var(--tuft-w);
   pointer-events: none;
 }
-.hero__rock--l {
-  left: calc(var(--rw) * -0.36);
+.hero__tuft--l {
+  left: calc(var(--tuft-w) * -0.3);
 }
-.hero__rock--r {
-  right: calc(var(--rw) * -0.36);
+.hero__tuft--r {
+  right: calc(var(--tuft-w) * -0.3);
 }
 
-/* ---------- Footer horizon ---------- */
+/* ---------- Footer meadow ---------- */
 .footer__art {
-  --horizon-w: max(100%, 1200px);
-  width: var(--horizon-w);
-  margin-left: calc(50% - var(--horizon-w) / 2);
+  --meadow-w: max(100%, 1200px);
+  width: var(--meadow-w);
+  margin-left: calc(50% - var(--meadow-w) / 2);
 }
 @media (max-width: 899px) {
   .footer__art {
-    --horizon-w: 900px;
+    --meadow-w: 720px;
   }
 }
-/* The footer lake is drawn in the meadow green; its reeds and hills share the one colour. */
-.footer__art .art__ink {
-  background: var(--art-near);
+
+/* ---------- Scenes behind the product shots of the Features page ---------- */
+.scene {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-art);
+  background: linear-gradient(to bottom, var(--bg) 0, var(--bg) 35%, var(--art-sky) 100%);
+}
+.scene__art {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  display: grid;
+  align-items: end;
+}
+.scene__art > .art {
+  --scene-w: max(100%, 1000px);
+  width: var(--scene-w);
+  margin-left: calc(50% - var(--scene-w) / 2);
+}
+@media (max-width: 899px) {
+  .scene__art > .art {
+    --scene-w: 560px;
+  }
+}
+.scene__shot {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  min-height: clamp(280px, 40vw, 560px);
+  padding: clamp(20px, 4vw, 56px);
 }

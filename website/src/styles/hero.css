@@ -1,21 +1,25 @@
 /*
- * Hero: a full-bleed landscape behind everything (styles/art.css), then an eyebrow, the display headline,
- * one sentence, one button and a quiet row of facts, and the screen rising from the foot into the hills.
+ * Hero: flowers and hills drawn in dots behind everything (styles/art.css), then the display headline,
+ * one sentence and one button, and the screen rising from the foot of the page into the hills.
  */
 .hero {
   position: relative;
   isolation: isolate;
   overflow: clip;
-  padding-top: calc(var(--nav-h) + clamp(48px, 7vw, 112px));
+  padding-top: calc(var(--nav-h) + clamp(40px, 6vw, 96px));
   padding-bottom: clamp(36px, 5vw, 80px);
+}
+.hero__top {
+  position: relative;
 }
 .hero__inner {
   display: grid;
   justify-items: center;
-  gap: clamp(20px, 2.2vw, 28px);
+  gap: clamp(16px, 1.8vw, 24px);
   max-width: calc(840px + 2 * var(--page-margin));
   text-align: center;
 }
+/* Small pill used by the section heads. */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -57,26 +61,14 @@
   color: var(--text-dim);
   text-wrap: balance;
 }
-.hero__facts {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-2) var(--space-6);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-dim);
-}
-.hero__facts li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.hero__facts a {
-  color: var(--text);
-}
-/* The screen: it stays whole, its foot resting on the meadow, and the boulders stand at its lower corners. */
+/* The screen: it stays whole, its foot resting on the meadow, and tufts of flowers stand at its lower corners. */
 .hero__frame {
   position: relative;
   max-width: calc(1180px + 2 * var(--page-margin));
-  margin-top: clamp(64px, 8vw, 128px);
+  margin-top: clamp(48px, 5vw, 72px);
+}
+@media (max-width: 899px) {
+  .hero__frame {
+    margin-top: 150px;
+  }
 }

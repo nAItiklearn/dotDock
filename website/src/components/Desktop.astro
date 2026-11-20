@@ -3,9 +3,10 @@
  * A desktop shot drawn in code: the theme's wallpaper, real widget components, the notch-style
  * island at the top and the dock at the bottom, in a screen frame. The island plays a scripted
  * session with the product's own beetle, landscape and state icons (scripts/island.ts); the dock
- * is the design for an upcoming part, so it is an illustration. The widgets are the same ones the
+ * is the product's design drawn in markup (Dock.astro), so it is an illustration. The widgets are the same ones the
  * rest of the page uses (live where the browser can supply the data, labelled otherwise).
  */
+import Dock from "./Dock.astro";
 import Widget from "./Widget.astro";
 import type { WidgetKind } from "../lib/widgets";
 import { THEMES } from "../lib/themes";
@@ -36,29 +37,6 @@ function place(item: (typeof items)[number]): string {
   const x = layout === "b" ? COLS - item.x - item.w : item.x;
   const small = item.small ?? [0, 0, 1, 1];
   return `--x:${x};--y:${item.y};--w:${item.w};--h:${item.h};--mx:${small[0]};--my:${small[1]};--mw:${small[2]};--mh:${small[3]}`;
-}
-
-// Dock glyphs: 3 x 3 dot patterns by lit cell index. Abstract on purpose; no brand icons.
-const GLYPHS = [
-  [0, 1, 2, 3, 4, 5, 6, 7, 8],
-  [0, 3, 6, 7, 8],
-  [0, 1, 2, 3, 5, 6, 7, 8],
-  [1, 3, 4, 5, 7],
-  [0, 2, 4, 6, 8],
-  [0, 2, 3, 5, 6, 8],
-];
-const ACTIVE_GLYPH = 2;
-function glyphPaths(lit: readonly number[]): { on: string; off: string } {
-  let on = "";
-  let off = "";
-  for (let i = 0; i < 9; i++) {
-    const cx = (i % 3) + 0.5;
-    const cy = Math.floor(i / 3) + 0.5;
-    const d = `M${cx - 0.36} ${cy}a0.36 0.36 0 1 0 0.72 0a0.36 0.36 0 1 0 -0.72 0Z`;
-    if (lit.includes(i)) on += d;
-    else off += d;
-  }
-  return { on, off };
 }
 
 ---
@@ -101,21 +79,7 @@ function glyphPaths(lit: readonly number[]): { on: string; off: string } {
         }
       </div>
 
-      <div class="desk__dock" aria-hidden="true">
-        {
-          GLYPHS.map((glyph, i) => {
-            const p = glyphPaths(glyph);
-            return (
-              <span class:list={["desk__app", i === ACTIVE_GLYPH && "desk__app--active"]}>
-                <svg viewBox="0 0 3 3">
-                  <path d={p.off} fill="var(--dot-off)" />
-                  <path d={p.on} fill="var(--text)" />
-                </svg>
-              </span>
-            );
-          })
-        }
-      </div>
+      <div class="desk__dock"><Dock unit="max(34px, 4.4cqw)" /></div>
     </div>
   </div>
 </div>

@@ -13,6 +13,38 @@ function initNav(): void {
   update();
 }
 
+/** Scenes and the footer meadow fetch their masks when they come within a screen or so of the viewport. */
+function initArt(): void {
+  const pieces = [...document.querySelectorAll<HTMLElement>("[data-art-lazy]")];
+  if (!("IntersectionObserver" in window)) {
+    for (const el of pieces) el.classList.add("art--on");
+    return;
+  }
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        entry.target.classList.add("art--on");
+        io.unobserve(entry.target);
+      }
+    },
+    { rootMargin: "900px 0px" },
+  );
+  for (const el of pieces) io.observe(el);
+}
+
+/** The small-screen menu closes when a link in it is followed, or on Escape. */
+function initMenu(): void {
+  const menu = document.querySelector<HTMLDetailsElement>("[data-nav-menu]");
+  if (!menu) return;
+  menu.addEventListener("click", (e) => {
+    if (e.target instanceof Element && e.target.closest("a")) menu.open = false;
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") menu.open = false;
+  });
+}
+
 function initReveal(): void {
   const items = [...document.querySelectorAll<HTMLElement>(".reveal")];
   if (!("IntersectionObserver" in window)) {
@@ -51,15 +83,6 @@ function initCopy(): void {
   }
 }
 
-/** The video poster animates only while it is on screen. */
-function initVideo(): void {
-  const video = document.querySelector<HTMLElement>("[data-product-video]");
-  if (!video || !("IntersectionObserver" in window)) return;
-  new IntersectionObserver((entries) => {
-    for (const entry of entries) video.classList.toggle("is-live", entry.isIntersecting);
-  }).observe(video);
-}
-
 /** Opens the FAQ answer that the URL fragment points at, so links like /faq#restore land open. */
 function initFaqLinks(): void {
   const open = (): void => {
@@ -91,6 +114,7 @@ function initWall(): void {
 initNav();
 initReveal();
 initCopy();
-initVideo();
+initMenu();
+initArt();
 initFaqLinks();
 initWall();

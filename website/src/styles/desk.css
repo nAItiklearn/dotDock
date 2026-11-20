@@ -155,59 +155,8 @@
   position: absolute;
   z-index: 2;
   left: 50%;
-  bottom: 2.2cqw;
-  display: flex;
-  align-items: center;
-  gap: 1cqw;
-  padding: 1cqw 1.4cqw;
-  border-radius: 999px;
-  background: var(--surface);
-  border: var(--hairline) solid var(--border);
-  box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  bottom: 2cqw;
   transform: translateX(-50%);
-}
-.desk__app {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 4.6cqw;
-  height: 4.6cqw;
-  min-width: 34px;
-  min-height: 34px;
-  border-radius: 50%;
-  background: var(--fill-faint);
-  box-shadow: inset 0 0 0 1px var(--border);
-}
-.desk__app svg {
-  width: 52%;
-  height: 52%;
-}
-.desk__app--active::after {
-  content: "";
-  position: absolute;
-  bottom: -0.9cqw;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-@media (max-width: 959px) {
-  .desk__dock {
-    bottom: 14px;
-    gap: 6px;
-    padding: 7px 10px;
-  }
-  .desk__app {
-    width: 34px;
-    height: 34px;
-  }
-  .desk__app:nth-child(n + 5) {
-    display: none;
-  }
 }
 
 /* A little tilt on large screens so the shot has depth. */

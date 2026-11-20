@@ -28,13 +28,14 @@ export interface ThemeColors {
   readonly danger: string;
   readonly success: string;
   readonly shadow: string;
-  /** Art palette: ridges from far to near, the sun, wild flowers (petal and eye), the sky at the horizon, stone. */
+  /** Art palette: ridges from far to near, flowers (red petals, golden petals, dark centres), the sky at the horizon, stone. */
   readonly artFar: string;
   readonly artMid: string;
   readonly artNear: string;
   readonly artSun: string;
-  readonly artFlower: string;
-  readonly artEye: string;
+  readonly artPetal: string;
+  readonly artGold: string;
+  readonly artHeart: string;
   readonly artSky: string;
   readonly artStone: string;
 }
@@ -74,8 +75,9 @@ export const OBSIDIAN: Theme = {
     artMid: "#476650",
     artNear: "#6f9a76",
     artSun: "#e94248",
-    artFlower: "#e94248",
-    artEye: "#f2d98a",
+    artPetal: "#e94248",
+    artGold: "#f2c75c",
+    artHeart: "#8a5a35",
     artSky: "#17201b",
     artStone: "#d8d4cb",
   },
@@ -105,8 +107,9 @@ export const PAPER: Theme = {
     artMid: "#86a37e",
     artNear: "#4d7a47",
     artSun: "#da3038",
-    artFlower: "#da3038",
-    artEye: "#f0c24a",
+    artPetal: "#da3038",
+    artGold: "#f0b43c",
+    artHeart: "#2b2b27",
     artSky: "#ece8d8",
     artStone: "#2b2b27",
   },
@@ -136,8 +139,9 @@ export const AURUM: Theme = {
     artMid: "#6e5828",
     artNear: "#b08a38",
     artSun: "#e3b456",
-    artFlower: "#f4efe4",
-    artEye: "#e3b456",
+    artPetal: "#f4efe4",
+    artGold: "#e3b456",
+    artHeart: "#8a6a2c",
     artSky: "#1c1810",
     artStone: "#e8dcc0",
   },
@@ -167,8 +171,9 @@ const CSS_VAR: Record<keyof ThemeColors, string> = {
   artMid: "--art-mid",
   artNear: "--art-near",
   artSun: "--art-sun",
-  artFlower: "--art-flower",
-  artEye: "--art-eye",
+  artPetal: "--art-petal",
+  artGold: "--art-gold",
+  artHeart: "--art-heart",
   artSky: "--art-sky",
   artStone: "--art-stone",
 };

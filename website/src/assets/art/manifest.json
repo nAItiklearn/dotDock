@@ -1,273 +1,553 @@
 {
- "horizon": {
-  "seed": 21,
+ "bouquet-left": {
+  "seed": 31,
+  "variants": {
+   "wide": {
+    "w": 480,
+    "h": 640,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "bouquet-left-wide-stalk-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 494
+      },
+      "2": {
+       "file": "bouquet-left-wide-stalk-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 634
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "bouquet-left-wide-petal-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 382
+      },
+      "2": {
+       "file": "bouquet-left-wide-petal-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 530
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "bouquet-left-wide-gold-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 474
+      },
+      "2": {
+       "file": "bouquet-left-wide-gold-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 622
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "bouquet-left-wide-heart-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 260
+      },
+      "2": {
+       "file": "bouquet-left-wide-heart-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 410
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "bouquet-left-wide-grain-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 17332
+      },
+      "2": {
+       "file": "bouquet-left-wide-grain-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 43600
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 190,
+    "h": 300,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "bouquet-left-narrow-stalk-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 320
+      },
+      "2": {
+       "file": "bouquet-left-narrow-stalk-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 348
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "bouquet-left-narrow-petal-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 224
+      },
+      "2": {
+       "file": "bouquet-left-narrow-petal-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 254
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "bouquet-left-narrow-gold-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 250
+      },
+      "2": {
+       "file": "bouquet-left-narrow-gold-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 282
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "bouquet-left-narrow-heart-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 138
+      },
+      "2": {
+       "file": "bouquet-left-narrow-heart-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 168
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "bouquet-left-narrow-grain-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 6002
+      },
+      "2": {
+       "file": "bouquet-left-narrow-grain-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 14752
+      }
+     }
+    }
+   }
+  }
+ },
+ "bouquet-right": {
+  "seed": 32,
+  "variants": {
+   "wide": {
+    "w": 480,
+    "h": 640,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "bouquet-right-wide-stalk-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 562
+      },
+      "2": {
+       "file": "bouquet-right-wide-stalk-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 708
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "bouquet-right-wide-petal-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 458
+      },
+      "2": {
+       "file": "bouquet-right-wide-petal-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 600
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "bouquet-right-wide-gold-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 362
+      },
+      "2": {
+       "file": "bouquet-right-wide-gold-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 502
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "bouquet-right-wide-heart-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 250
+      },
+      "2": {
+       "file": "bouquet-right-wide-heart-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 394
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "bouquet-right-wide-grain-1x.webp",
+       "w": 480,
+       "h": 640,
+       "bytes": 18032
+      },
+      "2": {
+       "file": "bouquet-right-wide-grain-2x.webp",
+       "w": 960,
+       "h": 1280,
+       "bytes": 45716
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 190,
+    "h": 300,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "bouquet-right-narrow-stalk-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 370
+      },
+      "2": {
+       "file": "bouquet-right-narrow-stalk-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 390
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "bouquet-right-narrow-petal-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 274
+      },
+      "2": {
+       "file": "bouquet-right-narrow-petal-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 300
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "bouquet-right-narrow-gold-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 198
+      },
+      "2": {
+       "file": "bouquet-right-narrow-gold-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 226
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "bouquet-right-narrow-heart-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 138
+      },
+      "2": {
+       "file": "bouquet-right-narrow-heart-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 164
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "bouquet-right-narrow-grain-1x.webp",
+       "w": 190,
+       "h": 300,
+       "bytes": 5858
+      },
+      "2": {
+       "file": "bouquet-right-narrow-grain-2x.webp",
+       "w": 380,
+       "h": 600,
+       "bytes": 14656
+      }
+     }
+    }
+   }
+  }
+ },
+ "meadow": {
+  "seed": 71,
   "variants": {
    "wide": {
     "w": 1920,
-    "h": 820,
+    "h": 420,
     "layers": {
-     "ink": {
+     "far": {
       "1": {
-       "file": "horizon-wide-ink-1x.webp",
+       "file": "meadow-wide-far-1x.webp",
        "w": 1920,
-       "h": 820,
-       "bytes": 57848
+       "h": 420,
+       "bytes": 23218
       },
       "2": {
-       "file": "horizon-wide-ink-2x.webp",
+       "file": "meadow-wide-far-2x.webp",
        "w": 3840,
-       "h": 1640,
-       "bytes": 142466
+       "h": 840,
+       "bytes": 57598
       }
      },
-     "accent": {
+     "mid": {
       "1": {
-       "file": "horizon-wide-accent-1x.webp",
+       "file": "meadow-wide-mid-1x.webp",
        "w": 1920,
-       "h": 820,
-       "bytes": 9524
+       "h": 420,
+       "bytes": 33154
       },
       "2": {
-       "file": "horizon-wide-accent-2x.webp",
+       "file": "meadow-wide-mid-2x.webp",
        "w": 3840,
-       "h": 1640,
-       "bytes": 27712
-      }
-     }
-    }
-   },
-   "narrow": {
-    "w": 900,
-    "h": 700,
-    "layers": {
-     "ink": {
-      "1": {
-       "file": "horizon-narrow-ink-1x.webp",
-       "w": 900,
-       "h": 700,
-       "bytes": 33786
-      },
-      "2": {
-       "file": "horizon-narrow-ink-2x.webp",
-       "w": 1800,
-       "h": 1400,
-       "bytes": 82086
+       "h": 840,
+       "bytes": 81042
       }
      },
-     "accent": {
+     "near": {
       "1": {
-       "file": "horizon-narrow-accent-1x.webp",
-       "w": 900,
-       "h": 700,
-       "bytes": 9170
+       "file": "meadow-wide-near-1x.webp",
+       "w": 1920,
+       "h": 420,
+       "bytes": 44168
       },
       "2": {
-       "file": "horizon-narrow-accent-2x.webp",
-       "w": 1800,
-       "h": 1400,
-       "bytes": 23382
-      }
-     }
-    }
-   }
-  }
- },
- "rock-left": {
-  "seed": 8,
-  "variants": {
-   "wide": {
-    "w": 320,
-    "h": 390,
-    "layers": {
-     "body": {
-      "1": {
-       "file": "rock-left-wide-body-1x.webp",
-       "w": 320,
-       "h": 390,
-       "bytes": 2566
-      },
-      "2": {
-       "file": "rock-left-wide-body-2x.webp",
-       "w": 640,
-       "h": 780,
-       "bytes": 5948
+       "file": "meadow-wide-near-2x.webp",
+       "w": 3840,
+       "h": 840,
+       "bytes": 106512
       }
      },
-     "ink-paper": {
+     "stalk": {
       "1": {
-       "file": "rock-left-wide-ink-paper-1x.webp",
-       "w": 320,
-       "h": 390,
-       "bytes": 10408
+       "file": "meadow-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 420,
+       "bytes": 1416
       },
       "2": {
-       "file": "rock-left-wide-ink-paper-2x.webp",
-       "w": 640,
-       "h": 780,
-       "bytes": 24364
-      }
-     },
-     "ink-dark": {
-      "1": {
-       "file": "rock-left-wide-ink-dark-1x.webp",
-       "w": 320,
-       "h": 390,
-       "bytes": 9640
-      },
-      "2": {
-       "file": "rock-left-wide-ink-dark-2x.webp",
-       "w": 640,
-       "h": 780,
-       "bytes": 22520
-      }
-     }
-    }
-   },
-   "narrow": {
-    "w": 170,
-    "h": 207,
-    "layers": {
-     "body": {
-      "1": {
-       "file": "rock-left-narrow-body-1x.webp",
-       "w": 170,
-       "h": 207,
-       "bytes": 1192
-      },
-      "2": {
-       "file": "rock-left-narrow-body-2x.webp",
-       "w": 340,
-       "h": 414,
-       "bytes": 2772
-      }
-     },
-     "ink-paper": {
-      "1": {
-       "file": "rock-left-narrow-ink-paper-1x.webp",
-       "w": 170,
-       "h": 207,
-       "bytes": 4298
-      },
-      "2": {
-       "file": "rock-left-narrow-ink-paper-2x.webp",
-       "w": 340,
-       "h": 414,
-       "bytes": 10242
-      }
-     },
-     "ink-dark": {
-      "1": {
-       "file": "rock-left-narrow-ink-dark-1x.webp",
-       "w": 170,
-       "h": 207,
-       "bytes": 3868
-      },
-      "2": {
-       "file": "rock-left-narrow-ink-dark-2x.webp",
-       "w": 340,
-       "h": 414,
-       "bytes": 9148
-      }
-     }
-    }
-   }
-  }
- },
- "rock-right": {
-  "seed": 5,
-  "variants": {
-   "wide": {
-    "w": 320,
-    "h": 390,
-    "layers": {
-     "body": {
-      "1": {
-       "file": "rock-right-wide-body-1x.webp",
-       "w": 320,
-       "h": 390,
-       "bytes": 1814
-      },
-      "2": {
-       "file": "rock-right-wide-body-2x.webp",
-       "w": 640,
-       "h": 780,
-       "bytes": 4326
-      }
-     },
-     "ink-paper": {
-      "1": {
-       "file": "rock-right-wide-ink-paper-1x.webp",
-       "w": 320,
-       "h": 390,
-       "bytes": 6670
-      },
-      "2": {
-       "file": "rock-right-wide-ink-paper-2x.webp",
-       "w": 640,
-       "h": 780,
-       "bytes": 15530
-      }
-     },
-     "ink-dark": {
-      "1": {
-       "file": "rock-right-wide-ink-dark-1x.webp",
-       "w": 320,
-       "h": 390,
-       "bytes": 6084
-      },
-      "2": {
-       "file": "rock-right-wide-ink-dark-2x.webp",
-       "w": 640,
-       "h": 780,
-       "bytes": 14318
-      }
-     }
-    }
-   },
-   "narrow": {
-    "w": 170,
-    "h": 207,
-    "layers": {
-     "body": {
-      "1": {
-       "file": "rock-right-narrow-body-1x.webp",
-       "w": 170,
-       "h": 207,
-       "bytes": 844
-      },
-      "2": {
-       "file": "rock-right-narrow-body-2x.webp",
-       "w": 340,
-       "h": 414,
+       "file": "meadow-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 840,
        "bytes": 1942
       }
      },
-     "ink-paper": {
+     "petal": {
       "1": {
-       "file": "rock-right-narrow-ink-paper-1x.webp",
-       "w": 170,
-       "h": 207,
-       "bytes": 2816
+       "file": "meadow-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 420,
+       "bytes": 480
       },
       "2": {
-       "file": "rock-right-narrow-ink-paper-2x.webp",
-       "w": 340,
-       "h": 414,
-       "bytes": 6536
+       "file": "meadow-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 840,
+       "bytes": 952
       }
      },
-     "ink-dark": {
+     "gold": {
       "1": {
-       "file": "rock-right-narrow-ink-dark-1x.webp",
-       "w": 170,
-       "h": 207,
-       "bytes": 2538
+       "file": "meadow-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 420,
+       "bytes": 98
       },
       "2": {
-       "file": "rock-right-narrow-ink-dark-2x.webp",
-       "w": 340,
-       "h": 414,
-       "bytes": 5962
+       "file": "meadow-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 840,
+       "bytes": 206
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "meadow-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 420,
+       "bytes": 76
+      },
+      "2": {
+       "file": "meadow-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 840,
+       "bytes": 178
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "meadow-wide-grain-1x.webp",
+       "w": 1920,
+       "h": 420,
+       "bytes": 39392
+      },
+      "2": {
+       "file": "meadow-wide-grain-2x.webp",
+       "w": 3840,
+       "h": 840,
+       "bytes": 99212
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 300,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "meadow-narrow-far-1x.webp",
+       "w": 720,
+       "h": 300,
+       "bytes": 6888
+      },
+      "2": {
+       "file": "meadow-narrow-far-2x.webp",
+       "w": 1440,
+       "h": 600,
+       "bytes": 15808
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "meadow-narrow-mid-1x.webp",
+       "w": 720,
+       "h": 300,
+       "bytes": 9716
+      },
+      "2": {
+       "file": "meadow-narrow-mid-2x.webp",
+       "w": 1440,
+       "h": 600,
+       "bytes": 22376
+      }
+     },
+     "near": {
+      "1": {
+       "file": "meadow-narrow-near-1x.webp",
+       "w": 720,
+       "h": 300,
+       "bytes": 13260
+      },
+      "2": {
+       "file": "meadow-narrow-near-2x.webp",
+       "w": 1440,
+       "h": 600,
+       "bytes": 30538
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "meadow-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 300,
+       "bytes": 634
+      },
+      "2": {
+       "file": "meadow-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 600,
+       "bytes": 694
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "meadow-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 300,
+       "bytes": 262
+      },
+      "2": {
+       "file": "meadow-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 600,
+       "bytes": 338
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "meadow-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 300,
+       "bytes": 68
+      },
+      "2": {
+       "file": "meadow-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 600,
+       "bytes": 96
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "meadow-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 300,
+       "bytes": 46
+      },
+      "2": {
+       "file": "meadow-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 600,
+       "bytes": 80
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "meadow-narrow-grain-1x.webp",
+       "w": 720,
+       "h": 300,
+       "bytes": 12518
+      },
+      "2": {
+       "file": "meadow-narrow-grain-2x.webp",
+       "w": 1440,
+       "h": 600,
+       "bytes": 31050
       }
      }
     }
@@ -279,90 +559,48 @@
   "variants": {
    "wide": {
     "w": 1920,
-    "h": 1100,
+    "h": 900,
     "layers": {
      "far": {
       "1": {
        "file": "scape-wide-far-1x.webp",
        "w": 1920,
-       "h": 1100,
-       "bytes": 56782
+       "h": 900,
+       "bytes": 47878
       },
       "2": {
        "file": "scape-wide-far-2x.webp",
        "w": 3840,
-       "h": 2200,
-       "bytes": 148032
+       "h": 1800,
+       "bytes": 122974
       }
      },
      "mid": {
       "1": {
        "file": "scape-wide-mid-1x.webp",
        "w": 1920,
-       "h": 1100,
-       "bytes": 78448
+       "h": 900,
+       "bytes": 45886
       },
       "2": {
        "file": "scape-wide-mid-2x.webp",
        "w": 3840,
-       "h": 2200,
-       "bytes": 203608
+       "h": 1800,
+       "bytes": 117090
       }
      },
      "near": {
       "1": {
        "file": "scape-wide-near-1x.webp",
        "w": 1920,
-       "h": 1100,
-       "bytes": 105328
+       "h": 900,
+       "bytes": 47706
       },
       "2": {
        "file": "scape-wide-near-2x.webp",
        "w": 3840,
-       "h": 2200,
-       "bytes": 267828
-      }
-     },
-     "sun": {
-      "1": {
-       "file": "scape-wide-sun-1x.webp",
-       "w": 1920,
-       "h": 1100,
-       "bytes": 10596
-      },
-      "2": {
-       "file": "scape-wide-sun-2x.webp",
-       "w": 3840,
-       "h": 2200,
-       "bytes": 31362
-      }
-     },
-     "flower": {
-      "1": {
-       "file": "scape-wide-flower-1x.webp",
-       "w": 1920,
-       "h": 1100,
-       "bytes": 17246
-      },
-      "2": {
-       "file": "scape-wide-flower-2x.webp",
-       "w": 3840,
-       "h": 2200,
-       "bytes": 46250
-      }
-     },
-     "eye": {
-      "1": {
-       "file": "scape-wide-eye-1x.webp",
-       "w": 1920,
-       "h": 1100,
-       "bytes": 6962
-      },
-      "2": {
-       "file": "scape-wide-eye-2x.webp",
-       "w": 3840,
-       "h": 2200,
-       "bytes": 22074
+       "h": 1800,
+       "bytes": 116054
       }
      }
     }
@@ -412,47 +650,1283 @@
        "h": 680,
        "bytes": 36168
       }
-     },
-     "sun": {
+     }
+    }
+   }
+  }
+ },
+ "scene-dock": {
+  "seed": 61,
+  "variants": {
+   "wide": {
+    "w": 1200,
+    "h": 560,
+    "layers": {
+     "far": {
       "1": {
-       "file": "scape-narrow-sun-1x.webp",
-       "w": 720,
-       "h": 340,
-       "bytes": 4852
+       "file": "scene-dock-wide-far-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 20782
       },
       "2": {
-       "file": "scape-narrow-sun-2x.webp",
-       "w": 1440,
-       "h": 680,
-       "bytes": 11590
+       "file": "scene-dock-wide-far-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 51224
       }
      },
-     "flower": {
+     "mid": {
       "1": {
-       "file": "scape-narrow-flower-1x.webp",
-       "w": 720,
-       "h": 340,
-       "bytes": 6056
+       "file": "scene-dock-wide-mid-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 27514
       },
       "2": {
-       "file": "scape-narrow-flower-2x.webp",
-       "w": 1440,
-       "h": 680,
-       "bytes": 14586
+       "file": "scene-dock-wide-mid-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 66134
       }
      },
-     "eye": {
+     "near": {
       "1": {
-       "file": "scape-narrow-eye-1x.webp",
-       "w": 720,
-       "h": 340,
-       "bytes": 1846
+       "file": "scene-dock-wide-near-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 36400
       },
       "2": {
-       "file": "scape-narrow-eye-2x.webp",
-       "w": 1440,
-       "h": 680,
-       "bytes": 4554
+       "file": "scene-dock-wide-near-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 87566
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-dock-wide-stalk-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 840
+      },
+      "2": {
+       "file": "scene-dock-wide-stalk-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 1126
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-dock-wide-petal-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 414
+      },
+      "2": {
+       "file": "scene-dock-wide-petal-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 546
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-dock-wide-gold-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 168
+      },
+      "2": {
+       "file": "scene-dock-wide-gold-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 362
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-dock-wide-heart-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 88
+      },
+      "2": {
+       "file": "scene-dock-wide-heart-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 182
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-dock-wide-grain-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 22094
+      },
+      "2": {
+       "file": "scene-dock-wide-grain-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 56690
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 560,
+    "h": 440,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "scene-dock-narrow-far-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 7748
+      },
+      "2": {
+       "file": "scene-dock-narrow-far-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 17642
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "scene-dock-narrow-mid-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 11938
+      },
+      "2": {
+       "file": "scene-dock-narrow-mid-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 26450
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scene-dock-narrow-near-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 15294
+      },
+      "2": {
+       "file": "scene-dock-narrow-near-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 34964
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-dock-narrow-stalk-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 518
+      },
+      "2": {
+       "file": "scene-dock-narrow-stalk-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 642
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-dock-narrow-petal-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 392
+      },
+      "2": {
+       "file": "scene-dock-narrow-petal-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 478
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-dock-narrow-gold-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 166
+      },
+      "2": {
+       "file": "scene-dock-narrow-gold-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 220
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-dock-narrow-heart-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 76
+      },
+      "2": {
+       "file": "scene-dock-narrow-heart-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 112
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-dock-narrow-grain-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 17606
+      },
+      "2": {
+       "file": "scene-dock-narrow-grain-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 44620
+      }
+     }
+    }
+   }
+  }
+ },
+ "scene-home": {
+  "seed": 63,
+  "variants": {
+   "wide": {
+    "w": 1200,
+    "h": 560,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "scene-home-wide-far-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 21218
+      },
+      "2": {
+       "file": "scene-home-wide-far-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 52294
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "scene-home-wide-mid-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 29456
+      },
+      "2": {
+       "file": "scene-home-wide-mid-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 71078
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scene-home-wide-near-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 36820
+      },
+      "2": {
+       "file": "scene-home-wide-near-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 88644
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-home-wide-stalk-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 922
+      },
+      "2": {
+       "file": "scene-home-wide-stalk-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 1182
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-home-wide-petal-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 766
+      },
+      "2": {
+       "file": "scene-home-wide-petal-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 1094
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-home-wide-gold-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 164
+      },
+      "2": {
+       "file": "scene-home-wide-gold-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 360
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-home-wide-heart-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 316
+      },
+      "2": {
+       "file": "scene-home-wide-heart-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 644
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-home-wide-grain-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 27018
+      },
+      "2": {
+       "file": "scene-home-wide-grain-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 69142
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 560,
+    "h": 440,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "scene-home-narrow-far-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 8198
+      },
+      "2": {
+       "file": "scene-home-narrow-far-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 18812
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "scene-home-narrow-mid-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 11670
+      },
+      "2": {
+       "file": "scene-home-narrow-mid-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 27044
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scene-home-narrow-near-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 15054
+      },
+      "2": {
+       "file": "scene-home-narrow-near-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 34754
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-home-narrow-stalk-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 520
+      },
+      "2": {
+       "file": "scene-home-narrow-stalk-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 644
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-home-narrow-petal-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 620
+      },
+      "2": {
+       "file": "scene-home-narrow-petal-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 700
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-home-narrow-gold-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 156
+      },
+      "2": {
+       "file": "scene-home-narrow-gold-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 210
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-home-narrow-heart-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 202
+      },
+      "2": {
+       "file": "scene-home-narrow-heart-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 310
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-home-narrow-grain-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 17006
+      },
+      "2": {
+       "file": "scene-home-narrow-grain-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 43350
+      }
+     }
+    }
+   }
+  }
+ },
+ "scene-island": {
+  "seed": 62,
+  "variants": {
+   "wide": {
+    "w": 1200,
+    "h": 560,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "scene-island-wide-far-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 18966
+      },
+      "2": {
+       "file": "scene-island-wide-far-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 46864
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "scene-island-wide-mid-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 30244
+      },
+      "2": {
+       "file": "scene-island-wide-mid-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 72788
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scene-island-wide-near-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 36848
+      },
+      "2": {
+       "file": "scene-island-wide-near-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 89220
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-island-wide-stalk-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 890
+      },
+      "2": {
+       "file": "scene-island-wide-stalk-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 1192
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-island-wide-petal-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 232
+      },
+      "2": {
+       "file": "scene-island-wide-petal-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 444
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-island-wide-gold-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 718
+      },
+      "2": {
+       "file": "scene-island-wide-gold-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 1066
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-island-wide-heart-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 402
+      },
+      "2": {
+       "file": "scene-island-wide-heart-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 760
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-island-wide-grain-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 27388
+      },
+      "2": {
+       "file": "scene-island-wide-grain-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 70058
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 560,
+    "h": 440,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "scene-island-narrow-far-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 8170
+      },
+      "2": {
+       "file": "scene-island-narrow-far-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 18578
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "scene-island-narrow-mid-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 11424
+      },
+      "2": {
+       "file": "scene-island-narrow-mid-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 26620
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scene-island-narrow-near-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 14722
+      },
+      "2": {
+       "file": "scene-island-narrow-near-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 33780
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-island-narrow-stalk-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 538
+      },
+      "2": {
+       "file": "scene-island-narrow-stalk-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 656
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-island-narrow-petal-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 282
+      },
+      "2": {
+       "file": "scene-island-narrow-petal-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 348
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-island-narrow-gold-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 440
+      },
+      "2": {
+       "file": "scene-island-narrow-gold-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 562
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-island-narrow-heart-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 276
+      },
+      "2": {
+       "file": "scene-island-narrow-heart-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 388
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-island-narrow-grain-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 16904
+      },
+      "2": {
+       "file": "scene-island-narrow-grain-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 42692
+      }
+     }
+    }
+   }
+  }
+ },
+ "scene-themes": {
+  "seed": 64,
+  "variants": {
+   "wide": {
+    "w": 1200,
+    "h": 560,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "scene-themes-wide-far-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 19500
+      },
+      "2": {
+       "file": "scene-themes-wide-far-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 48332
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "scene-themes-wide-mid-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 27044
+      },
+      "2": {
+       "file": "scene-themes-wide-mid-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 65792
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scene-themes-wide-near-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 38308
+      },
+      "2": {
+       "file": "scene-themes-wide-near-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 92246
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-themes-wide-stalk-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 934
+      },
+      "2": {
+       "file": "scene-themes-wide-stalk-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 1224
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-themes-wide-petal-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 632
+      },
+      "2": {
+       "file": "scene-themes-wide-petal-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 974
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-themes-wide-gold-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 492
+      },
+      "2": {
+       "file": "scene-themes-wide-gold-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 836
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-themes-wide-heart-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 366
+      },
+      "2": {
+       "file": "scene-themes-wide-heart-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 698
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-themes-wide-grain-1x.webp",
+       "w": 1200,
+       "h": 560,
+       "bytes": 28096
+      },
+      "2": {
+       "file": "scene-themes-wide-grain-2x.webp",
+       "w": 2400,
+       "h": 1120,
+       "bytes": 71586
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 560,
+    "h": 440,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "scene-themes-narrow-far-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 7448
+      },
+      "2": {
+       "file": "scene-themes-narrow-far-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 17154
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "scene-themes-narrow-mid-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 11938
+      },
+      "2": {
+       "file": "scene-themes-narrow-mid-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 26542
+      }
+     },
+     "near": {
+      "1": {
+       "file": "scene-themes-narrow-near-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 15270
+      },
+      "2": {
+       "file": "scene-themes-narrow-near-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 35120
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "scene-themes-narrow-stalk-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 496
+      },
+      "2": {
+       "file": "scene-themes-narrow-stalk-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 618
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "scene-themes-narrow-petal-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 468
+      },
+      "2": {
+       "file": "scene-themes-narrow-petal-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 594
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "scene-themes-narrow-gold-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 320
+      },
+      "2": {
+       "file": "scene-themes-narrow-gold-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 438
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "scene-themes-narrow-heart-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 232
+      },
+      "2": {
+       "file": "scene-themes-narrow-heart-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 340
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "scene-themes-narrow-grain-1x.webp",
+       "w": 560,
+       "h": 440,
+       "bytes": 17204
+      },
+      "2": {
+       "file": "scene-themes-narrow-grain-2x.webp",
+       "w": 1120,
+       "h": 880,
+       "bytes": 43468
+      }
+     }
+    }
+   }
+  }
+ },
+ "tuft-left": {
+  "seed": 41,
+  "variants": {
+   "wide": {
+    "w": 280,
+    "h": 190,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "tuft-left-wide-stalk-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 364
+      },
+      "2": {
+       "file": "tuft-left-wide-stalk-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 382
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "tuft-left-wide-petal-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 316
+      },
+      "2": {
+       "file": "tuft-left-wide-petal-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 336
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "tuft-left-wide-gold-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 98
+      },
+      "2": {
+       "file": "tuft-left-wide-gold-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 126
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "tuft-left-wide-heart-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 98
+      },
+      "2": {
+       "file": "tuft-left-wide-heart-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 128
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "tuft-left-wide-grain-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 3450
+      },
+      "2": {
+       "file": "tuft-left-wide-grain-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 8484
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 150,
+    "h": 110,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "tuft-left-narrow-stalk-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 240
+      },
+      "2": {
+       "file": "tuft-left-narrow-stalk-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 264
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "tuft-left-narrow-petal-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 212
+      },
+      "2": {
+       "file": "tuft-left-narrow-petal-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 232
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "tuft-left-narrow-gold-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 64
+      },
+      "2": {
+       "file": "tuft-left-narrow-gold-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 72
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "tuft-left-narrow-heart-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 84
+      },
+      "2": {
+       "file": "tuft-left-narrow-heart-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 100
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "tuft-left-narrow-grain-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 1452
+      },
+      "2": {
+       "file": "tuft-left-narrow-grain-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 3412
+      }
+     }
+    }
+   }
+  }
+ },
+ "tuft-right": {
+  "seed": 42,
+  "variants": {
+   "wide": {
+    "w": 280,
+    "h": 190,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "tuft-right-wide-stalk-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 388
+      },
+      "2": {
+       "file": "tuft-right-wide-stalk-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 388
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "tuft-right-wide-petal-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 320
+      },
+      "2": {
+       "file": "tuft-right-wide-petal-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 334
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "tuft-right-wide-gold-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 94
+      },
+      "2": {
+       "file": "tuft-right-wide-gold-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 120
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "tuft-right-wide-heart-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 98
+      },
+      "2": {
+       "file": "tuft-right-wide-heart-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 132
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "tuft-right-wide-grain-1x.webp",
+       "w": 280,
+       "h": 190,
+       "bytes": 2638
+      },
+      "2": {
+       "file": "tuft-right-wide-grain-2x.webp",
+       "w": 560,
+       "h": 380,
+       "bytes": 6308
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 150,
+    "h": 110,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "tuft-right-narrow-stalk-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 238
+      },
+      "2": {
+       "file": "tuft-right-narrow-stalk-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 264
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "tuft-right-narrow-petal-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 218
+      },
+      "2": {
+       "file": "tuft-right-narrow-petal-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 234
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "tuft-right-narrow-gold-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 64
+      },
+      "2": {
+       "file": "tuft-right-narrow-gold-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 78
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "tuft-right-narrow-heart-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 84
+      },
+      "2": {
+       "file": "tuft-right-narrow-heart-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 94
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "tuft-right-narrow-grain-1x.webp",
+       "w": 150,
+       "h": 110,
+       "bytes": 1450
+      },
+      "2": {
+       "file": "tuft-right-narrow-grain-2x.webp",
+       "w": 300,
+       "h": 220,
+       "bytes": 3412
       }
      }
     }

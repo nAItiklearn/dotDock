@@ -27,6 +27,14 @@ const WIDE_FROM_PX = 900;
 
 export type ArtName = keyof typeof manifest;
 
+/**
+ * Pieces below the fold download their masks only when they come near the screen: their rules apply once
+ * scripts/chrome.ts has put `art--on` on the piece. The hero's pieces are not lazy.
+ */
+export function isLazyArt(name: string): boolean {
+  return name.startsWith("scene-") || name === "meadow";
+}
+
 function url(file: string): string {
   const found = URLS[`../assets/art/${file}`];
   if (!found) throw new Error(`Site art file missing: ${file}`);
@@ -58,7 +66,7 @@ function maskRule(layer: Scales): string {
 
 function selector(name: string, layer: string): string {
   const [role, mode] = layer.split("-");
-  const base = `.art--${name} .art__${role}`;
+  const base = `.art--${name}${isLazyArt(name) ? ".art--on" : ""} .art__${role}`;
   if (mode === "paper") return `html[data-theme="paper"] ${base}`;
   if (mode === "dark") return `html:not([data-theme="paper"]) ${base}`;
   return base;

@@ -6,9 +6,9 @@ from typing import Callable
 
 import numpy as np
 
-from .horizon import render_horizon
-from .rocks import render_rock
+from .bloom import render_bouquet, render_tuft
 from .scape import render_scape
+from .scene import render_scene
 
 Layers = dict[str, np.ndarray]
 
@@ -22,52 +22,55 @@ class Piece:
     quality: dict[str, tuple[int, int]] = field(default_factory=dict)   # layer -> (webp quality, alpha quality)
 
 
-def _ink_accent_stack(layers: Layers, theme: str) -> list:
-    return [(layers["ink"], "ink"), (layers["accent"], "accent")]
-
-
-# Preview colours of the scape layers per theme: the same values as the art tokens in website/src/lib/themes.ts.
-_SCAPE_COLOURS = {
-    "paper": {"far": "#b3c0ae", "mid": "#86a37e", "near": "#4d7a47", "sun": "#da3038", "flower": "#da3038", "eye": "#f0c24a"},
-    "obsidian": {"far": "#2f3f35", "mid": "#476650", "near": "#6f9a76", "sun": "#e94248", "flower": "#e94248", "eye": "#f2d98a"},
-    "aurum": {"far": "#3d3422", "mid": "#6e5828", "near": "#b08a38", "sun": "#e3b456", "flower": "#f4efe4", "eye": "#e3b456"},
+# Preview colours of the layers per theme: the same values as the art tokens in website/src/lib/themes.ts.
+_COLOURS = {
+    "paper": {"far": "#b3c0ae", "mid": "#86a37e", "near": "#4d7a47", "stalk": "#4d7a47", "petal": "#da3038", "gold": "#f0b43c", "heart": "#2b2b27", "grain": "#2b2b27"},
+    "obsidian": {"far": "#2f3f35", "mid": "#476650", "near": "#6f9a76", "stalk": "#6f9a76", "petal": "#e94248", "gold": "#f2c75c", "heart": "#8a5a35", "grain": "#d8d4cb"},
+    "aurum": {"far": "#3d3422", "mid": "#6e5828", "near": "#b08a38", "stalk": "#b08a38", "petal": "#f4efe4", "gold": "#e3b456", "heart": "#8a6a2c", "grain": "#e8dcc0"},
 }
+_ORDER = ("grain", "far", "mid", "near", "stalk", "petal", "gold", "heart")
 
 
-def _scape_stack(layers: Layers, theme: str) -> list:
-    c = _SCAPE_COLOURS[theme]
-    return [(layers[k], c[k]) for k in ("far", "mid", "near", "sun", "flower", "eye")]
+def _colour_stack(layers: Layers, theme: str) -> list:
+    c = _COLOURS[theme]
+    return [(layers[k] * (0.45 if k == "grain" else 1.0), c[k]) for k in _ORDER if k in layers]
 
 
 def _scape(variant: str, w: int, h: int, scale: float) -> Layers:
     return render_scape(w, h, scale, seed=11 if variant == "wide" else 12, narrow=variant == "narrow")
 
 
-def _horizon(variant: str, w: int, h: int, scale: float) -> Layers:
-    return render_horizon(w, h, scale, seed=21 if variant == "wide" else 22, narrow=variant == "narrow")
-
-
-def _rock(seed: int):
+def _scene(kind: str, seed: int):
     def render(variant: str, w: int, h: int, scale: float) -> Layers:
-        pitch = 4.8 if variant == "wide" else 3.6
-        r = render_rock(w, h, scale, seed, planes=11, pitch=pitch)
-        return {"body": r["body"], "ink-paper": r["dark"], "ink-dark": r["light"]}
-
-    def stack(layers: Layers, theme: str) -> list:
-        return [(layers["body"] * 0.10, "ink"), (layers["ink-paper" if theme == "paper" else "ink-dark"], "ink")]
-
-    return render, stack
+        return render_scene(w, h, scale, seed, kind, narrow=variant == "narrow")
+    return render
 
 
-_ROCK_Q = {"body": (70, 60), "ink-paper": (80, 70), "ink-dark": (80, 70)}
-_rock_l, _rock_l_stack = _rock(8)
-_rock_r, _rock_r_stack = _rock(5)
+def _bouquet(seed: int, side: str):
+    def render(variant: str, w: int, h: int, scale: float) -> Layers:
+        return render_bouquet(w, h, scale, seed, side, narrow=variant == "narrow")
+    return render
+
+
+def _tuft(seed: int, side: str):
+    def render(variant: str, w: int, h: int, scale: float) -> Layers:
+        return render_tuft(w, h, scale, seed, side, narrow=variant == "narrow")
+    return render
+
+
+_SCENE_Q = {"far": (78, 60), "mid": (78, 60), "near": (78, 60)} | {k: (100, 100) for k in ("stalk", "petal", "gold", "heart")} | {"grain": (80, 70)}
+_FLAT = {k: (100, 100) for k in ("stalk", "petal", "gold", "heart")} | {"grain": (80, 70)}
 
 PIECES: dict[str, Piece] = {
-    "scape": Piece(11, {"wide": (1920, 1100), "narrow": (720, 340)}, _scape, _scape_stack,
-                   {"far": (78, 60), "mid": (78, 60), "near": (78, 60), "sun": (80, 70), "flower": (80, 70), "eye": (80, 70)}),
-    "rock-left": Piece(8, {"wide": (320, 390), "narrow": (170, 207)}, _rock_l, _rock_l_stack, _ROCK_Q),
-    "rock-right": Piece(5, {"wide": (320, 390), "narrow": (170, 207)}, _rock_r, _rock_r_stack, _ROCK_Q),
-    "horizon": Piece(21, {"wide": (1920, 820), "narrow": (900, 700)}, _horizon, _ink_accent_stack,
-                     {"ink": (78, 60), "accent": (80, 70)}),
+    "scape": Piece(11, {"wide": (1920, 900), "narrow": (720, 340)}, _scape, _colour_stack,
+                   {"far": (78, 60), "mid": (78, 60), "near": (78, 60)}),
+    "bouquet-left": Piece(31, {"wide": (480, 640), "narrow": (190, 300)}, _bouquet(31, "left"), _colour_stack, _FLAT),
+    "bouquet-right": Piece(32, {"wide": (480, 640), "narrow": (190, 300)}, _bouquet(32, "right"), _colour_stack, _FLAT),
+    "tuft-left": Piece(41, {"wide": (280, 190), "narrow": (150, 110)}, _tuft(41, "left"), _colour_stack, _FLAT),
+    "tuft-right": Piece(42, {"wide": (280, 190), "narrow": (150, 110)}, _tuft(42, "right"), _colour_stack, _FLAT),
+    **{
+        f"scene-{kind}": Piece(61 + i, {"wide": (1200, 560), "narrow": (560, 440)}, _scene(kind, 61 + i), _colour_stack, _SCENE_Q)
+        for i, kind in enumerate(("dock", "island", "home", "themes"))
+    },
+    "meadow": Piece(71, {"wide": (1920, 420), "narrow": (720, 300)}, _scene("meadow", 71), _colour_stack, _SCENE_Q),
 }

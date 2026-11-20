@@ -368,6 +368,70 @@ button {
   }
 }
 
+.nav__github {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--text-dim);
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.nav__github:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+/* On small screens the links fold into a menu; it is a <details>, so it works without script. */
+.nav__menu {
+  position: relative;
+}
+.nav__menu-button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+.nav__menu-button::-webkit-details-marker {
+  display: none;
+}
+.nav__menu[open] .nav__menu-button {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+.nav__sheet {
+  position: absolute;
+  top: calc(100% + 22px);
+  right: -8px;
+  display: grid;
+  min-width: 220px;
+  padding: var(--space-2);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  box-shadow: var(--shadow);
+}
+.nav__sheet a {
+  display: block;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--text);
+}
+.nav__sheet a:hover,
+.nav__sheet a[aria-current="page"] {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+@media (min-width: 900px) {
+  .nav__menu {
+    display: none;
+  }
+}
+
 /* Theme switch: three discs, one radio group. */
 .theme-switch {
   display: inline-flex;

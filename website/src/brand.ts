@@ -4,11 +4,8 @@
  */
 export const PRODUCT_NAME = "dotDock";
 
-/** One line, used in the page title and social previews. The last word is drawn in dot-matrix type. */
-export const TAGLINE_FIRST = "Windows,";
-export const TAGLINE_SECOND = "reimagined in";
-export const TAGLINE_DOTS = "dots";
-export const TAGLINE = `${TAGLINE_FIRST} ${TAGLINE_SECOND} ${TAGLINE_DOTS}.`;
+/** One line, used in the hero, the page title and social previews. */
+export const TAGLINE = "Windows, in dots.";
 
 export const REPO_URL = "https://github.com/nAItiklearn/dotDock";
 export const RELEASES_URL = `${REPO_URL}/releases`;
@@ -22,6 +19,7 @@ export const GPL_URL = "https://www.gnu.org/licenses/gpl-3.0.html";
 /** In-site routes. Every page, the nav and the footer link through these. */
 export const ROUTES = {
   home: "/",
+  features: "/features",
   download: "/download",
   faq: "/faq",
   privacy: "/privacy",

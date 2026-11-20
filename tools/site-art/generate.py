@@ -43,6 +43,7 @@ def main() -> None:
     wanted = [n for n in args.only.split(",") if n] or list(PIECES)
     manifest_path = args.out / "manifest.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    manifest = {name: entry for name, entry in manifest.items() if name in PIECES}   # a removed piece leaves no trace
 
     for name in wanted:
         piece = PIECES[name]

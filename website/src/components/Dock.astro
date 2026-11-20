@@ -1,0 +1,80 @@
+---
+/**
+ * The dock, drawn with the site's own markup in the product's design (docs/DOCK_SPEC.md section 4): a
+ * floating glass pill with pinned apps, a category stack under the pointer (magnified, its popover open
+ * in the large shot), a divider, running apps with a dot under each (the focused one in the accent), a
+ * divider and a live tile. The marks on the tiles are abstract dot patterns, not brand icons. It is an
+ * illustration, so it is hidden from assistive technology; the page text carries the meaning.
+ */
+import { DOCK_GLYPHS, glyphPaths } from "../lib/dockGlyphs";
+
+interface Props {
+  /** Show the stack popover above the pill. */
+  open?: boolean;
+  /** Size of one tile: any CSS length. */
+  unit: string;
+  class?: string;
+}
+const { open = false, unit, class: className = "" } = Astro.props;
+
+const marks = DOCK_GLYPHS.map(glyphPaths);
+const pinned = [0, 1, 2];
+const running = [3, 4];
+const stackMarks = [5, 6, 7, 2];
+const popover = [0, 1, 2, 3, 4, 5, 6, 7];
+const FOCUSED = 4;
+---
+
+<div class:list={["dock", open && "dock--open", className]} style={`--d:${unit}`} aria-hidden="true">
+  {
+    open && (
+      <div class="dock__pop">
+        <p class="dock__pop-title">Development</p>
+        <div class="dock__pop-grid">
+          {popover.map((i) => (
+            <span class="dock__tile">
+              <svg viewBox="0 0 3 3"><path d={marks[i]!.off} fill="var(--dot-off)" /><path d={marks[i]!.on} fill="var(--text)" /></svg>
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  <div class="dock__bar">
+    {
+      pinned.map((i) => (
+        <span class="dock__item">
+          <span class="dock__tile">
+            <svg viewBox="0 0 3 3"><path d={marks[i]!.off} fill="var(--dot-off)" /><path d={marks[i]!.on} fill="var(--text)" /></svg>
+          </span>
+        </span>
+      ))
+    }
+    <span class="dock__item dock__item--peak">
+      <span class="dock__tile dock__tile--stack">
+        {stackMarks.map((i) => (
+          <svg viewBox="0 0 3 3"><path d={marks[i]!.off} fill="var(--dot-off)" /><path d={marks[i]!.on} fill="var(--text)" /></svg>
+        ))}
+      </span>
+    </span>
+    <i class="dock__sep"></i>
+    {
+      running.map((i) => (
+        <span class:list={["dock__item", "dock__item--running", i === FOCUSED && "dock__item--focus"]}>
+          <span class="dock__tile">
+            <svg viewBox="0 0 3 3"><path d={marks[i]!.off} fill="var(--dot-off)" /><path d={marks[i]!.on} fill="var(--text)" /></svg>
+          </span>
+        </span>
+      ))
+    }
+    <i class="dock__sep"></i>
+    <span class="dock__item">
+      <span class="dock__tile dock__tile--ring">
+        <svg viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="13" fill="none" stroke="var(--dot-off)" stroke-width="4" />
+          <circle cx="18" cy="18" r="13" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="52 82" transform="rotate(-90 18 18)" />
+        </svg>
+      </span>
+    </span>
+  </div>
+</div>

@@ -5,7 +5,7 @@
  * `parallax` is the share of the page scroll the piece lags behind (negative: runs ahead), see
  * scripts/parallax.ts.
  */
-import { artRoles, type ArtName } from "../lib/art";
+import { artRoles, isLazyArt, type ArtName } from "../lib/art";
 
 interface Props {
   piece: ArtName;
@@ -18,6 +18,6 @@ const { piece, class: className = "", parallax, fromPage = false } = Astro.props
 const roles = artRoles(piece);
 ---
 
-<div class={`art art--${piece} ${className}`.trim()} aria-hidden="true" data-parallax={parallax} data-parallax-origin={fromPage ? "page" : undefined}>
+<div class={`art art--${piece} ${className}`.trim()} aria-hidden="true" data-parallax={parallax} data-parallax-origin={fromPage ? "page" : undefined} data-art-lazy={isLazyArt(piece) ? "" : undefined}>
   {roles.map((role) => <i class={`art__layer art__${role}`} />)}
 </div>
