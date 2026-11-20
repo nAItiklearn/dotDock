@@ -289,7 +289,6 @@ pub fn run() {
             dock_host::dock_set_regions,
             dock_host::dock_preview,
             dock_host::dock_set_focus,
-            dock_host::dock_set_glass,
             media_command,
             weather_search,
             weather_set_place,

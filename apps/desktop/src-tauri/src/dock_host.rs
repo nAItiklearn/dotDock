@@ -6,7 +6,7 @@
 //! snapshot, click-through except where the UI says it draws something (`dock_set_regions`).
 
 use dotdock_dock::glass::Shape;
-use dotdock_dock::host::{DockHost, GlassRequest, Hooks};
+use dotdock_dock::host::{DockHost, Hooks};
 use dotdock_dock::icons::{self, webview_url};
 use dotdock_dock::protocol::{
     Category, CategoryId, CommandResult, DockApp, DockEvent, DockSettings, DockSnapshot, DockWindow, PreviewArgs, Rect,
@@ -266,6 +266,6 @@ pub fn dock_set_focus(active: bool, state: State<'_, DockState>) {
 }
 
 #[tauri::command]
-pub fn dock_set_glass(shapes: Vec<Shape>, dark: bool, state: State<'_, DockState>) {
-    state.host.set_glass(GlassRequest { shapes, dark });
+pub fn dock_set_glass(shapes: Vec<Shape>, state: State<'_, DockState>) {
+    state.host.set_glass(shapes);
 }
