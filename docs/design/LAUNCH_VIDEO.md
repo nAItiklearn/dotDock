@@ -23,3 +23,12 @@ already has a slot) and in the release notes.
 - Music only from a CC0 or own source, recorded in THIRD_PARTY_NOTICES.md.
 - Every shot passes the same rubric (4.5) as the product.
 - Built with ffmpeg; the edit script lives in `tools/video/` so it can be re-cut after updates.
+
+## Showcase strip on the website (owner request 2026-11-20)
+- A looping row of real screenshots moving left (component built by the website track, fed by
+  `website/src/content/showcase.json`; hidden until it has at least three real entries).
+- Captured at D7 from the real app on this laptop: 8 to 12 setups, each a different natural landscape
+  wallpaper (meadow, coast, misty ridges, forest; our generated art or public-domain/CC0 photos),
+  a different dock theme (glass, glass-lite, solid themes, minimal) and a different home-screen layout
+  (the best customisations: clock styles, photo widget, stacks open, notch active).
+- The owner's own wallpaper is restored exactly after capturing.
