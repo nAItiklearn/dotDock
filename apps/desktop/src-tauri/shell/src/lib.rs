@@ -6,6 +6,7 @@ pub mod autostart;
 pub mod boot_log;
 pub mod crash_guard;
 pub mod dock_guard;
+pub mod first_run;
 pub mod modules;
 mod process;
 pub mod providers;

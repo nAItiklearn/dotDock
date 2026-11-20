@@ -10,6 +10,7 @@ mod tray;
 
 use desktop_host::HitRegions;
 use dotdock_shell::crash_guard::{self, StartDecision};
+use dotdock_shell::first_run::{self, FirstStart};
 use dotdock_shell::providers::weather::{self, Place};
 use dotdock_shell::wallpaper;
 use dotdock_shell::{autostart, boot_log as boot, dock_guard, sentinel};
@@ -69,6 +70,17 @@ async fn wallpapers_list(app: AppHandle) -> Result<Vec<WallpaperItem>, String> {
             path: path.to_string_lossy().into_owned(),
         })
         .collect())
+}
+
+/// The default wallpaper of a first start. Applying waits on COM and the shell, so it runs off the setup thread.
+fn apply_first_run_wallpaper(app: &AppHandle, first: FirstStart) {
+    let outcome = match bundled_wallpapers_dir(app) {
+        Ok(dir) => first.apply_default(&dir, |path| {
+            wallpaper::apply(path, None, wallpaper::Fit::default()).map_err(|e| e.to_string())
+        }),
+        Err(reason) => first_run::Outcome::Failed(reason),
+    };
+    boot::record(&format!("first start wallpaper: {outcome:?}"));
 }
 
 /// Sets a bundled wallpaper as the real Windows wallpaper (all monitors when `monitor` is None).
@@ -230,10 +242,16 @@ pub fn run() {
             boot::mark("setup");
             let handle = app.handle().clone();
             tray::install(&handle)?;
+            // Decided before any window exists: the first window creates the traces of an earlier run.
+            let first_start = dotdock_shell::app_data_dir().and_then(|dir| first_run::claim(&dir));
             modules_host::install(&handle);
             // The parts start on their own thread: building a window waits for the main thread, which
             // is only free once setup returns.
             modules_host::start_enabled(&handle)?;
+            if let Some(first) = first_start {
+                let app = handle.clone();
+                std::thread::spawn(move || apply_first_run_wallpaper(&app, first));
+            }
             std::thread::spawn(|| {
                 std::thread::sleep(crash_guard::stable_after());
                 crash_guard::mark_stable();
