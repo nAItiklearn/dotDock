@@ -9,7 +9,7 @@ import { categoryLabel, t, type StringKey } from "./strings";
  * stacks from the categories that are not on the dock yet; and the accounts-based tiles (GitHub, Linear, Vercel)
  * have a reserved slot that stays closed until the integrations track publishes their protocol.
  */
-export const GALLERY_CATEGORIES = ["time", "focus", "media", "system", "people", "developer", "stacks"] as const;
+export const GALLERY_CATEGORIES = ["time", "focus", "media", "system", "tools", "people", "developer", "stacks"] as const;
 export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
 
 const TILE_CATEGORY: Readonly<Record<TileId, GalleryCategory>> = {
@@ -26,6 +26,16 @@ const TILE_CATEGORY: Readonly<Record<TileId, GalleryCategory>> = {
   mic: "media",
   system: "system",
   contacts: "people",
+  cpu: "system",
+  battery: "system",
+  network: "system",
+  toggles: "system",
+  analog: "time",
+  world: "time",
+  notes: "focus",
+  colour: "tools",
+  convert: "tools",
+  emoji: "tools",
 };
 
 /** Services that need an account. They are opt-in, and have no tile until their feeds and protocol exist. */

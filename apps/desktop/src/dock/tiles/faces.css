@@ -14,7 +14,11 @@
 .tile--stopwatch,
 .tile--reminders,
 .tile--progress,
-.tile--contacts {
+.tile--contacts,
+.tile--notes,
+.tile--convert,
+.tile--world,
+.tile--network {
   gap: calc(var(--d-icon) * 0.14);
   padding: 0 calc(var(--d-icon) * 0.12) 0 calc(var(--d-icon) * 0.1);
 }
@@ -173,7 +177,12 @@
 .tile--system,
 .tile--mic,
 .tile--audio,
-.tile--hydration {
+.tile--hydration,
+.tile--cpu,
+.tile--battery,
+.tile--analog,
+.tile--colour,
+.tile--emoji {
   justify-content: center;
   padding: 0;
 }
@@ -257,5 +266,80 @@
 }
 .dock-anchor[data-axis="y"] .avatars .avatar:nth-child(n + 2),
 .face--tile[data-size="compact"] .avatars .avatar:nth-child(n + 2) {
+  display: none;
+}
+
+.system__value[data-low="true"] {
+  color: var(--danger);
+}
+.analog {
+  width: 82%;
+  height: 82%;
+}
+.swatch {
+  display: grid;
+  place-items: center;
+  width: 72%;
+  height: 72%;
+  border: var(--face-hair, var(--hairline)) solid var(--disc-edge);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+.swatch .icon {
+  height: 46%;
+  width: auto;
+}
+.emoji {
+  font-size: calc(var(--d-icon) * 0.5);
+  line-height: 1;
+}
+
+/* Quick settings: round switches on the tile; each is its own button above the one that opens the popover. */
+.tile--toggles {
+  gap: calc(var(--d-icon) * 0.12);
+  padding: 0 calc(var(--d-icon) * 0.14);
+}
+.tile__toggle {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(var(--d-icon) * 0.7);
+  height: calc(var(--d-icon) * 0.7);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.tile__toggle .icon {
+  height: 50%;
+  width: auto;
+}
+.tile__toggle[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface-2));
+  color: var(--accent);
+}
+.tile__toggle:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+@media (hover: hover) {
+  .tile__toggle:not(:disabled):hover {
+    transform: scale(1.08);
+  }
+}
+.tile__toggle:not(:disabled):active {
+  transform: scale(var(--press));
+}
+.tile__toggle:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}
+.dock-anchor[data-axis="y"] .tile--toggles .tile__toggle:nth-child(n + 3) {
   display: none;
 }

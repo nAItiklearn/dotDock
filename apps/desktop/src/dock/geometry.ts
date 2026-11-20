@@ -78,6 +78,16 @@ export const LENGTH_RATIO = {
   contacts: [2.1, 1],
   mic: [1, 1],
   audio: [1, 1],
+  cpu: [1, 1],
+  battery: [1, 1],
+  analog: [1, 1],
+  notes: [3.1, 1],
+  colour: [1, 1],
+  convert: [2.8, 1],
+  emoji: [1, 1],
+  world: [3.1, 1],
+  network: [3.2, 1],
+  toggles: [3.4, 1],
   /** Measured once drawn; this estimate only sizes the dock before the first measurement. */
   status: [3.2, 2.3],
 } as const;
@@ -277,6 +287,13 @@ export const TILE_POPOVER_SIZE = {
   progress: { w: 340, h: 360 },
   contacts: { w: 340, h: 400 },
   audio: { w: 340, h: 380 },
+  notes: { w: 380, h: 440 },
+  colour: { w: 320, h: 340 },
+  convert: { w: 340, h: 380 },
+  emoji: { w: 340, h: 390 },
+  world: { w: 340, h: 410 },
+  network: { w: 340, h: 330 },
+  toggles: { w: 330, h: 340 },
 } as const;
 export type PopoverTileId = keyof typeof TILE_POPOVER_SIZE;
 export const isPopoverTile = (id: string): id is PopoverTileId => Object.hasOwn(TILE_POPOVER_SIZE, id);

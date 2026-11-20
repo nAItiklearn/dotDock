@@ -7,37 +7,11 @@ import { BatteryIcon, DockIcon } from "../DockIcons";
 import type { TileId } from "../model";
 import { t } from "../strings";
 import { AgendaFace, AudioFace, ContactsFace, FocusFace, HydrationFace, MeetingFace, MicFace, ProgressFace, RemindersFace, StopwatchFace, SystemFace } from "./faces";
-import { useAwake } from "./hooks";
+import { useMinuteClock } from "./hooks";
+import { AnalogFace, BatteryFace, ColourFace, ConvertFace, CpuFace, EmojiFace, NetworkFace, NotesFace, TogglesFace, WorldFace } from "./toolsFaces";
 import type { TileControls } from "./shell";
 
-const MS_PER_MINUTE = 60_000;
-/** Lands just after the minute turns, so the clock never shows the old minute. */
-const MINUTE_LAG_MS = 40;
 const LOW_BATTERY = 20;
-
-/**
- * The current time, refreshed once a minute on the minute. Nothing runs between ticks, and nothing runs at all
- * while the core has frozen the dock or the page is hidden: the clock catches up the moment it wakes.
- */
-export function useMinuteClock(): Date {
-  const [now, setNow] = useState(() => new Date());
-  const awake = useAwake();
-  useEffect(() => {
-    if (!awake) return undefined;
-    setNow(new Date());
-    let timer = 0;
-    const schedule = (): void => {
-      const wait = MS_PER_MINUTE - (Date.now() % MS_PER_MINUTE) + MINUTE_LAG_MS;
-      timer = window.setTimeout(() => {
-        setNow(new Date());
-        schedule();
-      }, wait);
-    };
-    schedule();
-    return () => window.clearTimeout(timer);
-  }, [awake]);
-  return now;
-}
 
 const hourMinute = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" });
 const weekdayDay = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric" });
@@ -130,6 +104,26 @@ export function Tile({ id, controls }: { readonly id: TileId; readonly controls:
       return <MicFace />;
     case "audio":
       return <AudioFace controls={controls} />;
+    case "cpu":
+      return <CpuFace />;
+    case "battery":
+      return <BatteryFace />;
+    case "analog":
+      return <AnalogFace />;
+    case "notes":
+      return <NotesFace controls={controls} />;
+    case "colour":
+      return <ColourFace controls={controls} />;
+    case "convert":
+      return <ConvertFace controls={controls} />;
+    case "emoji":
+      return <EmojiFace controls={controls} />;
+    case "world":
+      return <WorldFace controls={controls} />;
+    case "network":
+      return <NetworkFace controls={controls} />;
+    case "toggles":
+      return <TogglesFace controls={controls} />;
   }
 }
 
