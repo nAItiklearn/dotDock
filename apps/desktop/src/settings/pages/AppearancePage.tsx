@@ -11,6 +11,7 @@ import { Icon } from "../../lib/ui/Icon";
 import { downloadText, pickTextFile } from "../ui/download";
 import { PageHeader, Row, Section } from "../ui/layout";
 import { ThemeEditor } from "../ui/ThemeEditor";
+import { WallpaperThemeSection } from "../ui/WallpaperTheme";
 import { offerUndo } from "../ui/undo";
 import { pageById } from "../pageMeta";
 
@@ -286,6 +287,7 @@ export function AppearancePage() {
     <>
       <PageHeader title={page.title} description={page.description} />
       <ThemeChoice />
+      <WallpaperThemeSection />
       <CustomThemes />
       <ShapeAndMotion />
     </>

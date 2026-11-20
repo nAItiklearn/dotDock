@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { OBSIDIAN, PAPER } from "../../design-system/themes";
+import { LIMITS } from "../model/defaults";
 import { contrastRatio, formatColor, parseColor } from "./color";
 import { rgbToOklch } from "./oklch";
 import { extractPalette, hueDistance, type PixelGrid, type WallpaperPalette } from "./palette";
 import { THEME_ROLES, validateThemeDoc } from "./schema";
-import { auditAa, buildThemeDoc, suggestMode, themeFromPalette, WALLPAPER_THEME_ID, type WallpaperMode } from "./wallpaperTheme";
+import {
+  auditAa,
+  buildThemeDoc,
+  suggestMode,
+  themeFromPalette,
+  themeNameFor,
+  WALLPAPER_THEME_ID,
+  type WallpaperMode,
+} from "./wallpaperTheme";
 
 type Triplet = readonly [number, number, number];
 
@@ -182,6 +191,22 @@ describe("suggestMode", () => {
   it("decides by overall lightness, not by the biggest colour alone", () => {
     const mostlyLight = paletteOf(picture(10, [{ color: [250, 250, 250], count: 60 }, { color: [0, 0, 0], count: 40 }]));
     expect(suggestMode(mostlyLight)).toBe("light");
+  });
+});
+
+describe("themeNameFor", () => {
+  it("names the theme after the picture, without its extension", () => {
+    expect(themeNameFor("sunset.over.sea.jpg")).toBe("From sunset.over.sea");
+    expect(themeNameFor("ridge")).toBe("From ridge");
+  });
+
+  it("falls back to a plain name for the current wallpaper or an empty name", () => {
+    expect(themeNameFor(null)).toBe("My wallpaper");
+    expect(themeNameFor(".png")).toBe("My wallpaper");
+  });
+
+  it("fits the name limit of a theme", () => {
+    expect(themeNameFor(`${"a".repeat(100)}.png`).length).toBe(LIMITS.themeNameLength);
   });
 });
 

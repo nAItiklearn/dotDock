@@ -1,4 +1,5 @@
 import { OBSIDIAN, PAPER } from "../../design-system/themes";
+import { LIMITS } from "../model/defaults";
 import { THEME_SCHEMA } from "../model/types";
 import { composite, contrastRatio, formatColor, parseColor, type Rgba } from "./color";
 import { DARK_RAMP, INK, LIGHT_RAMP, STATUS, WHITE, readableOn, type ContrastCheck, type Step } from "./derive";
@@ -21,7 +22,7 @@ export type WallpaperMode = "dark" | "light";
 export const WALLPAPER_THEME_ID = "custom-from-wallpaper";
 
 /** WCAG 2.2 AA: 4.5:1 for text, 3:1 for graphical objects such as the accent. */
-const AA_TEXT = 4.5;
+export const AA_TEXT = 4.5;
 const AA_GRAPHIC = 3;
 /** Step of the search for a passing lightness; finer than one 8-bit step of grey. */
 const LIGHTNESS_STEP = 1 / 256;
@@ -156,6 +157,12 @@ export function auditAa(colors: Readonly<Record<ThemeRole, string>>): readonly C
     const ratio = contrastRatio(fg, back);
     return { label, ratio, target, pass: ratio >= target };
   });
+}
+
+/** What the generated theme is called: "My wallpaper", or "From " and the picture's file name without its extension. */
+export function themeNameFor(fileName: string | null): string {
+  const stem = fileName?.replace(/\.[^.]*$/, "").trim() ?? "";
+  return (stem === "" ? "My wallpaper" : `From ${stem}`).slice(0, LIMITS.themeNameLength);
 }
 
 /** The theme as a custom-theme document, ready to save and select. */

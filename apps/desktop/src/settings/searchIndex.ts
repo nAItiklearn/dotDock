@@ -25,6 +25,7 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
 
   e("appearance", "theme", "Theme", "obsidian paper aurum colour color dark light palette"),
   e("appearance", "theme-switch", "Switch automatically", "system windows schedule time day night light dark follow"),
+  e("appearance", "wallpaper-theme", "Theme from your wallpaper", "palette colours colors extract generate auto tint picture image desktop background accent apply undo"),
   e("appearance", "custom-themes", "Your themes", "editor create import export json accent oklch contrast custom"),
   e("appearance", "radius", "Corner roundness", "radius shape round square cards"),
   e("appearance", "motion", "Motion", "animation reduce reduced still"),
