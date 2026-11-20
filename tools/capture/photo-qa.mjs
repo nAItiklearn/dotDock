@@ -30,7 +30,7 @@ const chrome = spawn(CHROME, [
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function connect() {
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 150; i++) {
     try {
       const targets = await (await fetch(`http://127.0.0.1:${PORT}/json`)).json();
       const page = targets.find((t) => t.type === "page");
@@ -68,11 +68,13 @@ async function open(url) {
 }
 
 async function shot(file) {
-  const { width, height } = await evaluate(`({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight })`);
-  const { data } = await send("Page.captureScreenshot", {
-    format: "png", captureBeyondViewport: true,
-    clip: { x: 0, y: 0, width, height, scale: 1 },
-  });
+  // The page scrolls inside <body>, so the viewport is grown to the gallery's full height first.
+  const height = await evaluate(`Math.ceil(document.querySelector(".gallery").scrollHeight)`);
+  const width = VIEWPORT.width;
+  await send("Emulation.setDeviceMetricsOverride", { ...VIEWPORT, height, mobile: false });
+  await sleep(400);
+  const { data } = await send("Page.captureScreenshot", { format: "png" });
+  await send("Emulation.setDeviceMetricsOverride", { ...VIEWPORT, mobile: false });
   writeFileSync(join(outDir, file), Buffer.from(data, "base64"));
   console.log(file, `${width}x${height}`);
 }

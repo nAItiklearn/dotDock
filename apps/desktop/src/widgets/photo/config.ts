@@ -57,7 +57,7 @@ const FRAMES: readonly (TitledOption & { readonly const: PhotoFrame })[] = [
 const SHAPES: readonly (TitledOption & { readonly const: PhotoShape })[] = [
   { const: "rounded", title: "Rounded" },
   { const: "squircle", title: "Squircle" },
-  { const: "circle", title: "Circle" },
+  { const: "circle", title: "Circle or pill" },
 ];
 
 /** Border colours are tokens: paper and ink are the same in every theme, grey and accent follow the theme. */

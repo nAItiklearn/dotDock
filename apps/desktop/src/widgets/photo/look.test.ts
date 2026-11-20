@@ -4,14 +4,14 @@ import {
   DOT_FILL,
   dotsPath,
   fitsRounded,
-  ellipsePerimeter,
-  ellipsePoints,
   layoutFrame,
   lookOf,
   lookVars,
   MIN_RING_DOTS,
   MIN_WINDOW_SHARE,
   POLAROID_FOOT,
+  stadiumPerimeter,
+  stadiumPoints,
   type Look,
   type LookSettings,
 } from "./look";
@@ -158,42 +158,63 @@ describe("dot-matrix border", () => {
     }
   });
 
-  it("puts the ring on an ellipse for the circle shape", () => {
+  it("puts the ring on a pill half a cell inside the edge for the circle shape", () => {
     const layout = dots(wide, { thickness: 12, shape: "circle" });
     const band = bandFor(look({ frame: "dots", thickness: 12 }), wide);
-    const a = wide.w / 2 - band / 2;
-    const b = wide.h / 2 - band / 2;
+    const r = (wide.h - band) / 2;
+    const half = (wide.w - wide.h) / 2;
     expect(layout.dots.length).toBeGreaterThanOrEqual(MIN_RING_DOTS);
+    expect(layout.dots.length % 2).toBe(0);
     for (const d of layout.dots) {
-      const u = (d.x - wide.w / 2) / a;
-      const v = (d.y - wide.h / 2) / b;
-      expect(u * u + v * v).toBeCloseTo(1, 5);
+      // Every dot is one end radius from the pill's spine, the segment between its two end centres.
+      const x = Math.max(0, Math.abs(d.x - wide.w / 2) - half);
+      expect(Math.hypot(x, d.y - wide.h / 2)).toBeCloseTo(r, 5);
     }
     expect(layout.insets).toEqual({ top: band, right: band, bottom: band, left: band });
   });
+
+  it("is symmetric on both axes for the circle shape, wide, tall and square", () => {
+    for (const card of [wide, { w: wide.h, h: wide.w }, large]) {
+      const layout = dots(card, { thickness: 12, shape: "circle" });
+      const key = (x: number, y: number): string => `${x.toFixed(2)},${y.toFixed(2)}`;
+      const set = new Set(layout.dots.map((d) => key(d.x, d.y)));
+      for (const d of layout.dots) {
+        expect(set.has(key(card.w - d.x, d.y))).toBe(true);
+        expect(set.has(key(d.x, card.h - d.y))).toBe(true);
+      }
+    }
+  });
 });
 
-describe("ellipsePoints", () => {
-  it("starts at the top and spaces points evenly along a wide ellipse", () => {
-    const a = 150;
-    const b = 50;
+describe("stadiumPoints", () => {
+  it("starts on a long side and spaces points evenly on straight runs and round ends", () => {
+    const w = 300;
+    const h = 100;
     const count = 40;
-    const points = ellipsePoints(a, b, count);
+    const points = stadiumPoints(w, h, count);
     expect(points).toHaveLength(count);
     expect(points[0]?.x).toBeCloseTo(0, 6);
-    expect(points[0]?.y).toBeCloseTo(-b, 6);
+    expect(points[0]?.y).toBeCloseTo(-h / 2, 6);
+    const along = stadiumPerimeter(w, h) / count;
     const gaps = points.map((p, i) => {
       const next = points[(i + 1) % count] ?? p;
       return Math.hypot(next.x - p.x, next.y - p.y);
     });
-    const mean = gaps.reduce((sum, g) => sum + g, 0) / count;
-    for (const g of gaps) expect(Math.abs(g - mean) / mean).toBeLessThan(0.03);
-    expect(mean * count).toBeCloseTo(ellipsePerimeter(a, b), -1);
+    // A chord across a round end is a little shorter than the arc it spans.
+    for (const g of gaps) expect(Math.abs(g - along) / along).toBeLessThan(0.03);
   });
 
-  it("reduces to a circle when the axes match", () => {
-    const points = ellipsePoints(40, 40, 8);
-    for (const p of points) expect(Math.hypot(p.x, p.y)).toBeCloseTo(40, 6);
+  it("is a circle when the sides match, and stands upright when tall", () => {
+    for (const p of stadiumPoints(80, 80, 8)) expect(Math.hypot(p.x, p.y)).toBeCloseTo(40, 6);
+    for (const p of stadiumPoints(100, 300, 24)) {
+      expect(Math.abs(p.x)).toBeLessThanOrEqual(50 + 1e-9);
+      expect(Math.abs(p.y)).toBeLessThanOrEqual(150 + 1e-9);
+    }
+  });
+
+  it("has the perimeter of two straight runs and one whole circle", () => {
+    expect(stadiumPerimeter(300, 100)).toBeCloseTo(2 * 200 + Math.PI * 100, 9);
+    expect(stadiumPerimeter(100, 300)).toBeCloseTo(stadiumPerimeter(300, 100), 9);
   });
 });
 
@@ -230,14 +251,14 @@ describe("dotsPath and lookVars", () => {
     expect(vars["--photo-window-rx"]).toBe("max(0px, calc(28px - var(--hairline)))");
   });
 
-  it("makes a circle a true ellipse, outside and inside the band", () => {
+  it("gives the circle shape fully round ends, a pill when wide, outside and inside the band", () => {
     const wide = { w: 340, h: 164 };
     const l = look({ frame: "mat", shape: "circle", thickness: 12 });
     const layout = layoutFrame(l, wide);
     const vars = lookVars(l, layout, wide);
-    expect(vars["--photo-rx"]).toBe("calc(170px + var(--hairline))");
+    expect(vars["--photo-rx"]).toBe("calc(82px + var(--hairline))");
     expect(vars["--photo-ry"]).toBe("calc(82px + var(--hairline))");
-    expect(vars["--photo-window-rx"]).toBe(`${layout.window.w / 2}px`);
+    expect(vars["--photo-window-rx"]).toBe(`${layout.window.h / 2}px`);
     expect(vars["--photo-window-ry"]).toBe(`${layout.window.h / 2}px`);
   });
 });

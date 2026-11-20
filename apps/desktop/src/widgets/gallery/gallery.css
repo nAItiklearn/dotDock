@@ -5,8 +5,6 @@ body {
 }
 /* ?wallpaper=: the widgets over a real desktop picture that covers the whole page. */
 html.gallery--wallpaper .gallery {
-  width: max-content;
-  min-width: 100vw;
   min-height: 100vh;
   box-sizing: border-box;
   background: var(--gallery-wallpaper) center / cover;

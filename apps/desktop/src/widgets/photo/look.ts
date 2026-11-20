@@ -34,8 +34,6 @@ export const POLAROID_FOOT = 4;
 export const DOT_FILL = 0.5;
 /** The fewest dots a ring may have; fewer would not read as a ring. */
 export const MIN_RING_DOTS = 12;
-/** Samples used to space dots evenly along an ellipse. */
-const ARC_SAMPLES = 720;
 
 /** What the border actually is, after the rules that stop settings from contradicting each other. */
 export interface Look {
@@ -142,45 +140,57 @@ export function fitsRounded(card: Box, radius: number, dot: Dot, r: number): boo
   return Math.hypot(dx, dy) + r <= corner + 1e-9;
 }
 
-/** Ramanujan's approximation of an ellipse's perimeter; exact enough to count dots. */
-export function ellipsePerimeter(a: number, b: number): number {
-  return Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)));
+/** The perimeter of a stadium (a rectangle with fully round ends) of the given outer size. */
+export function stadiumPerimeter(w: number, h: number): number {
+  const r = Math.min(w, h) / 2;
+  return 2 * (Math.max(w, h) - 2 * r) + 2 * Math.PI * r;
 }
 
 /**
- * `count` points spaced evenly by distance along the ellipse with semi-axes a and b, starting at
- * the top and going clockwise. Even angles would bunch the points at the ends of a wide ellipse.
+ * `count` points spaced evenly by distance along a stadium of outer size w x h centred on the
+ * origin, starting at the middle of a long side. An even count puts the points symmetrically on
+ * both axes.
  */
-export function ellipsePoints(a: number, b: number, count: number): Dot[] {
-  const cumulative = new Float64Array(ARC_SAMPLES + 1);
-  let previous: Dot = { x: 0, y: -b };
-  for (let i = 1; i <= ARC_SAMPLES; i += 1) {
-    const t = -Math.PI / 2 + (i / ARC_SAMPLES) * 2 * Math.PI;
-    const next: Dot = { x: a * Math.cos(t), y: b * Math.sin(t) };
-    cumulative[i] = (cumulative[i - 1] ?? 0) + Math.hypot(next.x - previous.x, next.y - previous.y);
-    previous = next;
-  }
-  const total = cumulative[ARC_SAMPLES] ?? 0;
+export function stadiumPoints(w: number, h: number, count: number): Dot[] {
+  // Laid out lying down (long axis horizontal), then turned upright when the stadium is tall.
+  const r = Math.min(w, h) / 2;
+  const half = Math.max(w, h) / 2 - r;
+  const arc = Math.PI * r;
+  const total = 4 * half + 2 * arc;
+  const at = (distance: number): Dot => {
+    let d = distance;
+    if (d < half) return { x: d, y: -r };
+    d -= half;
+    if (d < arc) {
+      const t = -Math.PI / 2 + d / r;
+      return { x: half + r * Math.cos(t), y: r * Math.sin(t) };
+    }
+    d -= arc;
+    if (d < 2 * half) return { x: half - d, y: r };
+    d -= 2 * half;
+    if (d < arc) {
+      const t = Math.PI / 2 + d / r;
+      return { x: -half + r * Math.cos(t), y: r * Math.sin(t) };
+    }
+    return { x: -half + (d - arc), y: -r };
+  };
   const points: Dot[] = [];
-  let sample = 0;
   for (let k = 0; k < count; k += 1) {
-    const target = (k / count) * total;
-    while (sample < ARC_SAMPLES - 1 && (cumulative[sample + 1] ?? 0) < target) sample += 1;
-    const lo = cumulative[sample] ?? 0;
-    const hi = cumulative[sample + 1] ?? lo;
-    const along = hi > lo ? (target - lo) / (hi - lo) : 0;
-    const t = -Math.PI / 2 + ((sample + along) / ARC_SAMPLES) * 2 * Math.PI;
-    points.push({ x: a * Math.cos(t), y: b * Math.sin(t) });
+    const p = at((k / count) * total);
+    points.push(w >= h ? p : { x: p.y, y: p.x });
   }
   return points;
 }
 
-/** Dots on an ellipse one cell inside the widget's edge, for the circle shape. */
-function ellipseRing(card: Box, band: number): { insets: Insets; dots: Dot[]; radius: number } {
-  const a = card.w / 2 - band / 2;
-  const b = card.h / 2 - band / 2;
-  const count = Math.max(MIN_RING_DOTS, Math.round(ellipsePerimeter(a, b) / band));
-  const dots = ellipsePoints(a, b, count).map((p) => ({ x: card.w / 2 + p.x, y: card.h / 2 + p.y }));
+/**
+ * Dots on a stadium half a cell inside the widget's edge, for the circle shape: a circle on a
+ * square widget, a pill on any other. The count is even, so the ring is symmetric on both axes.
+ */
+function stadiumRing(card: Box, band: number): { insets: Insets; dots: Dot[]; radius: number } {
+  const w = card.w - band;
+  const h = card.h - band;
+  const count = Math.max(MIN_RING_DOTS, 2 * Math.round(stadiumPerimeter(w, h) / band / 2));
+  const dots = stadiumPoints(w, h, count).map((p) => ({ x: card.w / 2 + p.x, y: card.h / 2 + p.y }));
   return { insets: uniform(band), dots, radius: (band * DOT_FILL) / 2 };
 }
 
@@ -192,7 +202,7 @@ export function layoutFrame(look: Look, card: Box): FrameLayout {
   let dots: readonly Dot[] = NO_DOTS;
   let dotRadius = 0;
   if (look.frame === "dots" && band > 0) {
-    const ring = look.shape === "circle" ? ellipseRing(card, band) : rectRing(card, band);
+    const ring = look.shape === "circle" ? stadiumRing(card, band) : rectRing(card, band);
     insets = ring.insets;
     dots = look.shape === "circle" ? ring.dots : ring.dots.filter((d) => fitsRounded(card, look.radius, d, ring.radius));
     dotRadius = ring.radius;
@@ -215,7 +225,7 @@ const px = (n: number): string => `${round2(n)}px`;
  * Custom properties the stylesheet reads: the photo window's insets and the corner radii of the
  * widget and of the window, horizontal and vertical. They are lengths, so a change of border or
  * shape eases between two values (they are registered in PhotoWidget.css). `card` is the inside of
- * the widget's hairline border, which the outer radius adds back so a circle is a true ellipse.
+ * the widget's hairline border, which the outer radius adds back so the round ends are true half circles.
  */
 export function lookVars(look: Look, layout: FrameLayout, card: Box): Readonly<Record<string, string>> {
   const { top, right, bottom, left } = layout.insets;
@@ -226,10 +236,13 @@ export function lookVars(look: Look, layout: FrameLayout, card: Box): Readonly<R
     "--photo-inset-l": px(left),
   };
   if (look.shape === "circle") {
-    vars["--photo-rx"] = `calc(${px(card.w / 2)} + var(--hairline))`;
-    vars["--photo-ry"] = `calc(${px(card.h / 2)} + var(--hairline))`;
-    vars["--photo-window-rx"] = px(layout.window.w / 2);
-    vars["--photo-window-ry"] = px(layout.window.h / 2);
+    // Fully round ends: a circle on a square widget, a pill on any other, the window concentric with it.
+    const outer = `calc(${px(Math.min(card.w, card.h) / 2)} + var(--hairline))`;
+    const inner = px(Math.min(layout.window.w, layout.window.h) / 2);
+    vars["--photo-rx"] = outer;
+    vars["--photo-ry"] = outer;
+    vars["--photo-window-rx"] = inner;
+    vars["--photo-window-ry"] = inner;
     return vars;
   }
   vars["--photo-rx"] = px(look.radius);
