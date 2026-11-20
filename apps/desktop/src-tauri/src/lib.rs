@@ -301,6 +301,7 @@ pub fn run() {
             tiles_host::dock_toggle_mic,
             tiles_host::dock_hydration,
             tiles_host::dock_audio,
+            tiles_host::dock_toggles,
             media_command,
             weather_search,
             weather_set_place,

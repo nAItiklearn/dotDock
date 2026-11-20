@@ -14,12 +14,12 @@ use crate::hub::TileHub;
 use crate::hydration::Hydration;
 use crate::microphone;
 use crate::paths::DataDir;
-use crate::protocol::{ContactAction, TileData, TileId};
+use crate::protocol::{CommandResult, ContactAction, SettingsPage, TileCommand, TileData, TileId};
 use crate::shell;
 use crate::stopwatch::Stopwatch;
 use crate::wire::{
-    agenda_feed, audio_feed, contacts_feed, meeting_feed, mic_feed, AudioOp, Feed, FeedName, FeedsUpdate, HydrationOp,
-    Issue, StopwatchOp,
+    agenda_feed, audio_feed, contacts_feed, meeting_feed, mic_feed, network_feed, toggles_feed, AudioOp, Feed,
+    FeedName, FeedsUpdate, HydrationOp, Issue, StopwatchOp, ToggleName, TogglesOp,
 };
 use crate::zone::{Local, Zone};
 use std::collections::{BTreeSet, HashSet};
@@ -69,7 +69,7 @@ impl Core {
     }
 }
 
-/// The feeds a tile's data feeds. Tiles the dock UI has no feed for (clipboard, shelf, toggles) feed none.
+/// The feeds a tile's data feeds. Tiles the dock UI has no feed for (clipboard, shelf, screenshots) feed none.
 fn feeds_from(data: &TileData, now: i64, zone: &dyn Zone) -> FeedsUpdate {
     let mut update = FeedsUpdate::default();
     match data {
@@ -80,6 +80,8 @@ fn feeds_from(data: &TileData, now: i64, zone: &dyn Zone) -> FeedsUpdate {
             update.meeting = Some(meeting_feed(state, now));
             update.agenda = Some(agenda_feed(state, now, zone));
         }
+        TileData::SystemHistory(history) => update.network = Some(network_feed(history)),
+        TileData::Toggles(state) => update.toggles = Some(toggles_feed(state)),
         _ => {}
     }
     update
@@ -92,6 +94,8 @@ fn tile_of(feed: FeedName) -> Option<TileId> {
         FeedName::Meeting | FeedName::Agenda => Some(TileId::Calendar),
         FeedName::Mic => Some(TileId::Microphone),
         FeedName::Audio => Some(TileId::Audio),
+        FeedName::Network => Some(TileId::SystemHistory),
+        FeedName::Toggles => Some(TileId::Toggles),
         FeedName::Stopwatch | FeedName::Hydration => None,
     }
 }
@@ -245,6 +249,29 @@ impl DockTiles {
 
     pub fn hydration(&self, op: HydrationOp) -> Result<(), String> {
         self.hydration.command(op, now_ms())
+    }
+
+    /// Wi-Fi, Bluetooth and brightness change the real setting. Windows has no documented way to switch night light
+    /// or do-not-disturb, so those open their Settings page, where one click does it.
+    pub fn toggles(&self, op: TogglesOp) -> Result<(), String> {
+        let command = match op {
+            TogglesOp::Switch { name: ToggleName::Wifi, on } => TileCommand::TogglesSetWifi { on },
+            TogglesOp::Switch { name: ToggleName::Bluetooth, on } => TileCommand::TogglesSetBluetooth { on },
+            TogglesOp::Switch { name: ToggleName::NightLight, .. } => {
+                TileCommand::TogglesOpenSettings { page: SettingsPage::NightLight }
+            }
+            TogglesOp::Switch { name: ToggleName::DoNotDisturb, .. } => {
+                TileCommand::TogglesOpenSettings { page: SettingsPage::DoNotDisturb }
+            }
+            TogglesOp::Brightness { value } if value.is_finite() => {
+                TileCommand::TogglesSetBrightness { level: value.clamp(0.0, 1.0) }
+            }
+            TogglesOp::Brightness { .. } => return Err("That is not a brightness".to_owned()),
+        };
+        match self.hub.command(command) {
+            CommandResult::Ok { .. } => Ok(()),
+            CommandResult::Failed { reason, .. } => Err(reason),
+        }
     }
 
     pub fn audio(&self, op: AudioOp) -> Result<(), String> {

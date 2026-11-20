@@ -51,13 +51,13 @@ describe("showStack", () => {
 });
 
 describe("isFrozen", () => {
-  const calm = { locked: false, displayOff: false, fullscreen: false };
+  const calm = { locked: false, displayOff: false, fullscreen: false, frozen: false };
 
   it("is false while nothing asks the dock to stop", () => {
     expect(isFrozen(calm)).toBe(false);
   });
 
   it.each(["locked", "displayOff", "fullscreen"] as const)("is true when the core says %s", (reason) => {
-    expect(isFrozen({ ...calm, [reason]: true })).toBe(true);
+    expect(isFrozen({ ...calm, [reason]: true, frozen: true })).toBe(true);
   });
 });

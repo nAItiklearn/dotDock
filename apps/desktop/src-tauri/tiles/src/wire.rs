@@ -1,5 +1,5 @@
-//! What the dock UI reads and sends, in the shapes of the dock's `tiles/ui-types.ts`: seven feeds, each
-//! `{ data, issue }`, and six commands. Everything serialises as camelCase and times are Unix milliseconds.
+//! What the dock UI reads and sends, in the shapes of the dock's `tiles/ui-types.ts`: nine feeds, each
+//! `{ data, issue }`, and seven commands. Everything serialises as camelCase and times are Unix milliseconds.
 //!
 //! The functions here only map the providers' states onto those shapes, so they are pure and tested. A feed that
 //! has no data says why with an [`Issue`]; the core produces three of the UI's five reasons. `unsupported` is the
@@ -9,7 +9,7 @@ use crate::calendar::next_event;
 use crate::contacts;
 use crate::protocol::{
     AudioState, CalendarEvent, CalendarSource, CalendarState, Channel, Contact, ContactAction, ContactsState,
-    DeviceKind, MeetingService, MicrophoneState,
+    DeviceKind, MeetingService, MicrophoneState, SystemHistory, Toggle, TogglesState,
 };
 use crate::zone::Zone;
 use serde::{Deserialize, Serialize};
@@ -58,6 +58,8 @@ pub enum FeedName {
     Hydration,
     Agenda,
     Audio,
+    Network,
+    Toggles,
 }
 
 // ---------------------------------------------------------------- views
@@ -165,6 +167,29 @@ pub struct AudioView {
     pub muted: bool,
 }
 
+#[derive(Serialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct NetworkView {
+    pub down_bytes_per_sec: f64,
+    pub up_bytes_per_sec: f64,
+}
+
+#[derive(Serialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Switches {
+    pub wifi: Option<bool>,
+    pub bluetooth: Option<bool>,
+    pub night_light: Option<bool>,
+    pub do_not_disturb: Option<bool>,
+}
+
+#[derive(Serialize, Clone, PartialEq, Debug)]
+pub struct TogglesView {
+    pub switches: Switches,
+    /// 0 to 1, or null for a display whose brightness cannot be set.
+    pub brightness: Option<f32>,
+}
+
 /// One delivery on the feed event: only the feeds that changed, as the UI's `Partial<TileFeeds>`.
 #[derive(Serialize, Default, Clone, PartialEq, Debug)]
 pub struct FeedsUpdate {
@@ -182,6 +207,10 @@ pub struct FeedsUpdate {
     pub agenda: Option<Feed<AgendaView>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub audio: Option<Feed<AudioView>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub network: Option<Feed<NetworkView>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub toggles: Option<Feed<TogglesView>>,
 }
 
 impl FeedsUpdate {
@@ -200,6 +229,8 @@ impl FeedsUpdate {
             FeedName::Hydration => update.hydration = Some(Feed::issue(issue)),
             FeedName::Agenda => update.agenda = Some(Feed::issue(issue)),
             FeedName::Audio => update.audio = Some(Feed::issue(issue)),
+            FeedName::Network => update.network = Some(Feed::issue(issue)),
+            FeedName::Toggles => update.toggles = Some(Feed::issue(issue)),
         }
         update
     }
@@ -215,6 +246,8 @@ impl FeedsUpdate {
             hydration: self.hydration.filter(|_| keep(FeedName::Hydration)),
             agenda: self.agenda.filter(|_| keep(FeedName::Agenda)),
             audio: self.audio.filter(|_| keep(FeedName::Audio)),
+            network: self.network.filter(|_| keep(FeedName::Network)),
+            toggles: self.toggles.filter(|_| keep(FeedName::Toggles)),
         }
     }
 
@@ -227,6 +260,8 @@ impl FeedsUpdate {
         self.hydration = other.hydration.or(self.hydration.take());
         self.agenda = other.agenda.or(self.agenda.take());
         self.audio = other.audio.or(self.audio.take());
+        self.network = other.network.or(self.network.take());
+        self.toggles = other.toggles.or(self.toggles.take());
     }
 }
 
@@ -246,6 +281,23 @@ pub enum StopwatchOp {
 pub enum HydrationOp {
     Log { ml: u32 },
     Snooze { minutes: u32 },
+}
+
+/// The switches of the quick-toggles tile.
+#[derive(Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum ToggleName {
+    Wifi,
+    Bluetooth,
+    NightLight,
+    DoNotDisturb,
+}
+
+#[derive(Deserialize, Clone, Copy, PartialEq, Debug)]
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum TogglesOp {
+    Switch { name: ToggleName, on: bool },
+    Brightness { value: f32 },
 }
 
 #[derive(Deserialize, Clone, PartialEq, Debug)]
@@ -304,6 +356,31 @@ pub fn audio_feed(state: &AudioState) -> Feed<AudioView> {
         })
         .collect();
     Feed::data(AudioView { devices, volume: state.volume, muted: state.muted })
+}
+
+/// Throughput over the last sample of the system history; before the first sample, zero.
+pub fn network_feed(history: &SystemHistory) -> Feed<NetworkView> {
+    Feed::data(NetworkView {
+        down_bytes_per_sec: history.net_down.last().copied().unwrap_or(0.0),
+        up_bytes_per_sec: history.net_up.last().copied().unwrap_or(0.0),
+    })
+}
+
+/// A switch the machine has and can read is its state; one it lacks, or cannot read, is null.
+fn switch(toggle: &Toggle) -> Option<bool> {
+    toggle.on.filter(|_| toggle.available)
+}
+
+pub fn toggles_feed(state: &TogglesState) -> Feed<TogglesView> {
+    Feed::data(TogglesView {
+        switches: Switches {
+            wifi: switch(&state.wifi),
+            bluetooth: switch(&state.bluetooth),
+            night_light: switch(&state.night_light),
+            do_not_disturb: switch(&state.do_not_disturb),
+        },
+        brightness: state.brightness.available.then_some(state.brightness.level.clamp(0.0, 1.0)),
+    })
 }
 
 pub fn mic_feed(state: &MicrophoneState) -> Feed<MicView> {
@@ -698,5 +775,86 @@ mod tests {
             AudioOp::Mute { muted: true }
         );
         assert!(serde_json::from_value::<AudioOp>(json!({ "type": "eject" })).is_err());
+    }
+
+    fn history(down: &[f64], up: &[f64]) -> SystemHistory {
+        SystemHistory {
+            interval_secs: 1,
+            cpu: vec![],
+            memory: vec![],
+            disk: vec![],
+            net_down: down.to_vec(),
+            net_up: up.to_vec(),
+            capacity: 60,
+            memory_used_bytes: 0,
+            memory_total_bytes: 0,
+        }
+    }
+
+    #[test]
+    fn the_network_feed_is_the_newest_sample_and_zero_before_the_first() {
+        assert_eq!(
+            serde_json::to_value(network_feed(&history(&[10.0, 2048.0], &[5.0, 512.0]))).unwrap(),
+            json!({ "data": { "downBytesPerSec": 2048.0, "upBytesPerSec": 512.0 }, "issue": null })
+        );
+        let empty = network_feed(&history(&[], &[])).data.expect("data");
+        assert_eq!((empty.down_bytes_per_sec, empty.up_bytes_per_sec), (0.0, 0.0));
+    }
+
+    fn toggle(available: bool, on: Option<bool>) -> Toggle {
+        Toggle { available, on, problem: None }
+    }
+
+    #[test]
+    fn a_missing_or_unreadable_switch_is_null_and_brightness_is_clamped() {
+        let state = TogglesState {
+            wifi: toggle(true, Some(true)),
+            bluetooth: toggle(false, Some(false)),
+            brightness: crate::protocol::Brightness { available: true, level: 1.4 },
+            night_light: toggle(true, None),
+            do_not_disturb: toggle(true, Some(false)),
+        };
+        assert_eq!(
+            serde_json::to_value(toggles_feed(&state)).unwrap(),
+            json!({
+                "data": {
+                    "switches": { "wifi": true, "bluetooth": null, "nightLight": null, "doNotDisturb": false },
+                    "brightness": 1.0
+                },
+                "issue": null
+            })
+        );
+        let dark = TogglesState { brightness: crate::protocol::Brightness { available: false, level: 0.5 }, ..state };
+        assert_eq!(toggles_feed(&dark).data.expect("data").brightness, None);
+    }
+
+    #[test]
+    fn toggles_ops_and_the_new_feed_names_read_as_the_ui_sends_them() {
+        assert_eq!(
+            serde_json::from_value::<TogglesOp>(json!({ "type": "switch", "name": "nightLight", "on": true })).unwrap(),
+            TogglesOp::Switch { name: ToggleName::NightLight, on: true }
+        );
+        assert_eq!(
+            serde_json::from_value::<TogglesOp>(json!({ "type": "brightness", "value": 0.25 })).unwrap(),
+            TogglesOp::Brightness { value: 0.25 }
+        );
+        assert!(
+            serde_json::from_value::<TogglesOp>(json!({ "type": "switch", "name": "airplane", "on": true })).is_err()
+        );
+        assert_eq!(
+            serde_json::from_value::<Vec<FeedName>>(json!(["network", "toggles"])).unwrap(),
+            vec![FeedName::Network, FeedName::Toggles]
+        );
+    }
+
+    #[test]
+    fn the_new_feeds_fail_filter_and_absorb_like_the_others() {
+        let failed = FeedsUpdate::failed(FeedName::Toggles, Issue::Error);
+        assert_eq!(serde_json::to_value(&failed).unwrap(), json!({ "toggles": { "data": null, "issue": "error" } }));
+        let mut update = FeedsUpdate::failed(FeedName::Network, Issue::Error);
+        update.absorb(failed);
+        let only: BTreeSet<FeedName> = [FeedName::Network].into();
+        let kept = update.only(&only);
+        assert!(kept.network.is_some() && kept.toggles.is_none());
     }
 }

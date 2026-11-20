@@ -63,8 +63,9 @@ export const dev = {
     handlers?.library(action);
   },
   /** What the core reports when the session locks, the display turns off or a fullscreen app takes over. */
-  freeze(state: Partial<FrozenState>): void {
-    handlers?.frozen({ locked: false, displayOff: false, fullscreen: false, ...state });
+  freeze(state: Partial<Omit<FrozenState, "frozen">>): void {
+    const reasons = { locked: false, displayOff: false, fullscreen: false, ...state };
+    handlers?.frozen({ ...reasons, frozen: reasons.locked || reasons.displayOff || reasons.fullscreen });
   },
   pointer(inside: boolean): void {
     handlers?.pointer(inside);

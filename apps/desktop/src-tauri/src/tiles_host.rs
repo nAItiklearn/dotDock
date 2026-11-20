@@ -6,7 +6,7 @@
 use crate::dock_host::DOCK_LABEL;
 use dotdock_shell::boot_log;
 use dotdock_tiles::protocol::ContactAction;
-use dotdock_tiles::wire::{AudioOp, FeedName, HydrationOp, StopwatchOp};
+use dotdock_tiles::wire::{AudioOp, FeedName, HydrationOp, StopwatchOp, TogglesOp};
 use dotdock_tiles::{DataDir, DockEvent, DockTiles, EVENT_FEEDS, EVENT_MIC_LEVEL};
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -89,4 +89,9 @@ pub fn dock_hydration(op: HydrationOp, state: State<'_, TilesState>) -> Result<(
 #[tauri::command(async)]
 pub fn dock_audio(op: AudioOp, state: State<'_, TilesState>) -> Result<(), String> {
     state.0.audio(op)
+}
+
+#[tauri::command(async)]
+pub fn dock_toggles(op: TogglesOp, state: State<'_, TilesState>) -> Result<(), String> {
+    state.0.toggles(op)
 }
