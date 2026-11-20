@@ -1,6 +1,7 @@
 //! dotDock core: owns the desktop overlay window, providers and boot timing.
 
 mod desktop_host;
+mod dock_host;
 mod island_host;
 mod providers;
 mod tray;
@@ -112,8 +113,11 @@ async fn wallpaper_monitors() -> Result<Vec<String>, String> {
 
 /// The in-app "Restore Windows desktop" action.
 #[tauri::command]
-async fn restore_windows() -> Result<(), String> {
-    dotdock_shell::restore::restore_windows().map(|_| ()).map_err(|e| e.to_string())
+async fn restore_windows(app: AppHandle) -> Result<(), String> {
+    let restored = dotdock_shell::restore::restore_windows().map(|_| ()).map_err(|e| e.to_string());
+    // The taskbar is back: the dock must not keep wanting it hidden.
+    dock_host::taskbar_released(&app);
+    restored
 }
 
 #[tauri::command]
@@ -260,6 +264,7 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| tray::open_settings(app)))
         .manage(ready.clone())
         .manage(regions.clone())
+        .register_asynchronous_uri_scheme_protocol(dotdock_dock::icons::SCHEME, dock_host::serve_icon)
         .invoke_handler(tauri::generate_handler![
             providers_ready,
             overlay_ready,
@@ -274,6 +279,17 @@ pub fn run() {
             island_host::island_disconnect,
             island_host::island_connection,
             island_host::island_set_settings,
+            dock_host::dock_ready,
+            dock_host::dock_launch,
+            dock_host::dock_activate,
+            dock_host::dock_close_window,
+            dock_host::dock_set_category,
+            dock_host::dock_save_categories,
+            dock_host::dock_set_settings,
+            dock_host::dock_set_regions,
+            dock_host::dock_preview,
+            dock_host::dock_set_focus,
+            dock_host::dock_set_glass,
             media_command,
             weather_search,
             weather_set_place,
@@ -290,6 +306,7 @@ pub fn run() {
             boot::mark("window-created");
             tray::install(&handle)?;
             island_host::start(&handle)?;
+            dock_host::start(&handle)?;
             let wake = providers::spawn(handle.clone(), ready)?;
             app.manage(wake);
             desktop_host::spawn_guard(Hwnd::from_raw(window.hwnd()?.0), regions)?;
@@ -308,9 +325,11 @@ pub fn run() {
         })
         .build(tauri::generate_context!())
         .map(|app| {
-            app.run(|_, event| {
+            app.run(|app, event| {
                 // A clean exit is never a crash, and never leaves the taskbar hidden.
                 if let tauri::RunEvent::Exit = event {
+                    // The host first: it stops its taskbar worker, so nothing hides the taskbar after the restore.
+                    dock_host::shutdown(app);
                     dock_guard::restore_after_dock();
                     crash_guard::mark_stable();
                 }

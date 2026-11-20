@@ -902,6 +902,7 @@ dependencies = [
 name = "dotdock"
 version = "0.1.0"
 dependencies = [
+ "dotdock-dock",
  "dotdock-island",
  "dotdock-shell",
  "serde",
