@@ -56,7 +56,8 @@ fn convert(a: &Appointment) -> CalendarEvent {
     let details: String = a.Details().map(|s| s.to_string()).unwrap_or_default().chars().take(DETAILS_CHARS).collect();
     let online = a.OnlineMeetingLink().map(|s| s.to_string()).unwrap_or_default();
     let uri = a.Uri().and_then(|u| u.AbsoluteUri()).map(|s| s.to_string()).unwrap_or_default();
-    let join = meeting::find_join_link([online.as_str(), location.as_deref().unwrap_or(""), uri.as_str(), details.as_str()]);
+    let join =
+        meeting::find_join_link([online.as_str(), location.as_deref().unwrap_or(""), uri.as_str(), details.as_str()]);
     let id = a.LocalId().map(|s| s.to_string()).unwrap_or_default();
     CalendarEvent {
         id: format!("{id}@{start_ms}"),
@@ -102,5 +103,22 @@ mod tests {
         let now = crate::clock::now_ms();
         let events = fetch(now, now + 7 * DAY_MS).expect("the store opens");
         assert!(events.windows(2).all(|w| w[0].start_ms <= w[1].start_ms), "soonest first");
+    }
+
+    /// Stopping the tile ends its worker and starting it again runs a new one. Windows tears the multithreaded
+    /// apartment down when its last thread leaves, which invalidates the WinRT factories the `windows` crate keeps
+    /// for the process; the second thread would then crash inside `RequestStoreAsync`.
+    #[test]
+    fn the_store_opens_again_on_a_later_thread_after_the_first_one_ended() {
+        let now = crate::clock::now_ms();
+        for _ in 0..2 {
+            std::thread::spawn(move || {
+                let _com = crate::com::ComGuard::new();
+                fetch(now, now + DAY_MS).map(|events| events.len())
+            })
+            .join()
+            .expect("the thread did not crash")
+            .expect("the store opens");
+        }
     }
 }

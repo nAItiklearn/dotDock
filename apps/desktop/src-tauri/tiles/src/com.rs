@@ -1,11 +1,14 @@
 //! COM and Win32 plumbing shared by the providers.
 
 use std::sync::mpsc::{Receiver, Sender};
+use std::sync::Once;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 use windows::core::{PCWSTR, PWSTR};
 use windows::Win32::Foundation::HANDLE;
-use windows::Win32::System::Com::{CoInitializeEx, CoTaskMemFree, CoUninitialize, COINIT_MULTITHREADED};
+use windows::Win32::System::Com::{
+    CoIncrementMTAUsage, CoInitializeEx, CoTaskMemFree, CoUninitialize, COINIT_MULTITHREADED,
+};
 use windows::Win32::System::Threading::{
     OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION,
 };
@@ -16,8 +19,22 @@ use windows::Win32::System::Threading::{
 /// is undone on drop.
 pub struct ComGuard(bool);
 
+/// Holds the process's multithreaded apartment open for the rest of the run.
+///
+/// Windows destroys that apartment when its last thread leaves it, and the WinRT factories the `windows` crate
+/// caches for the whole process die with it: the next worker (a tile stopped and started again) would crash on its
+/// first WinRT call. One usage count that is never given back keeps the apartment, and the cache, valid.
+fn keep_mta_alive() {
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        // SAFETY: plain call. The cookie is deliberately never released; the usage must outlive every worker.
+        let _ = unsafe { CoIncrementMTAUsage() };
+    });
+}
+
 impl ComGuard {
     pub fn new() -> Self {
+        keep_mta_alive();
         // SAFETY: plain initialisation call; the matching CoUninitialize runs in Drop only when this call succeeded.
         let hr = unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) };
         Self(hr.is_ok())
