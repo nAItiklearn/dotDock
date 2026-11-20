@@ -257,7 +257,7 @@ impl Controller {
             }
         }
         if let Some(glass) = &mut self.glass {
-            glass.follow(rect, window as isize);
+            glass.follow(rect, window);
             let request = &self.glass_request;
             if let Err(error) = glass.show(&request.shapes, window::scale(window), request.dark) {
                 self.hooks.log(&format!("glass shape refused: {error}"));

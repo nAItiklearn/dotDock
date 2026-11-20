@@ -905,6 +905,7 @@ dependencies = [
  "dotdock-dock",
  "dotdock-island",
  "dotdock-shell",
+ "dotdock-tiles",
  "serde",
  "serde_json",
  "tauri",

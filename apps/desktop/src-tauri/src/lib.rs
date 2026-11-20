@@ -4,6 +4,7 @@ mod desktop_host;
 mod dock_host;
 mod island_host;
 mod providers;
+mod tiles_host;
 mod tray;
 
 use desktop_host::{HitRect, HitRegions, Hwnd};
@@ -290,6 +291,16 @@ pub fn run() {
             dock_host::dock_preview,
             dock_host::dock_set_focus,
             dock_host::dock_set_glass,
+            tiles_host::dock_tiles_watch,
+            tiles_host::dock_tiles_unwatch,
+            tiles_host::dock_mic_watch,
+            tiles_host::dock_mic_unwatch,
+            tiles_host::dock_contact,
+            tiles_host::dock_join_meeting,
+            tiles_host::dock_stopwatch,
+            tiles_host::dock_toggle_mic,
+            tiles_host::dock_hydration,
+            tiles_host::dock_audio,
             media_command,
             weather_search,
             weather_set_place,
@@ -307,6 +318,7 @@ pub fn run() {
             tray::install(&handle)?;
             island_host::start(&handle)?;
             dock_host::start(&handle)?;
+            tiles_host::start(&handle);
             let wake = providers::spawn(handle.clone(), ready)?;
             app.manage(wake);
             desktop_host::spawn_guard(Hwnd::from_raw(window.hwnd()?.0), regions)?;
@@ -329,6 +341,7 @@ pub fn run() {
                 // A clean exit is never a crash, and never leaves the taskbar hidden.
                 if let tauri::RunEvent::Exit = event {
                     // The host first: it stops its taskbar worker, so nothing hides the taskbar after the restore.
+                    tiles_host::shutdown(app);
                     dock_host::shutdown(app);
                     dock_guard::restore_after_dock();
                     crash_guard::mark_stable();
