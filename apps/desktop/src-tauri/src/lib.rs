@@ -89,6 +89,13 @@ async fn wallpaper_apply(
     wallpaper::apply(&path, monitor.as_deref(), fit).map_err(|e| e.to_string())
 }
 
+/// The picture Windows is showing as the wallpaper, as the raw bytes of its file, for Settings to
+/// read the colours of. The path is Windows' own answer; the caller cannot name a file.
+#[tauri::command]
+async fn wallpaper_current_image() -> Result<tauri::ipc::Response, String> {
+    wallpaper::current_image().map(tauri::ipc::Response::new).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn wallpaper_monitors() -> Result<Vec<String>, String> {
     wallpaper::monitors().map_err(|e| e.to_string())
@@ -213,6 +220,7 @@ pub fn run() {
             weather_set_place,
             wallpapers_list,
             wallpaper_apply,
+            wallpaper_current_image,
             wallpaper_monitors,
             restore_windows,
             autostart_set
