@@ -22,6 +22,10 @@ const { TilePopover } = await import("./popovers");
 const { Gallery } = await import("../Gallery");
 const { Prefs, drawnAsHint } = await import("../Prefs");
 const { Slot } = await import("../items");
+const { useNotesStore } = await import("../../widgets/notesStore");
+const { useTools } = await import("./toolsStore");
+const { useNetworkHistory } = await import("./networkHistory");
+const { conversionText } = await import("./toolsFaces");
 const { useFeedStore } = await import("./feeds");
 const { useDockStore } = await import("../store");
 const { useTimerStore } = await import("../../widgets/timerStore");
@@ -640,5 +644,262 @@ describe("tiles in edit mode", () => {
     expect(slot("agenda", "compact", false)).toContain('data-size="compact"');
     expect(slot("agenda", "compact", false)).toContain("--len:48px");
     expect(slot("agenda", "regular", false)).toContain("--len:172.8px");
+  });
+});
+
+describe("processor, battery and the analog clock", () => {
+  it("shows the load as a ring and a number", () => {
+    seed(useProviderStore, { states: { ...useProviderStore.getInitialState().states, system: { data: { memTotalBytes: 16e9, memUsedBytes: 8e9, cpuPercent: 34, disks: [] }, stale: false, issue: null } } });
+    const html = face("cpu");
+    expect(html).toContain(">34<");
+    expect(html).toContain('aria-label="Processor 34%"');
+    expect(html.match(/<circle/g)).toHaveLength(12);
+  });
+
+  it("has a state for a machine that reports no processor load", () => {
+    seed(useProviderStore, { states: { ...useProviderStore.getInitialState().states, system: { data: null, stale: false, issue: "unsupported" } } });
+    expect(face("cpu")).toContain(">–<");
+  });
+
+  const battery = (percent: number, charging: boolean) =>
+    seed(useProviderStore, { states: { ...useProviderStore.getInitialState().states, battery: { data: { percent, charging, pluggedIn: charging, secondsRemaining: null }, stale: false, issue: null } } });
+
+  it("shows the charge, charging, and a warning colour when it is low", () => {
+    battery(72, false);
+    expect(face("battery")).toContain('aria-label="Battery 72%"');
+    battery(72, true);
+    expect(face("battery")).toContain("Battery 72%, Charging");
+    battery(12, false);
+    expect(face("battery")).toContain('data-low="true"');
+    expect(face("battery")).toContain("var(--danger)");
+    battery(12, true);
+    expect(face("battery")).not.toContain('data-low="true"');
+  });
+
+  it("says there is no battery on a desktop", () => {
+    seed(useProviderStore, { states: { ...useProviderStore.getInitialState().states, battery: { data: null, stale: false, issue: "no-device" } } });
+    expect(face("battery")).toContain('aria-label="No battery"');
+  });
+
+  it("draws a round face with twelve marks and two hands", () => {
+    const html = face("analog");
+    expect(html.match(/<circle/g)).toHaveLength(13);
+    expect(html.match(/<line/g)).toHaveLength(2);
+  });
+});
+
+describe("notes", () => {
+  const note = (id: string, title: string, body: string, pinned = false) => ({ id, title, body, color: "plain" as const, pinned });
+  const setNotes = (notes: ReturnType<typeof note>[]) => seed(useNotesStore, { notes, activeId: notes[0]?.id ?? null });
+
+  it("has a state for no notes, in the tile and the popover", () => {
+    setNotes([]);
+    expect(face("notes")).toContain("No notes yet");
+    expect(popover("notes")).toContain("Notes you write here show on the home screen too.");
+  });
+
+  it("leads with the pinned note, or the first line, and counts them", () => {
+    setNotes([note("1", "", "Plain\nsecond line"), note("2", "Shopping", "milk", true)]);
+    const html = face("notes");
+    expect(html).toContain("Shopping");
+    expect(html).toContain("2 notes");
+    setNotes([note("1", "", "First line\nsecond")]);
+    expect(face("notes")).toContain("First line");
+    expect(face("notes")).toContain("1 note");
+  });
+
+  it("shows every note as a tab, and the open one in an editor with pin and delete", () => {
+    setNotes([note("1", "Shopping", "milk\neggs", true), note("2", "", "Ideas")]);
+    const html = popover("notes");
+    expect(button(html, "Shopping")).toContain('aria-selected="true"');
+    expect(button(html, "Ideas")).toBeDefined();
+    expect(html).toContain('aria-label="New note"');
+    expect(html).toContain("milk");
+    expect(button(html, "Unpin Shopping")).toContain('aria-pressed="true"');
+    expect(button(html, "Delete Shopping")).toBeDefined();
+  });
+});
+
+describe("colour picker", () => {
+  const setColours = (colours: string[]) => seed(useTools, { colours });
+  const withDropper = (on: boolean) => {
+    const w = window as unknown as { EyeDropper?: unknown };
+    if (on) w.EyeDropper = class {};
+    else delete w.EyeDropper;
+  };
+
+  it("shows the last colour on the tile, or the dropper before any", () => {
+    setColours([]);
+    expect(face("colour")).toContain('data-empty="true"');
+    setColours(["#E94248", "#112233"]);
+    const html = face("colour");
+    expect(html).toContain("background:#E94248");
+    expect(html).toContain('aria-label="Colour picker, #E94248"');
+  });
+
+  it("offers the screen picker, the last colours and a way to copy each, when the window has a picker", () => {
+    withDropper(true);
+    setColours(["#E94248", "#112233"]);
+    const html = popover("colour");
+    expect(html).toContain("Pick a colour from the screen");
+    expect(html).toContain("rgb(233, 66, 72)");
+    expect(button(html, "Copy #112233")).toBeDefined();
+    withDropper(false);
+  });
+
+  it("invites the first pick, and says plainly when the window cannot pick from the screen", () => {
+    withDropper(true);
+    setColours([]);
+    expect(popover("colour")).toContain("Pick one from anywhere on the screen and it is kept here.");
+    withDropper(false);
+    expect(popover("colour")).toContain("Not available");
+  });
+});
+
+describe("converter", () => {
+  const setup = (patch: Partial<ReturnType<typeof useTools.getInitialState>["conversion"]> = {}) =>
+    seed(useTools, { conversion: { category: "length", from: "kilometer", to: "mile", amount: "1", ...patch } });
+
+  it("writes the conversion that is set up, on the tile", () => {
+    setup();
+    const html = face("convert");
+    expect(html).toContain("1 km = 0.621371 mi");
+    expect(html).toContain("Length");
+  });
+
+  it("asks for a number when what was typed is not one", () => {
+    setup({ amount: "abc" });
+    expect(face("convert")).toContain("Type a number");
+    expect(conversionText({ category: "length", from: "kilometer", to: "mile", amount: "abc" })).toBeNull();
+  });
+
+  it("follows the units that are chosen, including temperature", () => {
+    setup({ category: "temperature", from: "celsius", to: "fahrenheit", amount: "100" });
+    expect(face("convert")).toContain("100 °C = 212 °F");
+  });
+
+  it("has every category as a tab, the amount, both units and a swap in the popover", () => {
+    setup();
+    const html = popover("convert");
+    for (const words of ["Length", "Mass", "Volume", "Temperature", "Speed", "Area", "Data"]) expect(button(html, words)).toBeDefined();
+    expect(button(html, "Length")).toContain('aria-selected="true"');
+    expect(html).toContain('aria-label="Swap units"');
+    expect(html).toContain('aria-label="Copy the result"');
+    expect(html).toContain("0.621371 mi");
+    expect(html.match(/<select/g)).toHaveLength(2);
+  });
+
+  it("marks a bad amount invalid and disables copying it", () => {
+    setup({ amount: "abc" });
+    const html = popover("convert");
+    expect(html).toContain('aria-invalid="true"');
+    expect(button(html, "Copy the result")).toContain('disabled=""');
+  });
+});
+
+describe("emoji", () => {
+  it("shows the last one used on the tile, else a face", () => {
+    seed(useTools, { emoji: [] });
+    expect(face("emoji")).toContain("😀");
+    seed(useTools, { emoji: ["🔥"] });
+    expect(face("emoji")).toContain("🔥");
+  });
+
+  it("offers the groups and a grid of emoji to copy, with recent ones above", () => {
+    seed(useTools, { emoji: ["🔥", "😀"] });
+    const html = popover("emoji");
+    for (const words of ["Faces", "Hands", "Animals", "Food", "Travel", "Objects", "Recent"]) expect(html).toContain(words);
+    expect(button(html, "Copy 🔥")).toBeDefined();
+    expect(html.match(/aria-label="Copy /g)?.length).toBeGreaterThan(60);
+  });
+});
+
+describe("world clock", () => {
+  it("has a state for no cities, and invites adding one", () => {
+    seed(useTools, { cities: [] });
+    const html = face("world");
+    expect(html).toContain("No cities yet");
+    expect(html).toContain("Add a city");
+    expect(popover("world")).toContain("Add the places you keep time for.");
+  });
+
+  it("shows two cities on the tile, and every one in the popover with a way to remove it", () => {
+    seed(useTools, { cities: ["tokyo", "london", "new-york"] });
+    const html = face("world");
+    expect(html).toContain('<span class="tile__title">Tokyo');
+    expect(html).toContain('<span class="tile__sub caps">London');
+    expect(html).not.toContain('<span class="tile__sub caps">New York');
+    const open = popover("world");
+    for (const city of ["Tokyo", "London", "New York"]) expect(button(open, `Remove ${city}`)).toBeDefined();
+    expect(open).toContain("UTC+9");
+  });
+
+  it("offers cities to add that are not chosen yet, until the limit", () => {
+    seed(useTools, { cities: ["tokyo"] });
+    const html = popover("world");
+    expect(button(html, "Add a city: London")).toBeDefined();
+    expect(button(html, "Add a city: Tokyo")).toBeUndefined();
+    seed(useTools, { cities: ["tokyo", "london", "paris", "berlin", "madrid", "rome"] });
+    const full = popover("world");
+    expect(full).toContain("Up to 6 cities. Remove one to add another.");
+    expect(full).not.toContain('placeholder="Search cities"');
+  });
+});
+
+describe("network", () => {
+  it("shows the rates, download first", () => {
+    feeds({ network: ready({ downBytesPerSec: 4_200_000, upBytesPerSec: 312_000 }) });
+    const html = face("network");
+    expect(html).toMatch(/4\.2\s?MB\/s/);
+    expect(html).toMatch(/↑ 312\s?kB\/s/);
+  });
+
+  it("says why there is nothing to show", () => {
+    feeds({ network: failed("offline") });
+    expect(face("network")).toContain("Offline");
+    expect(popover("network")).toContain("It updates when the connection is back.");
+  });
+
+  it("draws download and upload as two graphs of the last minute", () => {
+    seed(useNetworkHistory, { samples: [{ at: Date.now() - 5000, down: 2_000_000, up: 100_000 }] });
+    feeds({ network: ready({ downBytesPerSec: 2_000_000, upBytesPerSec: 100_000 }) });
+    const html = popover("network");
+    for (const words of ["Download", "Upload", "Last 60 seconds"]) expect(html).toContain(words);
+    expect(html.match(/<svg class="graph"/g)).toHaveLength(2);
+  });
+});
+
+describe("quick settings", () => {
+  const togglesView = (patch: Partial<{ wifi: boolean | null; bluetooth: boolean | null; nightLight: boolean | null; brightness: number | null }> = {}) =>
+    ready({ switches: { wifi: patch.wifi ?? true, bluetooth: patch.bluetooth === undefined ? false : patch.bluetooth, nightLight: patch.nightLight ?? false, doNotDisturb: false }, brightness: patch.brightness === undefined ? 0.7 : patch.brightness });
+
+  it("shows each switch as it is set", () => {
+    feeds({ toggles: togglesView() });
+    const html = face("toggles");
+    expect(button(html, "Wi-Fi, on")).toContain('aria-pressed="true"');
+    expect(button(html, "Bluetooth, off")).toContain('aria-pressed="false"');
+  });
+
+  it("disables a switch the machine does not have, and says so", () => {
+    feeds({ toggles: togglesView({ bluetooth: null }) });
+    expect(button(face("toggles"), "Bluetooth, Not on this device")).toContain('disabled=""');
+    expect(popover("toggles")).toContain("Not on this device");
+  });
+
+  it("lists all four switches and the brightness in the popover", () => {
+    feeds({ toggles: togglesView() });
+    const html = popover("toggles");
+    for (const words of ["Wi-Fi", "Bluetooth", "Night light", "Do not disturb", "Brightness", "70%"]) expect(html).toContain(words);
+    expect(html.match(/role="switch"/g)).toHaveLength(4);
+  });
+
+  it("has no slider to move when the display brightness cannot be set", () => {
+    feeds({ toggles: togglesView({ brightness: null }) });
+    expect(popover("toggles")).toMatch(/type="range"[^>]*disabled=""|disabled=""[^>]*type="range"/);
+  });
+
+  it("has a designed state for each reason the settings are missing", () => {
+    feeds({ toggles: failed("unsupported") });
+    expect(popover("toggles")).toContain("The dock service has not provided this yet.");
   });
 });

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDockStore } from "../store";
+import { panelShownAtStart, togglesPanel } from "./panelKey";
 import type { EffectsChoice } from "../effects";
 import { TILE_IDS, type TileId } from "../model";
 import type { DockEdge } from "../protocol";
@@ -21,12 +22,26 @@ const FOCUS_SEEDS: readonly FocusSeed[] = ["idle", "running", "paused", "break",
 const MINUTE_MS = 60_000;
 const NEW_APPS = ["Lumen Notes", "Tide Weather", "Grain Recorder"] as const;
 
+/** Hidden until the backquote key (see `panelKey.ts`): the dock itself is the way to try every feature. */
 export function DevPanel() {
+  const [shown, setShown] = useState(() => panelShownAtStart(location.search));
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+      if (togglesPanel({ code: e.code, ctrlKey: e.ctrlKey, altKey: e.altKey, metaKey: e.metaKey, typing })) setShown((now) => !now);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  return shown ? <Fixture /> : null;
+}
+
+function Fixture() {
   const settings = useDockStore((s) => s.settings);
   const choice = useDockStore((s) => s.effectsChoice);
   const themeChoice = useDockStore((s) => s.themeChoice);
   const backdrop = useDockStore((s) => s.backdrop);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [installed, setInstalled] = useState(0);
   const [feed, setFeed] = useState<FeedName>("contacts");
   const wallpaper = useDevWallpaper();

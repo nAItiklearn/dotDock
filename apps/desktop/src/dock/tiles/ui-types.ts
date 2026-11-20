@@ -112,6 +112,26 @@ export interface AudioView {
   readonly muted: boolean;
 }
 
+// Network throughput.
+
+export interface NetworkView {
+  /** Bytes received and sent per second, over the last second. */
+  readonly downBytesPerSec: number;
+  readonly upBytesPerSec: number;
+}
+
+// Quick toggles. A switch the machine does not have (no Bluetooth radio, a desktop with no brightness) is null.
+
+export type ToggleName = "wifi" | "bluetooth" | "nightLight" | "doNotDisturb";
+
+export interface TogglesView {
+  readonly switches: Readonly<Record<ToggleName, boolean | null>>;
+  /** 0 to 1, or null for a display whose brightness cannot be set. */
+  readonly brightness: number | null;
+}
+
+export type TogglesOp = { readonly type: "switch"; readonly name: ToggleName; readonly on: boolean } | { readonly type: "brightness"; readonly value: number };
+
 /** Every feed the dock reads from the core. Reminders, focus, progress, system and media come from elsewhere in the app. */
 export interface TileFeeds {
   readonly contacts: TileFeed<ContactsView>;
@@ -121,6 +141,8 @@ export interface TileFeeds {
   readonly hydration: TileFeed<HydrationView>;
   readonly agenda: TileFeed<AgendaView>;
   readonly audio: TileFeed<AudioView>;
+  readonly network: TileFeed<NetworkView>;
+  readonly toggles: TileFeed<TogglesView>;
 }
 
 export type FeedName = keyof TileFeeds;
@@ -142,6 +164,7 @@ export interface TilesCommands {
   toggleMic(): Promise<void>;
   hydration(op: HydrationOp): Promise<void>;
   audio(op: AudioOp): Promise<void>;
+  toggles(op: TogglesOp): Promise<void>;
 }
 
 export type Unsubscribe = () => void;

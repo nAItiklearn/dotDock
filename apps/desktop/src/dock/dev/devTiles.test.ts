@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { stopwatchElapsed } from "../tiles/format";
 import type { FeedName, TileFeeds } from "../tiles/ui-types";
-import { AUDIO, createDevTiles, type DevTiles } from "./devTiles";
+import { AUDIO, createDevTiles, sampleNetwork, TOGGLES, type DevTiles } from "./devTiles";
 
 /**
  * The dev backend is the dock's test harness: every tile is driven through it in the browser. These tests hold it to the
@@ -257,5 +257,71 @@ describe("what the day holds", () => {
     expect(events.some((e) => e.startsAt <= now && now < e.endsAt)).toBe(true);
     expect(events.some((e) => e.startsAt > now)).toBe(true);
     expect(events.some((e) => e.allDay)).toBe(true);
+  });
+});
+
+describe("network", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("is measured only while somebody reads it, one sample a second", () => {
+    expect(tiles.networkWatchers()).toBe(0);
+    listen(["network"]);
+    expect(tiles.networkWatchers()).toBe(1);
+    const first = feeds.network?.data;
+    vi.advanceTimersByTime(3000);
+    expect(feeds.network?.data).not.toEqual(first);
+    stop();
+    expect(tiles.networkWatchers()).toBe(0);
+    const frozen = feeds.network?.data;
+    vi.advanceTimersByTime(5000);
+    expect(feeds.network?.data).toEqual(frozen);
+  });
+
+  it("does not start measuring for a tile that reads something else", () => {
+    listen(["mic"]);
+    vi.advanceTimersByTime(3000);
+    expect(feeds.network).toBeUndefined();
+  });
+
+  it("has rates that are whole numbers of bytes, never zero", () => {
+    for (let second = 0; second < 60; second++) {
+      const { downBytesPerSec, upBytesPerSec } = sampleNetwork(second);
+      expect(Number.isInteger(downBytesPerSec) && downBytesPerSec > 0).toBe(true);
+      expect(Number.isInteger(upBytesPerSec) && upBytesPerSec > 0).toBe(true);
+    }
+  });
+});
+
+describe("quick settings", () => {
+  beforeEach(() => listen(["toggles"]));
+  const view = () => tiles.state().toggles;
+
+  it("switches a setting on and off", async () => {
+    await tiles.backend.commands.toggles({ type: "switch", name: "nightLight", on: true });
+    expect(view().switches.nightLight).toBe(true);
+    await tiles.backend.commands.toggles({ type: "switch", name: "nightLight", on: false });
+    expect(view().switches.nightLight).toBe(false);
+    expect(feeds.toggles?.data?.switches.nightLight).toBe(false);
+  });
+
+  it("sets the brightness, kept between zero and one", async () => {
+    await tiles.backend.commands.toggles({ type: "brightness", value: 0.3 });
+    expect(view().brightness).toBe(0.3);
+    await tiles.backend.commands.toggles({ type: "brightness", value: 3 });
+    expect(view().brightness).toBe(1);
+  });
+
+  it("leaves a setting the machine does not have alone", async () => {
+    tiles.setToggles({ ...TOGGLES, switches: { ...TOGGLES.switches, bluetooth: null }, brightness: null });
+    await tiles.backend.commands.toggles({ type: "switch", name: "bluetooth", on: true });
+    await tiles.backend.commands.toggles({ type: "brightness", value: 0.5 });
+    expect(view().switches.bluetooth).toBeNull();
+    expect(view().brightness).toBeNull();
+  });
+
+  it("follows a change made elsewhere", () => {
+    tiles.outside.toggle("wifi", false);
+    expect(feeds.toggles?.data?.switches.wifi).toBe(false);
   });
 });

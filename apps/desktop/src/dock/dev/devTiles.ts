@@ -10,11 +10,15 @@ import type {
   HydrationView,
   MeetingView,
   MicView,
+  NetworkView,
   StopwatchOp,
   StopwatchView,
   TileFeeds,
   TileIssue,
   TilesBackend,
+  ToggleName,
+  TogglesOp,
+  TogglesView,
 } from "../tiles/ui-types";
 
 /**
@@ -27,6 +31,7 @@ const MS_PER_HOUR = 60 * MS_PER_MINUTE;
 const MIC_LEVEL_EVERY_MS = 150;
 const DEFAULT_MEETING_IN_MS = 12 * MS_PER_MINUTE;
 const MEETING_LENGTH_MS = 45 * MS_PER_MINUTE;
+const NETWORK_EVERY_MS = 1000;
 const GLASS_ML = 250;
 const GOAL_ML = 2000;
 const REMINDER_EVERY_MIN = 60;
@@ -86,6 +91,14 @@ export function sampleAgenda(now: number): AgendaView {
   };
 }
 
+export const TOGGLES: TogglesView = { switches: { wifi: true, bluetooth: true, nightLight: false, doNotDisturb: false }, brightness: 0.7 };
+
+/** A link that is busy in bursts: a download that comes and goes, and a trickle of upload. */
+export function sampleNetwork(second: number): NetworkView {
+  const burst = Math.max(0, Math.sin(second / 5)) ** 2;
+  return { downBytesPerSec: Math.round(4_200_000 * burst + 30_000), upBytesPerSec: Math.round(312_000 * Math.abs(Math.sin(second / 3)) + 4_000) };
+}
+
 export function sampleMeeting(now: number, startsInMs = DEFAULT_MEETING_IN_MS, joinUrl: string | null = "https://teams.example/meet/dock-fixture"): MeetingView {
   return {
     id: "m-sync",
@@ -106,6 +119,8 @@ interface State {
   hydration: HydrationView;
   agenda: AgendaView;
   audio: AudioView;
+  network: NetworkView;
+  toggles: TogglesView;
 }
 
 type Listener = (changes: Partial<TileFeeds>) => void;
@@ -125,9 +140,13 @@ export interface DevTiles {
     readonly mute: (muted: boolean) => void;
     readonly micMuted: (muted: boolean) => void;
     readonly output: (deviceId: string) => void;
+    readonly toggle: (name: ToggleName, on: boolean) => void;
     readonly devices: (count: number) => void;
   };
   readonly setContacts: (view: ContactsView) => void;
+  readonly setToggles: (view: TogglesView) => void;
+  /** How many listeners are reading the network; the core measures it only while one is. */
+  readonly networkWatchers: () => number;
   readonly setMeeting: (meeting: MeetingView | null) => void;
   readonly setAgenda: (view: AgendaView) => void;
   readonly setHydration: (patch: Partial<HydrationView>) => void;
@@ -145,6 +164,8 @@ export function createDevTiles(clock: () => number = Date.now): DevTiles {
     hydration: { goalMl: GOAL_ML, loggedMl: 750, glassMl: GLASS_ML, nextReminderAt: now + 25 * MS_PER_MINUTE, intervalMinutes: REMINDER_EVERY_MIN },
     agenda: sampleAgenda(now),
     audio: AUDIO,
+    network: sampleNetwork(0),
+    toggles: TOGGLES,
   };
   const issues = new Map<FeedName, TileIssue>();
   const subscribers = new Set<{ readonly names: readonly FeedName[]; readonly listener: Listener }>();
@@ -152,6 +173,8 @@ export function createDevTiles(clock: () => number = Date.now): DevTiles {
   const log: string[] = [];
   let failure: string | null = null;
   let micTimer: ReturnType<typeof setInterval> | null = null;
+  let networkTimer: ReturnType<typeof setInterval> | null = null;
+  let networkSecond = 0;
 
   const feed = <K extends FeedName>(name: K): TileFeeds[K] => {
     const issue = issues.get(name) ?? null;
@@ -212,6 +235,25 @@ export function createDevTiles(clock: () => number = Date.now): DevTiles {
     else set("audio", { ...a, devices: a.devices.map((d) => ({ ...d, current: d.id === op.deviceId })) });
   };
 
+  const toggles = (op: TogglesOp): void => {
+    const view = state.toggles;
+    if (op.type === "brightness") set("toggles", { ...view, brightness: view.brightness === null ? null : Math.min(1, Math.max(0, op.value)) });
+    else if (view.switches[op.name] !== null) set("toggles", { ...view, switches: { ...view.switches, [op.name]: op.on } });
+  };
+
+  const watchesNetwork = (): boolean => [...subscribers].some((sub) => sub.names.includes("network"));
+  const syncNetwork = (): void => {
+    if (watchesNetwork() && networkTimer === null) {
+      networkTimer = setInterval(() => {
+        networkSecond += 1;
+        set("network", sampleNetwork(networkSecond));
+      }, NETWORK_EVERY_MS);
+    } else if (!watchesNetwork() && networkTimer !== null) {
+      clearInterval(networkTimer);
+      networkTimer = null;
+    }
+  };
+
   const startMic = (): void => {
     if (micTimer !== null) return;
     let tick = 0;
@@ -231,12 +273,17 @@ export function createDevTiles(clock: () => number = Date.now): DevTiles {
       toggleMic: () => run("mic toggle", () => set("mic", { muted: !state.mic.muted })),
       hydration: (op) => run(`hydration ${op.type}`, () => hydration(op)),
       audio: (op) => run(`audio ${op.type}`, () => audio(op)),
+      toggles: (op) => run(`toggles ${op.type}`, () => toggles(op)),
     },
     subscribe: (names, listener) => {
       const sub = { names, listener };
       subscribers.add(sub);
+      syncNetwork();
       listener(Object.fromEntries(names.map((n) => [n, feed(n)])) as Partial<TileFeeds>);
-      return () => subscribers.delete(sub);
+      return () => {
+        subscribers.delete(sub);
+        syncNetwork();
+      };
     },
     watchMicLevel: (listener) => {
       micListeners.add(listener);
@@ -268,9 +315,12 @@ export function createDevTiles(clock: () => number = Date.now): DevTiles {
       mute: (muted) => audio({ type: "mute", muted }),
       micMuted: (muted) => set("mic", { muted }),
       output: (deviceId) => audio({ type: "output", deviceId }),
+      toggle: (name, on) => toggles({ type: "switch", name, on }),
       devices: (count) => set("audio", { ...state.audio, devices: AUDIO.devices.slice(0, count).map((d, i) => ({ ...d, current: i === 0 })) }),
     },
     setContacts: (view) => set("contacts", view),
+    setToggles: (view) => set("toggles", view),
+    networkWatchers: () => [...subscribers].filter((sub) => sub.names.includes("network")).length,
     setMeeting: (meeting) => set("meeting", meeting),
     setAgenda: (view) => set("agenda", view),
     setHydration: (patch) => set("hydration", { ...state.hydration, ...patch }),

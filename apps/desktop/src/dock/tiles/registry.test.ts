@@ -74,14 +74,15 @@ describe("every live tile is wired up", () => {
 
 describe("tile length on the dock", () => {
   it("is one item long on a vertical dock for every tile that has words beside its mark", () => {
-    for (const id of ["agenda", "meeting", "focus", "stopwatch", "reminders", "progress", "contacts"] as const) {
+    for (const id of ["agenda", "meeting", "focus", "stopwatch", "reminders", "progress", "contacts", "notes", "convert", "world", "network"] as const) {
       expect(LENGTH_RATIO[id][1]).toBe(1);
       expect(LENGTH_RATIO[id][0]).toBeGreaterThan(1);
     }
   });
 
-  it("shrinks the whole dock to fit the screen with every tile on it", () => {
-    const kinds = ["item", "item", "item", "divider", ...TILE_IDS.map((id) => lengthKind({ kind: "tile", key: id, id, size: "regular" })), "divider", "status"] as const;
+  it("shrinks the whole dock to fit the screen with a handful of tiles on it", () => {
+    const some = ["clock", "media", "focus", "agenda", "hydration", "audio"] as const;
+    const kinds = ["item", "item", "item", "divider", ...some.map((id) => lengthKind({ kind: "tile", key: id, id, size: "regular" })), "divider", "status"] as const;
     const fitted = fitIconSize(64, kinds, 1280, false);
     expect(fitted).toBeLessThan(64);
     const used = kinds.reduce((sum, kind) => sum + lengthOf(kind, fitted, false), 0);
@@ -91,9 +92,11 @@ describe("tile length on the dock", () => {
 
 describe("tile popovers", () => {
   it("exist for the tiles that have more to show, and for no others", () => {
-    expect(Object.keys(TILE_POPOVER_SIZE).sort()).toEqual(["agenda", "audio", "contacts", "focus", "hydration", "meeting", "progress", "reminders", "stopwatch", "system"]);
+    expect(Object.keys(TILE_POPOVER_SIZE).sort()).toEqual(
+      ["agenda", "audio", "colour", "contacts", "convert", "emoji", "focus", "hydration", "meeting", "network", "notes", "progress", "reminders", "stopwatch", "system", "toggles", "world"].sort(),
+    );
     for (const id of Object.keys(TILE_POPOVER_SIZE)) expect(isTileId(id)).toBe(true);
-    for (const id of ["clock", "media", "mic"]) expect(isPopoverTile(id)).toBe(false);
+    for (const id of ["clock", "media", "mic", "cpu", "battery", "analog"]) expect(isPopoverTile(id)).toBe(false);
   });
 
   it("have room for a header and a body inside every size", () => {

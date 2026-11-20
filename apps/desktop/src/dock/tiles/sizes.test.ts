@@ -4,8 +4,8 @@ import { canResize, parseSizes, sizeOf, withSize } from "./sizes";
 
 describe("which tiles can change size", () => {
   it("is every tile that shows words beside its mark, and none that is only a mark", () => {
-    expect(TILE_IDS.filter(canResize)).toEqual(["agenda", "meeting", "focus", "stopwatch", "reminders", "progress", "contacts"]);
-    for (const id of ["clock", "media", "system", "hydration", "mic", "audio"] as const) expect(canResize(id)).toBe(false);
+    expect(TILE_IDS.filter(canResize)).toEqual(["agenda", "meeting", "focus", "stopwatch", "reminders", "progress", "contacts", "notes", "convert", "world", "network"]);
+    for (const id of ["clock", "media", "system", "hydration", "mic", "audio", "cpu", "battery", "analog", "colour", "emoji", "toggles"] as const) expect(canResize(id)).toBe(false);
   });
 });
 

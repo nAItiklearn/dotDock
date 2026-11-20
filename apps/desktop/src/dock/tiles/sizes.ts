@@ -11,7 +11,7 @@ export const TILE_SIZES_KEY = "dotdock.dock.tileSizes";
 export type TileSizes = Readonly<Record<string, TileSize>>;
 
 /** Tiles drawn as a mark with words beside it: the only ones that have a shorter form. */
-export const RESIZABLE: readonly TileId[] = ["agenda", "meeting", "focus", "stopwatch", "reminders", "progress", "contacts"];
+export const RESIZABLE: readonly TileId[] = ["agenda", "meeting", "focus", "stopwatch", "reminders", "progress", "contacts", "notes", "convert", "world", "network"];
 
 export const canResize = (id: TileId): boolean => RESIZABLE.includes(id);
 

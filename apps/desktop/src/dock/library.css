@@ -37,9 +37,10 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-image: var(--lattice);
-  background-size: var(--lattice-step) var(--lattice-step);
-  background-position: center;
+  background-color: var(--lattice-ink);
+  mask-image: var(--lattice);
+  mask-size: var(--lattice-step) var(--lattice-step);
+  mask-position: center;
   opacity: 0.5;
   pointer-events: none;
 }

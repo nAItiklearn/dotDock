@@ -26,6 +26,7 @@ import { nextMidnight, periodGrids } from "./period";
 import { remindersView } from "./reminders";
 import { issueText } from "./shell";
 import { useSystemHistory } from "./systemHistory";
+import { ColourBody, ConvertBody, EmojiBody, NetworkBody, NotesBody, TogglesBody, WorldBody } from "./toolsPopovers";
 import type { ContactAction, TileIssue } from "./ui-types";
 import { hydrationFill } from "./wave";
 import "../panels.css";
@@ -498,6 +499,13 @@ const BODY: Record<PopoverTileId, () => ReactNode> = {
   progress: () => <ProgressBody />,
   contacts: () => <ContactsBody />,
   audio: () => <AudioBody />,
+  notes: () => <NotesBody />,
+  colour: () => <ColourBody />,
+  convert: () => <ConvertBody />,
+  emoji: () => <EmojiBody />,
+  world: () => <WorldBody />,
+  network: () => <NetworkBody />,
+  toggles: () => <TogglesBody />,
 };
 
 /** The popover of one live tile: its full controls, opened beside the tile. Esc, a click away or the close button shuts it. */

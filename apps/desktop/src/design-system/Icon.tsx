@@ -86,6 +86,43 @@ const SHAPES = {
   ),
   flag: <path d="M6 20.5V4.5M6 5h11l-2 3.5 2 3.5H6" />,
   trash: <path d="M5 7h14M9.5 7V4.5h5V7M7 7l1 12.5h8L17 7" />,
+  wifi: (
+    <>
+      <path d="M3.5 9.5a12 12 0 0 1 17 0M6.5 12.8a8 8 0 0 1 11 0M9.4 16a4 4 0 0 1 5.2 0" />
+      <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  bluetooth: <path d="M7 7.5l10 9-5 4v-17l5 4-10 9" />,
+  moon: <path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z" />,
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="3.8" />
+      <path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M6 18l1.4-1.4M16.6 7.4L18 6" />
+    </>
+  ),
+  bell: <path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 1.5H5Zm4 3.5a1.8 1.8 0 0 0 3 0" />,
+  note: (
+    <>
+      <path d="M6 4.5h9l3.5 3.5v11.5H6Z" />
+      <path d="M9 11h6M9 14.5h6" />
+    </>
+  ),
+  picker: <path d="M14.5 5.5l4 4M13 7l4 4-8 8H5v-4ZM16 4.5l3.5 3.5" />,
+  swap: <path d="M7 8h11M15 5l3 3-3 3M17 16H6M9 13l-3 3 3 3" />,
+  copy: (
+    <>
+      <rect x="8.5" y="8.5" width="10" height="11" rx="2" />
+      <path d="M15.5 5.5h-8a2 2 0 0 0-2 2v9" />
+    </>
+  ),
+  "arrow-down": <path d="M12 5v14M6.5 13.5L12 19l5.5-5.5" />,
+  "arrow-up": <path d="M12 19V5M6.5 10.5L12 5l5.5 5.5" />,
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17M12 3.5c3 3.2 3 13.8 0 17M12 3.5c-3 3.2-3 13.8 0 17" />
+    </>
+  ),
   move: <path d="M12 4v16M4 12h16M12 4l-2.5 2.5M12 4l2.5 2.5M12 20l-2.5-2.5M12 20l2.5-2.5M4 12l2.5-2.5M4 12l2.5 2.5M20 12l-2.5-2.5M20 12l-2.5 2.5" />,
 } as const satisfies Record<string, ReactNode>;
 

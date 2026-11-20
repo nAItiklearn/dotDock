@@ -18,6 +18,16 @@ export const TILE_IDS = [
   "contacts",
   "mic",
   "audio",
+  "cpu",
+  "battery",
+  "analog",
+  "notes",
+  "colour",
+  "convert",
+  "emoji",
+  "world",
+  "network",
+  "toggles",
 ] as const;
 export type TileId = (typeof TILE_IDS)[number];
 export const isTileId = (id: string): id is TileId => (TILE_IDS as readonly string[]).includes(id);

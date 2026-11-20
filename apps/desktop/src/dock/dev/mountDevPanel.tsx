@@ -11,7 +11,10 @@ import { sampleIcon } from "./sampleIcons";
 import { DEFAULT_WALLPAPER, installBackdrop, parseWallpaper, setWallpaper } from "./wallpapers";
 import "./DevPanel.css";
 
-/** DEV ONLY. Entry for the fixture panel; main.tsx imports it only under `import.meta.env.DEV`. */
+/**
+ * DEV ONLY. Entry for the fixture panel; main.tsx imports it only under `import.meta.env.DEV`. The panel starts hidden:
+ * press the backquote key (left of 1) to show or hide it, or open the page with `?panel=1`. `?panel=0` leaves it out.
+ */
 
 /** Replaces the missing core with fixtures. Must run before the dock connects. */
 export function installDevBackend(): void {

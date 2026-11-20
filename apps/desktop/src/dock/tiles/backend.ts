@@ -23,6 +23,7 @@ export const TILES_WIRE = {
   toggleMic: "dock_toggle_mic",
   hydration: "dock_hydration",
   audio: "dock_audio",
+  toggles: "dock_toggles",
 } as const;
 
 async function run(name: string, args: Record<string, unknown>): Promise<void> {
@@ -40,6 +41,7 @@ const tauriCommands: TilesCommands = {
   toggleMic: () => run(TILES_WIRE.toggleMic, {}),
   hydration: (op) => run(TILES_WIRE.hydration, { op }),
   audio: (op) => run(TILES_WIRE.audio, { op }),
+  toggles: (op) => run(TILES_WIRE.toggles, { op }),
 };
 
 /** What a feed reads as while the core cannot supply it. */
@@ -103,6 +105,7 @@ const detachedTiles: TilesBackend = {
     toggleMic: () => Promise.reject(new Error("no core")),
     hydration: () => Promise.reject(new Error("no core")),
     audio: () => Promise.reject(new Error("no core")),
+    toggles: () => Promise.reject(new Error("no core")),
   },
   subscribe: (names, listener) => {
     queueMicrotask(() => listener(unsupported(names)));
