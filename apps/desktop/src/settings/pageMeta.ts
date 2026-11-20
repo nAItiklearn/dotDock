@@ -2,6 +2,7 @@ import type { IconName } from "../lib/ui/Icon";
 
 export type PageId =
   | "home"
+  | "modules"
   | "appearance"
   | "wallpapers"
   | "widgets"
@@ -24,6 +25,7 @@ export interface PageMeta {
 /** Settings pages in sidebar order. */
 export const PAGES: readonly PageMeta[] = [
   { id: "home", title: "Home", icon: "home", needsApp: false, description: "Layout profiles, the widgets on your desktop, and how editing behaves." },
+  { id: "modules", title: "Modules", icon: "settings", needsApp: true, description: "Switch the home screen, the dock, the taskbar replacement and the notch on or off, each by itself." },
   { id: "appearance", title: "Appearance", icon: "appearance", needsApp: false, description: "Themes, colours, shape and motion. The desktop updates as you change them." },
   { id: "wallpapers", title: "Wallpapers", icon: "wallpaper", needsApp: true, description: "Choose what sits behind your widgets, display by display." },
   { id: "widgets", title: "Widgets", icon: "widgets", needsApp: false, description: "Every widget, live. Add one to the active profile." },

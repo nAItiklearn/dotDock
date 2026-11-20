@@ -5,11 +5,13 @@ import { describe, expect, it } from "vitest";
 import { PAGES } from "./pageMeta";
 import { SEARCH_ENTRIES, searchSettings } from "./searchIndex";
 
-const pagesDir = join(dirname(fileURLToPath(import.meta.url)), "pages");
-const pageSources = readdirSync(pagesDir)
-  .filter((f) => f.endsWith(".tsx"))
-  .map((f) => readFileSync(join(pagesDir, f), "utf8"))
-  .join("\n");
+const settingsDir = dirname(fileURLToPath(import.meta.url));
+const sourcesIn = (dir: string): string[] =>
+  readdirSync(join(settingsDir, dir))
+    .filter((f) => f.endsWith(".tsx"))
+    .map((f) => readFileSync(join(settingsDir, dir, f), "utf8"));
+// Row ids live in the pages, in the sections they embed, and in the model file of the page whose rows are built from a list.
+const pageSources = [...sourcesIn("pages"), ...sourcesIn("ui"), readFileSync(join(settingsDir, "modulesModel.ts"), "utf8")].join("\n");
 
 describe("search index", () => {
   it("has unique ids", () => {

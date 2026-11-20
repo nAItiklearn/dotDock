@@ -1,6 +1,8 @@
 import type {
   AppInfo,
   DisplayInfo,
+  ModuleId,
+  ModuleStatus,
   NativeApi,
   PerformanceSettings,
   RestoreReport,
@@ -21,7 +23,48 @@ const later = <T>(value: T): Promise<T> => new Promise((resolve) => setTimeout((
 const swatch = (from: string, to: string): string =>
   `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs><rect width="160" height="100" fill="url(#g)"/></svg>`)}`;
 
+/** A sample picture for "use my wallpaper": a dusk sky over a dark ridge, drawn on the spot. */
+function sampleWallpaper(): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = 320;
+  canvas.height = 180;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Promise.reject(new Error("no canvas"));
+  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  sky.addColorStop(0, "#1b2a5a");
+  sky.addColorStop(0.6, "#c4553f");
+  sky.addColorStop(1, "#f2b04a");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#0d0f1a";
+  ctx.beginPath();
+  ctx.moveTo(0, 150);
+  ctx.lineTo(80, 110);
+  ctx.lineTo(160, 140);
+  ctx.lineTo(250, 95);
+  ctx.lineTo(320, 130);
+  ctx.lineTo(320, 180);
+  ctx.lineTo(0, 180);
+  ctx.fill();
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("no image"))), "image/png"));
+}
+
+/** This build has the home screen and the notch; the dock and the taskbar replacement arrive with the dock host. */
+const MOCK_MODULES: readonly ModuleStatus[] = [
+  { id: "home", enabled: true, state: "running", requires: null, error: null },
+  { id: "dock", enabled: false, state: "unavailable", requires: null, error: null },
+  { id: "taskbar", enabled: false, state: "unavailable", requires: "dock", error: null },
+  { id: "notch", enabled: true, state: "running", requires: null, error: null },
+];
+
 export function createMockNativeApi(): NativeApi {
+  let modules = MOCK_MODULES;
+  const listeners = new Set<(statuses: readonly ModuleStatus[]) => void>();
+  const setModule = (id: ModuleId, enabled: boolean): readonly ModuleStatus[] => {
+    modules = modules.map((m) => (m.id === id ? { ...m, enabled, state: enabled ? "running" : "stopped" } : m));
+    listeners.forEach((listener) => listener(modules));
+    return modules;
+  };
   let startup: StartupState = {
     useOurDesktop: true,
     launchAtSignIn: true,
@@ -75,6 +118,14 @@ export function createMockNativeApi(): NativeApi {
 
   return {
     available: true,
+    modules: {
+      list: () => later(modules),
+      set: (id, enabled) => later(setModule(id, enabled)),
+      onChange: (handler) => {
+        listeners.add(handler);
+        return Promise.resolve(() => listeners.delete(handler));
+      },
+    },
     startup: {
       get: () => later(startup),
       set: (setting, value) => {
@@ -100,6 +151,7 @@ export function createMockNativeApi(): NativeApi {
         if (index >= 0) wallpapers.splice(index, 1);
         return later(undefined);
       },
+      currentImage: sampleWallpaper,
     },
     performance: {
       get: () => later(performance),

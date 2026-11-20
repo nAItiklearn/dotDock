@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { isTauri } from "../../providers/bridge";
 import type { ShortcutAction } from "../model/types";
 
@@ -115,8 +116,36 @@ export interface UpdateStatus {
   readonly available: { readonly version: string; readonly notes: string | null } | null;
 }
 
+/** The parts of dotDock that can be switched on and off on their own. */
+export type ModuleId = "home" | "dock" | "taskbar" | "notch";
+
+/**
+ * `running`: up. `stopped`: off by choice. `waiting`: on, but the part it needs is not running.
+ * `failed`: on, and starting it failed (`error` says why). `unavailable`: this build does not have it.
+ */
+export type ModuleState = "running" | "stopped" | "waiting" | "failed" | "unavailable";
+
+export interface ModuleStatus {
+  readonly id: ModuleId;
+  /** The user's choice. Always false for a part that is not in this build. */
+  readonly enabled: boolean;
+  readonly state: ModuleState;
+  /** The part that has to be on for this one to make sense. */
+  readonly requires: ModuleId | null;
+  readonly error: string | null;
+}
+
 export interface NativeApi {
   readonly available: boolean;
+
+  modules: {
+    /** `modules_list` () → ModuleStatus[], in start order */
+    list(): Promise<readonly ModuleStatus[]>;
+    /** `modules_set` { id, enabled } → ModuleStatus[]. Starts or stops the part now; rejects with the reason when it cannot. */
+    set(id: ModuleId, enabled: boolean): Promise<readonly ModuleStatus[]>;
+    /** Hears the `modules://changed` event, which carries the full list. Resolves with the way to stop listening. */
+    onChange(handler: (statuses: readonly ModuleStatus[]) => void): Promise<() => void>;
+  };
 
   startup: {
     /** `startup_get` () → StartupState */
@@ -143,6 +172,8 @@ export interface NativeApi {
     importFile(): Promise<WallpaperItem | null>;
     /** `wallpapers_remove` { id: string } → void. Only imported wallpapers can be removed. */
     remove(id: string): Promise<void>;
+    /** `wallpaper_current_image` () → raw file bytes. The picture Windows shows as the wallpaper; rejects for a solid colour. */
+    currentImage(): Promise<Blob>;
   };
 
   performance: {
@@ -196,9 +227,17 @@ const unavailable = (): Promise<never> => Promise.reject(new NativeUnavailableEr
 
 export const unavailableNativeApi: NativeApi = {
   available: false,
+  modules: { list: unavailable, set: unavailable, onChange: unavailable },
   startup: { get: unavailable, set: unavailable, restoreWindows: unavailable },
   displays: { list: unavailable },
-  wallpapers: { list: unavailable, assignments: unavailable, assign: unavailable, importFile: unavailable, remove: unavailable },
+  wallpapers: {
+    list: unavailable,
+    assignments: unavailable,
+    assign: unavailable,
+    importFile: unavailable,
+    remove: unavailable,
+    currentImage: unavailable,
+  },
   performance: { get: unavailable, set: unavailable, stats: unavailable },
   shortcuts: { register: unavailable },
   window: { openSettings: unavailable, setEditMode: unavailable },
@@ -238,8 +277,15 @@ function toRestoreReport(raw: unknown): RestoreReport {
   };
 }
 
+const MODULES_CHANGED = "modules://changed";
+
 export const tauriNativeApi: NativeApi = {
   available: true,
+  modules: {
+    list: () => call("modules_list"),
+    set: (id, enabled) => call("modules_set", { id, enabled }),
+    onChange: (handler) => listen<readonly ModuleStatus[]>(MODULES_CHANGED, (event) => handler(event.payload)),
+  },
   startup: {
     get: () => call("startup_get"),
     set: (setting, value) => call("startup_set", { setting, value }),
@@ -252,6 +298,7 @@ export const tauriNativeApi: NativeApi = {
     assign: (monitorId, wallpaperId, fit) => call("wallpapers_assign", { monitorId, wallpaperId, fit }),
     importFile: () => call("wallpapers_import"),
     remove: (id) => call("wallpapers_remove", { id }),
+    currentImage: async () => new Blob([await call<ArrayBuffer>("wallpaper_current_image")]),
   },
   performance: {
     get: () => call("performance_get"),

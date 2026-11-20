@@ -10,6 +10,7 @@ import { AppearancePage } from "./pages/AppearancePage";
 import { DataPage } from "./pages/DataPage";
 import { DisplaysPage } from "./pages/DisplaysPage";
 import { HomePage } from "./pages/HomePage";
+import { ModulesPage } from "./pages/ModulesPage";
 import { PerformancePage } from "./pages/PerformancePage";
 import { ShortcutsPage } from "./pages/ShortcutsPage";
 import { StartupPage } from "./pages/StartupPage";
@@ -22,6 +23,7 @@ import "./settings.css";
 
 const PAGE_COMPONENTS: Readonly<Record<PageId, () => ReactNode>> = {
   home: () => <HomePage />,
+  modules: () => <ModulesPage />,
   appearance: () => <AppearancePage />,
   wallpapers: () => <WallpapersPage />,
   widgets: () => <WidgetsPage />,
