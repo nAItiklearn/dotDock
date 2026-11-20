@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { BUCKET_STEP, bucketWidth, CopyCache, KEPT_COPIES, MIN_BUCKET } from "./decode";
+import { BUCKET_STEP, bucketWidth, CacheDisposedError, CopyCache, drawCopy, KEPT_COPIES, MIN_BUCKET, type BitmapTarget } from "./decode";
 
 class Copy {
   closed = false;
-  constructor(readonly width: number) {}
+  readonly height: number;
+  constructor(readonly width: number) {
+    this.height = width / 2;
+  }
   close(): void {
     this.closed = true;
   }
@@ -89,5 +92,73 @@ describe("CopyCache", () => {
     cache.dispose();
     await settle();
     expect(made.every((c) => c.closed)).toBe(true);
+  });
+});
+
+describe("CopyCache after dispose", () => {
+  it("refuses new requests, so a replaced photo is never decoded again", async () => {
+    let decodes = 0;
+    const cache = new CopyCache((w) => {
+      decodes += 1;
+      return Promise.resolve(new Copy(w));
+    });
+    await cache.get(256);
+    cache.dispose();
+    await expect(cache.get(512)).rejects.toBeInstanceOf(CacheDisposedError);
+    expect(decodes).toBe(1);
+  });
+});
+
+/** A canvas stand-in that records what it was given. */
+class Target implements BitmapTarget<Copy> {
+  width = 0;
+  height = 0;
+  received: Copy[] = [];
+  getContext(): { transferFromImageBitmap(bitmap: Copy): void } {
+    return { transferFromImageBitmap: (bitmap) => this.received.push(bitmap) };
+  }
+}
+
+describe("drawCopy", () => {
+  const cacheOf = (): CopyCache<Copy> => new CopyCache((w) => Promise.resolve(new Copy(w)));
+  const cloneOf = (clones: Copy[]) => (copy: Copy): Promise<Copy> => {
+    const made = new Copy(copy.width);
+    clones.push(made);
+    return Promise.resolve(made);
+  };
+
+  it("hands the target a clone it owns and sizes the target to it", async () => {
+    const target = new Target();
+    const clones: Copy[] = [];
+    expect(await drawCopy(cacheOf(), 512, () => true, () => target, cloneOf(clones))).toBe("drawn");
+    expect(target.received).toEqual(clones);
+    expect(target.width).toBe(512);
+    expect(target.height).toBe(256);
+    expect(clones[0]?.closed).toBe(false);
+  });
+
+  it("clones nothing when the request was dropped while decoding", async () => {
+    const clones: Copy[] = [];
+    expect(await drawCopy(cacheOf(), 512, () => false, () => new Target(), cloneOf(clones))).toBe("stale");
+    expect(clones).toHaveLength(0);
+  });
+
+  it("closes its clone when the request is dropped while cloning, or the canvas is gone", async () => {
+    let asked = 0;
+    const clones: Copy[] = [];
+    const target = new Target();
+    // Live for the decode, gone by the time the clone is ready.
+    expect(await drawCopy(cacheOf(), 512, () => asked++ === 0, () => target, cloneOf(clones))).toBe("stale");
+    expect(clones[0]?.closed).toBe(true);
+    expect(target.received).toHaveLength(0);
+    const unmounted: Copy[] = [];
+    expect(await drawCopy(cacheOf(), 512, () => true, () => null, cloneOf(unmounted))).toBe("stale");
+    expect(unmounted[0]?.closed).toBe(true);
+  });
+
+  it("rejects with CacheDisposedError for a released photo, which callers ignore", async () => {
+    const cache = cacheOf();
+    cache.dispose();
+    await expect(drawCopy(cache, 512, () => true, () => new Target(), cloneOf([]))).rejects.toBeInstanceOf(CacheDisposedError);
   });
 });

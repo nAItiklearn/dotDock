@@ -23,7 +23,7 @@ import { defineWidget, type WidgetProps } from "../definition";
 import { sizeSpec, type SizeId } from "../sizes";
 import { ACCEPTED_TYPES, loadPhoto, readPhotoFile, savePhoto, type PhotoProblem, type StoredPhoto } from "./blobs";
 import { DEFAULT_PHOTO_CONFIG, PHOTO_SCHEMA, PHOTO_SIZES, type PhotoConfig } from "./config";
-import { bitmapCache, bucketWidth, type CopyCache } from "./decode";
+import { bitmapCache, bucketWidth, CacheDisposedError, drawCopy, type CopyCache } from "./decode";
 import {
   CENTRED,
   clampFraming,
@@ -64,14 +64,21 @@ interface Loaded {
   readonly copies: CopyCache<ImageBitmap>;
   readonly width: number;
   readonly height: number;
+  /** Unique per load, so a replaced photo gets a fresh canvas only once the new file is read. */
+  readonly key: number;
 }
 
-/** The stored photo for an instance, reloaded whenever its revision changes. */
+let loads = 0;
+
+/**
+ * The stored photo for an instance, reloaded whenever its revision changes. The photo on screen
+ * stays until the replacement has been read, and its decoded copies are released only then (or
+ * when the widget goes), so a replace never shows a blank frame.
+ */
 function usePhoto(id: string | undefined, rev: number): { readonly photo: Loaded | null; readonly ready: boolean } {
-  const [state, setState] = useState<{ photo: Loaded | null; ready: boolean }>({ photo: null, ready: id === undefined });
+  const [state, setState] = useState<{ photo: Loaded | null; ready: boolean }>({ photo: null, ready: false });
   useEffect(() => {
     if (id === undefined) return undefined;
-    let copies: CopyCache<ImageBitmap> | null = null;
     let live = true;
     loadPhoto(id)
       .then((stored) => {
@@ -80,8 +87,9 @@ function usePhoto(id: string | undefined, rev: number): { readonly photo: Loaded
           setState({ photo: null, ready: true });
           return;
         }
-        copies = bitmapCache(stored.blob, stored.width, stored.height);
-        setState({ photo: { copies, width: stored.width, height: stored.height }, ready: true });
+        loads += 1;
+        const copies = bitmapCache(stored.blob, stored.width, stored.height);
+        setState({ photo: { copies, width: stored.width, height: stored.height, key: loads }, ready: true });
       })
       .catch((err: unknown) => {
         console.error("photo load failed", err);
@@ -89,10 +97,24 @@ function usePhoto(id: string | undefined, rev: number): { readonly photo: Loaded
       });
     return () => {
       live = false;
-      copies?.dispose();
     };
   }, [id, rev]);
-  return state;
+  const shown = state.photo;
+  useEffect(() => () => shown?.copies.dispose(), [shown]);
+  // Without a placement id (previews) there is nothing to load: the empty state shows at once.
+  return id === undefined ? { photo: null, ready: true } : state;
+}
+
+/** The display's device pixel ratio, updated when the window moves to a screen with another scale. */
+function useDevicePixelRatio(): number {
+  const [ratio, setRatio] = useState(() => window.devicePixelRatio);
+  useEffect(() => {
+    const query = window.matchMedia(`(resolution: ${ratio}dppx)`);
+    const changed = (): void => setRatio(window.devicePixelRatio);
+    query.addEventListener("change", changed);
+    return () => query.removeEventListener("change", changed);
+  }, [ratio]);
+  return ratio;
 }
 
 /**
@@ -100,38 +122,35 @@ function usePhoto(id: string | undefined, rev: number): { readonly photo: Loaded
  * off the main thread; until it is ready the canvas keeps the copy it already shows, which the
  * compositor scales, so a new size never blocks a frame. Returns whether anything is drawn yet.
  */
-function useCopy(canvas: RefObject<HTMLCanvasElement | null>, photo: Loaded | null, width: number, failed: () => void): boolean {
+function useCopy(
+  canvas: RefObject<HTMLCanvasElement | null>,
+  photo: Loaded | null,
+  width: number,
+  drawn: () => void,
+  failed: () => void,
+): boolean {
   const [shown, setShown] = useState(false);
   // A new photo gets a new canvas, which fades in once its first copy is drawn.
   useEffect(() => setShown(false), [photo]);
   useEffect(() => {
     if (!photo || width <= 0) return undefined;
     let live = true;
-    photo.copies
-      .get(width)
-      // The cache keeps its copy for later sizes; the canvas takes a clone it can own.
-      .then((copy) => createImageBitmap(copy))
-      .then((clone) => {
-        const target = canvas.current;
-        const context = live && target ? target.getContext("bitmaprenderer") : null;
-        if (!target || !context) {
-          clone.close();
-          return;
-        }
-        target.width = clone.width;
-        target.height = clone.height;
-        context.transferFromImageBitmap(clone);
+    drawCopy(photo.copies, width, () => live, () => canvas.current, (copy) => createImageBitmap(copy))
+      .then((result) => {
+        if (result !== "drawn") return;
         setShown(true);
+        drawn();
       })
       .catch((err: unknown) => {
-        if (!live) return;
+        // A released photo was replaced or removed; its successor draws itself.
+        if (!live || err instanceof CacheDisposedError) return;
         console.error("photo decode failed", err);
         failed();
       });
     return () => {
       live = false;
     };
-  }, [canvas, photo, width, failed]);
+  }, [canvas, photo, width, drawn, failed]);
   return shown;
 }
 
@@ -231,6 +250,13 @@ export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanc
   useEffect(() => () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
   }, []);
+  // A new file starts centred (the store resets its framing); a zoom of the old one still waiting
+  // to be saved must not land on it.
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = null;
+    setDraft(null);
+  }, [entry.rev]);
   // Closing the file dialog without a choice fires "cancel", which React does not expose for inputs.
   useEffect(() => {
     const el = input.current;
@@ -278,10 +304,20 @@ export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanc
   };
 
   const photoBox: Box = photo ? { w: photo.width, h: photo.height } : { w: 0, h: 0 };
-  // The copy is decoded for the size the photo fills once any border change has settled.
-  const drawnWidth = photo ? place(frame, photoBox, config.fit, framing).width * window.devicePixelRatio : 0;
+  const pixelRatio = useDevicePixelRatio();
+  // The copy is decoded for the size the photo fills at its saved framing. During a zoom gesture
+  // the compositor scales the current copy, so each wheel notch does not start a full decode.
+  const drawnWidth = photo ? place(frame, photoBox, config.fit, entry.framing).width * pixelRatio : 0;
   const decodeFailed = useCallback(() => setProblem("decode"), []);
-  const shown = useCopy(canvasRef, photo, photo ? bucketWidth(drawnWidth, photo.width) : 0, decodeFailed);
+  const decodeRecovered = useCallback(() => setProblem((now) => (now === "decode" ? null : now)), []);
+  const shown = useCopy(canvasRef, photo, photo ? bucketWidth(drawnWidth, photo.width) : 0, decodeRecovered, decodeFailed);
+
+  const controlsRef = useRef<HTMLDivElement>(null);
+  // The Done button unmounts as adjusting ends; focus returns to the Adjust button that replaces it.
+  const finishAdjusting = (): void => {
+    setAdjusting(false);
+    requestAnimationFrame(() => controlsRef.current?.querySelector("button")?.focus());
+  };
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>): void => {
     if (!adjusting || !fillable || e.button !== 0) return;
@@ -314,7 +350,8 @@ export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanc
     if (!adjusting) return;
     if (e.key === "Escape" || e.key === "Enter") {
       e.preventDefault();
-      setAdjusting(false);
+      e.stopPropagation();
+      finishAdjusting();
       return;
     }
     if (!fillable) return;
@@ -387,7 +424,7 @@ export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanc
           onDoubleClick={() => adjusting && fillable && commit(CENTRED)}
         >
           {photo ? (
-            <canvas key={entry.rev} ref={canvasRef} className={`photo__img${shown ? " is-shown" : ""}`} style={photoVars} aria-hidden="true" />
+            <canvas key={photo.key} ref={canvasRef} className={`photo__img${shown ? " is-shown" : ""}`} style={photoVars} aria-hidden="true" />
           ) : null}
           {ready && !photo ? (
             <div className="photo-empty">
@@ -402,16 +439,16 @@ export function PhotoWidget({ size = "l", config = DEFAULT_PHOTO_CONFIG, instanc
             </div>
           ) : null}
         </div>
-        {look.frame === "polaroid" ? <p className="photo__caption caps">{look.caption}</p> : null}
+        {look.frame === "polaroid" ? <p className="photo__caption caps" dir="auto">{look.caption}</p> : null}
       </div>
 
       {photo ? (
-        <div className="photo__controls">
+        <div ref={controlsRef} className="photo__controls">
           {adjusting ? (
             <>
               <span className="photo__hint caps">{fillable ? "Drag to move, scroll to zoom" : "Fit shows the whole photo"}</span>
               {fillable ? <IconButton icon="reset" label="Centre the photo" size="sm" tone="ghost" onClick={() => commit(CENTRED)} /> : null}
-              <IconButton icon="check" label="Done" size="sm" tone="accent" onClick={() => setAdjusting(false)} />
+              <IconButton icon="check" label="Done" size="sm" tone="accent" onClick={finishAdjusting} />
             </>
           ) : (
             <>

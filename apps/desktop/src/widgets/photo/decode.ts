@@ -31,12 +31,21 @@ export interface Closable {
   close(): void;
 }
 
+/** Asked of a cache after `dispose`: its photo has been replaced or its widget removed. */
+export class CacheDisposedError extends Error {
+  constructor() {
+    super("The photo's decoded copies were released");
+    this.name = "CacheDisposedError";
+  }
+}
+
 /**
  * The copies of one photo, most recently used last. `decode` makes a copy of a given width; a
  * copy pushed out by a newer one is closed once its decode has finished.
  */
 export class CopyCache<T extends Closable> {
   private readonly copies = new Map<number, Promise<T>>();
+  private disposed = false;
 
   constructor(
     private readonly decode: (width: number) => Promise<T>,
@@ -44,6 +53,7 @@ export class CopyCache<T extends Closable> {
   ) {}
 
   get(width: number): Promise<T> {
+    if (this.disposed) return Promise.reject(new CacheDisposedError());
     const known = this.copies.get(width);
     if (known) {
       this.copies.delete(width);
@@ -66,6 +76,7 @@ export class CopyCache<T extends Closable> {
 
   /** Closes every copy; the cache must not be used afterwards. */
   dispose(): void {
+    this.disposed = true;
     for (const copy of this.copies.values()) copy.then((c) => c.close()).catch(() => undefined);
     this.copies.clear();
   }
@@ -78,6 +89,45 @@ export function bitmapCache(blob: Blob, width: number, height: number): CopyCach
       resizeWidth: w,
       resizeHeight: Math.max(1, Math.round((w * height) / width)),
       resizeQuality: "high",
+      // The size is the oriented one, so the copy must be turned upright before it is resized.
+      imageOrientation: "from-image",
     }),
   );
+}
+
+/** A canvas, or a stand-in for one in tests, that takes ownership of a decoded bitmap. */
+export interface BitmapTarget<T> {
+  width: number;
+  height: number;
+  getContext(kind: "bitmaprenderer"): { transferFromImageBitmap(bitmap: T): void } | null;
+}
+
+/** What `drawCopy` did: drew the copy, or dropped it because the request was no longer wanted. */
+export type DrawResult = "drawn" | "stale";
+
+/**
+ * Draws the copy of width `width` into the target. The cache keeps its copy for later sizes, so
+ * the target takes a clone it can own. `live` is asked before and after cloning: a request that
+ * was replaced or unmounted meanwhile clones nothing, or closes its clone, so no bitmap leaks.
+ */
+export async function drawCopy<T extends Closable & { readonly width: number; readonly height: number }>(
+  copies: CopyCache<T>,
+  width: number,
+  live: () => boolean,
+  target: () => BitmapTarget<T> | null,
+  clone: (copy: T) => Promise<T>,
+): Promise<DrawResult> {
+  const copy = await copies.get(width);
+  if (!live()) return "stale";
+  const owned = await clone(copy);
+  const canvas = live() ? target() : null;
+  const context = canvas?.getContext("bitmaprenderer") ?? null;
+  if (!canvas || !context) {
+    owned.close();
+    return "stale";
+  }
+  canvas.width = owned.width;
+  canvas.height = owned.height;
+  context.transferFromImageBitmap(owned);
+  return "drawn";
 }
