@@ -12,6 +12,8 @@
     "preview": "astro preview --port 4321"
   },
   "dependencies": {
+    "@astrojs/vercel": "^11.0.22",
+    "@upstash/redis": "^1.41.0",
     "astro": "^7.4.13"
   },
   "devDependencies": {

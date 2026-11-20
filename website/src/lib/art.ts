@@ -32,7 +32,7 @@ export type ArtName = keyof typeof manifest;
  * scripts/chrome.ts has put `art--on` on the piece. The hero's pieces are not lazy.
  */
 export function isLazyArt(name: string): boolean {
-  return name.startsWith("scene-") || name === "meadow";
+  return name.startsWith("scene-") || name.startsWith("band-") || name === "meadow";
 }
 
 function url(file: string): string {

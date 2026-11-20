@@ -13,6 +13,36 @@ function initNav(): void {
   update();
 }
 
+/** The screen is laid out at this width on wide pages (see styles/desk.css); a smaller preview scales it down. */
+const SCREEN_NATIVE_PX = 1180;
+const WIDE_PAGE = "(min-width: 960px)";
+
+function initScaled(): void {
+  const boxes = [...document.querySelectorAll<HTMLElement>("[data-scaled]")];
+  const wide = window.matchMedia(WIDE_PAGE);
+  const fit = (box: HTMLElement): void => {
+    const inner = box.querySelector<HTMLElement>("[data-scaled-inner]");
+    if (!inner) return;
+    if (!wide.matches) {
+      box.style.height = "";
+      inner.style.cssText = "";
+      return;
+    }
+    const scale = Math.min(1, box.clientWidth / SCREEN_NATIVE_PX);
+    inner.style.width = `${SCREEN_NATIVE_PX}px`;
+    inner.style.transform = `scale(${scale})`;
+    box.style.height = `${inner.offsetHeight * scale}px`;
+  };
+  const ro = new ResizeObserver((entries) => {
+    for (const entry of entries) fit(entry.target as HTMLElement);
+  });
+  for (const box of boxes) {
+    ro.observe(box);
+    fit(box);
+  }
+  wide.addEventListener("change", () => boxes.forEach(fit));
+}
+
 /** Scenes and the footer meadow fetch their masks when they come within a screen or so of the viewport. */
 function initArt(): void {
   const pieces = [...document.querySelectorAll<HTMLElement>("[data-art-lazy]")];
@@ -116,5 +146,6 @@ initReveal();
 initCopy();
 initMenu();
 initArt();
+initScaled();
 initFaqLinks();
 initWall();

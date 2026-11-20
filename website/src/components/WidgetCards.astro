@@ -32,7 +32,7 @@ const cards = [
     id: "photo",
     title: "Photo",
     line: "Your own picture in a frame, filled or fitted, in colour or black and white.",
-    items: [{ kind: "photo" }],
+    items: [{ kind: "photo", photo: "meadow" }],
   },
   {
     id: "focus",
@@ -73,6 +73,7 @@ const cards = [
                     kind={item.kind}
                     place={"place" in item ? item.place : ""}
                     clockStyle={"style" in item ? item.style : "blocks"}
+                    photo={"photo" in item ? item.photo : undefined}
                   />
                 ))
               }

@@ -8,7 +8,7 @@
  */
 import Dock from "./Dock.astro";
 import Widget from "./Widget.astro";
-import type { WidgetKind } from "../lib/widgets";
+import type { PhotoName, WidgetKind } from "../lib/widgets";
 import { THEMES, type ThemeId } from "../lib/themes";
 import { WALLPAPERS } from "../lib/wallpapers";
 
@@ -17,9 +17,11 @@ interface Props {
   layout?: "a" | "b";
   /** Pin the screen to one theme (its colours and its wallpaper) whatever theme the page is in. */
   theme?: ThemeId;
+  /** Put a photo widget on the screen; without it the screen has none. */
+  photo?: PhotoName;
   class?: string;
 }
-const { layout = "a", theme, class: className = "" } = Astro.props;
+const { layout = "a", theme, photo, class: className = "" } = Astro.props;
 const wallpapers = theme ? THEMES.filter((t) => t.id === theme) : THEMES;
 
 const COLS = 12;
@@ -75,9 +77,9 @@ function place(item: (typeof items)[number]): string {
 
       <div class="stage__grid">
         {
-          items.map((item) => (
+          items.filter((item) => item.kind !== "photo" || photo).map((item) => (
             <div class:list={["desk__slot", item.small === null && "desk__slot--hide-s"]}>
-              <Widget kind={item.kind} place={place(item)} clockStyle="blocks" />
+              <Widget kind={item.kind} place={place(item)} clockStyle="blocks" photo={photo} />
             </div>
           ))
         }

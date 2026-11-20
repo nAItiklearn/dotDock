@@ -32,6 +32,12 @@
 .art__stalk {
   background: var(--art-near);
 }
+.art__cloud {
+  background: var(--art-cloud);
+}
+.art__sea {
+  background: var(--art-sea);
+}
 .art__accent {
   background: var(--art-sun);
 }
@@ -177,4 +183,22 @@ html:not([data-theme="paper"]) .hero__scape .art__mid {
   align-content: center;
   min-height: clamp(280px, 40vw, 560px);
   padding: clamp(20px, 4vw, 56px);
+}
+
+/* ---------- Bands: wide, low pictures between sections ---------- */
+.band {
+  position: relative;
+  width: 100%;
+  overflow: clip;
+  pointer-events: none;
+}
+.band > .art {
+  --band-w: max(100%, 1200px);
+  width: var(--band-w);
+  margin-left: calc(50% - var(--band-w) / 2);
+}
+@media (max-width: 899px) {
+  .band > .art {
+    --band-w: 720px;
+  }
 }

@@ -5,15 +5,15 @@ import Footer from "../components/Footer.astro";
 import FeatureSection, { type Bullet } from "../components/FeatureSection.astro";
 import Dock from "../components/Dock.astro";
 import Desktop from "../components/Desktop.astro";
+import Scaled from "../components/Scaled.astro";
 import Widget from "../components/Widget.astro";
-import Modules from "../components/Modules.astro";
 import VideoSlot from "../components/VideoSlot.astro";
 import Cta from "../components/Cta.astro";
 import { PRODUCT_NAME, ROUTES } from "../brand";
 import { THEMES } from "../lib/themes";
 
 const title = `Features: ${PRODUCT_NAME}`;
-const description = `Everything ${PRODUCT_NAME} puts on your Windows desktop: a dock that files your apps for you, an island for your AI coding agents, widgets, themes, and parts you can switch off one by one.`;
+const description = `Everything ${PRODUCT_NAME} puts on your Windows desktop: a dock that files your apps for you, an island for your AI coding agents, widgets and themes, designed together as one environment.`;
 
 const dock: Bullet[] = [
   { title: "Magnification", text: "Icons grow gently under the pointer, up to about a quarter larger, and stay sharp." },
@@ -56,11 +56,6 @@ const themes: Bullet[] = [
   { title: "One theme everywhere", text: "The home screen, the dock and the island change together." },
 ];
 
-const modular: Bullet[] = [
-  { title: "Each part on its own", text: "Switch the home screen, the dock, the taskbar replacement and the island on or off one by one." },
-  { title: "Back to Windows in one click", text: "“Use Windows desktop” puts the stock wallpaper, taskbar and icons back." },
-  { title: "Safe mode", text: "Hold Shift while it starts and nothing is changed." },
-];
 ---
 
 <Base title={title} description={description}>
@@ -69,7 +64,7 @@ const modular: Bullet[] = [
     <header class="features-head wrap">
       <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>Features</p>
       <h1 class="h2 h1">One desktop that fits together.</h1>
-      <p class="lede">The dock, the island, the home screen and the themes are designed as one. Use all of it, or switch off what you do not want.</p>
+      <p class="lede">The dock, the island, the home screen and the themes are designed together, as one environment for your Windows desktop.</p>
     </header>
 
     <FeatureSection id="dock" large label="The dock" status="In development" scene="scene-dock" bullets={dock} shotLabel="The dock with the Development stack open above it">
@@ -82,7 +77,7 @@ const modular: Bullet[] = [
     <FeatureSection id="island" label="The agent island" status="In development" scene="scene-island" bullets={island} shotLabel="A desktop with the island at the top of the screen">
       <Fragment slot="title">An island for <span class="dim">your AI coding agents.</span></Fragment>
       <Fragment slot="lede">A notch at the top of the screen shows what your coding agent is doing, so you can look away from the terminal and still know.</Fragment>
-      <Desktop layout="b" />
+      <Scaled><Desktop layout="b" /></Scaled>
       <VideoSlot slot="after" name="notch" label="The island following a real coding session from thinking to done" caption="The island, recorded from the app." />
     </FeatureSection>
 
@@ -91,7 +86,7 @@ const modular: Bullet[] = [
       <Fragment slot="lede">Clocks, rings, grids, a calendar, media controls and your own photos, placed on a grid and drawn in dots. Time, date, calendar and battery are live on this page; a hollow dot marks a sample value.</Fragment>
       <div class="cluster">
         <Widget kind="clock" clockStyle="blocks" place="--w:4" />
-        <Widget kind="photo" />
+        <Widget kind="photo" photo="ridge" />
         <Widget kind="ring" />
         <Widget kind="calendar" />
         <Widget kind="music" />
@@ -105,18 +100,12 @@ const modular: Bullet[] = [
         {
           THEMES.map((t) => (
             <div class="trio__item">
-              <Desktop theme={t.id} layout={t.id === "paper" ? "a" : "b"} />
+              <Scaled><Desktop theme={t.id} layout={t.id === "paper" ? "a" : "b"} /></Scaled>
               <p class="trio__name">{t.name}</p>
             </div>
           ))
         }
       </div>
-    </FeatureSection>
-
-    <FeatureSection id="modular" label="Modular" status="In development" scene="scene-modular" bullets={modular} shotLabel="Switches for the home screen, the dock, the taskbar replacement and the island">
-      <Fragment slot="title">Use the parts <span class="dim">you want.</span></Fragment>
-      <Fragment slot="lede">Nothing is all or nothing. Each part switches on or off on its own, and stock Windows is always one click away.</Fragment>
-      <Modules />
     </FeatureSection>
 
     <Cta />

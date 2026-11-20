@@ -22,7 +22,7 @@ THRESHOLDS = (0.16, 0.36, 0.58, 0.80)
 LIGHT_ANGLE = math.radians(-125.0)             # light comes from the upper left
 GOLDEN_ANGLE = math.pi * (3.0 - math.sqrt(5.0))
 
-LAYERS = ("stalk", "petal", "gold", "heart")
+LAYERS = ("stalk", "petal", "gold", "heart", "cloud")
 
 
 class Canvas:

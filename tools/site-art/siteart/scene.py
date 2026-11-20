@@ -22,7 +22,6 @@ SCENES: dict[str, tuple[int, tuple[str, str] | None, int, int, int, bool]] = {
     "island": (52, ("sunflower", "sunflower"), 4, 0, 4, True),
     "home": (53, ("poppy", "poppy"), 4, 2, 0, True),
     "themes": (54, ("sunflower", "poppy"), 4, 3, 1, True),
-    "modular": (56, ("poppy", "sunflower"), 4, 2, 2, True),
     "meadow": (55, None, 0, 0, 0, False),
 }
 

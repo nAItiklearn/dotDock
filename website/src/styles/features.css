@@ -22,8 +22,8 @@
 .feature--large .scene__shot {
   min-height: clamp(360px, 52vw, 700px);
 }
-.scene__shot .desk {
-  width: min(100%, 760px);
+.scene__shot > .scaled {
+  width: min(100%, 860px);
 }
 .scene__shot .cluster {
   max-width: 860px;
@@ -68,7 +68,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-5);
-  width: min(100%, 1080px);
+  width: 100%;
+  max-width: 1080px;
+  justify-self: stretch;
 }
 @media (min-width: 900px) {
   .trio {
@@ -76,6 +78,7 @@
   }
 }
 .trio__item {
+  min-width: 0;
   display: grid;
   gap: var(--space-3);
   justify-items: center;
@@ -87,62 +90,17 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
+  padding: 6px 12px;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
 }
 
-/* The module switches. */
-.modules {
-  display: grid;
-  gap: var(--space-2);
-  width: min(100%, 460px);
-  padding: var(--space-3);
-  border: var(--hairline) solid var(--line-strong);
-  border-radius: var(--radius-card);
-  background: var(--surface-2);
-  box-shadow: var(--shadow);
+/* A screen scaled down as a whole (components/Scaled.astro). */
+.scaled {
+  width: 100%;
+  min-width: 0;
 }
-.modules__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-sm);
-}
-.modules__row + .modules__row {
-  border-top: var(--hairline) solid var(--line);
-}
-.modules__text {
-  display: grid;
-  gap: 2px;
-}
-.modules__name {
-  font-weight: 500;
-}
-.modules__note {
-  font-size: 13px;
-  color: var(--text-dim);
-}
-.switch {
-  flex: none;
-  position: relative;
-  width: 44px;
-  height: 26px;
-  border-radius: var(--radius-pill);
-  background: var(--dot-off);
-}
-.switch--on {
-  background: var(--accent);
-}
-.switch__knob {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
-}
-.switch--on .switch__knob {
-  left: 21px;
+.scaled__inner {
+  transform-origin: 0 0;
 }

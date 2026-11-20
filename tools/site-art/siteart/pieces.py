@@ -6,6 +6,7 @@ from typing import Callable
 
 import numpy as np
 
+from .band import render_band
 from .bloom import render_bouquet, render_tuft
 from .scape import render_scape
 from .scene import render_scene
@@ -24,11 +25,11 @@ class Piece:
 
 # Preview colours of the layers per theme: the same values as the art tokens in website/src/lib/themes.ts.
 _COLOURS = {
-    "paper": {"far": "#b3c0ae", "mid": "#86a37e", "near": "#4d7a47", "stalk": "#4d7a47", "petal": "#da3038", "gold": "#f0b43c", "heart": "#2b2b27", "grain": "#2b2b27"},
-    "obsidian": {"far": "#2f3f35", "mid": "#476650", "near": "#6f9a76", "stalk": "#6f9a76", "petal": "#e94248", "gold": "#f2c75c", "heart": "#8a5a35", "grain": "#d8d4cb"},
-    "aurum": {"far": "#3d3422", "mid": "#6e5828", "near": "#b08a38", "stalk": "#b08a38", "petal": "#f4efe4", "gold": "#e3b456", "heart": "#8a6a2c", "grain": "#e8dcc0"},
+    "paper": {"far": "#b3c0ae", "mid": "#86a37e", "near": "#4d7a47", "stalk": "#4d7a47", "petal": "#da3038", "gold": "#f0b43c", "heart": "#2b2b27", "grain": "#2b2b27", "cloud": "#c3cfdb", "sea": "#8fb0c9"},
+    "obsidian": {"far": "#2f3f35", "mid": "#476650", "near": "#6f9a76", "stalk": "#6f9a76", "petal": "#e94248", "gold": "#f2c75c", "heart": "#8a5a35", "grain": "#d8d4cb", "cloud": "#3a4756", "sea": "#3d5f78"},
+    "aurum": {"far": "#3d3422", "mid": "#6e5828", "near": "#b08a38", "stalk": "#b08a38", "petal": "#f4efe4", "gold": "#e3b456", "heart": "#8a6a2c", "grain": "#e8dcc0", "cloud": "#5a4a2a", "sea": "#8c6d2a"},
 }
-_ORDER = ("grain", "far", "mid", "near", "stalk", "petal", "gold", "heart")
+_ORDER = ("grain", "cloud", "sea", "far", "mid", "near", "stalk", "petal", "gold", "heart")
 
 
 def _colour_stack(layers: Layers, theme: str) -> list:
@@ -43,6 +44,12 @@ def _scape(variant: str, w: int, h: int, scale: float) -> Layers:
 def _scene(kind: str, seed: int):
     def render(variant: str, w: int, h: int, scale: float) -> Layers:
         return render_scene(w, h, scale, seed, kind, narrow=variant == "narrow")
+    return render
+
+
+def _band(kind: str, seed: int):
+    def render(variant: str, w: int, h: int, scale: float) -> Layers:
+        return render_band(w, h, scale, seed, kind, narrow=variant == "narrow")
     return render
 
 
@@ -70,7 +77,11 @@ PIECES: dict[str, Piece] = {
     "tuft-right": Piece(42, {"wide": (280, 190), "narrow": (150, 110)}, _tuft(42, "right"), _colour_stack, _FLAT),
     **{
         f"scene-{kind}": Piece(61 + i, {"wide": (1200, 560), "narrow": (560, 440)}, _scene(kind, 61 + i), _colour_stack, _SCENE_Q)
-        for i, kind in enumerate(("dock", "island", "home", "themes", "modular"))
+        for i, kind in enumerate(("dock", "island", "home", "themes"))
+    },
+    **{
+        f"band-{kind}": Piece(81 + i, {"wide": (1920, 300), "narrow": (720, 240)}, _band(kind, 81 + i), _colour_stack, _SCENE_Q | {"cloud": (100, 100), "sea": (78, 60)})
+        for i, kind in enumerate(("sky", "sea", "field"))
     },
     "meadow": Piece(71, {"wide": (1920, 420), "narrow": (720, 300)}, _scene("meadow", 71), _colour_stack, _SCENE_Q),
 }

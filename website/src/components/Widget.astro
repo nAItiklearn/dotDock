@@ -6,8 +6,10 @@
  */
 import DotMatrix from "./DotMatrix.astro";
 import cake from "../assets/photos/painted-flower-cake.webp";
+import ridge from "../assets/wallpapers/halftone-ridge-light-640.webp";
+import meadow from "../assets/wallpapers/meadow-dots-dark-640.webp";
 
-import type { WidgetKind } from "../lib/widgets";
+import type { PhotoName, WidgetKind } from "../lib/widgets";
 
 interface Props {
   kind: WidgetKind;
@@ -15,8 +17,17 @@ interface Props {
   place?: string;
   /** Clock digits style. */
   clockStyle?: "dots" | "blocks" | "stripes";
+  /** Which picture the photo widget shows. */
+  photo?: PhotoName | undefined;
 }
-const { kind, place = "", clockStyle = "blocks" } = Astro.props;
+const { kind, place = "", clockStyle = "blocks", photo = "cake" } = Astro.props;
+
+const PHOTOS = {
+  cake: { image: cake, alt: "A round cake painted with orange, red and yellow flowers on a deep blue ground, lit by one candle" },
+  ridge: { image: ridge, alt: "Misty ridges drawn in halftone dots" },
+  meadow: { image: meadow, alt: "Rolling meadow hills drawn in dots under a night sky" },
+};
+const picture = PHOTOS[photo];
 
 const SIZE: Record<WidgetKind, [number, number]> = {
   clock: [6, 2],
@@ -295,10 +306,10 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
     <section class="w w--photo" style={style} aria-label="Photo widget">
       <figure class="w-photo__frame">
         <img
-          src={cake.src}
-          width={cake.width}
-          height={cake.height}
-          alt="A round cake painted with orange, red and yellow flowers on a deep blue ground, lit by one candle"
+          src={picture.image.src}
+          width={picture.image.width}
+          height={picture.image.height}
+          alt={picture.alt}
           loading="lazy"
           decoding="async"
         />

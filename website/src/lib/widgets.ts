@@ -13,3 +13,6 @@ export type WidgetKind =
   | "timer"
   | "todo"
   | "photo";
+
+/** The pictures the photo widget can show on the site. */
+export type PhotoName = "cake" | "ridge" | "meadow";
