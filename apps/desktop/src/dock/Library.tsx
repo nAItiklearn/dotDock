@@ -7,8 +7,9 @@ import { EmptyGlyph } from "./EmptyGlyph";
 import { anchorPoint, LIBRARY, libraryColumns } from "./geometry";
 import { librarySections } from "./librarySections";
 import { freshAppIds } from "./model";
+import { markOpenPainted } from "./openMarks";
 import { isNavKey, moveAcrossSections, nextQuery, type GridPosition } from "./nav";
-import type { DockApp } from "./protocol";
+import type { DockApp, DockWindow } from "./protocol";
 import { useDockStore } from "./store";
 import { plural, t } from "./strings";
 import { toneVar } from "./tones";
@@ -16,32 +17,50 @@ import "./library.css";
 
 
 const START: GridPosition = { section: 0, index: 0 };
+const NO_WINDOWS: readonly DockWindow[] = [];
 
 /**
  * The App Library: every app in its category, with a search field that filters as you type. Arrow keys move
- * through the grid across sections, Enter opens, Esc clears the search and then closes. Mounted only while open.
+ * through the grid across sections, Enter opens, Esc clears the search and then closes. It is mounted ahead of use and
+ * stays mounted when closed, hidden, so opening it only makes it visible.
  */
-export function Library() {
+export function Library({ open: isOpen }: { readonly open: boolean }) {
   const categories = useDockStore((s) => s.categories);
   const apps = useDockStore((s) => s.apps);
-  const windows = useDockStore((s) => s.windows);
+  const seen = useDockStore((s) => s.seen);
+  // Running dots only matter while the library is showing; a closed one does not re-render for window changes.
+  const windows = useDockStore((s) => (isOpen ? s.windows : NO_WINDOWS));
   const edge = useDockStore((s) => s.settings.edge);
   const [query, setQuery] = useState("");
   const [pos, setPos] = useState<GridPosition>(START);
   const [cols, setCols] = useState(1);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  /** Whether the list has been scrolled since it was last at the top. Reading scroll positions forces a layout, so nothing reads them speculatively. */
+  const scrolled = useRef(false);
   const cellRefs = useRef(new Map<string, HTMLButtonElement>());
-  const seenAtOpen = useRef(useDockStore.getState().seen);
 
   const sections = useMemo(() => librarySections(categories, apps, query), [categories, apps, query]);
   const counts = useMemo(() => sections.map((s) => s.apps.length), [sections]);
-  const fresh = useMemo(() => freshAppIds(apps, seenAtOpen.current, Date.now()), [apps]);
+  const fresh = useMemo(() => freshAppIds(apps, seen, Date.now()), [apps, seen]);
   const running = useMemo(() => new Set(windows.flatMap((w) => (w.appId === null ? [] : [w.appId]))), [windows]);
   const total = counts.reduce((sum, n) => sum + n, 0);
   const selected = sections[pos.section]?.apps[pos.index] ?? null;
 
-  useEffect(() => inputRef.current?.focus(), []);
+  useLayoutEffect(() => {
+    if (isOpen) markOpenPainted("library");
+  }, [isOpen]);
+  // Opening focuses the search; closing resets it so the next opening starts clean while nobody is looking.
+  useEffect(() => {
+    if (isOpen) {
+      inputRef.current?.focus();
+      return;
+    }
+    setQuery("");
+    setPos(START);
+    if (scrolled.current && scrollRef.current) scrollRef.current.scrollTop = 0;
+    scrolled.current = false;
+  }, [isOpen]);
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
@@ -57,17 +76,15 @@ export function Library() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (selected) cellRefs.current.get(selected.id)?.scrollIntoView({ block: "nearest" });
-  }, [selected]);
 
   const close = (): void => useDockStore.getState().setLibrary(false);
-  const open = (app: DockApp): void => {
+  const launch = (app: DockApp): void => {
     close();
     void actions.open(app);
   };
 
   useEffect(() => {
+    if (!isOpen) return undefined;
     const onKey = (e: KeyboardEvent): void => {
       if (useDockStore.getState().menu !== null) return;
       if (e.key === "Escape") {
@@ -81,12 +98,15 @@ export function Library() {
       const arrowSideways = e.key === "ArrowLeft" || e.key === "ArrowRight";
       if (isNavKey(e.key) && !(arrowSideways && query !== "") && !((e.key === "Home" || e.key === "End") && query !== "")) {
         e.preventDefault();
-        setPos((p) => moveAcrossSections(counts, p, e.key as Parameters<typeof moveAcrossSections>[2], cols));
+        const to = moveAcrossSections(counts, pos, e.key as Parameters<typeof moveAcrossSections>[2], cols);
+        setPos(to);
+        const target = sections[to.section]?.apps[to.index];
+        if (target) cellRefs.current.get(target.id)?.scrollIntoView({ block: "nearest" });
         return;
       }
       if (e.key === "Enter" && selected) {
         e.preventDefault();
-        open(selected);
+        launch(selected);
         return;
       }
       if (document.activeElement !== inputRef.current && nextQuery(query, e) !== null) inputRef.current?.focus();
@@ -113,6 +133,8 @@ export function Library() {
       aria-modal="true"
       aria-label={t("library.title")}
       data-edge={edge}
+      data-open={isOpen ? "true" : "false"}
+      aria-hidden={!isOpen}
       style={shell}
     >
       <header className="library__top">
@@ -122,6 +144,7 @@ export function Library() {
           <input
             ref={inputRef}
             type="text"
+            tabIndex={isOpen ? 0 : -1}
             value={query}
             placeholder={t("library.search")}
             aria-label={t("library.search.label")}
@@ -134,12 +157,18 @@ export function Library() {
           />
           <kbd className="caps">esc</kbd>
         </label>
-        <button type="button" className="library__close" aria-label={t("library.close")} onClick={close}>
+        <button type="button" className="library__close" aria-label={t("library.close")} tabIndex={isOpen ? 0 : -1} onClick={close}>
           <Icon name="cross" />
         </button>
       </header>
 
-      <div ref={scrollRef} className="library__scroll">
+      <div
+        ref={scrollRef}
+        className="library__scroll"
+        onScroll={() => {
+          scrolled.current = true;
+        }}
+      >
         {total > 0 ? (
           <div className="library__body">
             {sections.map((section, s) => (
@@ -158,10 +187,10 @@ export function Library() {
                         else cellRefs.current.delete(app.id);
                       }}
                       app={app}
-                      selected={s === pos.section && i === pos.index}
+                      selected={isOpen && s === pos.section && i === pos.index}
                       running={running.has(app.id)}
                       fresh={fresh.has(app.id)}
-                      onOpen={open}
+                      onOpen={launch}
                       onContext={(a, e) => {
                         const r = e.currentTarget.getBoundingClientRect();
                         useDockStore.getState().setMenu({ key: `app:${a.id}`, at: anchorPoint({ x: r.left, y: r.top, w: r.width, h: r.height }, edge) });

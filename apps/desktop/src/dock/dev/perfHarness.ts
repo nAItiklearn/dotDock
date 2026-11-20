@@ -50,7 +50,68 @@ const triangle = (phase: number): number => {
   return p < 1 ? p : 2 - p;
 };
 
+const PRESS_MS = 80;
+const PAINTED_MARK = "dock:open:painted";
+const OPEN_TIMEOUT_MS = 3000;
+const MAX_RETRIES = 4;
+/** A frame this late means the browser stopped giving the page frames, not that the dock was slow. */
+const STALLED_FRAME_MS = 400;
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Waits until a panel has reported its first painted frame after `seen` earlier reports. */
+async function paintedAfter(seen: number): Promise<number> {
+  const started = performance.now();
+  for (;;) {
+    const marks = performance.getEntriesByName(PAINTED_MARK);
+    const mark = marks[seen];
+    if (mark) return mark.startTime;
+    if (performance.now() - started > OPEN_TIMEOUT_MS) throw new Error("the panel never painted");
+    await sleep(0);
+  }
+}
+
 export const perf = {
+  /**
+   * Taps a bar item `runs` times the way a hand does (press, hold `pressMs`, release, click) and measures from the
+   * press to the first painted frame of the panel it opens. The panel is closed with Escape between taps.
+   */
+  async opens(key: string, runs: number, pressMs = PRESS_MS): Promise<Stats & { readonly discarded: number }> {
+    const latencies: number[] = [];
+    let discarded = 0;
+    // The browser throttles frames for a window another window covers; a tap measured then is not a tap. Those are thrown away.
+    while (latencies.length < runs && discarded < runs * MAX_RETRIES) {
+      while (document.hidden) await sleep(50);
+      const target = document.querySelector<HTMLElement>(`[data-key="${CSS.escape(key)}"] .disc`);
+      if (!target) throw new Error(`no bar item ${key}`);
+      const box = target.getBoundingClientRect();
+      const init = { bubbles: true, cancelable: true, button: 0, pointerType: "mouse", clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 };
+      const seen = performance.getEntriesByName(PAINTED_MARK).length;
+      let widestGap = 0;
+      let lastFrame = performance.now();
+      let watching = true;
+      const watch = (now: number): void => {
+        widestGap = Math.max(widestGap, now - lastFrame);
+        lastFrame = now;
+        if (watching) requestAnimationFrame(watch);
+      };
+      requestAnimationFrame(watch);
+      const pressed = performance.now();
+      target.dispatchEvent(new PointerEvent("pointerdown", init));
+      await sleep(pressMs);
+      target.dispatchEvent(new PointerEvent("pointerup", init));
+      target.click();
+      const latency = (await paintedAfter(seen)) - pressed;
+      watching = false;
+      if (document.hidden || widestGap > STALLED_FRAME_MS) discarded++;
+      else latencies.push(latency);
+      await sleep(120);
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      await sleep(200);
+    }
+    return { ...stats(latencies), discarded };
+  },
+
   /** Frame cadence while the pointer sweeps the dock for `durationMs`; needs the page in the foreground. */
   async frames(durationMs: number): Promise<Stats & { readonly over20: number; readonly longTasks: number }> {
     const { x0, x1, y } = sweepGeometry();

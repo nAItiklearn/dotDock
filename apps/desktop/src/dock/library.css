@@ -8,10 +8,17 @@
   align-items: center;
   padding: var(--lib-pad) 0 0;
   background: var(--scrim);
-  animation: fade-in var(--dur-quick) linear;
   backdrop-filter: var(--scrim-filter);
   color: var(--text);
   pointer-events: auto;
+}
+/* Closed, the library stays mounted and laid out, just transparent. Opening it only changes the opacity of its own layer. */
+.library[data-open="false"] {
+  opacity: 0;
+  pointer-events: none;
+}
+.library[data-open="true"] {
+  animation: fade-in var(--dur-quick) linear;
 }
 /* Leave the dock's own side free, so the bar stays reachable over the library. */
 .library[data-edge="bottom"] {

@@ -4,12 +4,25 @@
  * (--panel-fill, --panel-filter, --panel-shadow), so lite draws them solid.
  */
 
-/* Stack popover: laid out and visible from the first frame; only its opacity fades in, briefly. */
+/* Stack popover: mounted ahead of use and visible from the first frame of opening; only its opacity fades in, briefly. */
 .popover {
   position: absolute;
+  top: 0;
+  left: 0;
   z-index: 20;
   color: var(--text);
   pointer-events: auto;
+  contain: layout style;
+}
+/*
+ * A stack that is not open stays mounted and laid out, just transparent. Opening it only changes the opacity of its
+ * own layer: unlike visibility or inert, opacity is not inherited, so no descendant is restyled.
+ */
+.popover[data-open="false"] {
+  opacity: 0;
+  pointer-events: none;
+}
+.popover[data-open="true"] {
   animation: fade-in var(--dur-quick) linear;
 }
 .popover__plate {

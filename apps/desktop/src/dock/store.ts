@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { readChoice, saveChoice, type EffectsChoice } from "./effects";
 import type { Rect } from "./geometry";
+import { appsInCategory, freshAppIds } from "./model";
 import type { Category, CategoryId, DockApp, DockSettings, DockSnapshot, DockWindow } from "./protocol";
 
 export const DEFAULT_SETTINGS: DockSettings = {
@@ -26,6 +27,8 @@ export interface OpenStack {
   readonly category: CategoryId;
   /** Where the tile was drawn when it was opened: the popover grows out of this rect. */
   readonly from: Rect;
+  /** Apps that were new when it opened. Opening marks them seen, so the popover keeps its own copy. */
+  readonly fresh: ReadonlySet<string>;
 }
 
 export interface MenuTarget {
@@ -85,6 +88,8 @@ interface DockStore {
   setApps: (apps: readonly DockApp[]) => void;
   markSeen: (ids: readonly string[]) => void;
   openStack: (stack: OpenStack | null) => void;
+  /** Opens a category's stack: notes which of its apps are new, then marks them seen. */
+  showStack: (category: CategoryId, from: Rect) => void;
   setLibrary: (open: boolean) => void;
   setEditing: (editing: boolean) => void;
   setMenu: (menu: MenuTarget | null) => void;
@@ -129,6 +134,13 @@ export const useDockStore = create<DockStore>((set, get) => ({
     set({ seen: next });
   },
   openStack: (stack) => set({ stack, menu: null }),
+  showStack: (category, from) => {
+    const { apps, seen } = get();
+    const inStack = appsInCategory(apps, category);
+    const fresh = freshAppIds(inStack, seen, Date.now());
+    get().markSeen(inStack.map((a) => a.id));
+    set({ stack: { category, from, fresh }, menu: null });
+  },
   setLibrary: (libraryOpen) => set({ libraryOpen, stack: null, menu: null }),
   setEditing: (editing) => set({ editing, menu: null }),
   setMenu: (menu) => set({ menu }),

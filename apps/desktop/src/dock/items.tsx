@@ -10,7 +10,12 @@ import { toneVar } from "./tones";
 
 /** What a slot can ask of the bar. The bar keeps these stable so slots only re-render when their entry changes. */
 export interface SlotHandlers {
+  /** A click or a key press: opens panels that did not already open on the press, launches apps. */
   readonly activate: (entry: BarEntry, face: HTMLElement) => void;
+  /** The primary button going down on an item that opens a panel: the panel opens now, not when the button comes back up. */
+  readonly press: (entry: BarEntry, face: HTMLElement, event: ReactPointerEvent<HTMLElement>) => void;
+  /** A key that opens a panel, on key down. */
+  readonly pressKey: (entry: BarEntry, face: HTMLElement, event: KeyboardEvent<HTMLElement>) => void;
   readonly context: (entry: BarEntry, event: MouseEvent | KeyboardEvent, face: HTMLElement) => void;
   readonly remove: (entry: BarEntry) => void;
   readonly focused: (key: string) => void;
@@ -34,6 +39,9 @@ export interface SlotProps {
 
 /** Whether an entry can be dragged in edit mode. */
 export const isDraggable = (entry: BarEntry): boolean => (entry.kind === "app" && entry.pinned) || entry.kind === "stack" || entry.kind === "tile";
+
+/** Items that open a panel: it opens on the press, ahead of the click, so the dock answers as fast as the hand moves. */
+export const opensPanel = (entry: BarEntry): boolean => entry.kind === "stack" || entry.kind === "library" || entry.kind === "add";
 
 /** Whether edit mode shows a remove badge on an entry. */
 export const isRemovable = isDraggable;
@@ -94,6 +102,7 @@ function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "
   const name = label(entry);
   const removable = editing && isRemovable(entry);
   const draggable = editing && isDraggable(entry);
+  const opensOnPress = !editing && opensPanel(entry);
   const common = {
     tabIndex: roving ? 0 : -1,
     onFocus: () => handlers.focused(entry.key),
@@ -146,9 +155,13 @@ function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "
           if (e.key === "ContextMenu" || (e.key === "F10" && e.shiftKey)) {
             e.preventDefault();
             handlers.context(entry, e, e.currentTarget);
+          } else if (opensOnPress && e.key === " ") {
+            e.preventDefault();
+            handlers.pressKey(entry, e.currentTarget, e);
           }
         }}
-        onPointerDown={draggable ? (e) => handlers.pointerDown(entry, e) : undefined}
+        onKeyUp={opensOnPress ? (e) => e.key === " " && e.preventDefault() : undefined}
+        onPointerDown={draggable ? (e) => handlers.pointerDown(entry, e) : opensOnPress ? (e) => handlers.press(entry, e.currentTarget, e) : undefined}
         {...common}
       >
         {entry.kind === "app" ? <AppArt icon={entry.icon} name={entry.name} /> : null}

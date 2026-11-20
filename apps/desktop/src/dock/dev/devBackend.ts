@@ -2,6 +2,7 @@ import type { DockBackend, Handlers } from "../bridge";
 import type { Rect } from "../geometry";
 import type { Category, CategoryId, CommandResult, DockApp, DockSettings, DockSnapshot, DockWindow } from "../protocol";
 import { APPS, CATEGORIES, SAMPLE_NOW, SETTINGS, WINDOWS, makeApp } from "./fixtures";
+import { rasterize } from "./sampleIcons";
 
 /** DEV ONLY. Stands in for the Tauri core so the dock can be designed in a plain browser. */
 
@@ -77,7 +78,14 @@ function refuse(): CommandResult | null {
 }
 
 export const devBackend: DockBackend = {
-  ready: () => Promise.resolve(model),
+  ready: async () => {
+    const icons = new Map<string, string>();
+    const unique = new Set([...model.apps.map((a) => a.icon), ...model.windows.map((w) => w.icon)]);
+    await Promise.all([...unique].map(async (icon) => icons.set(icon, await rasterize(icon))));
+    const raster = (icon: string): string => icons.get(icon) ?? icon;
+    model = { ...model, apps: model.apps.map((a) => ({ ...a, icon: raster(a.icon) })), windows: model.windows.map((w) => ({ ...w, icon: raster(w.icon) })) };
+    return model;
+  },
   subscribe: (next) => {
     handlers = next;
     return Promise.resolve(() => {

@@ -4,16 +4,34 @@ import { Bar, type BarLayout } from "./Bar";
 import { EditBanner } from "./EditBanner";
 import { chooseEffects, readCapabilities } from "./effects";
 import type { Rect } from "./geometry";
-import { loadContextMenu, loadLibrary, loadPreview, loadStackPopover, prefetchPanels } from "./prefetch";
+import { loadContextMenu, loadLibrary, loadPreview, loadStackPopover, usePanel, whenIdle } from "./prefetch";
 import { useDockStore } from "./store";
 import { useAutoHide, useKeyboardFocus, useNoticeTimeout, useRegions, type PanelRects } from "./useDockShell";
 import { useViewport } from "./useViewport";
 import "./dock.css";
 
-const StackPopover = lazy(() => loadStackPopover().then((m) => ({ default: m.StackPopover })));
 const ContextMenu = lazy(() => loadContextMenu().then((m) => ({ default: m.ContextMenu })));
-const Library = lazy(() => loadLibrary().then((m) => ({ default: m.Library })));
 const Preview = lazy(() => loadPreview().then((m) => ({ default: m.Preview })));
+
+/** Latest the browser may wait for an idle moment before the panels start loading and mounting anyway. */
+const IDLE_TIMEOUT_MS = 1000;
+
+/** True once the browser has been idle after the dock first painted. */
+function useIdleAfter(ready: boolean): boolean {
+  const [idle, setIdle] = useState(false);
+  useEffect(() => (ready && !idle ? whenIdle(() => setIdle(true), IDLE_TIMEOUT_MS) : undefined), [ready, idle]);
+  return idle;
+}
+
+/**
+ * Counts up to `total`, one step per idle moment once `active`. Each step mounts one more panel, so getting every
+ * panel ready never costs one long task.
+ */
+function useStepsWhenIdle(active: boolean, total: number): number {
+  const [steps, setSteps] = useState(0);
+  useEffect(() => (active && steps < total ? whenIdle(() => setSteps((n) => n + 1), IDLE_TIMEOUT_MS) : undefined), [active, steps, total]);
+  return Math.min(steps, total);
+}
 
 const sameRect = (a: Rect | null, b: Rect | null): boolean =>
   a === b || (a !== null && b !== null && a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h);
@@ -30,6 +48,7 @@ export function Dock() {
   const editing = useDockStore((s) => s.editing);
   const libraryOpen = useDockStore((s) => s.libraryOpen);
   const stack = useDockStore((s) => s.stack);
+  const pinned = useDockStore((s) => s.settings.pinned);
   const menu = useDockStore((s) => s.menu);
   const previewKey = useDockStore((s) => s.previewKey);
   const notice = useDockStore((s) => s.notice);
@@ -48,10 +67,19 @@ export function Dock() {
   useKeyboardFocus(editing || modal);
   useNoticeTimeout();
 
-  // The panels are code-split: the first time the pointer nears the dock they start loading, before any click needs them.
-  useEffect(() => {
-    if (pointerInside) prefetchPanels();
-  }, [pointerInside]);
+  // The panels are code-split but never loaded on demand: they load when the browser is first idle after the first
+  // paint, then the stacks and the library are mounted, hidden, one per idle moment. Opening one is then a flip.
+  const idle = useIdleAfter(ready);
+  const stackModule = usePanel(loadStackPopover, idle || stack !== null);
+  const libraryModule = usePanel(loadLibrary, idle || libraryOpen);
+  useEffect(() => (idle ? whenIdle(() => void Promise.all([loadContextMenu(), loadPreview()]), IDLE_TIMEOUT_MS) : undefined), [idle]);
+  const stackCategories = useMemo(() => pinned.flatMap((p) => (p.kind === "stack" ? [p.category] : [])), [pinned]);
+  const warmStacks = useStepsWhenIdle(stackModule !== null, stackCategories.length);
+  const warmLibrary = useStepsWhenIdle(libraryModule !== null && warmStacks === stackCategories.length, 1) === 1;
+  const readyStacks = useMemo(() => {
+    const warm = stackCategories.slice(0, warmStacks);
+    return stack !== null && !warm.includes(stack.category) ? [...warm, stack.category] : warm;
+  }, [stackCategories, warmStacks, stack]);
 
   const onLayout = useCallback((next: BarLayout) => setLayout((previous) => (previous && sameLayout(previous, next) ? previous : next)), []);
   const setRect = useCallback((id: string, rect: Rect | null) => {
@@ -74,18 +102,10 @@ export function Dock() {
 
   return (
     <main className="dock-root" data-effects={effects} data-frozen={frozen ? "true" : undefined} data-edge={layout?.edge} style={rootVars}>
-        {libraryOpen ? (
-          <Suspense key="library" fallback={null}>
-            <Library />
-          </Suspense>
-        ) : null}
+      {libraryModule !== null && (warmLibrary || libraryOpen) ? <libraryModule.Library open={libraryOpen} /> : null}
       {stack !== null || menu !== null ? <div className="scrim" onPointerDown={closeTop} onContextMenu={(e) => (e.preventDefault(), closeTop())} /> : null}
       <Bar hidden={hidden} onLayout={onLayout} />
-        {stack !== null && !libraryOpen ? (
-          <Suspense key={stack.category} fallback={null}>
-            <StackPopover stack={stack} />
-          </Suspense>
-        ) : null}
+      {stackModule !== null ? <stackModule.StackLayer categories={readyStacks} open={libraryOpen ? null : stack} /> : null}
       {previewKey !== null && !editing && !modal ? (
         <Suspense fallback={null}>
           <Preview onRect={rects.preview} />

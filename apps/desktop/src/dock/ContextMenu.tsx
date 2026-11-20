@@ -24,7 +24,7 @@ function useMenuContext(): MenuContext {
       openStack: (category) => {
         const el = document.querySelector<HTMLElement>(`[data-key="stack:${CSS.escape(category)}"] .disc`);
         const r = el?.getBoundingClientRect();
-        if (r) store.openStack({ category, from: { x: r.left, y: r.top, w: r.width, h: r.height } });
+        if (r) store.showStack(category, { x: r.left, y: r.top, w: r.width, h: r.height });
       },
       setLibrary: store.setLibrary,
       setEditing: store.setEditing,

@@ -65,3 +65,20 @@ export function sampleIcon(seed: string): string {
     `<g color="${palette[1]}">${glyph.replaceAll("#fff", ink)}</g></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
+
+const RASTER_PX = 128;
+
+/**
+ * Draws a sample icon once into a PNG, the form real app icons arrive in. An SVG icon is re-rasterised on
+ * every paint and would make the fixture dearer to draw than the product.
+ */
+export async function rasterize(svgUrl: string): Promise<string> {
+  const image = new Image();
+  image.src = svgUrl;
+  await image.decode();
+  const canvas = document.createElement("canvas");
+  canvas.width = RASTER_PX;
+  canvas.height = RASTER_PX;
+  canvas.getContext("2d")?.drawImage(image, 0, 0, RASTER_PX, RASTER_PX);
+  return canvas.toDataURL("image/png");
+}

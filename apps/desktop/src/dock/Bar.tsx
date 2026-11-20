@@ -18,6 +18,7 @@ import {
 import { isDraggable, Slot, type SlotHandlers } from "./items";
 import { maxGrowth } from "./magnify";
 import { activationTarget, buildEntries, lengthKind, pinKey, pinOf, reorderBy, tileKey, unpin, type AppEntry, type BarEntry, type StackEntry } from "./model";
+import { markOpenStart } from "./openMarks";
 import type { DockEdge } from "./protocol";
 import { leavePreview, onBarHover } from "./previewIntent";
 import { dockZone, hotStrip } from "./regions";
@@ -82,7 +83,8 @@ export function Bar({ hidden, onLayout }: BarProps) {
     [categories, apps, windows, settings, seen, editing],
   );
   const icon = fitIconSize(settings.iconSize, entries.map(lengthKind), (vertical ? viewport.h : viewport.w) - 2 * SCREEN_MARGIN, vertical);
-  const metrics = metricsFor(icon);
+  // One object per icon size: `measure` depends on it, and a new object on every render would re-measure (and force a layout) on every render.
+  const metrics = useMemo(() => metricsFor(icon), [icon]);
   const peak = clampMagnification(settings.magnification);
 
   const dockRef = useRef<HTMLDivElement>(null);
@@ -282,45 +284,76 @@ export function Bar({ hidden, onLayout }: BarProps) {
       engine.clearSlide();
     };
 
-    return {
-      activate: (entry, face) => {
-        if (suppressClick.current) return;
-        const store = useDockStore.getState();
-        const { edge: side, editing: isEditing } = latest.current;
-        switch (entry.kind) {
-          case "library":
-            store.setLibrary(true);
-            return;
-          case "add":
+    /** Opens the panel an item stands for, or launches or focuses the app. */
+    const open = (entry: BarEntry, face: HTMLElement): void => {
+      const store = useDockStore.getState();
+      const { edge: side, editing: isEditing } = latest.current;
+      switch (entry.kind) {
+        case "library":
+          store.setLibrary(true);
+          return;
+        case "add":
+          store.openStack(null);
+          store.setMenu({ key: entry.key, at: anchorPoint(rectOf(face), side) });
+          return;
+        case "stack":
+          if (store.stack?.category === entry.category.id) {
             store.openStack(null);
-            store.setMenu({ key: entry.key, at: anchorPoint(rectOf(face), side) });
-            return;
-          case "stack":
-            if (store.stack?.category === entry.category.id) {
-              store.openStack(null);
-              return;
-            }
-            store.markSeen(entry.apps.map((a) => a.id));
-            store.openStack({ category: entry.category.id, from: rectOf(face) });
-            return;
-          case "app": {
-            if (isEditing) return;
-            const target = activationTarget(entry.windows);
-            if (target) {
-              void actions.activate(target.hwnd, entry.name);
-              return;
-            }
-            if (entry.appId === null) return;
-            face.classList.remove("is-launching");
-            void face.offsetWidth;
-            face.classList.add("is-launching");
-            face.addEventListener("animationend", () => face.classList.remove("is-launching"), { once: true });
-            void actions.launch(entry.appId, entry.name);
             return;
           }
-          default:
+          store.showStack(entry.category.id, rectOf(face));
+          return;
+        case "app": {
+          if (isEditing) return;
+          const target = activationTarget(entry.windows);
+          if (target) {
+            void actions.activate(target.hwnd, entry.name);
             return;
+          }
+          if (entry.appId === null) return;
+          face.classList.remove("is-launching");
+          void face.offsetWidth;
+          face.classList.add("is-launching");
+          face.addEventListener("animationend", () => face.classList.remove("is-launching"), { once: true });
+          void actions.launch(entry.appId, entry.name);
+          return;
         }
+        default:
+          return;
+      }
+    };
+
+    /** Set from the press that opened a panel until the click that ends it has passed, so that click does not toggle the panel shut. */
+    let openedOnPress = false;
+    const panelOf = (entry: BarEntry): string => (entry.kind === "library" ? "library" : entry.kind === "stack" ? "stack" : "menu");
+    const openOnPress = (entry: BarEntry, face: HTMLElement, startedAt: number): void => {
+      markOpenStart(panelOf(entry), startedAt);
+      open(entry, face);
+    };
+
+    return {
+      activate: (entry, face) => {
+        if (suppressClick.current || openedOnPress) return;
+        open(entry, face);
+      },
+      press: (entry, face, e) => {
+        if (e.button !== 0) return;
+        openedOnPress = true;
+        const release = (): void => {
+          window.removeEventListener("pointerup", release);
+          window.removeEventListener("pointercancel", release);
+          // The click follows the release in the same task; this runs after it.
+          window.setTimeout(() => {
+            openedOnPress = false;
+          }, 0);
+        };
+        window.addEventListener("pointerup", release);
+        window.addEventListener("pointercancel", release);
+        openOnPress(entry, face, e.timeStamp);
+      },
+      pressKey: (entry, face, e) => {
+        if (e.repeat) return;
+        openOnPress(entry, face, e.timeStamp);
       },
       context: (entry: BarEntry, _event: MouseEvent | KeyboardEvent, face: HTMLElement) => {
         const store = useDockStore.getState();
