@@ -11,6 +11,7 @@
 
 pub mod codex;
 pub mod connect;
+pub mod copilot;
 pub mod describe;
 pub mod engine;
 pub mod feed;
