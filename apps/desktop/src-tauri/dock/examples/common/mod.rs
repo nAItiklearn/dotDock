@@ -9,7 +9,7 @@ use windows::Win32::Foundation::{COLORREF, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::Graphics::Gdi::{BeginPaint, HBRUSH};
 use windows::Win32::Graphics::Gdi::{
     BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, CreateSolidBrush, DeleteDC, DeleteObject, EndPaint, FillRect,
-    GetDC, GetDIBits, GetStockObject, ReleaseDC, SelectObject, BLACK_BRUSH, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, CAPTUREBLT, DIB_RGB_COLORS,
+    GetDC, GetDIBits, ReleaseDC, SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, CAPTUREBLT, DIB_RGB_COLORS,
     HGDIOBJ, PAINTSTRUCT, SRCCOPY,
 };
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
@@ -66,8 +66,6 @@ pub enum Look {
     Bars,
     /// One flat dark colour.
     Dark,
-    /// Black, which DWM treats as see-through once blur-behind is on: the stand-in for the transparent dock window.
-    Clear,
 }
 
 /// Background of `Look::Dark` windows (BGR), unlike any of the bars.
@@ -81,7 +79,6 @@ pub fn probe_window(look: Look, title: PCWSTR, rect: RECT, style: WINDOW_STYLE, 
         let (name, procedure, background) = match look {
             Look::Bars => (w!("DotDockProbeBars"), paint_proc as _, HBRUSH::default()),
             Look::Dark => (w!("DotDockProbeDark"), plain_proc as _, CreateSolidBrush(COLORREF(DARK))),
-            Look::Clear => (w!("DotDockProbeClear"), plain_proc as _, HBRUSH(GetStockObject(BLACK_BRUSH).0)),
         };
         let class = WNDCLASSW {
             lpfnWndProc: Some(procedure),

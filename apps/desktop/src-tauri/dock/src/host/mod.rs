@@ -16,7 +16,6 @@ pub mod replace;
 pub mod window;
 
 use crate::frozen::FrozenState;
-use crate::glass::Shape;
 use crate::protocol::{DockSettings, Rect, EVENT_POINTER};
 use controller::{Command, Handle};
 use pointer::{Pause, Poller, Regions};
@@ -24,6 +23,7 @@ use std::io;
 use std::sync::{Arc, Mutex, PoisonError};
 use window::{DockCursor, Focus};
 
+pub use controller::GlassRequest;
 pub use window::Styles;
 
 /// What only the application can do for the host.
@@ -156,8 +156,8 @@ impl DockHost {
     }
 
     /// Where the glass goes, as the UI last drew it. No shapes takes the glass away.
-    pub fn set_glass(&self, shapes: Vec<Shape>) {
-        self.send(Command::Glass(shapes));
+    pub fn set_glass(&self, request: GlassRequest) {
+        self.send(Command::Glass(request));
     }
 
     /// The window's handle, scale and width, for DWM thumbnails.

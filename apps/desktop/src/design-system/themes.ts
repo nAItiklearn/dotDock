@@ -111,13 +111,6 @@ export function applyTheme(theme: Theme, root: HTMLElement = document.documentEl
   root.style.colorScheme = theme.mode;
 }
 
-/** Removes what `applyTheme` set on an element, so it inherits the page's theme again. */
-export function clearTheme(root: HTMLElement): void {
-  for (const name of Object.values(CSS_VAR)) root.style.removeProperty(name);
-  delete root.dataset.theme;
-  root.style.removeProperty("color-scheme");
-}
-
 export function themeById(id: string): Theme {
   return BUILTIN_THEMES.find((t) => t.id === id) ?? OBSIDIAN;
 }

@@ -31,7 +31,6 @@ export default defineConfig({
       input: {
         overlay: resolve(here, "overlay.html"),
         island: resolve(here, "island.html"),
-        dock: resolve(here, "dock.html"),
         settings: resolve(here, "settings.html"),
       },
     },

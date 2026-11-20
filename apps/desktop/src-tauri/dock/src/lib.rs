@@ -5,7 +5,7 @@
 //! - `icons`: 256 px PNG icons, cached on disk, extracted off the caller's thread.
 //! - `running`: the windows that belong on a taskbar, pushed when they change; `frozen` says when to stop drawing.
 //! - `launch`, `thumbnail`, `appbar`: start an app, DWM thumbnails, and the app bar that reserves the dock's strip.
-//! - `placement`, `host`: where the dock window and its reserved strip go, and what makes it so (see `host`).
+//! - `placement`, `glass`: where the dock window and its reserved strip go, and the acrylic plate behind the bar.
 //! - `store`, `watch`: what is remembered between runs (atomic, at most one write a second) and when the catalogue
 //!   is stale (change notifications, never a timer).
 //! - `service`: one object the host holds, speaking the types in `protocol` (a mirror of `protocol.ts`).
@@ -20,6 +20,8 @@ pub mod classify;
 #[cfg(windows)]
 pub mod com;
 pub mod frozen;
+#[cfg(windows)]
+pub mod glass;
 #[cfg(windows)]
 pub mod host;
 #[cfg(windows)]
