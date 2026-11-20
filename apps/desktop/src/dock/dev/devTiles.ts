@@ -11,6 +11,7 @@ import type {
   MeetingView,
   MicView,
   NetworkView,
+  RatesView,
   StopwatchOp,
   StopwatchView,
   TileFeeds,
@@ -93,6 +94,15 @@ export function sampleAgenda(now: number): AgendaView {
 
 export const TOGGLES: TogglesView = { switches: { wifi: true, bluetooth: true, nightLight: false, doNotDisturb: false }, brightness: 0.7 };
 
+/**
+ * Reference rates for the fixture, quoted per euro like the European Central Bank's. Illustrative values for the
+ * harness only; the core supplies the published ones.
+ */
+export const RATES: Omit<RatesView, "publishedAt"> = {
+  base: "EUR",
+  rates: { USD: 1.08, GBP: 0.84, INR: 91.2, JPY: 162.4, CHF: 0.95, AUD: 1.64, CAD: 1.5, CNY: 7.8, SEK: 11.4 },
+};
+
 /** A link that is busy in bursts: a download that comes and goes, and a trickle of upload. */
 export function sampleNetwork(second: number): NetworkView {
   const burst = Math.max(0, Math.sin(second / 5)) ** 2;
@@ -121,6 +131,7 @@ interface State {
   audio: AudioView;
   network: NetworkView;
   toggles: TogglesView;
+  rates: RatesView;
 }
 
 type Listener = (changes: Partial<TileFeeds>) => void;
@@ -166,6 +177,7 @@ export function createDevTiles(clock: () => number = Date.now): DevTiles {
     audio: AUDIO,
     network: sampleNetwork(0),
     toggles: TOGGLES,
+    rates: { ...RATES, publishedAt: startOfDay(now) },
   };
   const issues = new Map<FeedName, TileIssue>();
   const subscribers = new Set<{ readonly names: readonly FeedName[]; readonly listener: Listener }>();
@@ -274,6 +286,8 @@ export function createDevTiles(clock: () => number = Date.now): DevTiles {
       hydration: (op) => run(`hydration ${op.type}`, () => hydration(op)),
       audio: (op) => run(`audio ${op.type}`, () => audio(op)),
       toggles: (op) => run(`toggles ${op.type}`, () => toggles(op)),
+      // The harness is a browser: the address opens in a new tab, as the core opens it in the default browser.
+      openUrl: (url) => run(`open ${url}`, () => void globalThis.open?.(url, "_blank", "noopener")),
     },
     subscribe: (names, listener) => {
       const sub = { names, listener };
