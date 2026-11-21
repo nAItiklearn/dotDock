@@ -7,6 +7,8 @@ import { isTauri } from "../providers/bridge";
 import { actions, connectIsland } from "./bridge";
 import { warmTokenFormats } from "./format";
 import { Island } from "./Island";
+import { primeActiveIsland } from "./prime";
+import { useIslandStore } from "./store";
 
 applyTheme(themeById(new URLSearchParams(location.search).get("theme") ?? "obsidian"));
 
@@ -24,6 +26,7 @@ async function boot(): Promise<void> {
   dev?.mountDevPanel();
   await connectIsland();
   actions.ready();
+  primeActiveIsland(useIslandStore.getState().settings);
 }
 
 boot().catch((err: unknown) => console.error("island failed to start", err));
