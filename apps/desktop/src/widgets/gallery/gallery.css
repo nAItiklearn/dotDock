@@ -3,6 +3,21 @@ body {
   overflow: auto;
   background: var(--bg);
 }
+/* ?wallpaper=: the widgets over a real desktop picture that covers the whole page. */
+html.gallery--wallpaper .gallery {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--gallery-wallpaper) center / cover;
+}
+/* Case labels sit on a plate so they stay readable over a busy picture. */
+html.gallery--wallpaper .gallery__caption,
+html.gallery--wallpaper .gallery__name,
+html.gallery--wallpaper .gallery__bar {
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
 .gallery {
   display: flex;
   flex-direction: column;
@@ -29,4 +44,13 @@ body {
   flex-direction: column;
   gap: var(--space-2);
   margin: 0;
+}
+/* The photo widget's settings panel, framed like the edit-mode drawer that hosts the same form. */
+.gallery__panel {
+  width: var(--drawer-w);
+  padding: var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }

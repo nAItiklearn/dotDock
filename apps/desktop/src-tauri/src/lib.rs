@@ -168,6 +168,7 @@ fn build_and_run(primary: bool) {
             home_host::overlay_ready,
             home_host::set_hit_regions,
             home_host::overlay_set_typing,
+            home_host::overlay_work_area,
             modules_host::environment_get,
             modules_host::environment_set,
             modules_host::taskbar_set,

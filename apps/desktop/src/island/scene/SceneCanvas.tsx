@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef } from "react";
 import { useReducedMotion } from "motion/react";
-import { readPalette, watchTheme, type Palette } from "../icons/palette";
+import { watchTheme } from "../../design-system/themes";
+import { readPalette, type Palette } from "../icons/palette";
 import type { IconStyle, Phase } from "../protocol";
 import { STATIC_POSE } from "./creature";
 import { drawScene, type PoseLayer } from "./draw";

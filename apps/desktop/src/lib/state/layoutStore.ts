@@ -53,7 +53,8 @@ export interface LayoutState {
   nudge(id: string, dx: number, dy: number): EditResult;
   resizeTo(id: string, sizeId: string): EditResult;
   stepSize(id: string, direction: 1 | -1): EditResult;
-  addWidget(widget: string, sizeId?: string): EditResult;
+  /** Adds a widget; `near` is the top-left cell it should land as close to as there is room for. */
+  addWidget(widget: string, sizeId?: string, near?: Cell): EditResult;
   duplicate(id: string): EditResult;
   remove(id: string): EditResult;
   patchConfig(id: string, patch: JsonObject): EditResult;
@@ -244,9 +245,9 @@ export function createLayoutStore(deps: LayoutDeps): LayoutStore {
         return sizeId ? get().resizeTo(id, sizeId) : { ok: false, reason: "unknown" };
       },
 
-      addWidget: (widget, sizeId) =>
+      addWidget: (widget, sizeId, near) =>
         guarded(() => {
-          const added = addWidget(present(), widget, sizeId, context());
+          const added = addWidget(present(), widget, sizeId, context(), near);
           if (!added) {
             notify(NO_ROOM_NOTICE);
             return { ok: false, reason: "no-room" };

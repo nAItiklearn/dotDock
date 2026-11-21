@@ -1,7 +1,7 @@
 import { createStore } from "zustand/vanilla";
 import { useStore } from "zustand";
 import type { Guide } from "../lib/layout/guides";
-import type { Placement, Rect } from "../lib/model/types";
+import type { Cell, Placement } from "../lib/model/types";
 
 export type DrawerTab = "add" | "selected";
 
@@ -16,11 +16,15 @@ export interface EditUiState {
   /** The widget being dragged or resized, if any. */
   readonly activeId: string | null;
   readonly gesture: "move" | "resize" | null;
-  /** Where the dragged widget will land, in cells. */
-  readonly ghost: Rect | null;
+  /** A widget held still on the plain desktop: lifted to say it can move, before it has moved. */
+  readonly liftedId: string | null;
   readonly guides: readonly Guide[];
   readonly drawerOpen: boolean;
   readonly drawerTab: DrawerTab;
+  /** Where widgets added from the drawer should land (the cell the user right-clicked), or the first free cell. */
+  readonly addAt: Cell | null;
+  /** The message of the "removed, undo" toast; `token` changes for every removal so the timer restarts. */
+  readonly undoToast: { readonly message: string; readonly token: number } | null;
   /** Live-region text for screen readers. */
   readonly announcement: string;
 }
@@ -29,10 +33,12 @@ const initial: EditUiState = {
   preview: null,
   activeId: null,
   gesture: null,
-  ghost: null,
+  liftedId: null,
   guides: [],
   drawerOpen: false,
   drawerTab: "add",
+  addAt: null,
+  undoToast: null,
   announcement: "",
 };
 

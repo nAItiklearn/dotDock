@@ -4,6 +4,7 @@ use dotdock_shell::providers::media::{self, MediaProvider};
 use dotdock_shell::providers::{battery, system, weather};
 use dotdock_shell::run_gate::{RunGate, Wait};
 use serde::Serialize;
+use std::sync::mpsc::RecvTimeoutError;
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
@@ -15,8 +16,6 @@ pub const EVENT_ISSUE: &str = "provider://issue";
 const FAST_TICK: Duration = Duration::from_secs(1);
 /// Disk usage changes slowly and enumerating volumes is comparatively costly.
 const DISK_EVERY: Duration = Duration::from_secs(30);
-/// Media state is sampled at this rate but only sent when it changes or the clock drifts (a seek).
-const MEDIA_TICK: Duration = Duration::from_millis(500);
 /// Open-Meteo updates its model hourly; 30 min keeps the widget fresh without waste.
 const WEATHER_REFRESH: Duration = Duration::from_secs(30 * 60);
 /// After a failed fetch (offline, timeout), retry sooner than the normal refresh.
@@ -86,36 +85,52 @@ fn run_loop(app: &AppHandle, gate: &RunGate) {
     }
 }
 
+/// Event-driven: the media session wakes this thread; between events it sleeps on the channel. Stopping the
+/// gate wakes it too, so the home screen part can stop without waiting for a track change.
 fn media_loop(app: &AppHandle, gate: &RunGate) {
+    let (wake, events) = std::sync::mpsc::channel();
+    let on_stop = wake.clone();
+    let stop_gate = gate.clone();
+    if let Err(error) = thread::Builder::new().name("media-stop".into()).spawn(move || {
+        stop_gate.wait_stopped();
+        let _ = on_stop.send(());
+    }) {
+        dotdock_shell::boot_log::record(&format!("media: no stop watcher: {error}"));
+        return;
+    }
     let mut provider = MediaProvider::new();
+    provider.watch(wake);
     let mut last_sent: Option<media::MediaData> = None;
     let mut idle_reported = false;
     loop {
-        let started = Instant::now();
-        match provider.read() {
-            media::Reading::Playing(data) => {
-                let changed = last_sent.as_ref().is_none_or(|l| !l.same_track_state(&data) || l.clock_drifted(&data));
-                if changed {
-                    emit(app, "media", data.clone());
-                    last_sent = Some(data);
-                }
+        let reading = provider.read();
+        let retry = provider.retry_after(&reading);
+        match media::next_update(last_sent.as_ref(), idle_reported, reading) {
+            media::Update::Send(data) => {
+                emit(app, "media", data.clone());
+                last_sent = Some(data);
                 idle_reported = false;
             }
-            media::Reading::Nothing if !idle_reported => {
+            media::Update::Idle => {
                 issue(app, "media", "no-device");
                 last_sent = None;
                 idle_reported = true;
             }
-            media::Reading::Nothing | media::Reading::Transient => {}
-            media::Reading::Unavailable => {
+            media::Update::Keep => {}
+            media::Update::Stop => {
                 issue(app, "media", "unsupported");
-                // The session manager never appears later in a running process; stop polling.
                 return;
             }
         }
-        if !gate.pause(MEDIA_TICK.saturating_sub(started.elapsed())) {
+        let woken = match retry {
+            Some(after) => events.recv_timeout(after).map_err(|e| e == RecvTimeoutError::Disconnected),
+            None => events.recv().map_err(|_| true),
+        };
+        if woken == Err(true) || gate.is_stopped() {
             return;
         }
+        // One read covers a burst of events (a track change raises several at once).
+        while events.try_recv().is_ok() {}
     }
 }
 

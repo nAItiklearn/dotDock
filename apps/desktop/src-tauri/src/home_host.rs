@@ -76,6 +76,14 @@ pub fn overlay_set_typing(app: AppHandle, typing: bool) {
     }
 }
 
+/// Where the taskbar and any docked bar leave room on the overlay's monitor; edit-mode panels stay inside.
+#[tauri::command]
+pub fn overlay_work_area(app: AppHandle) -> Option<desktop_host::Insets> {
+    let window = app.get_webview_window(OVERLAY_LABEL)?;
+    let hwnd = window.hwnd().ok()?;
+    desktop_host::work_area_insets(Hwnd::from_raw(hwnd.0))
+}
+
 #[tauri::command]
 pub fn set_hit_regions(rects: Vec<HitRect>, regions: State<'_, HitRegions>) {
     regions.replace(rects);

@@ -1,4 +1,4 @@
-import { useId, useRef, type ButtonHTMLAttributes, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
+import { useId, useRef, type ButtonHTMLAttributes, type CSSProperties, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { Icon, type IconName } from "./Icon";
 import "./controls.css";
 
@@ -127,8 +127,15 @@ interface SegmentedProps<T extends string> {
   readonly disabled?: boolean;
 }
 
-/** Radio group drawn as a pill strip. Arrow keys move and select, Home/End jump, as native radios do. */
-export function Segmented<T extends string>({ value, options, onChange, label, disabled = false }: SegmentedProps<T>) {
+/**
+ * Arrow keys move and select, Home/End jump, as native radios do. Returns the handler for a
+ * `role="radiogroup"` element; the radios inside it are found by role so the markup is free.
+ */
+function useRadioKeys<T extends string>(
+  options: readonly { readonly value: T }[],
+  value: T,
+  onChange: (next: T) => void,
+): [RefObject<HTMLDivElement | null>, (e: KeyboardEvent<HTMLDivElement>) => void] {
   const group = useRef<HTMLDivElement>(null);
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
     const index = options.findIndex((o) => o.value === value);
@@ -143,6 +150,12 @@ export function Segmented<T extends string>({ value, options, onChange, label, d
     onChange(target.value);
     group.current?.querySelectorAll<HTMLElement>('[role="radio"]')[next]?.focus();
   };
+  return [group, onKeyDown];
+}
+
+/** Radio group drawn as a pill strip. Arrow keys move and select, Home/End jump, as native radios do. */
+export function Segmented<T extends string>({ value, options, onChange, label, disabled = false }: SegmentedProps<T>) {
+  const [group, onKeyDown] = useRadioKeys(options, value, onChange);
   return (
     <div ref={group} className="ui-segmented" role="radiogroup" aria-label={label} onKeyDown={onKeyDown}>
       {options.map((option) => {
@@ -161,6 +174,51 @@ export function Segmented<T extends string>({ value, options, onChange, label, d
             {option.icon ? <Icon name={option.icon} size={15} /> : null}
             {option.label}
           </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- swatches
+
+export interface SwatchOption<T extends string> {
+  readonly value: T;
+  /** Spoken name and tooltip, e.g. "Accent". */
+  readonly label: string;
+  /** Name of the CSS custom property that holds the colour, e.g. "--accent". */
+  readonly token: string;
+}
+
+interface SwatchesProps<T extends string> {
+  readonly value: T;
+  readonly options: readonly SwatchOption<T>[];
+  readonly onChange: (next: T) => void;
+  readonly label: string;
+  readonly disabled?: boolean;
+}
+
+/** Radio group of colour chips for choosing a theme colour; the chip shows the colour it sets. */
+export function Swatches<T extends string>({ value, options, onChange, label, disabled = false }: SwatchesProps<T>) {
+  const [group, onKeyDown] = useRadioKeys(options, value, onChange);
+  return (
+    <div ref={group} className="ui-swatches" role="radiogroup" aria-label={label} onKeyDown={onKeyDown}>
+      {options.map((option) => {
+        const selected = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            aria-label={option.label}
+            title={option.label}
+            tabIndex={selected ? 0 : -1}
+            disabled={disabled}
+            className={`ui-swatches__option${selected ? " is-selected" : ""}`}
+            style={{ "--swatch": `var(${option.token})` } as CSSProperties}
+            onClick={() => onChange(option.value)}
+          />
         );
       })}
     </div>

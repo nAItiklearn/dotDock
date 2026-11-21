@@ -1,11 +1,11 @@
 import { fieldsForSize, isEnumField, type ConfigField, type ConfigSchema, type ConfigValue } from "../../widgets/configSchema";
 import type { SizeId } from "../../widgets/sizes";
 import type { JsonValue } from "../model/json";
-import { fieldName, Segmented, SelectField, Slider, Switch, TextField } from "./controls";
+import { fieldName, Segmented, SelectField, Slider, Swatches, Switch, TextField } from "./controls";
 
 export interface ConfigFormProps {
   readonly schema: ConfigSchema;
-  /** The size being edited; fields that do not apply to it are hidden. */
+  /** The size being edited; fields that do not apply to it, or to the current config, are hidden. */
   readonly size: SizeId;
   /** The widget's resolved config: every field has a valid value. */
   readonly config: Readonly<Record<string, ConfigValue>>;
@@ -41,6 +41,10 @@ function FieldControl({ field, value, onChange, disabled }: FieldProps) {
   if (field.type === "string" && isEnumField(field)) {
     const current = typeof value === "string" ? value : field.default;
     const options = field.oneOf.map((o) => ({ value: o.const, label: o.title }));
+    const swatches = field.oneOf.flatMap((o) => (o.swatch ? [{ value: o.const, label: o.title, token: o.swatch }] : []));
+    if (swatches.length === field.oneOf.length) {
+      return <Swatches value={current} options={swatches} label={field.title} disabled={disabled} onChange={onChange} />;
+    }
     return options.length <= 3 ? (
       <Segmented value={current} options={options} label={field.title} disabled={disabled} onChange={onChange} />
     ) : (
@@ -100,7 +104,7 @@ function FieldControl({ field, value, onChange, disabled }: FieldProps) {
 export function ConfigForm({ schema, size, config, onChange, disabled = false }: ConfigFormProps) {
   return (
     <div className="ui-form">
-      {fieldsForSize(schema, size).map(([key, field]) => (
+      {fieldsForSize(schema, size, config).map(([key, field]) => (
         <div className="ui-form__row" key={key}>
           <span className="ui-form__text">
             <span className="ui-form__label">{field.title}</span>

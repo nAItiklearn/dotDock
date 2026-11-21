@@ -10,6 +10,7 @@ import {
   textOr,
   toJsonObject,
 } from "./json";
+import { quantize } from "../layout/grid";
 import { normalizeShortcut } from "../shortcuts";
 import {
   LAYOUT_SCHEMA,
@@ -190,8 +191,8 @@ function sanitizePlacement(raw: unknown, r: Repairs): Placement | null {
     id: textOr(raw["id"], 64, widget),
     widget,
     size: textOr(raw["size"], 32, "m"),
-    x: intInRange(raw["x"], 0, MAX_COORDINATE, 0),
-    y: intInRange(raw["y"], 0, MAX_COORDINATE, 0),
+    x: quantize(numberInRange(raw["x"], 0, MAX_COORDINATE, 0)),
+    y: quantize(numberInRange(raw["y"], 0, MAX_COORDINATE, 0)),
     config: toJsonObject(raw["config"]),
   };
 }

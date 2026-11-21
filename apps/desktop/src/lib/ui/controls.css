@@ -8,6 +8,7 @@
   --switch-inset: 3px;
   --slider-thumb: 18px;
   --slider-track: 4px;
+  --swatch-size: 22px;
   --focus-width: 2px;
   --focus-offset: 2px;
   --press-scale: 0.97;
@@ -252,6 +253,44 @@
   color: var(--bg);
 }
 
+/* ---- swatches */
+.ui-swatches {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1);
+}
+.ui-swatches__option {
+  width: var(--swatch-size);
+  height: var(--swatch-size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 var(--hairline) color-mix(in srgb, var(--text) 28%, transparent);
+  cursor: pointer;
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.ui-swatches__option:hover:not(:disabled):not(.is-selected) {
+  transform: scale(1.12);
+}
+.ui-swatches__option.is-selected {
+  box-shadow:
+    inset 0 0 0 var(--hairline) color-mix(in srgb, var(--text) 28%, transparent),
+    0 0 0 var(--focus-width) var(--surface),
+    0 0 0 calc(var(--focus-width) * 2) var(--text);
+}
+.ui-swatches__option:focus-visible {
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: calc(var(--focus-width) * 2 + var(--focus-offset));
+}
+.ui-swatches__option:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* ---- select and text */
 .ui-select {
   position: relative;
@@ -325,10 +364,15 @@
 }
 .ui-form__row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-2) var(--space-4);
   min-height: var(--ctl-h);
+}
+/* A control too wide to sit beside its label drops under it and stays on the right. */
+.ui-form__row > :last-child {
+  margin-inline-start: auto;
 }
 .ui-form__label {
   color: var(--text);
@@ -342,6 +386,7 @@
 }
 .ui-form__value {
   min-width: 3ch;
+  white-space: nowrap;
   color: var(--text-dim);
   font-family: var(--font-mono);
   font-size: var(--text-xs);

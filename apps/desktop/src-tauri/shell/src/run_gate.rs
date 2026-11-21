@@ -54,6 +54,14 @@ impl RunGate {
         self.flags().stopped
     }
 
+    /// Blocks until the gate is stopped.
+    pub fn wait_stopped(&self) {
+        let mut flags = self.flags();
+        while !flags.stopped {
+            flags = self.0 .1.wait(flags).unwrap_or_else(PoisonError::into_inner);
+        }
+    }
+
     /// Blocks until the gate is opened. False if it was stopped first.
     pub fn wait_open(&self) -> bool {
         let mut flags = self.flags();
@@ -113,6 +121,24 @@ mod tests {
         let started = Instant::now();
         assert!(gate.pause(Duration::from_millis(30)));
         assert!(started.elapsed() >= Duration::from_millis(30));
+    }
+
+    #[test]
+    fn a_thread_waiting_for_the_stop_wakes_when_the_gate_stops() {
+        let gate = RunGate::default();
+        let waiter = gate.clone();
+        let worker = thread::spawn(move || {
+            let started = Instant::now();
+            waiter.wait_stopped();
+            started.elapsed()
+        });
+        gate.open();
+        gate.nudge();
+        thread::sleep(Duration::from_millis(20));
+        assert!(!worker.is_finished(), "opening and nudging are not a stop");
+        gate.stop();
+        let took = worker.join().expect("worker");
+        assert!(took < PROMPT, "the wait lasted {took:?}");
     }
 
     #[test]

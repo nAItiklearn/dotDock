@@ -4,8 +4,8 @@ import type { MonitorId, WidgetInfo } from "../../lib/model/types";
 import { getApp } from "../../lib/state/app";
 import { useSettingsStore } from "../../lib/state/hooks";
 import { useGridMetrics } from "../../lib/state/useGridMetrics";
-import { Button, Segmented, SelectField } from "../../lib/ui/controls";
-import { sizesByArea } from "../../overlay/catalog";
+import { Button, SelectField } from "../../lib/ui/controls";
+import { SizePicker } from "../../lib/ui/SizePicker";
 import { WidgetPreview } from "../../overlay/WidgetPreview";
 import { addWidgetToProfile, removeWidgetFromProfile } from "../layoutActions";
 import { PageHeader, Section } from "../ui/layout";
@@ -25,7 +25,7 @@ interface CardProps {
 
 function WidgetCard({ meta, metrics, profileId, profileName, display }: CardProps) {
   const app = getApp();
-  const [sizeId, setSizeId] = useState(meta.sizes[0]?.id ?? "m");
+  const [sizeId, setSizeId] = useState<string>(meta.sizes[0]?.id ?? "m");
   const [busy, setBusy] = useState(false);
 
   const add = (): void => {
@@ -58,12 +58,7 @@ function WidgetCard({ meta, metrics, profileId, profileName, display }: CardProp
       </div>
       <div className="widget-card__actions">
         {meta.sizes.length > 1 ? (
-          <Segmented
-            label={`${meta.name} size`}
-            value={sizeId}
-            options={sizesByArea(meta.sizes).map((s) => ({ value: s.id, label: s.name }))}
-            onChange={setSizeId}
-          />
+          <SizePicker label={`${meta.name} size`} sizes={meta.sizes} value={sizeId} onChange={setSizeId} />
         ) : (
           <span className="caps">{meta.sizes[0]?.w}×{meta.sizes[0]?.h} cells</span>
         )}

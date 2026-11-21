@@ -16,29 +16,10 @@ const LIB_RS = join(__dirname, "..", "src-tauri", "src", "lib.rs");
 const NOT_COMMANDS = new Set(["usage_limit", "model_not_found", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m"]);
 
 /**
- * Names the Settings track (branch `worktree-agent-a140991fdc0a4c940`) is wiring into the core. Each must still be
- * missing: once the core registers one, this test fails until the name is taken off the list, so the list only shrinks.
+ * Names a track is still wiring into the core. Empty since the V1 integration merged the Settings, theme, dock and
+ * release tracks; a name put here must still be missing, so the list only shrinks.
  */
-const PENDING_IN_SETTINGS_TRACK = new Set([
-  "app_info",
-  "app_open_data_folder",
-  "displays_list",
-  "overlay_edit_mode",
-  "performance_get",
-  "performance_set",
-  "performance_stats",
-  "settings_open",
-  "shortcuts_register",
-  "startup_get",
-  "startup_set",
-  "updater_check",
-  "updater_set_enabled",
-  "updater_status",
-  "wallpapers_assign",
-  "wallpapers_assignments",
-  "wallpapers_import",
-  "wallpapers_remove",
-]);
+const PENDING_IN_SETTINGS_TRACK: ReadonlySet<string> = new Set<string>();
 
 function sources(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {

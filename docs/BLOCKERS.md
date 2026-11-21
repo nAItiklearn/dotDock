@@ -30,3 +30,8 @@ freeing space (finished worktrees' `target-gnu`, ~8 GB each), then build with th
   (2) a `rates` feed (`{ base, publishedAt, rates }`, ECB daily XML, cached on disk); (3) `dock_open_url { url }`
   that opens http(s) only, in the default browser.
 - **Meanwhile:** each tile shows its designed "Not available" state in the real app and works in the harness.
+## B-home-1 Widget colours do not yet re-derive by themselves when the wallpaper changes (2026-11-21, home track)
+- **What:** the owner's V1 rule needs the theme to be rebuilt from the new wallpaper whenever it changes. The palette code is on the theme track (`worktree-agent-aa4d6d019cc73921a`), which applies it only when the user presses Apply; no branch listens for a wallpaper change (`WM_SETTINGCHANGE` / `SPI_SETDESKWALLPAPER`).
+- **Home side done:** every home screen colour is a theme token (guarded by `widgets/themeTokens.test.ts`); a theme change repaints the widgets in one frame (live check in `docs/QA/home-live/features.md`).
+- **Owner (lead, 20:30):** reassigned to the theme track.
+- **Needed at merge:** after the theme track lands, the core emits a wallpaper-changed event and the theme track's `applyWallpaperTheme` runs on it. Then rerun the wallpaper rows of `docs/QA/home-live/features.md`.

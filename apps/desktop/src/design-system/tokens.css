@@ -74,14 +74,29 @@
   --press: 0.94;
   --hover-edge: 0.4;
 
+  /* Direct editing on the home screen. */
+  --slot-lift-scale: 1.025;
+  --slot-enter-scale: 0.96;
+  --slot-handle-size: 28px;
+  /* The hover resize handle waits a beat, so moving the pointer across widgets does not flash handles. */
+  --slot-handle-delay: 180ms;
+  --menu-width: 200px;
+
   /* Controls laid over a user's photo: a dark glass pill that reads on any image, in any theme. */
   --media-scrim: rgb(0 0 0 / 0.42);
   --media-ink: #f3f1ee;
   --media-blur: 12px;
   /* Black-and-white photos get a touch of contrast back after the colour is taken out. */
   --mono-contrast: 1.06;
-  /* Photo mat: warm paper, the same in every theme. */
+  /* Photo borders: warm paper and near-black ink, the same in every theme. */
   --photo-mat: #efede9;
+  --photo-ink: #111111;
+  /* A caption on a grey or accent border the warm pair cannot carry at 4.5 : 1 takes the strongest pair. */
+  --photo-mat-max: #ffffff;
+  --photo-ink-max: #000000;
+  /* A band's outer hairline: the caption ink at this strength, so a paper mat on a light desktop
+     (or ink on a dark one) keeps a visible edge. */
+  --photo-edge-mix: 24%;
 }
 
 @media (prefers-reduced-motion: reduce) {

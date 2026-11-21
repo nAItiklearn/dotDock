@@ -9,6 +9,7 @@ import type { ConfigSchema } from "./configSchema";
 import { defineWidget, type WidgetProps } from "./definition";
 import { formatDuration } from "./format";
 import { sendMediaCommand } from "./mediaControls";
+import { activeSession } from "./mediaSession";
 import { sizeSpec, type SizeId, type SizeSpec } from "./sizes";
 import { Freshness, WidgetNotice } from "./WidgetNotice";
 import "./MusicWidget.css";
@@ -45,8 +46,7 @@ const MS_PER_SECOND = 1000;
 /** What the widget shows: a live session, or the designed "nothing playing" state. */
 function useSession(): { media: MediaData | null; state: ProviderState<MediaData> } {
   const state = useProvider("media");
-  // Remembered media from a previous run is never shown as if it were playing now.
-  return { media: state.stale ? null : state.data, state };
+  return { media: activeSession(state), state };
 }
 
 /** Position now, extrapolated from the last payload while playing. */
@@ -238,15 +238,13 @@ function LivePlayer({ media, size, accentFollows }: { readonly media: MediaData;
   return <Card media={media} receivedAt={receivedAt} accent={accent} />;
 }
 
-const SHAPE: Record<SizeId, "pill" | "card"> = { s: "pill", m: "card", l: "card", xl: "card" };
-
 export function MusicWidget({ size = "m", config = { accentFromArtwork: false } }: { readonly size?: SizeId; readonly config?: MusicConfig }) {
   const { media, state } = useSession();
   if (media) return <LivePlayer media={media} size={size} accentFollows={config.accentFromArtwork} />;
   const spec = sizeSpec(MUSIC_SIZES, size);
   const unavailable = state.issue === "unsupported" || state.issue === "error";
   return (
-    <Surface shape={SHAPE[size]} w={spec.w} h={spec.h} label="Music">
+    <Surface shape={size === "s" ? "pill" : "card"} w={spec.w} h={spec.h} label="Music">
       {unavailable ? <WidgetNotice title="Music" issue={state.issue} compact={size === "s"} /> : <Idle size={size} />}
       <Freshness state={state} />
     </Surface>

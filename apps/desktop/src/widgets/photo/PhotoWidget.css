@@ -1,40 +1,193 @@
 /*
- * Photo widget. The image is laid out at its final pixel size (see frame.ts), so nothing here
- * scales it: filters and blending change colour only, never resolution.
+ * Photo widget. The photo is drawn from a copy decoded for the size it fills (see decode.ts), so
+ * the compositor never scales it by more than one bucket step: filters and blending change colour
+ * only, never resolution.
+ *
+ * Geometry arrives as custom properties from look.ts (the photo window's insets and the corner
+ * radii, measured against the widget's real size); colours, radii and type come from the tokens.
+ * The geometry properties are registered as lengths so a change of border or shape eases.
  */
-.photo {
-  --photo-inset: 0px;
-  --photo-radius: var(--radius-lg);
+@property --photo-inset-t {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
 }
-/* A mat is a pale paper border in every theme, like a print mounted for a frame. */
-.photo--mat {
-  --photo-inset: var(--space-3);
-  --photo-radius: var(--radius-sm);
-  background: var(--photo-mat);
-  border-color: transparent;
+@property --photo-inset-r {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --photo-inset-b {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --photo-inset-l {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --photo-rx {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --photo-ry {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --photo-window-rx {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --photo-window-ry {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+.photo {
+  /* Border colour, and the ink that is legible on it (a polaroid's caption). PhotoWidget picks the
+     ink from the resolved colours (ink.ts); this default is what it picks for paper and accent. */
+  --photo-line: var(--photo-mat);
+  --photo-line-ink: var(--photo-ink);
+  /* The band's outer hairline: a little of the caption ink over the band. */
+  --photo-edge: color-mix(in srgb, var(--photo-line-ink) var(--photo-edge-mix), transparent);
+}
+.photo--tint-ink {
+  --photo-line: var(--photo-ink);
+  --photo-line-ink: var(--photo-mat);
+}
+.photo--tint-dim {
+  --photo-line: var(--text-dim);
+}
+.photo--tint-accent {
+  --photo-line: var(--accent);
+}
+
+/* Shape: the widget's silhouette. Everything inside is clipped to it. */
+.surface.photo {
+  border-radius: var(--photo-rx) / var(--photo-ry);
+  /* A change of border, shape, colour or shadow in the panel eases instead of snapping; the lift stays. */
+  transition:
+    transform var(--dur-med) var(--ease-out),
+    background-color var(--dur-med) var(--ease-out),
+    border-color var(--dur-med) var(--ease-out),
+    box-shadow var(--dur-med) var(--ease-out),
+    --photo-inset-t var(--dur-med) var(--ease-out),
+    --photo-inset-r var(--dur-med) var(--ease-out),
+    --photo-inset-b var(--dur-med) var(--ease-out),
+    --photo-inset-l var(--dur-med) var(--ease-out),
+    --photo-rx var(--dur-med) var(--ease-out),
+    --photo-ry var(--dur-med) var(--ease-out),
+    --photo-window-rx var(--dur-med) var(--ease-out),
+    --photo-window-ry var(--dur-med) var(--ease-out);
+}
+/* A resize snaps between whole-cell footprints, so its geometry is drawn at once. */
+.surface.photo.photo--snap {
+  transition: transform var(--dur-med) var(--ease-out);
+}
+.surface.photo--shape-squircle {
+  corner-shape: squircle;
+}
+.surface.photo--flat {
+  box-shadow: none;
+}
+
+/* Borders. A mat and a polaroid are the widget's own fill, a keyline is its edge, dots sit on top. */
+.surface.photo--frame-hairline {
+  border-color: var(--photo-line);
+}
+/* A band as light or dark as the desktop behind it would melt into it: its hairline edge keeps the frame's outline. */
+.surface.photo--frame-mat,
+.surface.photo--frame-polaroid {
+  background: var(--photo-line);
+  border-color: var(--photo-edge);
+}
+
+/* The stage fills the widget; its measured size drives the border layout. */
+.photo__stage {
+  position: absolute;
+  inset: 0;
+}
+.photo__dots {
+  position: absolute;
+  top: 0;
+  left: 0;
+  fill: var(--photo-line);
+  /* A light dot on a light theme still reads: each dot casts the widget's own soft shadow. */
+  filter: drop-shadow(0 var(--hairline) var(--hairline) var(--drop-shadow));
+  pointer-events: none;
+  animation: photo-in var(--dur-med) var(--ease-out);
+}
+.photo--flat .photo__dots {
+  filter: none;
 }
 
 .photo__frame {
   position: absolute;
-  inset: var(--photo-inset);
+  inset: var(--photo-inset-t) var(--photo-inset-r) var(--photo-inset-b) var(--photo-inset-l);
   overflow: hidden;
-  border-radius: calc(var(--photo-radius) - var(--hairline));
+  border-radius: var(--photo-window-rx) / var(--photo-window-ry);
   outline: none;
   isolation: isolate;
+  /* The photo and the empty state size themselves against the window's live size. */
+  container-type: size;
+  transition: background-color var(--dur-med) var(--ease-out);
 }
-.photo--mat.has-photo .photo__frame {
+.photo--shape-squircle .photo__frame {
+  corner-shape: squircle;
+}
+/* Behind a photo that does not cover its window (Fit) and behind the empty state. */
+.photo:not(.photo--frame-none) .photo__frame {
   background: var(--surface-2);
 }
 
+.photo__stage .photo__caption {
+  position: absolute;
+  right: var(--photo-inset-r);
+  bottom: 0;
+  left: var(--photo-inset-l);
+  height: var(--photo-inset-b);
+  margin: 0;
+  padding: 0 var(--space-2);
+  overflow: hidden;
+  color: var(--photo-line-ink);
+  line-height: var(--photo-inset-b);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: photo-in var(--dur-med) var(--ease-out);
+}
+
+/*
+ * The photo covers the window (fill) or fits inside it (fit), from its aspect ratio, zoom and focal
+ * point: the same rule as `place` in frame.ts, measured against the window's live size, so it
+ * stays covered in every frame of an eased border change.
+ */
 .photo__img {
+  --photo-w: calc(max(100cqw, 100cqh * var(--photo-aspect)) * var(--photo-zoom));
+  --photo-h: calc(max(100cqw / var(--photo-aspect), 100cqh) * var(--photo-zoom));
   position: absolute;
   top: 0;
   left: 0;
-  max-width: none;
   display: block;
-  image-rendering: auto;
-  animation: photo-in var(--dur-slow) var(--ease-out);
+  width: var(--photo-w);
+  height: var(--photo-h);
+  transform: translate(calc((100cqw - var(--photo-w)) * var(--photo-fx)), calc((100cqh - var(--photo-h)) * var(--photo-fy)));
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
   will-change: transform;
+}
+.photo--fit-fit .photo__img {
+  --photo-w: min(100cqw, 100cqh * var(--photo-aspect));
+  --photo-h: min(100cqw / var(--photo-aspect), 100cqh);
+}
+.photo__img.is-shown {
+  opacity: 1;
 }
 @keyframes photo-in {
   from {
@@ -43,11 +196,11 @@
 }
 
 /* Black and white, and the duotone: shadows stay ink, highlights take the theme's accent. */
-.photo--mono .photo__img,
-.photo--duotone .photo__img {
+.photo--tone-mono .photo__img,
+.photo--tone-duotone .photo__img {
   filter: grayscale(1) contrast(var(--mono-contrast));
 }
-.photo--duotone.has-photo .photo__frame::after {
+.photo--tone-duotone.has-photo .photo__frame::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -77,8 +230,8 @@
 /* Controls fade in on hover or keyboard focus and sit on a dark pill so they read on any photo. */
 .photo__controls {
   position: absolute;
-  right: calc(var(--photo-inset) + var(--space-2));
-  bottom: calc(var(--photo-inset) + var(--space-2));
+  right: calc(var(--photo-inset-r) + var(--space-2));
+  bottom: calc(var(--photo-inset-b) + var(--space-2));
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -115,13 +268,20 @@
 
 .photo__problem {
   position: absolute;
-  left: calc(var(--photo-inset) + var(--space-3));
-  bottom: calc(var(--photo-inset) + var(--space-3));
+  left: calc(var(--photo-inset-l) + var(--space-3));
+  bottom: calc(var(--photo-inset-b) + var(--space-3));
   margin: 0;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--media-scrim);
   color: var(--media-ink);
+}
+/* A circle has no corner to tuck these into: they sit at the bottom centre instead. */
+.photo--shape-circle .photo__controls,
+.photo--shape-circle .photo__problem {
+  right: auto;
+  left: 50%;
+  translate: -50% 0;
 }
 
 .photo-empty {
@@ -159,6 +319,7 @@
   color: var(--accent-ink);
   font-size: var(--text-sm);
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition: transform var(--dur-fast) var(--ease-out);
 }
@@ -177,13 +338,33 @@
 .photo.is-dropping .photo-empty {
   color: var(--accent);
 }
+/* A border or a small widget leaves little room: drop the pictogram first, then the sentence. */
+@container (max-width: 160px) {
+  .photo-empty {
+    padding: var(--space-2);
+  }
+}
+@container (max-height: 168px) {
+  .photo-empty__icon {
+    display: none;
+  }
+}
+@container (max-height: 112px) {
+  .photo-empty__copy {
+    display: none;
+  }
+  .photo-empty {
+    padding: var(--space-2);
+  }
+}
 
 .photo__input {
   display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .photo__img {
+  .photo__dots,
+  .photo__stage .photo__caption {
     animation: none;
   }
 }

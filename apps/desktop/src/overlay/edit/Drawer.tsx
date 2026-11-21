@@ -7,11 +7,14 @@ import { getApp } from "../../lib/state/app";
 import { useLayoutStore, useSettingsStore } from "../../lib/state/hooks";
 import { Button, IconButton, Segmented } from "../../lib/ui/controls";
 import { ConfigForm } from "../../lib/ui/ConfigForm";
-import { sizesByArea, widgetCatalog } from "../catalog";
+import { SizePicker } from "../../lib/ui/SizePicker";
+import { widgetCatalog } from "../catalog";
 import { announce, editUi, useEditUi, type DrawerTab } from "../editUi";
+import { addOrigin, removeWithExit } from "../directActions";
 import { WidgetPreview } from "../WidgetPreview";
 
-const PREVIEW_MAX_WIDTH = 296;
+/** Drawer width less the body, card and stage padding: a preview never makes the card scroll sideways. */
+const PREVIEW_MAX_WIDTH = 248;
 const PREVIEW_MAX_HEIGHT = 112;
 
 const TABS: readonly { value: DrawerTab; label: string }[] = [
@@ -20,9 +23,11 @@ const TABS: readonly { value: DrawerTab; label: string }[] = [
 ];
 
 function GalleryCard({ meta, metrics }: { readonly meta: WidgetInfo; readonly metrics: GridMetrics }) {
-  const [sizeId, setSizeId] = useState(meta.sizes[0]?.id ?? "m");
+  const [sizeId, setSizeId] = useState<string>(meta.sizes[0]?.id ?? "m");
   const add = (): void => {
-    const result = getApp().layout.getState().addWidget(meta.id, sizeId);
+    const at = editUi.getState().addAt;
+    const near = addOrigin(at, meta.sizes.find((s) => s.id === sizeId));
+    const result = getApp().layout.getState().addWidget(meta.id, sizeId, near);
     if (result.ok) announce(`${meta.name} added`);
   };
   return (
@@ -37,12 +42,7 @@ function GalleryCard({ meta, metrics }: { readonly meta: WidgetInfo; readonly me
         </div>
         <div className="gallery-card__actions">
           {meta.sizes.length > 1 ? (
-            <Segmented
-              label={`${meta.name} size`}
-              value={sizeId}
-              options={sizesByArea(meta.sizes).map((s) => ({ value: s.id, label: s.name }))}
-              onChange={setSizeId}
-            />
+            <SizePicker label={`${meta.name} size`} sizes={meta.sizes} value={sizeId} onChange={setSizeId} />
           ) : (
             <span />
           )}
@@ -79,7 +79,7 @@ function SelectedTab() {
   }
   const sizeId = (meta.sizes.find((s) => s.id === selected.size) ?? meta.sizes[0])?.id ?? "m";
   const config = normalizeConfig(meta.settingsSchema, selected.config);
-  const fields = fieldsForSize(meta.settingsSchema, sizeId);
+  const fields = fieldsForSize(meta.settingsSchema, sizeId, config);
   return (
     <div className="selected">
       <div className="selected__head">
@@ -89,12 +89,7 @@ function SelectedTab() {
       {meta.sizes.length > 1 ? (
         <div className="ui-form__row">
           <span className="ui-form__label">Size</span>
-          <Segmented
-            label="Size"
-            value={sizeId}
-            options={sizesByArea(meta.sizes).map((s) => ({ value: s.id, label: s.name }))}
-            onChange={(next) => layout.getState().resizeTo(selected.id, next)}
-          />
+          <SizePicker label="Size" sizes={meta.sizes} value={sizeId} onChange={(next) => layout.getState().resizeTo(selected.id, next)} />
         </div>
       ) : null}
       {fields.length > 0 ? (
@@ -110,7 +105,7 @@ function SelectedTab() {
         <Button icon="duplicate" onClick={() => layout.getState().duplicate(selected.id)}>
           Duplicate
         </Button>
-        <Button variant="danger" icon="trash" onClick={() => layout.getState().remove(selected.id)}>
+        <Button variant="danger" icon="trash" onClick={() => void removeWithExit(layout, selected.id, meta.name)}>
           Remove
         </Button>
       </div>
@@ -127,7 +122,7 @@ export function Drawer({ metrics }: { readonly metrics: GridMetrics }) {
       <div className="drawer__panel">
         <header className="drawer__head">
           <Segmented label="Panel" value={tab} options={TABS} onChange={(next) => editUi.setState({ drawerTab: next })} />
-          <IconButton icon="close" label="Close panel" onClick={() => editUi.setState({ drawerOpen: false })} />
+          <IconButton icon="close" label="Close panel" onClick={() => editUi.setState({ drawerOpen: false, addAt: null })} />
         </header>
         <div className="drawer__body">
           {locked ? (

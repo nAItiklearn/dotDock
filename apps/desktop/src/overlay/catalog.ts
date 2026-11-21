@@ -7,7 +7,6 @@ import { WIDGETS, getWidget } from "../widgets/registry";
  */
 const BELOW_BAR: ReadonlySet<string> = new Set(["weather", "quote", "calendar", "notes", "todo"]);
 const OFFERED = WIDGETS.filter((w) => !BELOW_BAR.has(w.id));
-import type { SizeSpec } from "../widgets/sizes";
 
 /**
  * The widget registry seen through the layout engine's narrow `WidgetCatalog` interface. This is the one place
@@ -17,8 +16,3 @@ export const widgetCatalog: WidgetCatalog = {
   list: () => OFFERED,
   get: getWidget,
 };
-
-/** Sizes smallest first, for pickers; the registry lists the default size first instead. */
-export function sizesByArea(sizes: readonly SizeSpec[]): readonly SizeSpec[] {
-  return [...sizes].sort((a, b) => a.w * a.h - b.w * b.h);
-}

@@ -147,6 +147,15 @@ describe("add, duplicate, remove, configure", () => {
     expect(second?.placements[1]).toMatchObject({ size: "xl", x: 4, y: 0 });
   });
 
+  it("adds a widget as close to the pointed cell as there is room for", () => {
+    const at = addWidget([], "clock", undefined, ctx, { x: 6, y: 3 });
+    expect(at?.placements[0]).toMatchObject({ x: 6, y: 3 });
+    const blocked = addWidget(at?.placements ?? [], "clock", undefined, ctx, { x: 6, y: 3 });
+    const placed = blocked?.placements[1];
+    expect(placed).toBeDefined();
+    expect(overlapping(blocked?.placements ?? [])).toBe(false);
+  });
+
   it("reports no room instead of overlapping", () => {
     const full = [placement("c-1", "clock", "l", 0, 0), placement("c-2", "clock", "l", 4, 0), placement("c-3", "clock", "l", 0, 4), placement("c-4", "clock", "l", 4, 4)];
     const tiny: LayoutContext = { ...ctx, bounds: { cols: 8, rows: 8 } };
