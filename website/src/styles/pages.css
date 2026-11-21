@@ -27,6 +27,8 @@
 }
 .block {
   display: grid;
+  /* A grid track would otherwise grow to the widest licence text; the code scrolls inside its own box. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 .block__title {
@@ -66,7 +68,11 @@
 }
 .block__content {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
+}
+.block__content pre {
+  overflow-x: auto;
 }
 
 .steps {
@@ -199,6 +205,7 @@
 
 .prose {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   max-width: 76ch;
   color: var(--text-dim);
@@ -273,4 +280,14 @@
   text-align: center;
   font-size: 14px;
   color: var(--text-dim);
+}
+
+/* Notice tables carry long file paths and licence names: on a phone they wrap inside the cell. */
+.prose table {
+  width: 100%;
+  table-layout: fixed;
+}
+.prose th,
+.prose td {
+  overflow-wrap: anywhere;
 }

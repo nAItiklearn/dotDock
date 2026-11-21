@@ -363,6 +363,13 @@
   padding-block: var(--space-2);
   scrollbar-width: none;
 }
+/* On a phone the command wraps at any character instead of hiding half of the address off screen. */
+@media (max-width: 479px) {
+  .code__text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
 .code__prompt {
   color: var(--accent-text);
   margin-right: var(--space-2);

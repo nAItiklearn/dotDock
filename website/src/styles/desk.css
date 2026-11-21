@@ -30,7 +30,8 @@
     display: none;
   }
   .desk .stage__grid {
-    padding-top: 52px;
+    /* Clear of the island: its height in island units (sub line, state row, scene, gaps and padding) plus a gap. */
+    padding-top: calc(90 * 64cqw / 328 + var(--space-3));
     padding-bottom: 92px;
   }
 }

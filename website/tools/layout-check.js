@@ -35,7 +35,12 @@ async () => {
       for (let node = walker.nextNode(); node; node = walker.nextNode()) {
         const text = node.textContent.trim();
         const parent = node.parentElement;
-        if (!text || !parent || parent.closest(BY_DESIGN) || parent.closest("script,style,[hidden]")) continue;
+        if (!text || !parent || parent.closest(BY_DESIGN) || parent.closest("script,style,[hidden],.sr-only")) continue;
+        // The answer of a closed disclosure is not on screen.
+        const shut = parent.closest("details:not([open])");
+        // Text in a box that scrolls sideways (code, wide tables) is reached by scrolling that box.
+        if (parent.closest("pre,.table-wrap,.code__text")) continue;
+        if (shut && !parent.closest("summary")) continue;
         const range = d.createRange();
         range.selectNodeContents(node);
         for (const r of range.getClientRects()) {
@@ -51,7 +56,7 @@ async () => {
       }
 
       for (const el of d.querySelectorAll("h1,h2,h3,p,li,a,button,span,td,th,summary")) {
-        if (el.closest("noscript,[hidden]") || el.children.length > 0) continue;
+        if (el.closest("noscript,[hidden],.sr-only") || el.children.length > 0) continue;
         const cs = d.defaultView.getComputedStyle(el);
         if (cs.display === "none" || cs.visibility === "hidden") continue;
         if (el.scrollWidth > el.clientWidth + 2 && cs.overflowX !== "visible" && el.clientWidth > 0 && cs.textOverflow !== "ellipsis") {
@@ -81,5 +86,13 @@ async () => {
       frame.remove();
     }
   }
-  return { pages: paths, widths, count: problems.length, problems: problems.slice(0, 60) };
+  // Group the same finding across widths so one cause reads as one line.
+  const grouped = new Map();
+  for (const p of problems) {
+    const at = p.indexOf(" @");
+    const colon = p.indexOf(": ", at);
+    const key = `${p.slice(0, at)} ${p.slice(colon + 2).replace(/\s+/g, " ")}`;
+    grouped.set(key, [...(grouped.get(key) || []), p.slice(at + 2, colon)]);
+  }
+  return { pages: paths, widths, count: problems.length, problems: [...grouped].map(([k, w]) => `${k} @${w.join(",")}`).slice(0, 80) };
 }

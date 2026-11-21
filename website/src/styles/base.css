@@ -588,17 +588,18 @@ button {
 .footer__list a:hover {
   color: var(--text);
 }
-/* The lockup stands in the sky of a dotted lake; the scene is the footer's floor. */
+/* The lockup stands above a dotted lake; the scene is the footer's floor. */
 .footer__stage {
   position: relative;
   overflow: hidden;
   contain: paint;
 }
 .footer__mark {
-  position: absolute;
-  z-index: 1;
-  /* Whole lockup visible: the mark and seven dot-font characters fit the width from 320 px up. */
-  inset: clamp(8px, 2.4vw, 56px) 0 auto;
+  /* Whole lockup visible: the mark and seven dot-font characters fit the width from 320 px up.
+     It stands above the lake, never on it. */
+  margin-top: clamp(8px, 2.4vw, 56px);
+  /* The dot glyphs overhang a 0.8 line box; the extra space keeps them off the lake. */
+  margin-bottom: 0.3em;
   display: flex;
   align-items: center;
   justify-content: center;
