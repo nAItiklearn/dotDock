@@ -97,13 +97,18 @@ const PROBE = `(() => {
 
 const FRAMES = (ms) => `new Promise((done) => {
   const gaps = []; const at = []; let last = 0; const until = performance.now() + ${ms};
+  const slow = []; const watch = new PerformanceObserver((list) => { for (const e of list.getEntries()) slow.push({
+    at: Math.round(performance.timeOrigin + e.startTime), ms: Math.round(e.duration), blockingMs: Math.round(e.blockingDuration),
+    scriptMs: Math.round(e.scripts.reduce((n, x) => n + x.duration, 0)), renderMs: Math.round(e.startTime + e.duration - e.renderStart),
+    scripts: e.scripts.map((x) => [Math.round(x.duration), x.invokerType, x.invoker, x.sourceFunctionName].join(' ')) }); });
+  watch.observe({ type: 'long-animation-frame' });
   const step = (now) => { if (last) { gaps.push(now - last); at.push(Date.now()); } last = now;
     if (now < until) requestAnimationFrame(step);
-    else { const s = [...gaps].sort((a, b) => a - b); const iv = s[Math.floor(s.length / 2)] || 0;
+    else { watch.disconnect(); const s = [...gaps].sort((a, b) => a - b); const iv = s[Math.floor(s.length / 2)] || 0;
       done({ frames: gaps.length + 1, refreshHz: Math.round(1000 / iv), medianMs: +iv.toFixed(2),
              p99Ms: +(s[Math.floor(s.length * 0.99)] || 0).toFixed(2), worstMs: +(s.at(-1) || 0).toFixed(2),
              dropped: gaps.filter((g) => g > iv * 1.5).length,
-             drops: gaps.flatMap((g, i) => (g > iv * 1.5 ? [{ at: at[i], ms: +g.toFixed(1) }] : [])) }); } };
+             slow, drops: gaps.flatMap((g, i) => (g > iv * 1.5 ? [{ at: at[i], ms: +g.toFixed(1) }] : [])) }); } };
   requestAnimationFrame(step); })`;
 
 /** Margin of the hover footprint around the plate (src/island/regions.ts HOVER_MARGIN). */
@@ -183,13 +188,14 @@ async function drive(port, seconds, seed) {
   const dpr = first?.dpr ?? 1;
   const toScreen = (x, y) => [Math.round(left + x * dpr), Math.round(top + y * dpr)];
 
-  // Where the driver last put the cursor, in window CSS px, and since when.
+  // Where the cursor really is (Windows keeps it on the screen), in window CSS px, and since when.
   let cursor = { x: first.rest.x + first.rest.w / 2, y: 400, since: performance.now() };
-  const place = async (x, y) => {
+  const pointer = async (command, x, y) => {
     const [sx, sy] = toScreen(x, y);
-    await input.cmd(`move ${sx} ${sy}`);
-    cursor = { x, y, since: performance.now() };
+    const [, ax, ay] = (await input.cmd(`${command} ${sx} ${sy}`)).split(' ').map(Number);
+    cursor = { x: (ax - left) / dpr, y: (ay - top) / dpr, since: performance.now() };
   };
+  const place = (x, y) => pointer('move', x, y);
   const glide = async (x, y, ms) => {
     const from = { ...cursor };
     const steps = Math.max(1, Math.round(ms / GLIDE_STEP_MS));
@@ -237,10 +243,11 @@ async function drive(port, seconds, seed) {
     async hover() { const c = plateCentre(); await glide(c.x + between(rand, -80, 80), c.y, between(rand, 150, 400)); await sleep(between(rand, 300, 1500)); },
     async leave() { const a = away(); await glide(a.x, a.y, between(rand, 150, 400)); },
     async flick() { const c = plateCentre(); await glide(c.x, c.y, 90); const a = away(); await glide(a.x, a.y, 90); },
-    async click() { const c = plateCentre(); const [x, y] = toScreen(c.x, c.y); await input.cmd(`left ${x} ${y}`); cursor = { ...c, since: performance.now() }; },
-    async rightClick() { const c = plateCentre(); const [x, y] = toScreen(c.x, c.y); await input.cmd(`right ${x} ${y}`); cursor = { ...c, since: performance.now() }; },
+    async click() { const c = plateCentre(); await pointer('left', c.x, c.y); },
+    async rightClick() { const c = plateCentre(); await pointer('right', c.x, c.y); },
     async swipe() { const c = plateCentre(); await place(c.x, c.y); for (let i = 0; i < 3; i++) { await input.cmd(`hwheel ${rand() < 0.5 ? 120 : -120}`); await sleep(40); } },
-    async page() { if (!last.pager.length) return; const d = pick(rand, last.pager); const [x, y] = toScreen(d.x, d.y); await input.cmd(`left ${x} ${y}`); cursor = { ...d, since: performance.now() }; },
+    // The pager can only be clicked where it is on screen, so not while the island has slid away.
+    async page() { if (!last.pager.length || last.aside) return; const d = pick(rand, last.pager); await pointer('left', d.x, d.y); },
     async blur() { const a = away(); await glide(a.x, a.y, 200); await input.cmd('activate dotDock test backdrop'); },
     async rest() { await sleep(between(rand, 800, 2500)); },
   };
@@ -279,7 +286,10 @@ async function drive(port, seconds, seed) {
   // Each dropped frame with the action that was running when it fell, to tell the island's own work from noise.
   const drops = pacing.drops.map((d) => ({ ...d, during: timeline.findLast((t) => t.at <= d.at)?.action ?? 'start' }));
   delete pacing.drops;
-  const report = { seconds, seed, actions: counts, probes, pacing, drops, standbyMs, final: final && { mode: final.mode, aside: final.aside, plate: final.plate }, problems: problems.slice(0, 20), problemCount: problems.length, pass: problems.length === 0 };
+  // Long animation frames (over 50 ms) with the scripts that ran in them, next to the drops they explain.
+  const slow = pacing.slow.map((f) => ({ ...f, during: timeline.findLast((t) => t.at <= f.at)?.action ?? 'start' }));
+  delete pacing.slow;
+  const report = { seconds, seed, actions: counts, probes, pacing, drops, slow, standbyMs, final: final && { mode: final.mode, aside: final.aside, plate: final.plate }, problems: problems.slice(0, 20), problemCount: problems.length, pass: problems.length === 0 };
   console.log(JSON.stringify(report, null, 1));
   process.exitCode = report.pass ? 0 : 1;
 }

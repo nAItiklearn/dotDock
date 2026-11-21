@@ -11,7 +11,8 @@
     rect <title>       print "rect <left> <top> <right> <bottom>" of the top-level window with that title
     activate <title>   bring the window with that title to the front (takes focus away from whatever had it)
     quit               put the cursor back where it was at start and exit
-  Every command answers one line ("ok" or the result) so the driver can wait for it.
+  Every command answers one line so the driver can wait for it: move, left and right answer "at <x> <y>", where
+  the cursor really is afterwards (Windows clamps it to the screen), the others "ok" or their result.
 #>
 $ErrorActionPreference = 'Stop'
 Add-Type -Namespace DotDock -Name Input -MemberDefinition @'
@@ -31,6 +32,12 @@ $LEFTDOWN = 0x0002; $LEFTUP = 0x0004; $RIGHTDOWN = 0x0008; $RIGHTUP = 0x0010; $H
 $start = New-Object DotDock.Input+POINT
 [void][DotDock.Input]::GetCursorPos([ref]$start)
 
+function At {
+  $p = New-Object DotDock.Input+POINT
+  [void][DotDock.Input]::GetCursorPos([ref]$p)
+  "at $($p.X) $($p.Y)"
+}
+
 function Click([int]$x, [int]$y, [uint32]$down, [uint32]$up) {
   [void][DotDock.Input]::SetCursorPos($x, $y)
   [DotDock.Input]::mouse_event($down, 0, 0, 0, [UIntPtr]::Zero)
@@ -41,9 +48,9 @@ try {
   while ($null -ne ($line = [Console]::In.ReadLine())) {
     $cmd, $rest = $line.Trim() -split ' ', 2
     switch ($cmd) {
-      'move' { $x, $y = $rest -split ' '; [void][DotDock.Input]::SetCursorPos([int]$x, [int]$y); 'ok' }
-      'left' { $x, $y = $rest -split ' '; Click ([int]$x) ([int]$y) $LEFTDOWN $LEFTUP; 'ok' }
-      'right' { $x, $y = $rest -split ' '; Click ([int]$x) ([int]$y) $RIGHTDOWN $RIGHTUP; 'ok' }
+      'move' { $x, $y = $rest -split ' '; [void][DotDock.Input]::SetCursorPos([int]$x, [int]$y); At }
+      'left' { $x, $y = $rest -split ' '; Click ([int]$x) ([int]$y) $LEFTDOWN $LEFTUP; At }
+      'right' { $x, $y = $rest -split ' '; Click ([int]$x) ([int]$y) $RIGHTDOWN $RIGHTUP; At }
       'hwheel' { [DotDock.Input]::mouse_event($HWHEEL, 0, 0, [int]$rest, [UIntPtr]::Zero); 'ok' }
       'rect' {
         $h = [DotDock.Input]::FindWindow([NullString]::Value, $rest)
