@@ -1,17 +1,17 @@
 # Live status (rewritten every 30 min)
 
-**Last check:** 2026-11-21 13:13. **Disk D:** 14 GB free (limit 12 GB). **Screen:** notch lock (12:35) was stale and removed; notch asked to release or re-take it briefly.
-Owner priorities (11:35): dock works absolutely fine, then the notch with no bugs, then the home screen tested thoroughly, then the website, then videos. Dock bottom-only. Glass landed (7a1712f).
+**Last check:** 2026-11-21 13:56. **Disk D:** 19 GB free (limit 12 GB). **Screen:** home screen editing live run, owner said go (lock since 13:37).
+Owner priorities (11:35): dock works absolutely fine, then the notch with no bugs, then the home screen tested thoroughly, then the website, then videos. Bar: above 4.8 on design, performance, accuracy and functionality for the dock, notch and website. Auto-update before release.
 
 | Track | Working on now | Last commit | Flags |
 |---|---|---|---|
-| Dock host (real dock on the desktop) | Start guard for live runs; native glass blur tied to the glass theme; taskbar parity and hard test | 2 min ago | |
-| Dock UI | Bottom-only, quality bar (real icons, fluid magnification), pre-made categories | 62 min ago | Pushed (1 of 2) |
-| Notch | State-tour fixture through every phase; live run | 39 min ago | Release the screen |
-| Theme + two switches | Decisions logged (D-027); timings, then final report | 8 min ago | Finishing |
-| Settings | Wallpapers tell dark and light apart; sliders without a gradient | 34 min ago | |
-| GitHub/dev tiles | Developer tiles page in Settings (token fields, Stars repositories) | 20 min ago | |
-| Website | Dropped unused Features scenes; bento layout, carousel, content audit | 4 min ago | |
-| Download page | Living pixel scenes for home, Features and Privacy committed | 7 min ago | Recovered |
-| Home screen direct editing | Owner's four fixes (12 files uncommitted) | 2 h ago | Pushed (1 of 2) |
+| Dock host (real dock on the desktop) | First layout from the user's own apps, catalogue cleaned (197 kept, 104 out); bottom-only and guarded live runs | 45 min ago | |
+| Dock UI | Random-input soak test committed; bottom-only, quality bar | 24 min ago | |
+| Notch | Captures from one long-lived process; live run | 8 min ago | |
+| Theme + two switches | Timings, then final report | 51 min ago | Finishing |
+| Settings | Fixed a preview block the merge left open | 39 min ago | |
+| GitHub/dev tiles | Settings page and decisions (D-032) committed | 23 min ago | Finishing |
+| Website | Bento layout, carousel, content audit | 35 min ago | |
+| Download page | Living scenes tuned for phones (33 files uncommitted) | 20 min ago | |
+| Home screen direct editing | Live run on the real desktop: the "+ Widgets" click | 41 min ago | On screen |
 | Photo widget | Merged into main (1b135f3), 4.83 | merged | Done |
