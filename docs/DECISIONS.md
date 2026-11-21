@@ -209,3 +209,15 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
 - Scroll: the nav's stuck state is watched with an IntersectionObserver instead of reading `scrollY` per scroll
   event (a trace showed it forcing layout); parallax reads every position before writing any transform; art masks
   are fetched and decoded asynchronously (`Image.decode()`) two screens ahead instead of 900 px.
+
+## D-039 Scene art flattened into pictures (2026-11-21, website track)
+- Every band and every scene layer is drawn as one flattened WebP per piece, render (narrow, wide), theme and pixel
+  ratio (`tools/flatten-art.mjs`, run by `pnpm build`, redrawing only what changed per `art-flat/sources.json`),
+  shown as `<picture>`/`<img loading="lazy" decoding="async">` with width and height; the current theme's picture
+  is set eager and decoded with `img.decode()` two screens ahead. A scene paints a handful of images instead of
+  dozens of full-width masks that were decoded on the main thread at first paint. The small sprites (butterflies,
+  dragonfly, fish) keep their masks, since their wings and fins beat as separate layers.
+- Colours and opacities come from the same tokens as the CSS (themes.ts, meadow-colours.css, art.css), read by the
+  tool. Scene captures with masks and flattened differ by under 0.6 % of pixels (moving sprites and petals):
+  docs/QA/website-art-live/masks and /flat.
+- Cost: 12 MB of pictures in the repository (396 files); a page downloads only its theme, render and ratio.

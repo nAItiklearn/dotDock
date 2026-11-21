@@ -8,6 +8,7 @@
  * for art whose lighting has to read the right way round on a light and on a dark page.
  */
 import manifest from "../assets/art/manifest.json";
+import { flatFile, isFlat } from "./art-flat";
 
 type Scales = Record<string, { file: string; w: number; h: number; bytes: number }>;
 interface Variant {
@@ -23,7 +24,8 @@ const PIECES = manifest as unknown as Record<string, Piece>;
 const URLS = import.meta.glob<string>("../assets/art/*.webp", { eager: true, query: "?url", import: "default" });
 
 /** Viewport width from which the wide render is used. */
-const WIDE_FROM_PX = 900;
+export const WIDE_FROM_PX = 900;
+const FLAT_URLS = import.meta.glob<string>("../assets/art-flat/*.webp", { eager: true, query: "?url", import: "default" });
 
 export type ArtName = keyof typeof manifest;
 
@@ -47,6 +49,32 @@ export function artRoles(name: string): string[] {
   if (!piece) throw new Error(`Unknown site art: ${name}`);
   // Every role either render uses: a narrow render can hold a flower colour the wide one does not, and back.
   return [...new Set(Object.values(piece.variants).flatMap((v) => Object.keys(v.layers).map((l) => l.split("-")[0] ?? l)))];
+}
+
+/** One flattened render of a piece (tools/flatten-art.mjs): its 1x and 2x pictures and its size in CSS pixels. */
+export interface FlatRender {
+  readonly x1: string;
+  readonly x2: string;
+  readonly w: number;
+  readonly h: number;
+}
+
+/** The flattened narrow and wide renders of a piece in a theme, or null for a piece drawn with masks. */
+export function flatRenders(name: string, theme: string): { narrow: FlatRender; wide: FlatRender } | null {
+  if (!isFlat(name)) return null;
+  const piece = PIECES[name];
+  if (!piece) throw new Error(`Unknown site art: ${name}`);
+  const render = (variant: string): FlatRender => {
+    const v = piece.variants[variant] ?? Object.values(piece.variants)[0];
+    if (!v) throw new Error(`Site art without renders: ${name}`);
+    const file = (scale: number) => {
+      const found = FLAT_URLS[`../assets/art-flat/${flatFile(name, piece.variants[variant] ? variant : Object.keys(piece.variants)[0] ?? variant, theme, scale)}`];
+      if (!found) throw new Error(`Flattened art missing: ${name}/${variant}/${theme}/${scale}x (run node tools/flatten-art.mjs)`);
+      return found;
+    };
+    return { x1: file(1), x2: file(2), w: v.w, h: v.h };
+  };
+  return { narrow: render("narrow"), wide: render("wide") };
 }
 
 /** Pixel size of the variant an element shows at a given width class, for layout rules. */
@@ -89,10 +117,11 @@ export function artCss(): string {
       const has = roles(v);
       const uneven = [...all].filter((r) => !Object.values(piece.variants).every((o) => roles(o).has(r)));
       return (
-        Object.entries(v.layers)
-          .map(([layer, scales]) => `${selector(name, layer)}{${maskRule(scales)}}`)
-          .join("") +
-        uneven.map((r) => `.art--${name} .art__${r}{display:${has.has(r) ? "block" : "none"}}`).join("") +
+        (isFlat(name)
+          ? ""
+          : Object.entries(v.layers)
+              .map(([layer, scales]) => `${selector(name, layer)}{${maskRule(scales)}}`)
+              .join("") + uneven.map((r) => `.art--${name} .art__${r}{display:${has.has(r) ? "block" : "none"}}`).join("")) +
         `.art--${name}{--art-w:${v.w};--art-h:${v.h}}`
       );
     };
