@@ -76,7 +76,6 @@ const columns = [
 
   <div class="footer__stage" aria-hidden="true">
     <span class="footer__mark"><Mark size={48} class="footer__mark-icon" />{PRODUCT_NAME}</span>
-    <LiveScene scene="meadow" />
   </div>
 
   <div class="wrap">
@@ -89,5 +88,10 @@ const columns = [
       <p class="tabular">&copy; {year} {PRODUCT_NAME} contributors</p>
       <p class="footer__visits tabular" data-visits hidden><span data-visits-count></span> visits, counted anonymously</p>
     </div>
+  </div>
+
+  <!-- The meadow ends the page: its ground runs to the bottom edge, with nothing under it. -->
+  <div class="footer__meadow" aria-hidden="true">
+    <LiveScene scene="meadow" />
   </div>
 </footer>

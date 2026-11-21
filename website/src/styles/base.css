@@ -623,6 +623,9 @@ button {
 .footer__mark-icon {
   width: 0.76em;
   height: 0.8em;
+}
+.footer__meadow .live {
+  margin-block: clamp(8px, 2vw, 24px) 0;
 }
 .footer__legal {
   display: grid;
