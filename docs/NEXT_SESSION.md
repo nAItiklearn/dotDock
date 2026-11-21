@@ -77,7 +77,10 @@ wallpaper first; `tools/restore-windows.ps1` (has `-DryRun`) restores everything
 4. In `website/` run `node tools/release-data.mjs` (adds date, size, SHA-256), commit, push.
 5. Vercel: the project is **already created and linked** (done 22:55): `dotdock`, id
    `prj_tASXGC6S4bWI8SgjFQWs8JX2bA4x`, team `naitiklearns-projects` (`team_kMhof5qb7z3Fnd4K92551OeJ`), GitHub
-   `nAItiklearn/dotDock`, root `website`, Astro, Node 24.x, `pnpm install --frozen-lockfile` / `pnpm build`,
+   `nAItiklearn/dotDock`, root `website`, Astro, Node 24.x, install `npx --yes pnpm@12.16.1 install --frozen-lockfile`, build
+   `npx --yes pnpm@12.16.1 build` (Vercel's own pnpm cannot read the pnpm 12 lockfile; verified 23:05 with a preview
+   build of website `9b8ceca` from branch `website-v1-preview`: READY in 40 s, pages 200, `/api/visits` 200
+   `{"available":false}`),
    protection on previews only (the production URL is public). **Any push to `main` deploys production**, so push
    `main` only after the integration branch is merged and green. `KV_REST_API_URL` / `KV_REST_API_TOKEN` are
    optional (visit counter; the site runs cleanly without them). Leave `DOTDOCK_OWNER_PHOTOS` unset. Watch the
