@@ -21,6 +21,8 @@ const SWEEP_FRAMES_PER_PASS = 90;
 const FRAME_MS = 1000 / 60;
 const SWEEP_PERIOD_MS = 1500;
 const EDGE_INSET = 24;
+/** How far a measured drag carries an item, in item widths: far enough to slide its neighbours. */
+const DRAG_REACH_SLOTS = 2.5;
 
 interface Sweep {
   readonly x0: number;
@@ -136,6 +138,47 @@ export const perf = {
     });
     observer.disconnect();
     move(0, 0);
+    deltas.shift();
+    return { ...stats(deltas), over20: deltas.filter((d) => d > 20).length, longTasks };
+  },
+
+  /**
+   * Frame cadence while an item is carried along the dock for `durationMs` (rounded up to whole there-and-back passes)
+   * and dropped where it started, so the measurement leaves the order as it was.
+   */
+  async drag(key: string, durationMs: number): Promise<Stats & { readonly over20: number; readonly longTasks: number }> {
+    const target = document.querySelector<HTMLElement>(`[data-key="${CSS.escape(key)}"] .disc`);
+    if (!target) throw new Error(`no bar item ${key}`);
+    const box = target.getBoundingClientRect();
+    const x0 = box.left + box.width / 2;
+    const y = box.top + box.height / 2;
+    const reach = box.width * DRAG_REACH_SLOTS;
+    const passes = Math.max(1, Math.ceil(durationMs / (SWEEP_PERIOD_MS * 2)));
+    const total = passes * SWEEP_PERIOD_MS * 2;
+    const at = (x: number) => ({ bubbles: true, cancelable: true, button: 0, buttons: 1, pointerType: "mouse", isPrimary: true, clientX: x, clientY: y });
+    const deltas: number[] = [];
+    let longTasks = 0;
+    const observer = new PerformanceObserver((list) => {
+      longTasks += list.getEntries().length;
+    });
+    observer.observe({ type: "longtask" });
+    target.dispatchEvent(new PointerEvent("pointerdown", at(x0)));
+    let last = performance.now();
+    const start = last;
+    await new Promise<void>((resolve) => {
+      const frame = (now: number): void => {
+        deltas.push(now - last);
+        last = now;
+        const elapsed = Math.min(now - start, total);
+        // Out to the right and back, so the item ends where it began.
+        window.dispatchEvent(new PointerEvent("pointermove", at(x0 + reach * triangle((elapsed / SWEEP_PERIOD_MS) % 2))));
+        if (elapsed < total) requestAnimationFrame(frame);
+        else resolve();
+      };
+      requestAnimationFrame(frame);
+    });
+    window.dispatchEvent(new PointerEvent("pointerup", at(x0)));
+    observer.disconnect();
     deltas.shift();
     return { ...stats(deltas), over20: deltas.filter((d) => d > 20).length, longTasks };
   },

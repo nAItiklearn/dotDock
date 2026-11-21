@@ -37,6 +37,8 @@ pub trait Hooks: Send + Sync + 'static {
     fn set_taskbar_hidden(&self, hidden: bool) -> Result<(), String>;
     /// Hiding the taskbar was refused: the setting should go back to off.
     fn taskbar_refused(&self, reason: &str);
+    /// The kill switch (Ctrl+Alt+Shift+D) was pressed: quit now, putting the Windows taskbar back.
+    fn quit(&self);
 }
 
 /// The dock window and what the host knows about it.

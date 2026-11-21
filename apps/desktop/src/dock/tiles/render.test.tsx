@@ -20,7 +20,7 @@ vi.stubGlobal("navigator", { onLine: true });
 const { Tile } = await import("./Tile");
 const { TilePopover } = await import("./popovers");
 const { Gallery } = await import("../Gallery");
-const { Prefs, drawnAsHint } = await import("../Prefs");
+const { Prefs, drawnAsHint, resetPatch } = await import("../Prefs");
 const { Slot } = await import("../items");
 const { useNotesStore } = await import("../../widgets/notesStore");
 const { useTools } = await import("./toolsStore");
@@ -566,7 +566,7 @@ describe("the dock settings popover", () => {
 
   it("is a small labelled dialog with position, size, magnification, two switches and the look", () => {
     const html = prefs();
-    expect(html).toContain('aria-label="Dock settings"');
+    expect(html).toContain('aria-label="Customise the dock"');
     for (const words of ["Position", "Icon size", "Magnification", "Hide when not in use", "Keep windows clear of the dock", "Look"]) expect(html).toContain(words);
   });
 
@@ -588,6 +588,23 @@ describe("the dock settings popover", () => {
     const html = prefs({ autoHide: true, reserveSpace: false });
     expect(html).toMatch(/role="switch" class="prefs__switch" aria-checked="true"><span>Hide when not in use/);
     expect(html).toMatch(/role="switch" class="prefs__switch" aria-checked="false"><span>Keep windows clear/);
+  });
+
+  it("starts with the items: add an app, add a widget, arrange and remove", () => {
+    const html = prefs();
+    for (const words of ["Items", "Add an app", "Add a widget", "Arrange and remove"]) expect(button(html, words) ?? html).toContain(words);
+    expect(html.indexOf("Items")).toBeLessThan(html.indexOf("Position"));
+  });
+
+  it("ends with the taskbar switch and a reset", () => {
+    const html = prefs({ replaceTaskbar: true });
+    expect(html).toMatch(/role="switch" class="prefs__switch" aria-checked="true"><span>Replace the Windows taskbar/);
+    expect(button(html, "Reset the dock")).toBeDefined();
+  });
+
+  it("resets how the dock looks, but never whether it runs or replaces the taskbar", () => {
+    const patch = resetPatch({ enabled: true, replaceTaskbar: true });
+    expect(patch).toMatchObject({ pinned: [], tiles: [], edge: "bottom", iconSize: 48, magnification: 1.25, autoHide: false, reserveSpace: true, enabled: true, replaceTaskbar: true });
   });
 
   it("offers every look the dock has", () => {

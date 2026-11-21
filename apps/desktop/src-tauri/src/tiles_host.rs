@@ -6,7 +6,7 @@
 use crate::dock_host::DOCK_LABEL;
 use dotdock_shell::boot_log;
 use dotdock_tiles::protocol::ContactAction;
-use dotdock_tiles::wire::{AudioOp, FeedName, HydrationOp, StopwatchOp, TogglesOp};
+use dotdock_tiles::wire::{known_feeds, unsupported_feeds, AudioOp, HydrationOp, StopwatchOp, TogglesOp};
 use dotdock_tiles::{DataDir, DockEvent, DockTiles, EVENT_FEEDS, EVENT_MIC_LEVEL};
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -41,9 +41,15 @@ fn forward(app: &AppHandle, event: DockEvent) {
     };
 }
 
+/// Names are taken as strings so that a feed this core does not serve reads `unsupported` instead of failing the
+/// whole watch.
 #[tauri::command(async)]
-pub fn dock_tiles_watch(feeds: Vec<FeedName>, state: State<'_, TilesState>) {
-    state.0.watch(&feeds);
+pub fn dock_tiles_watch(app: AppHandle, feeds: Vec<String>, state: State<'_, TilesState>) {
+    let (known, unknown) = known_feeds(&feeds);
+    state.0.watch(&known);
+    if !unknown.is_empty() {
+        let _ = app.emit_to(DOCK_LABEL, EVENT_FEEDS, unsupported_feeds(&unknown));
+    }
 }
 
 #[tauri::command(async)]
@@ -89,6 +95,11 @@ pub fn dock_hydration(op: HydrationOp, state: State<'_, TilesState>) -> Result<(
 #[tauri::command(async)]
 pub fn dock_audio(op: AudioOp, state: State<'_, TilesState>) -> Result<(), String> {
     state.0.audio(op)
+}
+
+#[tauri::command(async)]
+pub fn dock_open_url(url: String, state: State<'_, TilesState>) -> Result<(), String> {
+    state.0.open_url(&url)
 }
 
 #[tauri::command(async)]

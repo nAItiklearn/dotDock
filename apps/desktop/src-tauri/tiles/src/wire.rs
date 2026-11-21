@@ -190,6 +190,29 @@ pub struct TogglesView {
     pub brightness: Option<f32>,
 }
 
+/// Splits the feed names a window asked for into the ones this core serves and the ones it does not know (a dock
+/// UI newer than its core). Unknown names must not make the whole watch fail.
+pub fn known_feeds(names: &[String]) -> (Vec<FeedName>, Vec<String>) {
+    let mut known = Vec::new();
+    let mut unknown = Vec::new();
+    for name in names {
+        match serde_json::from_value::<FeedName>(serde_json::Value::String(name.clone())) {
+            Ok(feed) => known.push(feed),
+            Err(_) => unknown.push(name.clone()),
+        }
+    }
+    (known, unknown)
+}
+
+/// The feed event that tells the UI these feeds are not served, in its own word (`unsupported`).
+pub fn unsupported_feeds(names: &[String]) -> serde_json::Value {
+    names
+        .iter()
+        .map(|name| (name.clone(), serde_json::json!({ "data": null, "issue": "unsupported" })))
+        .collect::<serde_json::Map<_, _>>()
+        .into()
+}
+
 /// One delivery on the feed event: only the feeds that changed, as the UI's `Partial<TileFeeds>`.
 #[derive(Serialize, Default, Clone, PartialEq, Debug)]
 pub struct FeedsUpdate {
@@ -845,6 +868,15 @@ mod tests {
             serde_json::from_value::<Vec<FeedName>>(json!(["network", "toggles"])).unwrap(),
             vec![FeedName::Network, FeedName::Toggles]
         );
+    }
+
+    #[test]
+    fn an_unknown_feed_is_reported_unsupported_and_the_rest_are_still_served() {
+        let asked = vec!["audio".to_owned(), "rates".to_owned(), "toggles".to_owned()];
+        let (known, unknown) = known_feeds(&asked);
+        assert_eq!(known, vec![FeedName::Audio, FeedName::Toggles]);
+        assert_eq!(unknown, vec!["rates".to_owned()]);
+        assert_eq!(unsupported_feeds(&unknown), json!({ "rates": { "data": null, "issue": "unsupported" } }));
     }
 
     #[test]

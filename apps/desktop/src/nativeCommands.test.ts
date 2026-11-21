@@ -12,8 +12,8 @@ import { describe, expect, it } from "vitest";
 const SRC = join(__dirname);
 const LIB_RS = join(__dirname, "..", "src-tauri", "src", "lib.rs");
 
-/** snake_case literals in the sources that are data, not commands: the island feed's error kinds. */
-const NOT_COMMANDS = new Set(["usage_limit", "model_not_found"]);
+/** snake_case literals in the sources that are data, not commands: the island feed's error kinds and Open-Meteo fields. */
+const NOT_COMMANDS = new Set(["usage_limit", "model_not_found", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m"]);
 
 /**
  * Names the Settings track (branch `worktree-agent-a140991fdc0a4c940`) is wiring into the core. Each must still be

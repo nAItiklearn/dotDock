@@ -28,7 +28,7 @@ use windows::core::w;
 use windows::Win32::Foundation::{HMODULE, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    RegisterHotKey, UnregisterHotKey, MOD_ALT, MOD_CONTROL, MOD_NOREPEAT, VK_SPACE,
+    RegisterHotKey, UnregisterHotKey, MOD_ALT, MOD_CONTROL, MOD_NOREPEAT, MOD_SHIFT, VK_SPACE,
 };
 use windows::Win32::UI::Shell::ABN_POSCHANGED;
 use windows::Win32::UI::WindowsAndMessaging::{
@@ -45,6 +45,8 @@ const WM_APPBAR: u32 = WM_APP + 2;
 /// The App Library's shortcut: Ctrl+Alt+Space. Registered for the whole session; if another program already has it
 /// the dock still works, only the shortcut does not.
 const HOTKEY_ID: i32 = 1;
+/// The kill switch: Ctrl+Alt+Shift+D quits dotDock and puts the Windows taskbar back, whatever state the dock is in.
+const QUIT_HOTKEY_ID: i32 = 2;
 const LIBRARY_ACTION: &str = "toggle";
 
 /// One request for glass: the shapes (CSS px relative to the dock window) and whether the UI is dark.
@@ -313,6 +315,10 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, message: u32, wparam: WPARAM, lpa
             with_controller(|c| c.place(false), || REPLACE_AGAIN.set(true));
             LRESULT(0)
         }
+        WM_HOTKEY if wparam.0 == QUIT_HOTKEY_ID as usize => {
+            with_controller(|c| c.hooks.quit(), || {});
+            LRESULT(0)
+        }
         WM_HOTKEY if wparam.0 == HOTKEY_ID as usize => {
             with_controller(|c| c.hooks.emit(EVENT_LIBRARY, serde_json::json!(LIBRARY_ACTION)), || {});
             LRESULT(0)
@@ -451,6 +457,12 @@ fn run(parts: Parts, published: &AtomicIsize, ready: &std::sync::mpsc::SyncSende
         if !hotkey {
             hooks.log("the App Library shortcut (Ctrl+Alt+Space) is taken by another program");
         }
+        let quit_key = u32::from(b'D');
+        if RegisterHotKey(Some(hwnd), QUIT_HOTKEY_ID, MOD_CONTROL | MOD_ALT | MOD_SHIFT | MOD_NOREPEAT, quit_key)
+            .is_err()
+        {
+            hooks.log("the quit shortcut (Ctrl+Alt+Shift+D) is taken by another program; the tray menu still quits");
+        }
         let controller = Controller {
             hwnd,
             commands,
@@ -484,6 +496,8 @@ fn run(parts: Parts, published: &AtomicIsize, ready: &std::sync::mpsc::SyncSende
             if controller.hotkey {
                 let _ = UnregisterHotKey(Some(hwnd), HOTKEY_ID);
             }
+            // Fails harmlessly when the shortcut was never registered.
+            let _ = UnregisterHotKey(Some(hwnd), QUIT_HOTKEY_ID);
         }
         drop(controller);
         let _ = UnregisterClassW(CLASS_NAME, Some(instance.into()));

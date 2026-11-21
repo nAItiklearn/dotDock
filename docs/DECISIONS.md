@@ -140,3 +140,18 @@ Numbered D-019 because D-017 and D-018 exist on `main`; the backend track's bran
 - **Process-wide MTA:** the MTA is kept alive for the whole run (`CoIncrementMTAUsage` in `com.rs`). Without it, Windows tore the apartment down when the last worker ended, the `windows` crate's cached WinRT factories died with it, and the next calendar start crashed in `RequestStoreAsync` (reproduced with a test, `calendar::store`).
 - **Tests that play a sound** (microphone meter, voice memo recording) are `#[ignore]`d and run with `cargo test -p dotdock-tiles -- --ignored`: they play a system sound through the speakers and listen to its loopback, which is audible and takes the one process-wide `PlaySound` slot. They refuse to run while the output is muted (loopback is silent then), start the sound before the loopback stream opens, and the recording test tries up to three times, because on this laptop's driver a loopback stream stays silent about one try in six.
 - **Reverse:** drop `dock.rs`, `wire.rs`, `stopwatch.rs`, `hydration.rs` and `zone.rs`; `TileHub` still works on its own.
+
+## D-026 CoolDock-gap tiles: where each one's data comes from (dock UI, 2026-11-21)
+- **Sun arc** computes sunrise and sunset locally (sunrise equation, within a few minutes) for a bundled city. It
+  follows the city in the device's own time zone unless the user picks one; no location permission, no network.
+- **Wind** reads optional `windKmh`, `windFromDeg`, `gustKmh` on the weather provider. Until the core fetches them the
+  tile says "Not available" rather than guessing (blocker B-002).
+- **Currency** reads a new `rates` tile feed (European Central Bank reference rates, cached by the core so it works
+  offline). Not a field of the unit converter: rates change and have a source date, units do not.
+- **Web search** opens addresses through a new `dock_open_url` command that accepts http(s) only; a typed site opens
+  directly. Engines: DuckDuckGo (default, no account, no tracking), Google, Bing, Ecosia, Brave.
+- **History** is the dock's own record of apps it opened (launches that succeeded), newest first, on this device only.
+  CoolDock's history is browser history; reading another app's history is out of scope for a local-first dock.
+- **Voice memo** records with the WebView's microphone access and keeps audio in this device's IndexedDB, at most 12
+  memos and 10 minutes each, with a 40-bar peak waveform per memo. Nothing is uploaded.
+- **Flip clock** is a face only: a new minute mounts a new card whose top folds once (none with reduced motion).

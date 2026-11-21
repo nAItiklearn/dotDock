@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { isTauri } from "../../providers/bridge";
 import { useDockStore } from "../store";
 import { t } from "../strings";
+import { isWebAddress } from "./search";
 import type { FeedName, TileFeeds, TilesBackend, TilesCommands, Unsubscribe } from "./ui-types";
 
 /**
@@ -24,6 +25,7 @@ export const TILES_WIRE = {
   hydration: "dock_hydration",
   audio: "dock_audio",
   toggles: "dock_toggles",
+  openUrl: "dock_open_url",
 } as const;
 
 async function run(name: string, args: Record<string, unknown>): Promise<void> {
@@ -42,6 +44,7 @@ const tauriCommands: TilesCommands = {
   hydration: (op) => run(TILES_WIRE.hydration, { op }),
   audio: (op) => run(TILES_WIRE.audio, { op }),
   toggles: (op) => run(TILES_WIRE.toggles, { op }),
+  openUrl: (url) => (isWebAddress(url) ? run(TILES_WIRE.openUrl, { url }) : Promise.reject(new Error("not a web address"))),
 };
 
 /** What a feed reads as while the core cannot supply it. */
@@ -106,6 +109,7 @@ const detachedTiles: TilesBackend = {
     hydration: () => Promise.reject(new Error("no core")),
     audio: () => Promise.reject(new Error("no core")),
     toggles: () => Promise.reject(new Error("no core")),
+    openUrl: () => Promise.reject(new Error("no core")),
   },
   subscribe: (names, listener) => {
     queueMicrotask(() => listener(unsupported(names)));

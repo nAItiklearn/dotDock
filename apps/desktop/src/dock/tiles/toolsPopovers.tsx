@@ -26,7 +26,7 @@ const CITY_RESULTS = 8;
 const COPIED_MS = 1600;
 const BRIGHTNESS_STEP = 0.01;
 
-function Empty({ title, hint }: { readonly title: string; readonly hint?: string }) {
+export function Empty({ title, hint }: { readonly title: string; readonly hint?: string }) {
   return (
     <div className="tp-empty">
       <p>{title}</p>
@@ -36,7 +36,7 @@ function Empty({ title, hint }: { readonly title: string; readonly hint?: string
 }
 
 /** Puts text on the clipboard; false when the page may not (no focus, no permission). */
-async function copyText(text: string): Promise<boolean> {
+export async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
     return true;
@@ -46,7 +46,7 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 /** Shows `message` for a moment, then clears it: the small "Copied" under a control. */
-function useFlash(): readonly [string | null, (message: string) => void] {
+export function useFlash(): readonly [string | null, (message: string) => void] {
   const [message, setMessage] = useState<string | null>(null);
   return [
     message,

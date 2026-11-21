@@ -24,7 +24,7 @@ export function installDevBackend(): void {
 
 const BYTES_PER_GIB = 1024 ** 3;
 
-/** Sample provider data for the tiles: a track, memory use, a battery. Clearly the fixture's, never the product's. */
+/** Sample provider data for the tiles: a track, memory use, a battery, the weather. Clearly the fixture's, never the product's. */
 function publishSampleProviders(): void {
   const { publish } = useProviderStore.getState();
   publish("media", {
@@ -46,6 +46,7 @@ function publishSampleProviders(): void {
     disks: [],
   });
   publish("battery", { percent: 72, charging: false, pluggedIn: false, secondsRemaining: 9000 });
+  publish("weather", { place: "Fixture Bay", temperatureC: 21, highC: 24, lowC: 15, code: 2, isDay: true, fetchedAt: Date.now(), windKmh: 18, windFromDeg: 300, gustKmh: 31 });
 }
 
 /** Paints one of the app's wallpapers behind the transparent dock window and mounts the panel. `window.dockDev` exposes the fixture to devtools. */

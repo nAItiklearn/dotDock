@@ -274,6 +274,11 @@ impl DockTiles {
         }
     }
 
+    /// Opens a web address (the web search tile) in the default browser; anything but http(s) is refused.
+    pub fn open_url(&self, url: &str) -> Result<(), String> {
+        shell::open_web(url)
+    }
+
     pub fn audio(&self, op: AudioOp) -> Result<(), String> {
         match op {
             AudioOp::Output { device_id } => audio::set_default_device(&device_id),

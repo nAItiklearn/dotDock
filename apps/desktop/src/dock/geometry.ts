@@ -88,6 +88,13 @@ export const LENGTH_RATIO = {
   world: [3.1, 1],
   network: [3.2, 1],
   toggles: [3.4, 1],
+  flip: [2.2, 1.2],
+  sun: [3.1, 1],
+  wind: [2.7, 1],
+  currency: [3.6, 1],
+  search: [2.8, 1],
+  history: [3.1, 1],
+  memo: [2.6, 1],
   /** Measured once drawn; this estimate only sizes the dock before the first measurement. */
   status: [3.2, 2.3],
 } as const;
@@ -294,6 +301,11 @@ export const TILE_POPOVER_SIZE = {
   world: { w: 340, h: 410 },
   network: { w: 340, h: 330 },
   toggles: { w: 330, h: 340 },
+  sun: { w: 330, h: 330 },
+  currency: { w: 360, h: 340 },
+  search: { w: 380, h: 220 },
+  history: { w: 320, h: 400 },
+  memo: { w: 360, h: 380 },
 } as const;
 export type PopoverTileId = keyof typeof TILE_POPOVER_SIZE;
 export const isPopoverTile = (id: string): id is PopoverTileId => Object.hasOwn(TILE_POPOVER_SIZE, id);
@@ -302,7 +314,7 @@ export const isPopoverTile = (id: string): id is PopoverTileId => Object.hasOwn(
 export const GALLERY = { w: 660, h: 560, pad: 16, head: 52, icon: 40, cardMin: 190, gap: 12, gapToDock: 12 } as const;
 
 /** The dock settings popover, in px. */
-export const PREFS = { w: 330, h: 468, pad: 16, head: 52, gapToDock: 12 } as const;
+export const PREFS = { w: 340, h: 600, pad: 16, head: 52, gapToDock: 12 } as const;
 
 /** Context menus, in px. */
 export const MENU = { w: 236, row: 34, heading: 30, separator: 9, pad: 6, gap: 4 } as const;

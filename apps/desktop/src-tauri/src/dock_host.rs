@@ -62,6 +62,12 @@ impl Hooks for AppHooks {
     fn taskbar_refused(&self, _reason: &str) {
         replace_taskbar_off(&self.0);
     }
+
+    fn quit(&self) {
+        boot_log::record("dock: quit shortcut pressed");
+        // The exit handler stops the host and restores the taskbar before the process ends.
+        self.0.exit(0);
+    }
 }
 
 /// Turns "replace the taskbar" off in the stored settings; the change comes back as a settings event, so the dock

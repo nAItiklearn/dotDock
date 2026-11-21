@@ -64,6 +64,22 @@ pub fn is_allowed_uri(uri: &str) -> bool {
     ALLOWED_SCHEMES.iter().any(|s| lower.starts_with(s)) && !lower.chars().any(char::is_control)
 }
 
+/// True for an `http:` or `https:` address with a host and nothing a shell could read as more than one argument.
+pub fn is_web_address(url: &str) -> bool {
+    let lower = url.to_ascii_lowercase();
+    let rest = lower.strip_prefix("https://").or_else(|| lower.strip_prefix("http://"));
+    rest.is_some_and(|rest| !rest.is_empty() && !rest.starts_with('/'))
+        && !url.chars().any(|c| c.is_control() || c.is_whitespace() || c == '"')
+}
+
+/// Opens a web address in the default browser, and nothing else.
+pub fn open_web(url: &str) -> Result<(), String> {
+    if !is_web_address(url) {
+        return Err("that is not a web address".to_owned());
+    }
+    open(url)
+}
+
 /// Opens a link, after checking its scheme.
 pub fn open_uri(uri: &str) -> Result<(), String> {
     if !is_allowed_uri(uri) {
@@ -75,6 +91,18 @@ pub fn open_uri(uri: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_web_address_is_http_or_https_with_a_host_and_nothing_else() {
+        assert!(is_web_address("https://duckduckgo.com/?q=dot+dock"));
+        assert!(is_web_address("HTTP://example.org"));
+        assert!(!is_web_address("https://"));
+        assert!(!is_web_address("https:///etc"));
+        assert!(!is_web_address("file:///C:/Windows/notepad.exe"));
+        assert!(!is_web_address("ms-settings:display"));
+        assert!(!is_web_address("https://example.org \"&calc"));
+        assert!(!is_web_address("https://exa\nmple.org"));
+    }
 
     #[test]
     fn only_known_schemes_are_opened() {

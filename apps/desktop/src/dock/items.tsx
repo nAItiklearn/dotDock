@@ -46,7 +46,7 @@ export const isDraggable = (entry: BarEntry): boolean => (entry.kind === "app" &
 
 /** Items that open a panel: it opens on the press, ahead of the click, so the dock answers as fast as the hand moves. */
 export const opensPanel = (entry: BarEntry): boolean =>
-  entry.kind === "stack" || entry.kind === "library" || entry.kind === "add" || (entry.kind === "tile" && isPopoverTile(entry.id));
+  entry.kind === "stack" || entry.kind === "library" || entry.kind === "add" || entry.kind === "more" || (entry.kind === "tile" && isPopoverTile(entry.id));
 
 /** Whether edit mode shows a remove badge on an entry. */
 export const isRemovable = isDraggable;
@@ -86,6 +86,8 @@ function label(entry: BarEntry): string {
       return t(`tile.${entry.id}`);
     case "add":
       return t("edit.add");
+    case "more":
+      return t("dock.customise");
     default:
       return "";
   }
@@ -164,10 +166,10 @@ function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "
     <div className="face" data-editing={editing ? "true" : undefined} data-open={open ? "true" : undefined} style={style}>
       <button
         type="button"
-        className={`disc${entry.kind === "stack" ? " disc--stack" : ""}${entry.kind === "library" ? " disc--library" : ""}${entry.kind === "add" ? " disc--add" : ""}`}
+        className={`disc${entry.kind === "stack" ? " disc--stack" : ""}${entry.kind === "library" ? " disc--library" : ""}${entry.kind === "add" ? " disc--add" : ""}${entry.kind === "more" ? " disc--more" : ""}`}
         aria-label={aria}
-        aria-haspopup={entry.kind === "stack" || entry.kind === "add" ? "dialog" : undefined}
-        aria-expanded={entry.kind === "stack" || entry.kind === "add" ? open : undefined}
+        aria-haspopup={entry.kind === "stack" || entry.kind === "add" || entry.kind === "more" ? "dialog" : undefined}
+        aria-expanded={entry.kind === "stack" || entry.kind === "add" || entry.kind === "more" ? open : undefined}
         data-draggable={draggable ? "true" : undefined}
         onClick={(e) => handlers.activate(entry, e.currentTarget)}
         onContextMenu={(e) => {
@@ -192,6 +194,7 @@ function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "
         {entry.kind === "stack" ? <StackMini entry={entry} /> : null}
         {entry.kind === "library" ? <LibraryMark /> : null}
         {entry.kind === "add" ? <Icon name="plus" /> : null}
+        {entry.kind === "more" ? <Icon name="more" /> : null}
       </button>
       {entry.kind === "app" && entry.fresh ? <i className="badge" aria-label={t("item.new")} /> : null}
       {entry.kind === "stack" && entry.fresh > 0 ? (

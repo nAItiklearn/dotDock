@@ -7,6 +7,7 @@ import type { GlassRequest } from "./nativeGlass";
 import type { Category, CategoryId, CommandResult, DockApp, DockBackdrop, DockSettings, DockSnapshot, DockWindow, FrozenState } from "./protocol";
 import { isFrozen, useDockStore } from "./store";
 import { t } from "./strings";
+import { useTools } from "./tiles/toolsStore";
 
 /** Everything the dock needs from the outside world. The Tauri core provides it; a browser has nothing. */
 export interface DockBackend {
@@ -139,7 +140,8 @@ export const actions = {
   async launch(appId: string, name: string): Promise<void> {
     useDockStore.getState().markSeen([appId]);
     const result = await backend.launch(appId);
-    if (!result.ok) fail(t("launch.failed", { name }));
+    if (result.ok) useTools.getState().recordLaunch(appId, Date.now());
+    else fail(t("launch.failed", { name }));
   },
 
   /** Brings an app forward if it has windows, else starts it. Used by the stack popover and the App Library. */

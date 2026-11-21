@@ -94,11 +94,25 @@ function appMenu(app: DockApp, windows: readonly DockWindow[], ctx: MenuContext)
 }
 
 /**
+ * Every item's menu ends with the dock's own entries, so editing, adding a widget and the settings are found from
+ * wherever the user right-clicks, not only from the bar's empty space.
+ */
+function withDock(items: readonly MenuItem[], ctx: MenuContext): MenuItem[] {
+  return [...items, separator("s-dock"), ...barMenu(ctx).filter((item) => item.id !== "library")];
+}
+
+/**
  * The items of the menu for an entry key (the bar's own keys, plus `app:<id>` for apps in a popover or the
  * library). `null` is the bar itself; unknown keys fall back to it.
  */
 export function menuFor(key: string | null, ctx: MenuContext): MenuItem[] {
-  if (key === null || key === "library" || key === "status") return barMenu(ctx);
+  const items = itemMenu(key, ctx);
+  return items === null ? barMenu(ctx) : withDock(items, ctx);
+}
+
+/** The menu of one entry without the dock's entries; null for the bar itself and for keys it does not know. */
+function itemMenu(key: string | null, ctx: MenuContext): MenuItem[] | null {
+  if (key === null || key === "library" || key === "status") return null;
 
   if (key.startsWith("stack:")) {
     const category = key.slice("stack:".length) as CategoryId;
@@ -115,21 +129,21 @@ export function menuFor(key: string | null, ctx: MenuContext): MenuItem[] {
 
   if (key.startsWith("tile:")) {
     const id = key.slice("tile:".length);
-    if (!isTileId(id)) return barMenu(ctx);
+    if (!isTileId(id)) return null;
     return [{ id: "remove", label: t("menu.removeTile"), kind: "item", run: () => ctx.do.updateSettings({ tiles: ctx.settings.tiles.filter((tile) => tile !== id) }) }];
   }
 
   if (key.startsWith("app:")) {
     const app = ctx.apps.find((a) => `app:${a.id}` === key);
-    if (!app) return barMenu(ctx);
+    if (!app) return null;
     return appMenu(app, ctx.windows.filter((w) => w.appId === app.id), ctx);
   }
 
   if (key.startsWith("exe:")) {
     const windows = ctx.windows.filter((w) => w.appId === null && `exe:${w.icon}` === key);
-    return windows.length === 0 ? barMenu(ctx) : closeItems(windows, ctx).slice(1);
+    return windows.length === 0 ? null : closeItems(windows, ctx).slice(1);
   }
-  return barMenu(ctx);
+  return null;
 }
 
 const ROW_HEIGHT: Record<MenuItem["kind"], number> = { item: MENU.row, submenu: MENU.row, heading: MENU.heading, separator: MENU.separator };

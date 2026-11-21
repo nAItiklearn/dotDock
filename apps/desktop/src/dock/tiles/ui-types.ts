@@ -132,6 +132,17 @@ export interface TogglesView {
 
 export type TogglesOp = { readonly type: "switch"; readonly name: ToggleName; readonly on: boolean } | { readonly type: "brightness"; readonly value: number };
 
+// Currency reference rates.
+
+export interface RatesView {
+  /** The currency every rate is quoted against: "EUR" for the European Central Bank's rates. */
+  readonly base: string;
+  /** When the source published these rates. */
+  readonly publishedAt: number;
+  /** Units of each currency per one unit of the base, by ISO 4217 code. */
+  readonly rates: Readonly<Record<string, number>>;
+}
+
 /** Every feed the dock reads from the core. Reminders, focus, progress, system and media come from elsewhere in the app. */
 export interface TileFeeds {
   readonly contacts: TileFeed<ContactsView>;
@@ -143,6 +154,7 @@ export interface TileFeeds {
   readonly audio: TileFeed<AudioView>;
   readonly network: TileFeed<NetworkView>;
   readonly toggles: TileFeed<TogglesView>;
+  readonly rates: TileFeed<RatesView>;
 }
 
 export type FeedName = keyof TileFeeds;
@@ -165,6 +177,8 @@ export interface TilesCommands {
   hydration(op: HydrationOp): Promise<void>;
   audio(op: AudioOp): Promise<void>;
   toggles(op: TogglesOp): Promise<void>;
+  /** Opens a web address (http or https only) in the user's default browser. */
+  openUrl(url: string): Promise<void>;
 }
 
 export type Unsubscribe = () => void;

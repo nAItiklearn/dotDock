@@ -34,6 +34,13 @@ export interface WeatherData {
   readonly code: number;
   readonly isDay: boolean;
   readonly fetchedAt: number;
+  /**
+   * Wind at 10 m (Open-Meteo `wind_speed_10m`, `wind_direction_10m`, `wind_gusts_10m`), in km/h and degrees it blows
+   * from. Absent from a core that does not fetch it yet; the dock's wind tile then says it is not available.
+   */
+  readonly windKmh?: number;
+  readonly windFromDeg?: number;
+  readonly gustKmh?: number;
 }
 
 /** The system media session (Spotify, browsers, players). Absent when nothing is playing. */

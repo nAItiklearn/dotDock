@@ -117,3 +117,62 @@
   outline: var(--focus-ring) solid var(--accent);
   outline-offset: var(--focus-ring);
 }
+
+/* Everything under the head scrolls together when the screen is shorter than the panel. */
+.prefs__scroll {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.prefs__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.prefs__actions button,
+.prefs__reset {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  height: var(--row-h);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-md);
+  text-align: left;
+  cursor: pointer;
+}
+.prefs__actions .icon {
+  height: 46%;
+  width: auto;
+  color: var(--text-dim);
+}
+.prefs__reset {
+  justify-content: center;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text-dim);
+}
+.prefs__reset[data-confirm="true"] {
+  border-color: transparent;
+  background: var(--danger);
+  color: var(--accent-ink);
+}
+@media (hover: hover) {
+  .prefs__actions button:hover {
+    background: var(--surface-2);
+  }
+}
+.prefs__actions button:focus-visible,
+.prefs__reset:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { actions } from "./bridge";
 import type { Rect, Size } from "./geometry";
 import type { BarLayout } from "./Bar";
-import { computeRegions, sameRegions, snapRect } from "./regions";
+import { computeRegions, measurePanels, OPEN_PANEL_SELECTOR, sameRegions, snapRect } from "./regions";
 import { glassRequest, sameGlass, type GlassRequest } from "./nativeGlass";
 import type { DockThemeId } from "./theme";
 import { useDockStore } from "./store";
@@ -34,7 +34,7 @@ export interface PanelRects {
  * Tells the core which rectangles take the pointer. Everything else clicks through to the desktop, so this is
  * what keeps a full-screen window from getting in the way of the apps beneath it.
  */
-export function useRegions(layout: BarLayout | null, hidden: boolean, panels: PanelRects, viewport: Size, modal: boolean): void {
+export function useRegions(layout: BarLayout | null, hidden: boolean, panels: PanelRects, viewport: Size, fullscreen: boolean): void {
   const pointerInside = useDockStore((s) => s.pointerInside);
   const sent = useRef<readonly Rect[]>([]);
   useEffect(() => {
@@ -48,13 +48,62 @@ export function useRegions(layout: BarLayout | null, hidden: boolean, panels: Pa
       growth: layout.growth,
       hidden,
       panels: open,
-      modal,
+      fullscreen,
       viewport,
     }).map(snapRect);
     if (sameRegions(rects, sent.current)) return;
     sent.current = rects;
     actions.setRegions(rects);
-  }, [layout, hidden, panels, viewport, pointerInside, modal]);
+  }, [layout, hidden, panels, viewport, pointerInside, fullscreen]);
+}
+
+/**
+ * The drawn boxes of the open popovers and menus in `root`, kept current as panels open, close and move. Only
+ * additions, removals and the open flag are watched: the bar's per-frame transforms never cause a measurement.
+ */
+export function useOpenPanelRects(root: RefObject<HTMLElement | null>, watching: boolean): PanelRects {
+  const [rects, setRects] = useState<PanelRects>({});
+  useLayoutEffect(() => {
+    const el = root.current;
+    if (!el || !watching) {
+      setRects((previous) => (Object.keys(previous).length === 0 ? previous : {}));
+      return undefined;
+    }
+    const measure = (): void => {
+      const next = measurePanels(el.querySelectorAll<HTMLElement>(OPEN_PANEL_SELECTOR)).map(snapRect);
+      setRects((previous) => {
+        const before = Object.values(previous).filter((r): r is Rect => r !== null);
+        return sameRegions(before, next) ? previous : Object.fromEntries(next.map((r, i) => [`open:${i}`, r]));
+      });
+    };
+    measure();
+    const observer = new MutationObserver(measure);
+    observer.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-open"] });
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [root, watching]);
+  return rects;
+}
+
+/** Closes every open panel when the dock window loses focus: the user clicked an app beside it. */
+export function useCloseOnBlur(active: boolean): void {
+  useEffect(() => {
+    if (!active) return undefined;
+    const close = (): void => {
+      const store = useDockStore.getState();
+      store.setMenu(null);
+      store.showTile(null);
+      store.showGallery(null);
+      store.showPrefs(null);
+      store.openStack(null);
+      store.setLibrary(false);
+    };
+    window.addEventListener("blur", close);
+    return () => window.removeEventListener("blur", close);
+  }, [active]);
 }
 
 /** Asks the core for keyboard focus while something on screen needs keys, and hands it back afterwards. */

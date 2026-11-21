@@ -36,6 +36,13 @@ const TILE_CATEGORY: Readonly<Record<TileId, GalleryCategory>> = {
   colour: "tools",
   convert: "tools",
   emoji: "tools",
+  flip: "time",
+  sun: "time",
+  wind: "system",
+  currency: "tools",
+  search: "tools",
+  history: "tools",
+  memo: "media",
 };
 
 /** Services that need an account. They are opt-in, and have no tile until their feeds and protocol exist. */
