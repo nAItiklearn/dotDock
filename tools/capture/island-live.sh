@@ -37,7 +37,7 @@ build_app() {
     TAURI_CONFIG="{\"build\":{\"devUrl\":\"http://localhost:$DEV_PORT\"}}" \
     cargo +stable-x86_64-pc-windows-gnu build -p dotdock -p dotdock-island-hook)
 }
-# Another track's lock older than this is abandoned (docs/AGENT_RULES.md: a run holds the screen 20 min at most).
+# Longest a run may hold the screen (docs/AGENT_RULES.md); the backdrop closes itself after it.
 LOCK_STALE_S=1200
 
 mkdir -p "$LIVE" "$SHOTS"
@@ -50,16 +50,13 @@ other_dotdock() {
 }
 
 live_begin() {
-  if [ -f "$LOCK" ]; then
-    local age=$(( $(date +%s) - $(stat -c %Y "$LOCK") ))
-    if ! grep -q "^$TRACK " "$LOCK" && [ "$age" -lt "$LOCK_STALE_S" ]; then
-      echo "screen held: $(cat "$LOCK") (${age}s ago)"; return 1
-    fi
+  # Taken atomically (noclobber), never over another track's lock, however old it is.
+  if ! ( set -o noclobber; echo "$TRACK $(date -Iseconds)" > "$LOCK" ) 2> /dev/null; then
+    echo "screen held: $(cat "$LOCK" 2> /dev/null)"; return 1
   fi
   local others; others=$(other_dotdock)
-  if [ -n "$others" ]; then echo "another dotdock.exe runs (pid $others); not starting"; return 1; fi
-  if curl -s -o /dev/null "http://localhost:$DEV_PORT/"; then echo "port $DEV_PORT already serves something; not starting"; return 1; fi
-  echo "$TRACK $(date -Iseconds)" > "$LOCK"
+  if [ -n "$others" ]; then echo "another dotdock.exe runs (pid $others); not starting"; rm -f "$LOCK"; return 1; fi
+  if curl -s -o /dev/null "http://localhost:$DEV_PORT/"; then echo "port $DEV_PORT already serves something; not starting"; rm -f "$LOCK"; return 1; fi
   if [ "$FRONTEND" = preview ]; then
     (cd "$WT/apps/desktop" && npx vite build > "$LIVE/vite-build.log" 2>&1) || { echo "vite build failed"; rm -f "$LOCK"; return 1; }
     (cd "$WT/apps/desktop" && nohup npx vite preview --port "$DEV_PORT" --strictPort > "$LIVE/vite.log" 2>&1 &)
