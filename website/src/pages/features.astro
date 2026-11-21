@@ -104,7 +104,7 @@ const islandSlides: IslandSlide[] = [
 
     <section class="section feat" id="dock" aria-labelledby="dock-title">
       <div class="wrap">
-        <div class="section__head feat__head reveal">
+        <div class="section__head reveal">
           <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>The dock<span class="feature__status">In development</span></p>
           <h2 class="h2" id="dock-title">A dock that <span class="dim">files your apps for you.</span></h2>
           <p class="lede">It replaces the Windows taskbar with a floating dock, a full-screen App Library and live tiles, all drawn in the same dots as the home screen.</p>
@@ -139,11 +139,11 @@ const islandSlides: IslandSlide[] = [
           </ShotCard>
 
           <ShotCard span="full" eyebrow="Dock themes" title="Six looks, one dock." text="Glass blurs the Windows backdrop behind the dock, and a lighter glass takes over when transparency is off. Obsidian, Paper and Aurum are solid; Minimal shows icons only.">
-            <ul class="strips strips--two">
+            <ul class="strips">
               {
                 dockThemes.map((t) => (
                   <li class="strip">
-                    <Image src={t.img} alt={`The dock in the ${t.name} theme`} widths={[640, 1120, 1680]} sizes="(min-width: 900px) 540px, 100vw" loading="lazy" decoding="async" class="strip__img" />
+                    <Image src={t.img} alt={`The dock in the ${t.name} theme`} widths={[800, 1400, 2200]} sizes="(min-width: 900px) 1080px, 100vw" loading="lazy" decoding="async" class="strip__img" />
                     <p class="strip__label"><span class="strip__name">{t.name}</span><span class="strip__note">{t.note}</span></p>
                   </li>
                 ))
@@ -160,7 +160,7 @@ const islandSlides: IslandSlide[] = [
 
     <section class="section feat" id="island" aria-labelledby="island-title">
       <div class="wrap">
-        <div class="section__head feat__head reveal">
+        <div class="section__head reveal">
           <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>The agent island<span class="feature__status">In development</span></p>
           <h2 class="h2" id="island-title">An island for <span class="dim">your AI coding agents.</span></h2>
           <p class="lede">A notch at the top of the screen shows what your coding agent is doing, so you can look away from the terminal and still know. It follows Claude Code, Codex, Copilot CLI and OpenCode, and any other agent through an open protocol. Click it to jump to the right terminal.</p>
@@ -173,17 +173,17 @@ const islandSlides: IslandSlide[] = [
 
     <section class="section feat" id="widgets" aria-labelledby="widgets-title">
       <div class="wrap">
-        <div class="section__head feat__head reveal">
+        <div class="section__head reveal">
           <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>The home screen<span class="feature__status">In development</span></p>
           <h2 class="h2" id="widgets-title">Widgets that <span class="dim">live on your desktop.</span></h2>
           <p class="lede">Placed on a snapping grid and drawn in dots. The widgets below are live on this page where your browser can supply the data; a hollow dot marks a sample value.</p>
         </div>
         <div class="feat__grid">
-          <ShotCard eyebrow="Clocks" title="Dots, blocks or stripes." text="Always in step with your PC."><div class="feat__live"><Widget kind="clock" clockStyle="blocks" place="--w:4" /></div></ShotCard>
-          <ShotCard eyebrow="Photo" title="Your own picture." text="Edge to edge or fitted, in colour, black and white or the theme's accent."><div class="feat__live"><Widget kind="photo" photo={1} /></div></ShotCard>
-          <ShotCard span="third" eyebrow="Battery" title="Charge as a ring."><div class="feat__live"><Widget kind="ring" /></div></ShotCard>
-          <ShotCard span="third" eyebrow="Month" title="Today, ringed."><div class="feat__live"><Widget kind="calendar" /></div></ShotCard>
-          <ShotCard span="third" eyebrow="Media" title="Any player on your PC."><div class="feat__live"><Widget kind="music" /></div></ShotCard>
+          <ShotCard eyebrow="Clocks" title="Dots, blocks or stripes." text="Always in step with your PC."><div class="feat__live cluster"><Widget kind="clock" clockStyle="blocks" place="--w:4" /></div></ShotCard>
+          <ShotCard eyebrow="Photo" title="Your own picture." text="Edge to edge or fitted, in colour, black and white or the theme's accent."><div class="feat__live cluster"><Widget kind="photo" photo={1} /></div></ShotCard>
+          <ShotCard span="third" eyebrow="Battery" title="Charge as a ring."><div class="feat__live cluster"><Widget kind="ring" /></div></ShotCard>
+          <ShotCard span="third" eyebrow="Month" title="Today, ringed."><div class="feat__live cluster"><Widget kind="calendar" /></div></ShotCard>
+          <ShotCard span="third" eyebrow="Media" title="Any player on your PC."><div class="feat__live cluster"><Widget kind="music" /></div></ShotCard>
         </div>
       </div>
     </section>
@@ -192,7 +192,7 @@ const islandSlides: IslandSlide[] = [
 
     <section class="section feat" id="themes" aria-labelledby="themes-title">
       <div class="wrap">
-        <div class="section__head feat__head reveal">
+        <div class="section__head reveal">
           <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>Themes<span class="feature__status">In development</span></p>
           <h2 class="h2" id="themes-title">Yours, <span class="dim">down to the dot.</span></h2>
           <p class="lede">The home screen, the dock and the island change together. Pick Obsidian, Paper or Aurum, or choose a picture and {PRODUCT_NAME} draws the palette for the whole desktop from it.</p>

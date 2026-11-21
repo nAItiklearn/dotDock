@@ -17,7 +17,7 @@ const WALLPAPER = join(ROOT, "src", "assets", "wallpapers", "meadow-dots-dark-19
 const SCREEN_W = 1920;
 const SCALE = 2;
 /** The part of the top of a 1920-wide screen each card shows, in CSS pixels, with the island centred in it. */
-const FRAME = { width: 760, height: 250 };
+const FRAME = { width: 520, height: 170 };
 /** Seconds of settling after a snapshot, so the island's own transition has finished. */
 const SETTLE_MS = 1800;
 

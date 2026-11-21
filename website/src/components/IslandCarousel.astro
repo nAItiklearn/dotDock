@@ -28,7 +28,7 @@ const { slides, label } = Astro.props;
         <li class="carousel__slide" aria-roledescription="slide" aria-label={`${i + 1} of ${slides.length}: ${s.title}`}>
           <p class="shot-card__eyebrow">{s.eyebrow}</p>
           <h3 class="shot-card__title">{s.title}</h3>
-          <Image src={s.img} alt={s.alt} widths={[640, 1040, 1520]} sizes="(min-width: 900px) 760px, 88vw" loading="lazy" decoding="async" class="carousel__img" />
+          <Image src={s.img} alt={s.alt} widths={[520, 1040]} sizes="(min-width: 900px) 760px, 88vw" loading="lazy" decoding="async" class="carousel__img" />
         </li>
       ))
     }

@@ -84,9 +84,6 @@
 }
 
 /* ---------- The bento: cards on a 6-column grid ---------- */
-.feat__head {
-  text-align: left;
-}
 .feat__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -171,11 +168,6 @@
   display: grid;
   gap: var(--space-4);
   padding: 0 clamp(var(--space-3), 2vw, var(--space-6)) clamp(var(--space-3), 2vw, var(--space-6));
-}
-@media (min-width: 900px) {
-  .strips--two {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 .strip {
   min-width: 0;
