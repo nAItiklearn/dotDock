@@ -6,6 +6,7 @@ const invoke = vi.hoisted(() => vi.fn<(cmd: string, args?: Record<string, unknow
 vi.mock("@tauri-apps/api/core", () => ({ invoke }));
 vi.mock("../providers/bridge", () => ({ isTauri: () => true }));
 const { sendMediaCommand } = await import("./mediaControls");
+const { useProviderStore } = await import("../providers/store");
 
 const track: MediaData = {
   title: "Night Drive",
@@ -38,6 +39,23 @@ describe("which session the music widget shows", () => {
 
   it("shows nothing before the first reading", () => {
     expect(activeSession(live({ data: null }))).toBeNull();
+  });
+});
+
+describe("the widget follows the core's media events", () => {
+  it("playing, paused after a toggle, empty when the player closes, live again on the next session", () => {
+    const shown = (): MediaData | null => activeSession(useProviderStore.getState().states.media);
+    expect(shown()).toBeNull();
+    useProviderStore.getState().publish("media", track);
+    expect(shown()?.playing).toBe(true);
+    // The event that follows a toggle carries the paused state.
+    useProviderStore.getState().publish("media", { ...track, playing: false });
+    expect(shown()?.playing).toBe(false);
+    useProviderStore.getState().report("media", "no-device");
+    expect(shown()).toBeNull();
+    // The same track coming back is shown again, although its payload is unchanged.
+    useProviderStore.getState().publish("media", { ...track, playing: false });
+    expect(shown()?.title).toBe(track.title);
   });
 });
 
