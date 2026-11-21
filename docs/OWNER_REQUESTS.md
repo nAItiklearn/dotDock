@@ -10,7 +10,14 @@ A row is checked only when it is merged on main with evidence (test, screenshot 
 - [ ] Every surface rated 4.8 or more. Only then deploy the website and release the app.
 - [ ] No bugs from disk space or interruptions; no skipped tests.
 
+## Owner priorities (2026-11-21 11:35)
+Order: (1) the dock works absolutely fine, (2) the notch has no bugs, (3) everything placed on the home screen and
+tested miserably (every feature, button, theme, customisation), (4) the website completed, (5) videos, then release.
+Unfinished purely cosmetic app features are deferred and their controls removed (not the website: every website
+animation must work, bug-free). Glass theme deadline 12:15; deferred and removed if not done.
+
 ## Dock (top priority)
+- [ ] Fixed at the bottom only (it is the taskbar); no left/top/right positioning anywhere.
 - [ ] It really works when the owner uses it by hand: clicking launches or focuses apps, right-click menus work.
 - [ ] It never blocks the desktop: click-through outside its visible bar, never steals focus (incident 2026-11-21).
 - [ ] So good it practically never crashes or lags (prevention over recovery): 2-hour soak with 0 crashes,
