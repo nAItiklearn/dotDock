@@ -1,0 +1,12 @@
+{"v":1,"agent":"aider","name":"Aider","session":"aider-9b2","at":1795062600000,"phase":"thinking","cwd":"D:\\work\\dotDock","title":"Add keyboard focus rings to the dock","pid":5150}
+{"v":1,"agent":"aider","session":"aider-9b2","at":1795062602000,"phase":"reading","tool":"read","detail":"Dock.tsx"}
+{"v":1,"agent":"aider","session":"aider-9b2","at":1795062603000,"phase":"searching","tool":"grep","detail":"focus-visible"}
+{"v":1,"agent":"aider","session":"aider-9b2","at":1795062604000,"tokens_out":512,"context":20480}
+{"v":1,"agent":"aider","session":"aider-9b2","at":1795062605000,"phase":"teleporting","detail":"an unknown phase is skipped"}
+{"v":2,"agent":"aider","session":"aider-9b2","at":1795062605500,"phase":"done","summary":"a future protocol version is skipped"}
+{"agent":"aider","session":"aider-9b2"
+{"v":1,"agent":"aider","session":"aider-9b2","at":1795062606000,"phase":"editing","tool":"edit","detail":"Dock.css","tokens_out":"not a number"}
+{"v":1,"agent":"aider","session":"aider-9b2","at":1795062608000,"phase":"waiting","detail":"Run pnpm test?"}
+{"v":1,"agent":"aider","session":"aider-9b2","at":1795062611000,"phase":"running","tool":"shell","detail":"pnpm test --token abc123"}
+{"v":1,"agent":"aider","session":"aider-9b2","at":1795062615000,"tokens_out":1310}
+{"v":1,"agent":"aider","session":"aider-9b2","at":1795062616000,"phase":"done","summary":"Focus rings added to every dock item.\nAll tests pass."}

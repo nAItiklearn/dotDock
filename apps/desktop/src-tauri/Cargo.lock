@@ -945,6 +945,8 @@ name = "dotdock-island-hook"
 version = "0.1.0"
 dependencies = [
  "dotdock-island",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]

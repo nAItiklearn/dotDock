@@ -7,6 +7,7 @@
 //! and destroys the window.
 
 use crate::lifecycle;
+use dotdock_island::agents::{AgentHomes, Connectable};
 use dotdock_island::engine::{Alert, Snapshot};
 use dotdock_island::paths::ClaudeDirs;
 use dotdock_island::pointer::{self, PointerEvent, Poller, Regions, Target};
@@ -184,8 +185,11 @@ fn launch_into(app: &AppHandle, window: &WebviewWindow, dirs: ClaudeDirs) -> Res
 
     let data_dir = dotdock_shell::app_data_dir().ok_or("There is no folder to keep the notch's settings in.")?;
     let hook_source = std::env::current_exe().map_err(|e| e.to_string())?.with_file_name("dotdock-island-hook.exe");
-    let service = IslandService::start(ServiceConfig { dirs, data_dir, hook_source }, TauriHost(app.clone()))
-        .map_err(|e| format!("The notch could not start: {e}"))?;
+    let service = IslandService::start(
+        ServiceConfig { dirs, data_dir, hook_source, homes: AgentHomes::from_env() },
+        TauriHost(app.clone()),
+    )
+    .map_err(|e| format!("The notch could not start: {e}"))?;
 
     let regions = Arc::new(Mutex::new(Regions::default()));
     let follow = Arc::new(Mutex::new(service.settings().follow_cursor));
@@ -250,6 +254,16 @@ pub fn island_connect(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::
 #[tauri::command]
 pub fn island_disconnect(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
     s.with(|h| h.service.disconnect().map_err(|e| e.to_string()))?
+}
+
+#[tauri::command]
+pub fn island_connect_agent(agent: Connectable, s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
+    s.with(|h| h.service.connect_agent(agent).map_err(|e| e.to_string()))?
+}
+
+#[tauri::command]
+pub fn island_disconnect_agent(agent: Connectable, s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
+    s.with(|h| h.service.disconnect_agent(agent).map_err(|e| e.to_string()))?
 }
 
 #[tauri::command]

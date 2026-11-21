@@ -172,6 +172,8 @@ fn build_and_run(primary: bool) {
             island_host::island_dismiss,
             island_host::island_connect,
             island_host::island_disconnect,
+            island_host::island_connect_agent,
+            island_host::island_disconnect_agent,
             island_host::island_connection,
             island_host::island_set_settings,
             media_command,

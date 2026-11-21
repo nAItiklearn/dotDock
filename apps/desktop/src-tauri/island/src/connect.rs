@@ -74,8 +74,8 @@ fn io_err(path: &Path) -> impl FnOnce(std::io::Error) -> ConnectError + '_ {
 }
 
 /// Forward slashes work in a Windows exec-form command and survive JSON without escaping.
-fn command_for(hook: &Path) -> String {
-    hook.to_string_lossy().replace('\\', "/")
+pub(crate) fn command_for(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
 }
 
 fn is_ours(entry: &Value) -> bool {

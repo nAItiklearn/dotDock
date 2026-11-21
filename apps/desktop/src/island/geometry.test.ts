@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, WINDOW_SIZE, type IslandSettings, type SessionView } 
 const SESSION: SessionView = {
   id: "s",
   agent: "claude",
+  agentLabel: "Claude Code",
   phase: "thinking",
   tool: null,
   detail: null,

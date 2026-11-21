@@ -104,6 +104,24 @@ const HOP_HEIGHT = 3;
 /** Seconds after which both hops are over and the beetle sits. */
 export const DONE_SETTLE = 2 * HOP_SECONDS + HOP_GAP;
 
+/** The little burst of sparks when a turn is done: how long it flies and where each spark ends, from the shell. */
+export const BURST_SECONDS = 0.9;
+const BURST_ORIGIN = [5, 1] as const;
+const BURST_RAYS: readonly (readonly [number, number])[] = [[-7, -2], [-5, -4], [-2, -5], [2, -5], [5, -4], [8, -2]];
+/** The one spark in the accent colour, like the single lit LED of a Nothing glyph. */
+const BURST_ACCENT = 3;
+
+/** Sparks fly out fast and slow down (ease-out), fading as they go; whole cells only, so they stay on the lattice. */
+export function burst(emit: Emit, tp: number): void {
+  if (tp >= BURST_SECONDS) return;
+  const u = tp / BURST_SECONDS;
+  const travel = 1 - (1 - u) * (1 - u);
+  const v = Math.sin(Math.PI * Math.min(1, u * 1.6)) * (1 - u);
+  BURST_RAYS.forEach(([dc, dr], i) => {
+    emit(BURST_ORIGIN[0] + Math.round(dc * travel), BURST_ORIGIN[1] + Math.round(dr * travel), v, i === BURST_ACCENT ? "accent" : "success");
+  });
+}
+
 function hopOffset(tp: number): number {
   const local = tp < HOP_SECONDS ? tp : tp - HOP_SECONDS - HOP_GAP;
   const hopping = tp < HOP_SECONDS || (tp >= HOP_SECONDS + HOP_GAP && tp < DONE_SETTLE);
@@ -176,6 +194,7 @@ export function creatureCells(phase: Phase, tp: number, t: number, gait: number,
       body(emit, sitting({ dy }));
       antennae(emit, HEAD_TOP + dy, dy < 0 ? "up" : "rest", "neutral");
       legs(emit, dy < 0 ? "tucked" : "stand", 0, dy, "neutral");
+      burst(emit, tp);
       if (tp >= DONE_SETTLE) {
         const v = 0.55 + 0.45 * smooth(t / 0.9);
         for (const [c, r] of [[12, -1], [11, -1], [13, -1], [12, -2], [12, 0]] as const) emit(c, r, v, "success");

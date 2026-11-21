@@ -7,6 +7,7 @@ function view(id: string, phase: Phase = "thinking"): SessionView {
   return {
     id,
     agent: "claude",
+    agentLabel: "Claude Code",
     phase,
     tool: null,
     detail: null,

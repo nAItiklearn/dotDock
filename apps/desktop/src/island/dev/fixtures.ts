@@ -75,6 +75,7 @@ export function makeSession(index: number, phase: Exclude<Phase, "idle">, scenar
   return {
     id: `fixture-${index}`,
     agent,
+    agentLabel: agent === "codex" ? "Codex" : "Claude Code",
     phase,
     tool: base?.tool ?? null,
     detail: base ? (scenario.longDetail ? LONG_DETAIL : base.detail) : null,

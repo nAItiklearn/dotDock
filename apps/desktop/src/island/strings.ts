@@ -27,7 +27,7 @@ const EN = {
 
   "error.login": "Signed out",
   "error.login.hint.claude": "Run /login in the terminal",
-  "error.login.hint.codex": "Sign in to Codex again",
+  "error.login.hint.agent": "Sign in to {agent} again",
   "error.connection": "Offline",
   "error.connection.hint": "Check your connection and resend",
   "error.overloaded": "Busy",
@@ -97,6 +97,20 @@ const EN = {
   "connection.file": "Settings file",
   "connection.codex.found": "Codex logs found",
   "connection.codex.missing": "Codex not found",
+  "connection.feed": "Other agents",
+  "connection.feed.hint": "Any agent can report to this folder. See docs/ISLAND_PROTOCOL.md.",
+
+  "agent.copilot": "GitHub Copilot CLI",
+  "agent.opencode": "OpenCode",
+  "agent.state.not-found": "Not found",
+  "agent.state.disconnected": "Not connected",
+  "agent.state.connected": "Connected",
+  "agent.state.outdated": "Needs reconnecting",
+  "agent.state.hook-missing": "Hook program missing",
+  "agent.detail.copilot": "Connect adds one hooks file to your Copilot CLI folder and nothing else. Disconnect deletes it. Restart open Copilot sessions.",
+  "agent.detail.opencode": "Connect adds one plugin file to your OpenCode folder (OpenCode 2) and nothing else. Disconnect deletes it. Restart OpenCode.",
+  "agent.detail.not-found": "Not found on this machine.",
+  "agent.file": "File",
   "connection.busy": "Working…",
   "connection.failed": "That did not work. Try again.",
 } as const;
@@ -145,7 +159,7 @@ function errorHint(s: SessionView): string | null {
   if (!problem) return null;
   switch (problem.kind) {
     case "login":
-      return t(s.agent === "codex" ? "error.login.hint.codex" : "error.login.hint.claude");
+      return s.agent === "claude" ? t("error.login.hint.claude") : t("error.login.hint.agent", { agent: s.agentLabel });
     case "connection":
       return t("error.connection.hint");
     case "overloaded":

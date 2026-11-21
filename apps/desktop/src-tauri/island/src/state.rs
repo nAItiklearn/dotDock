@@ -47,6 +47,9 @@ impl TerminalHint {
 pub struct SessionState {
     pub schema: u32,
     pub agent: AgentKind,
+    /// The agent's own name when it is not one of the known kinds (`AgentKind::Other`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub agent_name: Option<String>,
     pub session_id: String,
     pub phase: Phase,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -92,6 +95,11 @@ pub struct SessionState {
 impl SessionState {
     pub fn new(agent: AgentKind, session_id: &str) -> Self {
         Self { schema: SCHEMA, agent, session_id: sanitize_id(session_id), ..Self::default() }
+    }
+
+    /// The name toasts and labels use for this session's agent.
+    pub fn agent_label(&self) -> String {
+        self.agent_name.clone().unwrap_or_else(|| self.agent.label().to_owned())
     }
 
     /// `<sessions dir>\<session id>.json`

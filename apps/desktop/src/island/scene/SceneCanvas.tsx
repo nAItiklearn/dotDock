@@ -5,7 +5,7 @@ import type { IconStyle, Phase } from "../protocol";
 import { STATIC_POSE } from "./creature";
 import { drawScene, type PoseLayer } from "./draw";
 import { SCENE_COLS, SCENE_ROWS } from "./layout";
-import { INITIAL_SCENE, stepScene, type SceneState } from "./motion";
+import { ENTERING_SCENE, INITIAL_SCENE, stepScene, type SceneState } from "./motion";
 
 /** Frames per second, with the same slack as the icon so a 60 Hz screen really gets 30. */
 const FRAME_MS = 1000 / 30;
@@ -22,6 +22,8 @@ interface Shown {
 
 export interface SceneCanvasProps {
   readonly phase: Phase;
+  /** The session shown. A session the island has not shown before walks its beetle in from the left. */
+  readonly sessionId: string;
   readonly iconStyle: IconStyle;
   /** Pitch of one lattice cell in CSS px. */
   readonly cell: number;
@@ -33,7 +35,7 @@ export interface SceneCanvasProps {
  * The beetle and its landscape. The walk state lives here and is stepped every frame, so a change of phase
  * only changes how the beetle behaves from now on: it never jumps. Frames themselves are pure functions.
  */
-export const SceneCanvas = memo(function SceneCanvas({ phase, iconStyle, cell, live }: SceneCanvasProps) {
+export const SceneCanvas = memo(function SceneCanvas({ phase, sessionId, iconStyle, cell, live }: SceneCanvasProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const reduced = useReducedMotion() ?? false;
   const shown = useRef<{ current: Shown; previous: Shown | null; changedAt: number }>({
@@ -43,6 +45,14 @@ export const SceneCanvas = memo(function SceneCanvas({ phase, iconStyle, cell, l
   });
   const scene = useRef<SceneState>(INITIAL_SCENE);
   const repaint = useRef<() => void>(() => undefined);
+  const seen = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (seen.current.has(sessionId)) return;
+    seen.current.add(sessionId);
+    if (!reduced) scene.current = ENTERING_SCENE;
+    repaint.current();
+  }, [sessionId, reduced]);
 
   useEffect(() => {
     const record = shown.current;

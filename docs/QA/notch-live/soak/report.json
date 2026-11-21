@@ -1,0 +1,321 @@
+{
+ "seconds": 180,
+ "seed": 1,
+ "actions": {
+  "hover": 15,
+  "leave": 16,
+  "swipe": 23,
+  "blur": 22,
+  "rest": 15,
+  "flick": 19,
+  "rightClick": 19,
+  "page": 16,
+  "click": 17
+ },
+ "probes": 756,
+ "pacing": {
+  "frames": 10800,
+  "refreshHz": 60,
+  "medianMs": 16.7,
+  "p99Ms": 17,
+  "worstMs": 99.8,
+  "dropped": 3
+ },
+ "drops": [
+  {
+   "at": 1795262345768,
+   "ms": 33.2,
+   "during": "hover"
+  },
+  {
+   "at": 1795262345991,
+   "ms": 49.9,
+   "during": "hover"
+  },
+  {
+   "at": 1795262403886,
+   "ms": 99.8,
+   "during": "rightClick"
+  }
+ ],
+ "standbyMs": 11593,
+ "final": {
+  "mode": "tiny",
+  "aside": false,
+  "plate": {
+   "w": 44,
+   "h": 12
+  }
+ },
+ "problems": [
+  {
+   "at": 83693,
+   "what": "island stuck aside with the cursor gone",
+   "s": {
+    "mode": "island",
+    "aside": true,
+    "rest": {
+     "x": 96,
+     "y": 10,
+     "w": 328,
+     "h": 94
+    },
+    "plate": {
+     "w": 328,
+     "h": 94
+    },
+    "slideY": -98,
+    "label": "Fixed the header layout.\nDONE\n155\nDone",
+    "dpr": 1.25,
+    "pager": [
+     {
+      "x": 372.5,
+      "y": -18.5
+     },
+     {
+      "x": 387,
+      "y": -18.5
+     },
+     {
+      "x": 397,
+      "y": -18.5
+     },
+     {
+      "x": 407,
+      "y": -18.5
+     }
+    ]
+   },
+   "cursor": {
+    "x": 372.5,
+    "y": -18.5,
+    "since": 82012.8793
+   }
+  },
+  {
+   "at": 83956,
+   "what": "island stuck aside with the cursor gone",
+   "s": {
+    "mode": "island",
+    "aside": true,
+    "rest": {
+     "x": 96,
+     "y": 10,
+     "w": 328,
+     "h": 94
+    },
+    "plate": {
+     "w": 328,
+     "h": 94
+    },
+    "slideY": -98,
+    "label": "Fixed the header layout.\nDONE\n155\nDone",
+    "dpr": 1.25,
+    "pager": [
+     {
+      "x": 372.5,
+      "y": -18.5
+     },
+     {
+      "x": 387,
+      "y": -18.5
+     },
+     {
+      "x": 397,
+      "y": -18.5
+     },
+     {
+      "x": 407,
+      "y": -18.5
+     }
+    ]
+   },
+   "cursor": {
+    "x": 372.5,
+    "y": -18.5,
+    "since": 82012.8793
+   }
+  },
+  {
+   "at": 84222,
+   "what": "island stuck aside with the cursor gone",
+   "s": {
+    "mode": "island",
+    "aside": true,
+    "rest": {
+     "x": 96,
+     "y": 10,
+     "w": 328,
+     "h": 94
+    },
+    "plate": {
+     "w": 328,
+     "h": 94
+    },
+    "slideY": -98,
+    "label": "Fixed the header layout.\nDONE\n155\nDone",
+    "dpr": 1.25,
+    "pager": [
+     {
+      "x": 372.5,
+      "y": -18.5
+     },
+     {
+      "x": 387,
+      "y": -18.5
+     },
+     {
+      "x": 397,
+      "y": -18.5
+     },
+     {
+      "x": 407,
+      "y": -18.5
+     }
+    ]
+   },
+   "cursor": {
+    "x": 372.5,
+    "y": -18.5,
+    "since": 82012.8793
+   }
+  },
+  {
+   "at": 84472,
+   "what": "island stuck aside with the cursor gone",
+   "s": {
+    "mode": "island",
+    "aside": true,
+    "rest": {
+     "x": 96,
+     "y": 10,
+     "w": 328,
+     "h": 94
+    },
+    "plate": {
+     "w": 328,
+     "h": 94
+    },
+    "slideY": -98,
+    "label": "Fixed the header layout.\nDONE\n155\nDone",
+    "dpr": 1.25,
+    "pager": [
+     {
+      "x": 372.5,
+      "y": -18.5
+     },
+     {
+      "x": 387,
+      "y": -18.5
+     },
+     {
+      "x": 397,
+      "y": -18.5
+     },
+     {
+      "x": 407,
+      "y": -18.5
+     }
+    ]
+   },
+   "cursor": {
+    "x": 372.5,
+    "y": -18.5,
+    "since": 82012.8793
+   }
+  },
+  {
+   "at": 84737,
+   "what": "island stuck aside with the cursor gone",
+   "s": {
+    "mode": "island",
+    "aside": true,
+    "rest": {
+     "x": 96,
+     "y": 10,
+     "w": 328,
+     "h": 94
+    },
+    "plate": {
+     "w": 328,
+     "h": 94
+    },
+    "slideY": -98,
+    "label": "Fixed the header layout.\nDONE\n155\nDone",
+    "dpr": 1.25,
+    "pager": [
+     {
+      "x": 372.5,
+      "y": -18.5
+     },
+     {
+      "x": 387,
+      "y": -18.5
+     },
+     {
+      "x": 397,
+      "y": -18.5
+     },
+     {
+      "x": 407,
+      "y": -18.5
+     }
+    ]
+   },
+   "cursor": {
+    "x": 372.5,
+    "y": -18.5,
+    "since": 82012.8793
+   }
+  },
+  {
+   "at": 85003,
+   "what": "island stuck aside with the cursor gone",
+   "s": {
+    "mode": "island",
+    "aside": true,
+    "rest": {
+     "x": 96,
+     "y": 10,
+     "w": 328,
+     "h": 94
+    },
+    "plate": {
+     "w": 328,
+     "h": 94
+    },
+    "slideY": -98,
+    "label": "Fixed the header layout.\nDONE\n155\nDone\nFixed the header layout.\nDONE\n881\nDone",
+    "dpr": 1.25,
+    "pager": [
+     {
+      "x": 368,
+      "y": -18.5
+     },
+     {
+      "x": 378,
+      "y": -18.5
+     },
+     {
+      "x": 392.5,
+      "y": -18.5
+     },
+     {
+      "x": 407,
+      "y": -18.5
+     }
+    ]
+   },
+   "cursor": {
+    "x": 372.5,
+    "y": -18.5,
+    "since": 82012.8793
+   }
+  },
+  {
+   "what": "3 dropped frame(s)"
+  }
+ ],
+ "problemCount": 7,
+ "pass": false
+}
