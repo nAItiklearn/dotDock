@@ -41,6 +41,12 @@ for your track. These rules are not optional.
 - The dock and its catalogue show only apps that really work for this user (no dead shortcuts, uninstallers,
   readmes, help links or duplicates).
 
+## Owner rule (2026-11-21): done is done, don't over-polish
+- Once a feature works, meets its spec and scores 4.8 or more, it is finished. Do not keep refining it:
+  over-polishing spoils products. Reopen it only for a real bug (crash, wrong behaviour, broken layout) or an
+  explicit owner request.
+- Spend remaining time on features that are missing or not working yet.
+
 ## Safety
 - Stay inside `D:\dotDock`, `%APPDATA%\dockDock`, `%LOCALAPPDATA%\dockDock` and the listed HKCU keys.
   Never HKLM, never reboot/sign out/shut down, never touch `~/.claude/settings.json`.

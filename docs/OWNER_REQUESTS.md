@@ -13,7 +13,8 @@ A row is checked only when it is merged on main with evidence (test, screenshot 
 ## Dock (top priority)
 - [ ] It really works when the owner uses it by hand: clicking launches or focuses apps, right-click menus work.
 - [ ] It never blocks the desktop: click-through outside its visible bar, never steals focus (incident 2026-11-21).
-- [ ] Kill switch (Ctrl+Alt+Shift+D and the tray's "Quit and restore Windows") plus the sentinel restore the taskbar.
+- [ ] So good it practically never crashes or lags (prevention over recovery): 2-hour soak with 0 crashes,
+      flat memory, 60 fps under load. Recovery stays minimal: one kill-switch hotkey and the existing sentinel.
 - [ ] A visible ⋯ button opens one panel to customise the whole dock (items, appearance, size, magnification,
       position, auto-hide, taskbar, reset); every control has a real, saved effect.
 - [ ] Easy to add and remove apps and tiles, and to do things from the dock; well organised, all real info.
