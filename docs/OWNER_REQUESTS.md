@@ -75,6 +75,13 @@ animation must work, bug-free). Glass theme deadline 12:15; deferred and removed
       revenue/visitors/sales counters (GitHub/Vercel style dev tiles), quick toggles (Wi-Fi, Bluetooth, brightness,
       night light, keyboard), file and web search, voice recorder, emoji picker, audio output switcher, social
       follower counters, timer/stopwatch/focus timer, currency converter, contribution heat-map, issue tracker tile.
-      Order: after the current dock, notch and website features pass 4.8; then one tile at a time, each tested and
-      scored before the next.
+      **Moved to V2 (owner, 2026-11-21):** any tile not already built waits for V2. V1 ships today with what exists.
 - [ ] Test the dock with the macOS-style frosted glass theme (the one finished last session).
+
+## V1 today (owner, 2026-11-21)
+- [ ] V1 complete today: fix everything; no new features (most already exist).
+- [ ] Final test runs home screen, notch and dock together: the notch animates and moves correctly, wallpapers are
+      changed several times, and widget colours and dock colours adapt to each wallpaper, with no glitches. Only then
+      is the app ready to download.
+- [ ] Website up to date with the shipped V1.
+- [ ] Videos: one main video of the whole theme, plus short separate clips for the dock and the notch.
