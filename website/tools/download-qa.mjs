@@ -76,7 +76,9 @@ async function shot(file, full = true) {
   console.log("shot", file);
 }
 async function showAll() {
-  await evaluate("(() => { document.querySelectorAll('.reveal').forEach((e) => e.classList.add('is-in')); return true; })()");
+  // The footer skips rendering until it nears the viewport (content-visibility: auto), which a full-page capture
+  // never does; render it for the shot so the page is captured as a reader scrolling to the end sees it.
+  await evaluate("(() => { document.querySelectorAll('.reveal').forEach((e) => e.classList.add('is-in')); document.querySelector('.footer').style.contentVisibility = 'visible'; return true; })()");
   await sleep(500);
 }
 

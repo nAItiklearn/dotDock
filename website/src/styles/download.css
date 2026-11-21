@@ -62,6 +62,14 @@ html:not([data-theme="paper"]) .vista .art__mid {
   opacity: 0.85;
 }
 
+/* The section labels here are field notes (base.css), not the boxed callout that pages.css also calls .note. */
+.dl .note {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
 /* ---------- Head ---------- */
 .dl-head {
   display: grid;
@@ -250,9 +258,14 @@ html:not([data-theme="paper"]) .vista .art__mid {
   animation-delay: -0.09s;
 }
 /* A dragonfly's wings blur rather than fold: a fast, shallow beat. */
+/*
+ * The sprite is drawn head up, seen from above; turned a quarter it flies head first along its path, so it reads
+ * as a dragonfly over the grass and not as a cross. The wing beat (transform) stays in the sprite's own frame.
+ */
 .vista__flyer--4 {
   left: 33%;
   top: 36%;
+  rotate: 90deg;
   animation-name: vista-dragonfly-flap;
   animation-duration: var(--vista-flap-dragonfly);
 }
@@ -492,6 +505,13 @@ html:not([data-theme="paper"]) .vista .art__mid {
   padding-bottom: clamp(56px, 8vw, 120px);
   text-align: center;
 }
+/* As wide as the whole command, so the address is never cut; on a phone it wraps (sections.css). */
 .dl-source .code {
-  width: min(100%, 560px);
+  width: max-content;
+  max-width: 100%;
+}
+@media (max-width: 479px) {
+  .dl-source .code {
+    width: 100%;
+  }
 }
