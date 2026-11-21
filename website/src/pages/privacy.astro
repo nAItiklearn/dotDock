@@ -7,12 +7,12 @@ import { ISSUES_URL, OPEN_METEO_URL, PRODUCT_NAME } from "../brand";
   artTop="band-horse"
   sceneBottom="reef"
   title={`Privacy: ${PRODUCT_NAME} keeps everything on your PC`}
-  description={`${PRODUCT_NAME} is local-first: no account, no telemetry. The only network calls are the weather forecast and, if you give them a token, the developer tiles.`}
+  description={`${PRODUCT_NAME} is local-first: no account, no telemetry. The only network call is the weather forecast, and only if you add a weather tile.`}
   label="Privacy"
   heading="Local first. Nothing phones home."
 >
   <Fragment slot="lede">
-    {PRODUCT_NAME} has no account and no telemetry. This page lists the only two things that ever leave your PC, and what this website does.
+    {PRODUCT_NAME} has no account and no telemetry. This page lists the only thing that ever leaves your PC, and what this website does.
   </Fragment>
 
   <section class="block reveal" aria-labelledby="pv-out">
@@ -27,11 +27,6 @@ import { ISSUES_URL, OPEN_METEO_URL, PRODUCT_NAME } from "../brand";
             <th scope="row"><a href={OPEN_METEO_URL} rel="noopener">Open-Meteo</a> forecast and place search</th>
             <td>Only if you add a weather tile to the dock, and only after you pick a place.</td>
             <td>The place you searched for, then its coordinates. You can search by name instead of sharing your location.</td>
-          </tr>
-          <tr>
-            <th scope="row">Developer tiles (GitHub, Linear, Vercel)</th>
-            <td>Only for a tile you add to the dock and give a token. The token is kept in Windows Credential Manager.</td>
-            <td>Your token, to that service&rsquo;s own API, to read the counts the tile shows. Nothing goes to {PRODUCT_NAME}.</td>
           </tr>
         </tbody>
       </table>

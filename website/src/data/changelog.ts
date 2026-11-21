@@ -22,8 +22,6 @@ export const VERSIONS: readonly Version[] = [
           "Six themes: Glass, a frosted glass that blurs the desktop behind it, Glass lite, Obsidian, Paper, Aurum and Minimal.",
           "Floats over maximised windows or reserves its space, on any edge of the screen.",
           "More than twenty live tiles: system load, battery, quick toggles, world and flip clocks, your day, focus timer, currency, web search, voice memo, audio devices and more.",
-          "Developer tiles for GitHub, starred repositories, Linear and Vercel, read with a token you add in Settings and keep in Windows Credential Manager.",
-          "An AI tokens tile, counted on your PC from the island's sessions.",
         ],
       },
       {
@@ -67,6 +65,8 @@ export const VERSIONS: readonly Version[] = [
           "The year, the month and the day as rows of progress dots.",
           "A calendar week strip next to the next event.",
           "Stocks, as a short list and a chart.",
+          "Developer tiles for GitHub, starred repositories, Linear and Vercel, read with a token you keep in Windows Credential Manager.",
+          "An AI tokens tile, counted on your PC from the island's sessions.",
           "Sales and revenue counters, alongside the developer tiles.",
           "Follower counts for the social accounts you choose.",
           "A contribution heat map.",

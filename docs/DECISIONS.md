@@ -192,3 +192,12 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
 - **Privacy: no update check in V1.** The core registers no updater command and Settings removed the row, so the
   "Update check" row was false. It now lists the developer tiles instead (only with a token you add, sent to that
   service's own API). The same edit is made byte for byte on the main-site branch so the merge is clean.
+
+## D-037 Developer tiles move to V2; downloads through the latest-release links (2026-11-21, website track)
+- Lead decision: the developer tiles (GitHub, Linear, Vercel, AI tokens) are not wired into the V1 app, so the
+  changelog lists them under "Next: Version 2" and the privacy page lists only the Open-Meteo forecast.
+- The download page offers v1.0.0 (NEXT_RELEASE in brand.ts) through
+  `releases/latest/download/dotDock_1.0.0_x64-setup.exe` and `..._x64-portable.exe`, which work the moment the
+  release is published. After publishing, run `node tools/release-data.mjs` and redeploy to add the date, size
+  and SHA-256.
+- The footer is a living scene (LiveScene "meadow"); the old static meadow piece and scene.py are removed.
