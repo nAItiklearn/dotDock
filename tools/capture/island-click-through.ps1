@@ -12,8 +12,10 @@
   beside the plate's width are the ones that must click through.
 .PARAMETER PlateWidth
   Width of the visible plate in physical pixels, centred in the window.
+.PARAMETER Standby
+  The island shows only its small standby pill, which takes no clicks: then the centre must click through too.
 #>
-param([int]$PlateDepth = 60, [int]$PlateWidth = 160)
+param([int]$PlateDepth = 60, [int]$PlateWidth = 160, [switch]$Standby)
 $ErrorActionPreference = 'Stop'
 Add-Type -Namespace DotDock -Name Win -MemberDefinition @'
 [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
@@ -28,7 +30,7 @@ public struct RECT { public int Left, Top, Right, Bottom; }
 public struct POINT { public int X, Y; }
 '@
 [void][DotDock.Win]::SetProcessDPIAware()
-$island = [DotDock.Win]::FindWindow($null, 'Agent Island')
+$island = [DotDock.Win]::FindWindow([NullString]::Value, 'Agent Island')
 if ($island -eq [IntPtr]::Zero) { Write-Output 'FAIL: no Agent Island window'; exit 1 }
 $r = New-Object DotDock.Win+RECT
 [void][DotDock.Win]::GetWindowRect($island, [ref]$r)
@@ -39,16 +41,16 @@ $inset = 6
 $half = [int]($PlateWidth / 2) + $inset
 # Every point lies inside the island's window rectangle but outside the plate.
 $through = @(
-  @($r.Left + $inset, $r.Top + $inset, 'top-left corner'),
-  @($r.Right - $inset, $r.Top + $inset, 'top-right corner'),
-  @($cx - $half - 20, $r.Top + $inset, 'left of the plate'),
-  @($cx + $half + 20, $r.Top + $inset, 'right of the plate'),
-  @($r.Left + $inset, $r.Bottom - $inset, 'bottom-left corner'),
-  @($cx, $r.Bottom - $inset, 'below the plate, centre'),
-  @($r.Right - $inset, $r.Bottom - $inset, 'bottom-right corner'),
-  @($cx, $r.Top + $PlateDepth + 24, 'just under the plate'),
-  @($r.Left + $inset, [int](($r.Top + $r.Bottom) / 2), 'left edge, middle'),
-  @($r.Right - $inset, [int](($r.Top + $r.Bottom) / 2), 'right edge, middle')
+  @(($r.Left + $inset), ($r.Top + $inset), 'top-left corner'),
+  @(($r.Right - $inset), ($r.Top + $inset), 'top-right corner'),
+  @(($cx - $half - 20), ($r.Top + $inset), 'left of the plate'),
+  @(($cx + $half + 20), ($r.Top + $inset), 'right of the plate'),
+  @(($r.Left + $inset), ($r.Bottom - $inset), 'bottom-left corner'),
+  @(($cx), ($r.Bottom - $inset), 'below the plate, centre'),
+  @(($r.Right - $inset), ($r.Bottom - $inset), 'bottom-right corner'),
+  @(($cx), ($r.Top + $PlateDepth + 24), 'just under the plate'),
+  @(($r.Left + $inset), ([int](($r.Top + $r.Bottom) / 2)), 'left edge, middle'),
+  @(($r.Right - $inset), ([int](($r.Top + $r.Bottom) / 2)), 'right edge, middle')
 )
 $hit = {
   param($x, $y)
@@ -67,9 +69,10 @@ try {
     Write-Output ('{0} click passes through at {1},{2} ({3})' -f ($(if ($ok) { 'PASS' } else { 'FAIL' })), $pt[0], $pt[1], $pt[2])
   }
   $root = & $hit $cx ($r.Top + [int]($PlateDepth / 2))
-  $ok = $root -eq $island
+  $ok = if ($Standby) { $root -ne $island } else { $root -eq $island }
   if (-not $ok) { $failed++ }
-  Write-Output ('{0} the plate itself takes the click at {1},{2}' -f ($(if ($ok) { 'PASS' } else { 'FAIL' })), $cx, ($r.Top + [int]($PlateDepth / 2)))
+  $what = if ($Standby) { 'the standby pill lets the click through' } else { 'the plate itself takes the click' }
+  Write-Output ('{0} {1} at {2},{3}' -f ($(if ($ok) { 'PASS' } else { 'FAIL' })), $what, $cx, ($r.Top + [int]($PlateDepth / 2)))
 } finally {
   [void][DotDock.Win]::SetCursorPos($saved.X, $saved.Y)
 }
