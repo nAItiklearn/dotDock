@@ -171,3 +171,16 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
 - **This branch's Features page is the older one.** The main-site branch rebuilt Features without the pixel scenes;
   its text-over-art finding on the dock scene at 390/414 belongs to the page that is being replaced, so it is left
   for the merge, where the main-site version wins.
+
+## D-035 Website: a Changelog page, and the privacy page says what V1 really sends (2026-11-21, website track)
+- **/changelog, linked from the footer (Resources).** Built on this branch because the living pixel scenes live
+  here: the meadow band on top, the pond scene (dragonfly over lilies) under the content, never under text.
+- **Content is what V1 ships, no dates typed.** Version 1 lists the dock (six themes including Glass, more than
+  twenty tiles), the developer tiles, the island, the home screen and the themes with the two Settings switches.
+  Version 2 lists only the wishlist dock tiles not built yet (docs/OWNER_REQUESTS.md: unread mail, progress dots,
+  week strip, stocks, sales counters, follower counts, contribution heat map, file search). A version's state
+  (released with its date and notes link, being tested, planned) comes from src/data/release.json via
+  lib/changelog.ts, tested in tests/changelog.test.ts.
+- **Privacy: no update check in V1.** The core registers no updater command and Settings removed the row, so the
+  "Update check" row was false. It now lists the developer tiles instead (only with a token you add, sent to that
+  service's own API). The same edit is made byte for byte on the main-site branch so the merge is clean.

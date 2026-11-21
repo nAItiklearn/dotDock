@@ -24,6 +24,7 @@ export const ROUTES = {
   faq: "/faq",
   privacy: "/privacy",
   license: "/license",
+  changelog: "/changelog",
 } as const;
 
 export const LICENSE_SPDX = "GPL-3.0-or-later";
