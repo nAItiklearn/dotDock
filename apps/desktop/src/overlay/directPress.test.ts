@@ -207,6 +207,25 @@ describe("edit mode carries the gesture on", () => {
     c.detach();
   });
 
+  it("a click on the empty desktop deselects: the selection never stays stuck on a widget", () => {
+    down(slot);
+    move(140, 100, 30);
+    const c = controller();
+    fire(slot, "pointerup", slot, { clientX: 140, clientY: 100 }, 60);
+    expect(app.layout.getState().selectedId).toBe("system-1");
+    let focusedRoot = false;
+    root.focus = () => {
+      focusedRoot = true;
+    };
+    // The click landed on Explorer's desktop; all the overlay sees is its window losing focus.
+    window.dispatchEvent(new Event("blur"));
+    expect(app.layout.getState().selectedId).toBeNull();
+    expect(app.layout.getState().editing).toBe(true);
+    // Focus left the widget, so focusing the window again does not select it back.
+    expect(focusedRoot).toBe(true);
+    c.detach();
+  });
+
   it("another app taking focus cancels the drag: the widget goes home, no full-screen hit area remains", () => {
     down(slot);
     move(140, 100, 30);

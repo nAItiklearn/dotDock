@@ -107,7 +107,18 @@ export class GestureController {
     if (h.moving || h.kind === "resize") this.active.frame = requestAnimationFrame(this.onFrame);
   }
 
-  private readonly onBlur = (): void => this.cancel();
+  /**
+   * Clicking the empty desktop reaches Explorer, not the overlay (it is click-through there), so the only
+   * sign of it is the window losing focus. That deselects, as a click on empty space does anywhere else.
+   * Focus moves to the root, or the widget would take the selection back when the window is focused again.
+   */
+  private readonly onBlur = (): void => {
+    this.cancel();
+    const layout = this.env.layout.getState();
+    if (!layout.editing || layout.selectedId === null) return;
+    layout.select(null);
+    this.env.root.focus({ preventScroll: true });
+  };
 
   private listen(el: HTMLElement): void {
     el.addEventListener("pointermove", this.onPointerMove);
