@@ -993,6 +993,14 @@ input,
   border-radius: var(--radius-sm);
   object-fit: cover;
 }
+.wallpaper__name {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.wallpaper__mode {
+  color: var(--text-dim);
+}
 .wallpaper__thumb--original {
   border: var(--hairline) dashed var(--text-dim);
   color: var(--text-dim);

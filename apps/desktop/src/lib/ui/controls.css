@@ -152,23 +152,51 @@
   transform: translateX(calc(var(--switch-w) - 2 * var(--hairline) - var(--switch-knob) - 2 * var(--switch-inset)));
 }
 
-/* ---- slider */
+/* ---- slider: a plain track, the filled part as its own element, the native input on top */
 .ui-slider {
-  -webkit-appearance: none;
-  appearance: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   width: 100%;
   min-width: 120px;
+  height: var(--slider-thumb);
+}
+.ui-slider::before,
+.ui-slider__fill {
+  position: absolute;
+  left: 0;
+  top: calc((var(--slider-thumb) - var(--slider-track)) / 2);
+  height: var(--slider-track);
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+}
+.ui-slider::before {
+  content: "";
+  right: 0;
+  background: var(--dot-off);
+}
+.ui-slider__fill {
+  width: var(--fill);
+  background: var(--accent);
+}
+.ui-slider__input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  width: 100%;
   height: var(--slider-thumb);
   margin: 0;
   background: transparent;
   cursor: pointer;
 }
-.ui-slider::-webkit-slider-runnable-track {
-  height: var(--slider-track);
-  border-radius: var(--radius-pill);
-  background: linear-gradient(to right, var(--accent) var(--fill), var(--dot-off) var(--fill));
+.ui-slider__input:disabled {
+  cursor: default;
 }
-.ui-slider::-webkit-slider-thumb {
+.ui-slider__input::-webkit-slider-runnable-track {
+  height: var(--slider-track);
+  background: transparent;
+}
+.ui-slider__input::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: var(--slider-thumb);
   height: var(--slider-thumb);
@@ -179,13 +207,13 @@
   box-shadow: 0 0 0 var(--hairline) var(--border);
   transition: transform var(--dur-fast) var(--ease-out);
 }
-.ui-slider:active::-webkit-slider-thumb {
+.ui-slider__input:active::-webkit-slider-thumb {
   transform: scale(1.12);
 }
-.ui-slider:focus-visible {
+.ui-slider__input:focus-visible {
   outline: none;
 }
-.ui-slider:focus-visible::-webkit-slider-thumb {
+.ui-slider__input:focus-visible::-webkit-slider-thumb {
   box-shadow: 0 0 0 var(--focus-width) var(--accent);
 }
 

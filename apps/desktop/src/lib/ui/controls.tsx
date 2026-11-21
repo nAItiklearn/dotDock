@@ -90,21 +90,24 @@ interface SliderProps {
 
 export function Slider({ value, min, max, step, onChange, label, disabled = false, valueText }: SliderProps) {
   const fill = max > min ? ((value - min) / (max - min)) * 100 : 0;
+  // The filled part is its own element over a plain track: two flat colours, no gradient.
   return (
-    <input
-      type="range"
-      name={fieldName(label)}
-      className="ui-slider"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      disabled={disabled}
-      aria-label={label}
-      aria-valuetext={valueText}
-      style={{ "--fill": `${fill}%` } as CSSProperties}
-      onChange={(e) => onChange(Number(e.currentTarget.value))}
-    />
+    <span className="ui-slider" style={{ "--fill": `${fill}%` } as CSSProperties}>
+      <span className="ui-slider__fill" aria-hidden="true" />
+      <input
+        type="range"
+        name={fieldName(label)}
+        className="ui-slider__input"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={disabled}
+        aria-label={label}
+        aria-valuetext={valueText}
+        onChange={(e) => onChange(Number(e.currentTarget.value))}
+      />
+    </span>
   );
 }
 
