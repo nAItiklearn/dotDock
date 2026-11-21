@@ -75,10 +75,13 @@ wallpaper first; `tools/restore-windows.ps1` (has `-DryRun`) restores everything
    `gh release edit v1.0.0 --notes-file docs/release-notes/v1.0.0.md`. Check its claims still match what shipped
    (wallpaper follow must really work).
 4. In `website/` run `node tools/release-data.mjs` (adds date, size, SHA-256), commit, push.
-5. Vercel: no project exists yet. Team `naitiklearns-projects` (`team_kMhof5qb7z3Fnd4K92551OeJ`). Create it from
-   GitHub `nAItiklearn/dotDock` with **root directory `website`** (Vercel MCP `create_git_project`), Astro,
-   `pnpm install` / `pnpm build`. `KV_REST_API_URL` / `KV_REST_API_TOKEN` are optional (visit counter; the site runs
-   cleanly without them). Leave `DOTDOCK_OWNER_PHOTOS` unset.
+5. Vercel: the project is **already created and linked** (done 22:55): `dotdock`, id
+   `prj_tASXGC6S4bWI8SgjFQWs8JX2bA4x`, team `naitiklearns-projects` (`team_kMhof5qb7z3Fnd4K92551OeJ`), GitHub
+   `nAItiklearn/dotDock`, root `website`, Astro, Node 24.x, `pnpm install --frozen-lockfile` / `pnpm build`,
+   protection on previews only (the production URL is public). **Any push to `main` deploys production**, so push
+   `main` only after the integration branch is merged and green. `KV_REST_API_URL` / `KV_REST_API_TOKEN` are
+   optional (visit counter; the site runs cleanly without them). Leave `DOTDOCK_OWNER_PHOTOS` unset. Watch the
+   build with the Vercel MCP `list_deployments` / `list_deployment_events`.
 6. Verify on the live URL: every page loads, the download buttons download the real installer and portable exe,
    no console errors.
 7. Update `PROGRESS.md` and `docs/STATUS.md`. Tell the owner the live URL.
