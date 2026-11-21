@@ -83,9 +83,22 @@ export function nextEvent(at: number, lat: number, lon: number): { readonly kind
   return null;
 }
 
+/**
+ * A time zone's id as the platform spells it. Zones have old and new names ("Asia/Calcutta" and "Asia/Kolkata"); the
+ * platform reports one of them for the device and accepts both, so both sides are put in its spelling before comparing.
+ */
+function canonicalZone(timeZone: string): string {
+  try {
+    return new Intl.DateTimeFormat("en", { timeZone }).resolvedOptions().timeZone;
+  } catch {
+    return timeZone;
+  }
+}
+
 /** The bundled city in the device's own time zone, which is where the user most likely is; null when there is none. */
 export function homeCity(timeZone: string): City | null {
-  return CITIES.find((c) => c.timeZone === timeZone) ?? null;
+  const zone = canonicalZone(timeZone);
+  return CITIES.find((c) => c.timeZone === timeZone || canonicalZone(c.timeZone) === zone) ?? null;
 }
 
 export const deviceTimeZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;

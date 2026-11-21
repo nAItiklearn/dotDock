@@ -29,8 +29,9 @@
   place-items: center;
   width: calc(var(--d-icon) * 0.72);
   height: calc(var(--d-icon) * 0.72);
+  border: var(--face-hair, var(--hairline)) solid var(--disc-edge);
   border-radius: calc(var(--d-icon) * 0.12);
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--text) 9%, var(--surface-2));
   color: var(--text);
   transform-origin: 50% 50%;
   animation: flip-down var(--dur-med) var(--ease-out);
@@ -41,7 +42,7 @@
   top: 50%;
   right: 0;
   left: 0;
-  height: var(--hairline);
+  height: calc(var(--hairline) * 1.5);
   background: var(--disc);
 }
 .flip__digits {
@@ -301,4 +302,10 @@
   .flip__card {
     animation: none;
   }
+}
+
+/* Fields keep their own height in popovers with room to spare; only lists take the rest. */
+.tp-body--fit > .tp-field,
+.tp-body--fit .tp-field > .tp-input {
+  flex: none;
 }

@@ -9,7 +9,7 @@ import { convertMoney, currencies, currencyName, formatMoney } from "./currency"
 import { useFeed } from "./feeds";
 import { useTicker } from "./hooks";
 import { readFeed } from "./hub";
-import { clockText } from "./memo";
+import { clockText, MEMO_BARS } from "./memo";
 import { deleteMemo, playMemo, startMemo, stopMemo, useMemos } from "./memoRecorder";
 import { SunArc, useSunCity, Waveform } from "./moreFaces";
 import { agoParts } from "./recent";
@@ -45,7 +45,7 @@ export function SunBody() {
   const home = homeCity(deviceTimeZone());
   const day = city ? sunDay(now, city.lat, city.lon) : null;
   return (
-    <div className="tp-body">
+    <div className="tp-body tp-body--fit">
       {city && day ? (
         <>
           <div className="tp-sun">
@@ -103,7 +103,7 @@ export function SearchBody() {
     }
   };
   return (
-    <div className="tp-body">
+    <div className="tp-body tp-body--fit">
       <form
         className="tp-search"
         role="search"
@@ -140,7 +140,7 @@ export function HistoryBody() {
   });
   if (rows.length === 0) return <Empty title={t("tile.history.none")} hint={t("tile.history.none.hint")} />;
   return (
-    <div className="tp-body">
+    <div className="tp-body tp-body--fit">
       <ul className="tp-list tp-scroll">
         {rows.map(({ app, at }) => {
           const ago = agoParts(at, now);
@@ -164,6 +164,12 @@ export function HistoryBody() {
 
 // Voice memo -------------------------------------------------------------------------------------------------------
 
+/** The last MEMO_BARS readings, newest on the right, with silence before the recording began. */
+const liveWave = (levels: readonly number[]): number[] => {
+  const tail = levels.slice(-MEMO_BARS);
+  return [...Array.from({ length: MEMO_BARS - tail.length }, () => 0), ...tail];
+};
+
 export function MemoBody() {
   const status = useMemos((s) => s.status);
   const levels = useMemos((s) => s.levels);
@@ -175,9 +181,9 @@ export function MemoBody() {
   const now = useTicker(SECOND_MS, recording);
   if (issue === "unsupported") return <Empty title={issueText(issue)} hint={t("tile.memo.unsupported.hint")} />;
   return (
-    <div className="tp-body">
+    <div className="tp-body tp-body--fit">
       <div className="tp-memo" data-recording={recording ? "true" : undefined}>
-        <Waveform levels={recording ? levels.slice(-48) : []} className="wave-bars--live" />
+        <Waveform levels={liveWave(recording ? levels : [])} className="wave-bars--live" />
         <span className="tp-memo__time">{recording && startedAt !== null ? clockText(now - startedAt) : clockText(0)}</span>
         <button
           type="button"
@@ -242,7 +248,7 @@ export function CurrencyBody() {
     </label>
   );
   return (
-    <div className="tp-body">
+    <div className="tp-body tp-body--fit">
       <label className="tp-field">
         <span className="caps">{t("tile.convert.amount")}</span>
         <input className="tp-input" inputMode="decimal" value={setup.amount} aria-invalid={amount === null} onChange={(e) => setCurrency({ amount: e.target.value })} />

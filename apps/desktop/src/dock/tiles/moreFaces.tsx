@@ -130,11 +130,12 @@ export function WindFace() {
   return (
     <TileShell id="wind" label={[t("tile.wind"), speed.format(kmh), t("tile.wind.from", { point }), gust].filter((p) => p).join(", ")}>
       <Mark>
+        {/* Drawn pointing north, turned to the bearing the air moves toward. */}
         <svg className="wind__arrow" viewBox="0 0 24 24" aria-hidden="true" style={{ transform: `rotate(${blowsToward(from)}deg)` }}>
-          <path d="M12 3.5v15M6.5 13l5.5 5.5 5.5-5.5" />
+          <path d="M12 20.5v-15M6.5 11l5.5-5.5 5.5 5.5" />
         </svg>
       </Mark>
-      <Words title={speed.format(kmh)} sub={[t("tile.wind.from", { point }), gust].filter((p) => p).join(" · ")} />
+      <Words title={speed.format(kmh)} sub={[compassPoint(from), gust].filter((p) => p).join(" · ")} />
     </TileShell>
   );
 }

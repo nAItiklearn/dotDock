@@ -305,7 +305,7 @@ export const TILE_POPOVER_SIZE = {
   currency: { w: 360, h: 340 },
   search: { w: 380, h: 220 },
   history: { w: 320, h: 400 },
-  memo: { w: 360, h: 420 },
+  memo: { w: 360, h: 380 },
 } as const;
 export type PopoverTileId = keyof typeof TILE_POPOVER_SIZE;
 export const isPopoverTile = (id: string): id is PopoverTileId => Object.hasOwn(TILE_POPOVER_SIZE, id);

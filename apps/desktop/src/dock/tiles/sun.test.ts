@@ -65,4 +65,8 @@ describe("the home city", () => {
     expect(homeCity("Europe/London")?.id).toBe("london");
     expect(homeCity("Etc/Unknown")).toBeNull();
   });
+
+  it("finds it under the zone's old name too", () => {
+    expect(homeCity("Asia/Calcutta")?.timeZone).toBe("Asia/Kolkata");
+  });
 });
