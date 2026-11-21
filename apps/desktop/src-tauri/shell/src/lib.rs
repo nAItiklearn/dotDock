@@ -12,6 +12,7 @@ pub mod file_dialog;
 pub mod first_run;
 pub mod handover;
 pub mod hotkey;
+pub mod instance;
 pub mod modules;
 mod process;
 pub mod providers;

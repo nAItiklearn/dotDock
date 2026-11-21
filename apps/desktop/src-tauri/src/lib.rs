@@ -14,7 +14,7 @@ use dotdock_shell::crash_guard::{self, StartDecision};
 use dotdock_shell::first_run::{self, FirstStart};
 use dotdock_shell::providers::weather::{self, Place};
 use dotdock_shell::wallpaper;
-use dotdock_shell::{autostart, boot_log as boot, dock_guard, sentinel};
+use dotdock_shell::{autostart, boot_log as boot, dock_guard, instance, sentinel};
 use home_host::HomeState;
 use tauri::{AppHandle, Manager, State};
 
@@ -112,6 +112,17 @@ pub fn run() {
     if run_cli_command() {
         return;
     }
+    // A later launch only hands over to the running app: the single-instance plugin forwards it and
+    // exits while the app is built. Nothing below may run for it (see `instance`).
+    let primary = instance::is_primary();
+    if primary && !prepare_primary_start() {
+        return;
+    }
+    build_and_run(primary);
+}
+
+/// The checks of the launch that runs the app. False when it must not start (safe mode, crash loop).
+fn prepare_primary_start() -> bool {
     boot::record_process_start();
     // Before anything else: if the last run left the taskbar hidden (power loss, or even the
     // sentinel was killed), it comes back now. Also in safe mode: showing it is always safe.
@@ -121,7 +132,7 @@ pub fn run() {
     if shift_held() {
         boot::mark("safe-mode");
         notice("Safe mode: dotDock started without changing your desktop.\n\nStart it again without holding Shift to bring your widgets back.");
-        return;
+        return false;
     }
     if let StartDecision::Tripped = crash_guard::on_start() {
         // At sign-in, stay quiet: the user is told on their next manual launch.
@@ -129,11 +140,15 @@ pub fn run() {
             notice("dotDock stopped unexpectedly several times, so it put your Windows desktop back the way it was and turned off starting with Windows.\n\nYou can start it again any time.");
             crash_guard::take_tripped_notice();
         }
-        return;
+        return false;
     }
     if !launched_at_sign_in && crash_guard::take_tripped_notice().is_some() {
         notice("Earlier, dotDock stopped unexpectedly several times at sign-in, so it put your Windows desktop back and turned off starting with Windows.\n\nIt is starting normally now.");
     }
+    true
+}
+
+fn build_and_run(primary: bool) {
     let result = tauri::Builder::default()
         // A second launch opens Settings in the running instance (MASTER_SPEC 7.4).
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| tray::open_settings(app)))
@@ -181,6 +196,11 @@ pub fn run() {
             core_commands::settings_dock_apps
         ])
         .setup(move |app| {
+            // The plugin only lets a later launch through while the running app is still before its
+            // own build (a modal notice, a quick double click). It must not become a second app.
+            if !primary {
+                std::process::exit(0);
+            }
             boot::mark("setup");
             let handle = app.handle().clone();
             tray::install(&handle)?;
