@@ -8,12 +8,14 @@ $cdp = Join-Path $PSScriptRoot 'cdp.mjs'
 
 function Invoke-Dock([int]$Port, [string]$Expression, [string]$Page = 'dock.html') {
   $file = [System.IO.Path]::GetTempFileName()
+  # node writes to stderr while the dock's debug port is not up yet; that is "no answer", not a failure.
+  $ErrorActionPreference = 'Continue'
   try {
     Set-Content -Path $file -Value $Expression -Encoding UTF8
     $out = (& node $cdp $Port $Page "@$file" 2>$null) -join ''
     if ($LASTEXITCODE -ne 0 -or $out -eq '') { return $null }
     $out | ConvertFrom-Json
-  } finally { Remove-Item $file -ErrorAction SilentlyContinue }
+  } catch { return $null } finally { Remove-Item $file -ErrorAction SilentlyContinue }
 }
 
 Export-ModuleMember -Function Invoke-Dock
