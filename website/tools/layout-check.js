@@ -38,8 +38,8 @@ async () => {
         if (!text || !parent || parent.closest(BY_DESIGN) || parent.closest("script,style,[hidden],.sr-only")) continue;
         // The answer of a closed disclosure is not on screen.
         const shut = parent.closest("details:not([open])");
-        // Text in a box that scrolls sideways (code, wide tables) is reached by scrolling that box.
-        if (parent.closest("pre,.table-wrap,.code__text")) continue;
+        // Text in a box that scrolls sideways (code, wide tables, the carousel's track) is reached by scrolling that box.
+        if (parent.closest("pre,.table-wrap,.code__text,[data-carousel-track]")) continue;
         if (shut && !parent.closest("summary")) continue;
         const range = d.createRange();
         range.selectNodeContents(node);
@@ -68,7 +68,7 @@ async () => {
       // (a card cut off at the viewport edge, or a grid wider than its gutter, fails here).
       const BOXES = ".bento__tile, .bento__cap, .w, figure, figcaption, h1, h2, h3, p, li, img, .btn, .card";
       for (const el of d.querySelectorAll(BOXES)) {
-        if (el.closest(`${BY_DESIGN},noscript,[hidden],.sr-only,.art,pre,.table-wrap,.marquee,[data-marquee]`)) continue;
+        if (el.closest(`${BY_DESIGN},noscript,[hidden],.sr-only,.art,pre,.table-wrap,.marquee,[data-marquee],[data-carousel-track] > *`)) continue;
         const cs = d.defaultView.getComputedStyle(el);
         const r = el.getBoundingClientRect();
         if (cs.display === "none" || cs.visibility === "hidden" || r.width < 2 || r.height < 2) continue;
