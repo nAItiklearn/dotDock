@@ -39,7 +39,7 @@ export function createMockNativeApi(): NativeApi {
     },
   };
   let performance: PerformanceSettings = { pauseOnFullscreen: true, pauseOnBatterySaver: false, pauseWhenLocked: true, systemRefreshHz: 1 };
-  let updates: UpdateStatus = { enabled: true, checkedAt: new Date(Date.now() - 86_400_000).toISOString(), available: null };
+  let updates: UpdateStatus = { checkedAtMs: null, available: null, failed: false };
   let assignments: WallpaperAssignment[] = [
     { monitorId: "DISPLAY1", wallpaperId: "sample-ink", fit: "fill" },
     { monitorId: "DISPLAY2", wallpaperId: null, fit: "fill" },
@@ -117,14 +117,11 @@ export function createMockNativeApi(): NativeApi {
     app: { info: () => later(info), openDataFolder: () => later(undefined) },
     updater: {
       status: () => later(updates),
-      setEnabled: (enabled) => {
-        updates = { ...updates, enabled };
-        return later(updates);
-      },
       check: () => {
-        updates = { ...updates, checkedAt: new Date().toISOString() };
+        updates = { ...updates, checkedAtMs: Date.now(), failed: false };
         return later(updates);
       },
+      install: () => later(undefined),
     },
   };
 }

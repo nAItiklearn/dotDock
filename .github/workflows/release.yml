@@ -62,8 +62,33 @@ jobs:
         working-directory: apps/desktop/src-tauri
 
       # Cold build on purpose: release artifacts do not use the shared rust cache.
+      # createUpdaterArtifacts signs the installer with the project's minisign key (*.exe.sig).
       - name: Build bundle
         run: pnpm tauri build --config src-tauri/tauri.sentinel.conf.json
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      # The in-app updater reads releases/latest/download/latest.json; it points at this tag's installer.
+      - name: Write updater manifest
+        env:
+          APP_VERSION: ${{ steps.app.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          installer="dotDock_${APP_VERSION}_x64-setup.exe"
+          sig="src-tauri/target/release/bundle/nsis/${installer}.sig"
+          mkdir -p ../../staging/updater
+          cp "$sig" ../../staging/updater/
+          SIG_FILE="$sig" URL="https://github.com/${REPO}/releases/download/${GITHUB_REF_NAME}/${installer}" node --input-type=commonjs -e '
+            const fs = require("fs");
+            const manifest = {
+              version: process.env.APP_VERSION,
+              notes: `dotDock ${process.env.APP_VERSION}`,
+              pub_date: new Date().toISOString(),
+              platforms: { "windows-x86_64": { signature: fs.readFileSync(process.env.SIG_FILE, "utf8").trim(), url: process.env.URL } },
+            };
+            fs.writeFileSync("../../staging/updater/latest.json", JSON.stringify(manifest, null, 2));
+          '
 
       - name: Stage portable exe
         run: |
@@ -84,6 +109,13 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dotdock-windows-updater
+          path: staging/updater/*
+          if-no-files-found: error
+          retention-days: 7
+
   release:
     name: Publish GitHub Release
     needs: bundle
@@ -98,7 +130,7 @@ jobs:
           path: release-assets
           merge-multiple: true
 
-      # Binaries are unsigned (no signing secrets yet); Windows SmartScreen will warn.
+      # No Authenticode certificate yet, so SmartScreen will warn; updates are minisign-signed.
       # A tag with a hyphen (v0.2.0-rc.1) is published as a prerelease.
       - uses: softprops/action-gh-release@v3
         with:

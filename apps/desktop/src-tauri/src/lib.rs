@@ -4,6 +4,7 @@ mod desktop_host;
 mod island_host;
 mod providers;
 mod tray;
+mod updater;
 
 use desktop_host::{HitRect, HitRegions, Hwnd};
 use dotdock_shell::crash_guard::{self, StartDecision};
@@ -258,6 +259,8 @@ pub fn run() {
     let result = tauri::Builder::default()
         // A second launch opens Settings in the running instance (MASTER_SPEC 7.4).
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| tray::open_settings(app)))
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updater::UpdaterState::default())
         .manage(ready.clone())
         .manage(regions.clone())
         .invoke_handler(tauri::generate_handler![
@@ -281,7 +284,10 @@ pub fn run() {
             wallpaper_apply,
             wallpaper_monitors,
             restore_windows,
-            autostart_set
+            autostart_set,
+            updater::updater_status,
+            updater::updater_check,
+            updater::updater_install
         ])
         .setup(move |app| {
             boot::mark("setup");
@@ -293,6 +299,7 @@ pub fn run() {
             let wake = providers::spawn(handle.clone(), ready)?;
             app.manage(wake);
             desktop_host::spawn_guard(Hwnd::from_raw(window.hwnd()?.0), regions)?;
+            updater::schedule_startup_check(handle.clone());
             std::thread::spawn(|| {
                 std::thread::sleep(crash_guard::stable_after());
                 crash_guard::mark_stable();

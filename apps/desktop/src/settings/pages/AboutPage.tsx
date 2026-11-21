@@ -5,10 +5,11 @@ import { BACKUP_SCHEMA, LAYOUT_SCHEMA, SETTINGS_SCHEMA, THEME_SCHEMA } from "../
 import { getNativeApi, type AppInfo, type UpdateStatus } from "../../lib/native/api";
 import { getApp } from "../../lib/state/app";
 import { useSettingsStore } from "../../lib/state/hooks";
-import { Button, Switch } from "../../lib/ui/controls";
+import { Button } from "../../lib/ui/controls";
 import { PageHeader, Row, Section } from "../ui/layout";
 import { pageById } from "../pageMeta";
 import { parseNotices, splitInline, type InlinePart } from "../noticesText";
+import { updateView } from "../updateText";
 
 const COPIED_FLASH_MS = 2200;
 const OPEN_METEO_URL = "https://open-meteo.com/";
@@ -43,49 +44,37 @@ function useAppInfo(): AppInfo | null {
 function UpdatesRow() {
   const native = getNativeApi();
   const [status, setStatus] = useState<UpdateStatus | null>(null);
-  const [checking, setChecking] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [callFailed, setCallFailed] = useState(false);
 
   useEffect(() => {
-    if (native.available) native.updater.status().then(setStatus, () => setFailed(true));
+    if (native.available) native.updater.status().then(setStatus, () => setCallFailed(true));
   }, [native]);
 
-  const check = (): void => {
-    setChecking(true);
-    setFailed(false);
-    native.updater
-      .check()
-      .then(setStatus, () => setFailed(true))
-      .finally(() => setChecking(false));
+  const run = (task: () => Promise<void>): void => {
+    setBusy(true);
+    setCallFailed(false);
+    task()
+      .catch(() => setCallFailed(true))
+      .finally(() => setBusy(false));
   };
+  const check = (): void => run(() => native.updater.check().then(setStatus));
+  const install = (): void => run(() => native.updater.install());
 
-  const line = !native.available
-    ? "Updates are delivered through the installed app."
-    : failed
-      ? "Couldn't reach the update service."
-      : status?.available
-        ? `Version ${status.available.version} is available.`
-        : status?.checkedAt
-          ? `Up to date. Last checked ${new Date(status.checkedAt).toLocaleString()}.`
-          : "Not checked yet.";
+  const view = updateView({ native: native.available, status, callFailed, formatTime: (ms) => new Date(ms).toLocaleString() });
 
-  return (
-    <>
-      <Row id="updates" label="Check for updates" description={line}>
-        <Button icon="reset" disabled={!native.available || checking || status?.enabled === false} onClick={check}>
-          {checking ? "Checking…" : "Check now"}
-        </Button>
-      </Row>
-      {native.available && status ? (
-        <Row label="Check automatically" id="updates-auto" description="Contacts the update service once a day. Nothing else is sent." >
-          <Switch
-            checked={status.enabled}
-            label="Check for updates automatically"
-            onChange={(enabled) => void native.updater.setEnabled(enabled).then(setStatus, () => setFailed(true))}
-          />
-        </Row>
-      ) : null}
-    </>
+  return view.kind === "available" ? (
+    <Row id="updates" label="Update available" description={view.line}>
+      <Button icon="check" disabled={busy} onClick={install}>
+        {busy ? "Installing…" : `Install ${view.version}`}
+      </Button>
+    </Row>
+  ) : (
+    <Row id="updates" label="Check for updates" description={view.line}>
+      <Button icon="reset" disabled={!native.available || busy} onClick={check}>
+        {busy ? "Checking…" : "Check now"}
+      </Button>
+    </Row>
   );
 }
 

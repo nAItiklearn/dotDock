@@ -110,9 +110,11 @@ export interface AppInfo {
 }
 
 export interface UpdateStatus {
-  readonly enabled: boolean;
-  readonly checkedAt: string | null;
+  /** Milliseconds since the Unix epoch of the last successful check. */
+  readonly checkedAtMs: number | null;
   readonly available: { readonly version: string; readonly notes: string | null } | null;
+  /** The last check could not reach the update service. */
+  readonly failed: boolean;
 }
 
 export interface NativeApi {
@@ -183,10 +185,10 @@ export interface NativeApi {
   updater: {
     /** `updater_status` () → UpdateStatus */
     status(): Promise<UpdateStatus>;
-    /** `updater_set_enabled` { enabled: boolean } → UpdateStatus */
-    setEnabled(enabled: boolean): Promise<UpdateStatus>;
     /** `updater_check` () → UpdateStatus */
     check(): Promise<UpdateStatus>;
+    /** `updater_install` () → void. Downloads, verifies and runs the signed installer, which closes the app. */
+    install(): Promise<void>;
   };
 }
 
@@ -203,7 +205,7 @@ export const unavailableNativeApi: NativeApi = {
   shortcuts: { register: unavailable },
   window: { openSettings: unavailable, setEditMode: unavailable },
   app: { info: unavailable, openDataFolder: unavailable },
-  updater: { status: unavailable, setEnabled: unavailable, check: unavailable },
+  updater: { status: unavailable, check: unavailable, install: unavailable },
 };
 
 const call = <T>(command: string, args?: Record<string, unknown>): Promise<T> => invoke<T>(command, args);
@@ -266,8 +268,8 @@ export const tauriNativeApi: NativeApi = {
   app: { info: () => call("app_info"), openDataFolder: () => call("app_open_data_folder") },
   updater: {
     status: () => call("updater_status"),
-    setEnabled: (enabled) => call("updater_set_enabled", { enabled }),
     check: () => call("updater_check"),
+    install: () => call("updater_install"),
   },
 };
 
