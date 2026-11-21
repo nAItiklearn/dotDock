@@ -1,0 +1,44 @@
+---
+/**
+ * The download page's scenery: a meadow at golden hour, stacked from the vista-* pieces of tools/site-art
+ * (siteart/vista.py) so each depth can move on its own. Back to front: the land and the sun, the clouds, the
+ * sparkles, the far half of the near flowers, the flyers and loose petals, the near half. Every motion is a
+ * transform or an opacity (styles/download.css); scripts/vista.ts pauses it while the picture is off screen.
+ * Purely decorative.
+ */
+import Art from "../Art.astro";
+
+/** The flyers: piece, the path they fly (styles/download.css) and where on the stage they start. */
+const FLYERS = [
+  { piece: "vista-butterfly-red", path: "loop" },
+  { piece: "vista-butterfly-gold", path: "drift" },
+  { piece: "vista-butterfly-violet", path: "rise" },
+  { piece: "vista-dragonfly", path: "dart" },
+] as const;
+
+/** Loose petals carried on the wind, each with its own colour role; styles/download.css gives each its path. */
+const PETALS = ["petal", "pink", "gold", "apricot", "petal", "violet", "pink", "cream"] as const;
+---
+
+<div class="vista" aria-hidden="true" data-vista>
+  <div class="vista__stage">
+    <Art piece="vista-land" class="vista__layer vista__land" />
+    <Art piece="vista-clouds" class="vista__layer vista__clouds" />
+    <Art piece="vista-glint-a" class="vista__layer vista__glint vista__glint--a" />
+    <Art piece="vista-glint-b" class="vista__layer vista__glint vista__glint--b" />
+    <Art piece="vista-sway-b" class="vista__layer vista__sway vista__sway--b" />
+    {
+      FLYERS.map((f, i) => (
+        <div class={`vista__flight vista__flight--${f.path}`}>
+          <Art piece={f.piece} class={`vista__flyer vista__flyer--${i + 1}`} />
+        </div>
+      ))
+    }
+    {PETALS.map((role, i) => <i class={`vista__petal vista__petal--${i + 1} vista__petal--${role}`} />)}
+    <Art piece="vista-sway-a" class="vista__layer vista__sway vista__sway--a" />
+  </div>
+</div>
+
+<script>
+  import "../../scripts/vista";
+</script>

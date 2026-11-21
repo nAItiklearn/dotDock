@@ -2997,5 +2997,1463 @@
     }
    }
   }
+ },
+ "vista-butterfly-gold": {
+  "seed": 721,
+  "variants": {
+   "wide": {
+    "w": 72,
+    "h": 48,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-butterfly-gold-wide-petal-1x.webp",
+       "w": 72,
+       "h": 48,
+       "bytes": 50
+      },
+      "2": {
+       "file": "vista-butterfly-gold-wide-petal-2x.webp",
+       "w": 144,
+       "h": 96,
+       "bytes": 54
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-butterfly-gold-wide-gold-1x.webp",
+       "w": 72,
+       "h": 48,
+       "bytes": 80
+      },
+      "2": {
+       "file": "vista-butterfly-gold-wide-gold-2x.webp",
+       "w": 144,
+       "h": 96,
+       "bytes": 88
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-butterfly-gold-wide-heart-1x.webp",
+       "w": 72,
+       "h": 48,
+       "bytes": 48
+      },
+      "2": {
+       "file": "vista-butterfly-gold-wide-heart-2x.webp",
+       "w": 144,
+       "h": 96,
+       "bytes": 50
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 54,
+    "h": 36,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-butterfly-gold-narrow-petal-1x.webp",
+       "w": 54,
+       "h": 36,
+       "bytes": 50
+      },
+      "2": {
+       "file": "vista-butterfly-gold-narrow-petal-2x.webp",
+       "w": 108,
+       "h": 72,
+       "bytes": 50
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-butterfly-gold-narrow-gold-1x.webp",
+       "w": 54,
+       "h": 36,
+       "bytes": 84
+      },
+      "2": {
+       "file": "vista-butterfly-gold-narrow-gold-2x.webp",
+       "w": 108,
+       "h": 72,
+       "bytes": 84
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-butterfly-gold-narrow-heart-1x.webp",
+       "w": 54,
+       "h": 36,
+       "bytes": 48
+      },
+      "2": {
+       "file": "vista-butterfly-gold-narrow-heart-2x.webp",
+       "w": 108,
+       "h": 72,
+       "bytes": 48
+      }
+     }
+    }
+   }
+  }
+ },
+ "vista-butterfly-red": {
+  "seed": 721,
+  "variants": {
+   "wide": {
+    "w": 72,
+    "h": 48,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-butterfly-red-wide-petal-1x.webp",
+       "w": 72,
+       "h": 48,
+       "bytes": 80
+      },
+      "2": {
+       "file": "vista-butterfly-red-wide-petal-2x.webp",
+       "w": 144,
+       "h": 96,
+       "bytes": 88
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-butterfly-red-wide-gold-1x.webp",
+       "w": 72,
+       "h": 48,
+       "bytes": 50
+      },
+      "2": {
+       "file": "vista-butterfly-red-wide-gold-2x.webp",
+       "w": 144,
+       "h": 96,
+       "bytes": 54
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-butterfly-red-wide-heart-1x.webp",
+       "w": 72,
+       "h": 48,
+       "bytes": 48
+      },
+      "2": {
+       "file": "vista-butterfly-red-wide-heart-2x.webp",
+       "w": 144,
+       "h": 96,
+       "bytes": 50
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 54,
+    "h": 36,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-butterfly-red-narrow-petal-1x.webp",
+       "w": 54,
+       "h": 36,
+       "bytes": 84
+      },
+      "2": {
+       "file": "vista-butterfly-red-narrow-petal-2x.webp",
+       "w": 108,
+       "h": 72,
+       "bytes": 84
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-butterfly-red-narrow-gold-1x.webp",
+       "w": 54,
+       "h": 36,
+       "bytes": 50
+      },
+      "2": {
+       "file": "vista-butterfly-red-narrow-gold-2x.webp",
+       "w": 108,
+       "h": 72,
+       "bytes": 50
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-butterfly-red-narrow-heart-1x.webp",
+       "w": 54,
+       "h": 36,
+       "bytes": 48
+      },
+      "2": {
+       "file": "vista-butterfly-red-narrow-heart-2x.webp",
+       "w": 108,
+       "h": 72,
+       "bytes": 48
+      }
+     }
+    }
+   }
+  }
+ },
+ "vista-butterfly-violet": {
+  "seed": 721,
+  "variants": {
+   "wide": {
+    "w": 72,
+    "h": 48,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "vista-butterfly-violet-wide-gold-1x.webp",
+       "w": 72,
+       "h": 48,
+       "bytes": 50
+      },
+      "2": {
+       "file": "vista-butterfly-violet-wide-gold-2x.webp",
+       "w": 144,
+       "h": 96,
+       "bytes": 54
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "vista-butterfly-violet-wide-violet-1x.webp",
+       "w": 72,
+       "h": 48,
+       "bytes": 82
+      },
+      "2": {
+       "file": "vista-butterfly-violet-wide-violet-2x.webp",
+       "w": 144,
+       "h": 96,
+       "bytes": 86
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-butterfly-violet-wide-heart-1x.webp",
+       "w": 72,
+       "h": 48,
+       "bytes": 48
+      },
+      "2": {
+       "file": "vista-butterfly-violet-wide-heart-2x.webp",
+       "w": 144,
+       "h": 96,
+       "bytes": 50
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 54,
+    "h": 36,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "vista-butterfly-violet-narrow-gold-1x.webp",
+       "w": 54,
+       "h": 36,
+       "bytes": 50
+      },
+      "2": {
+       "file": "vista-butterfly-violet-narrow-gold-2x.webp",
+       "w": 108,
+       "h": 72,
+       "bytes": 50
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "vista-butterfly-violet-narrow-violet-1x.webp",
+       "w": 54,
+       "h": 36,
+       "bytes": 84
+      },
+      "2": {
+       "file": "vista-butterfly-violet-narrow-violet-2x.webp",
+       "w": 108,
+       "h": 72,
+       "bytes": 86
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-butterfly-violet-narrow-heart-1x.webp",
+       "w": 54,
+       "h": 36,
+       "bytes": 48
+      },
+      "2": {
+       "file": "vista-butterfly-violet-narrow-heart-2x.webp",
+       "w": 108,
+       "h": 72,
+       "bytes": 48
+      }
+     }
+    }
+   }
+  }
+ },
+ "vista-clouds": {
+  "seed": 703,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 640,
+    "layers": {
+     "cloud": {
+      "1": {
+       "file": "vista-clouds-wide-cloud-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 24562
+      },
+      "2": {
+       "file": "vista-clouds-wide-cloud-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 66748
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-clouds-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 5674
+      },
+      "2": {
+       "file": "vista-clouds-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 18082
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "cloud": {
+      "1": {
+       "file": "vista-clouds-narrow-cloud-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 11800
+      },
+      "2": {
+       "file": "vista-clouds-narrow-cloud-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 29896
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-clouds-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 3228
+      },
+      "2": {
+       "file": "vista-clouds-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 9450
+      }
+     }
+    }
+   }
+  }
+ },
+ "vista-dragonfly": {
+  "seed": 721,
+  "variants": {
+   "wide": {
+    "w": 72,
+    "h": 72,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-dragonfly-wide-petal-1x.webp",
+       "w": 72,
+       "h": 72,
+       "bytes": 50
+      },
+      "2": {
+       "file": "vista-dragonfly-wide-petal-2x.webp",
+       "w": 144,
+       "h": 144,
+       "bytes": 54
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-dragonfly-wide-heart-1x.webp",
+       "w": 72,
+       "h": 72,
+       "bytes": 48
+      },
+      "2": {
+       "file": "vista-dragonfly-wide-heart-2x.webp",
+       "w": 144,
+       "h": 144,
+       "bytes": 50
+      }
+     },
+     "cloud": {
+      "1": {
+       "file": "vista-dragonfly-wide-cloud-1x.webp",
+       "w": 72,
+       "h": 72,
+       "bytes": 82
+      },
+      "2": {
+       "file": "vista-dragonfly-wide-cloud-2x.webp",
+       "w": 144,
+       "h": 144,
+       "bytes": 90
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 54,
+    "h": 54,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-dragonfly-narrow-petal-1x.webp",
+       "w": 54,
+       "h": 54,
+       "bytes": 50
+      },
+      "2": {
+       "file": "vista-dragonfly-narrow-petal-2x.webp",
+       "w": 108,
+       "h": 108,
+       "bytes": 52
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-dragonfly-narrow-heart-1x.webp",
+       "w": 54,
+       "h": 54,
+       "bytes": 46
+      },
+      "2": {
+       "file": "vista-dragonfly-narrow-heart-2x.webp",
+       "w": 108,
+       "h": 108,
+       "bytes": 48
+      }
+     },
+     "cloud": {
+      "1": {
+       "file": "vista-dragonfly-narrow-cloud-1x.webp",
+       "w": 54,
+       "h": 54,
+       "bytes": 88
+      },
+      "2": {
+       "file": "vista-dragonfly-narrow-cloud-2x.webp",
+       "w": 108,
+       "h": 108,
+       "bytes": 84
+      }
+     }
+    }
+   }
+  }
+ },
+ "vista-glint-a": {
+  "seed": 704,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 640,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "vista-glint-a-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 208
+      },
+      "2": {
+       "file": "vista-glint-a-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 566
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "vista-glint-a-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 136
+      },
+      "2": {
+       "file": "vista-glint-a-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 218
+      }
+     }
+    }
+   }
+  }
+ },
+ "vista-glint-b": {
+  "seed": 704,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 640,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "vista-glint-b-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 204
+      },
+      "2": {
+       "file": "vista-glint-b-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 562
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "vista-glint-b-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 130
+      },
+      "2": {
+       "file": "vista-glint-b-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 214
+      }
+     }
+    }
+   }
+  }
+ },
+ "vista-land": {
+  "seed": 701,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 640,
+    "layers": {
+     "glow": {
+      "1": {
+       "file": "vista-land-wide-glow-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 15580
+      },
+      "2": {
+       "file": "vista-land-wide-glow-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 44310
+      }
+     },
+     "far": {
+      "1": {
+       "file": "vista-land-wide-far-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 30704
+      },
+      "2": {
+       "file": "vista-land-wide-far-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 82522
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "vista-land-wide-mid-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 26860
+      },
+      "2": {
+       "file": "vista-land-wide-mid-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 70254
+      }
+     },
+     "near": {
+      "1": {
+       "file": "vista-land-wide-near-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 90668
+      },
+      "2": {
+       "file": "vista-land-wide-near-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 230700
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "vista-land-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 286
+      },
+      "2": {
+       "file": "vista-land-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 652
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-land-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 364
+      },
+      "2": {
+       "file": "vista-land-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 742
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "vista-land-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 550
+      },
+      "2": {
+       "file": "vista-land-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 1138
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "vista-land-wide-violet-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 370
+      },
+      "2": {
+       "file": "vista-land-wide-violet-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 764
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "vista-land-wide-apricot-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 374
+      },
+      "2": {
+       "file": "vista-land-wide-apricot-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 746
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "vista-land-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 276
+      },
+      "2": {
+       "file": "vista-land-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 648
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-land-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 128
+      },
+      "2": {
+       "file": "vista-land-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 288
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "vista-land-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 878
+      },
+      "2": {
+       "file": "vista-land-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 1338
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "glow": {
+      "1": {
+       "file": "vista-land-narrow-glow-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 5516
+      },
+      "2": {
+       "file": "vista-land-narrow-glow-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 14444
+      }
+     },
+     "far": {
+      "1": {
+       "file": "vista-land-narrow-far-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 9744
+      },
+      "2": {
+       "file": "vista-land-narrow-far-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 23656
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "vista-land-narrow-mid-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 9214
+      },
+      "2": {
+       "file": "vista-land-narrow-mid-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 22362
+      }
+     },
+     "near": {
+      "1": {
+       "file": "vista-land-narrow-near-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 31264
+      },
+      "2": {
+       "file": "vista-land-narrow-near-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 77118
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "vista-land-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 178
+      },
+      "2": {
+       "file": "vista-land-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 258
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-land-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 186
+      },
+      "2": {
+       "file": "vista-land-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 264
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "vista-land-narrow-pink-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 238
+      },
+      "2": {
+       "file": "vista-land-narrow-pink-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 316
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "vista-land-narrow-violet-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 210
+      },
+      "2": {
+       "file": "vista-land-narrow-violet-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 300
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "vista-land-narrow-apricot-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 214
+      },
+      "2": {
+       "file": "vista-land-narrow-apricot-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 302
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "vista-land-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 170
+      },
+      "2": {
+       "file": "vista-land-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 250
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-land-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 86
+      },
+      "2": {
+       "file": "vista-land-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 130
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "vista-land-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 526
+      },
+      "2": {
+       "file": "vista-land-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 764
+      }
+     }
+    }
+   }
+  }
+ },
+ "vista-sway-a": {
+  "seed": 711,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 640,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-sway-a-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 522
+      },
+      "2": {
+       "file": "vista-sway-a-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 1134
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-sway-a-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 604
+      },
+      "2": {
+       "file": "vista-sway-a-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 1212
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "vista-sway-a-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 420
+      },
+      "2": {
+       "file": "vista-sway-a-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 978
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "vista-sway-a-wide-violet-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 354
+      },
+      "2": {
+       "file": "vista-sway-a-wide-violet-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 916
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "vista-sway-a-wide-apricot-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 318
+      },
+      "2": {
+       "file": "vista-sway-a-wide-apricot-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 884
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "vista-sway-a-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 376
+      },
+      "2": {
+       "file": "vista-sway-a-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 934
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-sway-a-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 426
+      },
+      "2": {
+       "file": "vista-sway-a-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 1042
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "vista-sway-a-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 1712
+      },
+      "2": {
+       "file": "vista-sway-a-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 2294
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "vista-sway-a-wide-grain-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 12248
+      },
+      "2": {
+       "file": "vista-sway-a-wide-grain-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 33664
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-sway-a-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 158
+      },
+      "2": {
+       "file": "vista-sway-a-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 348
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-sway-a-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 308
+      },
+      "2": {
+       "file": "vista-sway-a-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 506
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "vista-sway-a-narrow-pink-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 168
+      },
+      "2": {
+       "file": "vista-sway-a-narrow-pink-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 352
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "vista-sway-a-narrow-violet-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 58
+      },
+      "2": {
+       "file": "vista-sway-a-narrow-violet-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 104
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "vista-sway-a-narrow-apricot-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 174
+      },
+      "2": {
+       "file": "vista-sway-a-narrow-apricot-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 360
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "vista-sway-a-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 58
+      },
+      "2": {
+       "file": "vista-sway-a-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 104
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-sway-a-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 166
+      },
+      "2": {
+       "file": "vista-sway-a-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 250
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "vista-sway-a-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 694
+      },
+      "2": {
+       "file": "vista-sway-a-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 858
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "vista-sway-a-narrow-grain-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 3714
+      },
+      "2": {
+       "file": "vista-sway-a-narrow-grain-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 10068
+      }
+     }
+    }
+   }
+  }
+ },
+ "vista-sway-b": {
+  "seed": 712,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 640,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-sway-b-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 364
+      },
+      "2": {
+       "file": "vista-sway-b-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 936
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-sway-b-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 468
+      },
+      "2": {
+       "file": "vista-sway-b-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 1050
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "vista-sway-b-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 462
+      },
+      "2": {
+       "file": "vista-sway-b-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 1054
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "vista-sway-b-wide-violet-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 488
+      },
+      "2": {
+       "file": "vista-sway-b-wide-violet-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 1084
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "vista-sway-b-wide-apricot-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 362
+      },
+      "2": {
+       "file": "vista-sway-b-wide-apricot-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 922
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "vista-sway-b-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 94
+      },
+      "2": {
+       "file": "vista-sway-b-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 250
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-sway-b-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 356
+      },
+      "2": {
+       "file": "vista-sway-b-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 952
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "vista-sway-b-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 1606
+      },
+      "2": {
+       "file": "vista-sway-b-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 2308
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "vista-sway-b-wide-grain-1x.webp",
+       "w": 1920,
+       "h": 640,
+       "bytes": 11444
+      },
+      "2": {
+       "file": "vista-sway-b-wide-grain-2x.webp",
+       "w": 3840,
+       "h": 1280,
+       "bytes": 31500
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "vista-sway-b-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 200
+      },
+      "2": {
+       "file": "vista-sway-b-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 390
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "vista-sway-b-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 186
+      },
+      "2": {
+       "file": "vista-sway-b-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 372
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "vista-sway-b-narrow-pink-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 274
+      },
+      "2": {
+       "file": "vista-sway-b-narrow-pink-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 462
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "vista-sway-b-narrow-violet-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 58
+      },
+      "2": {
+       "file": "vista-sway-b-narrow-violet-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 104
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "vista-sway-b-narrow-apricot-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 162
+      },
+      "2": {
+       "file": "vista-sway-b-narrow-apricot-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 350
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "vista-sway-b-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 58
+      },
+      "2": {
+       "file": "vista-sway-b-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 104
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "vista-sway-b-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 112
+      },
+      "2": {
+       "file": "vista-sway-b-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 202
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "vista-sway-b-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 778
+      },
+      "2": {
+       "file": "vista-sway-b-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 954
+      }
+     },
+     "grain": {
+      "1": {
+       "file": "vista-sway-b-narrow-grain-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 3954
+      },
+      "2": {
+       "file": "vista-sway-b-narrow-grain-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 10472
+      }
+     }
+    }
+   }
+  }
  }
 }

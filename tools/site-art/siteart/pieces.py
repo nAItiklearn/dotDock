@@ -10,6 +10,7 @@ from .vignette import KINDS as VIGNETTES, render_vignette
 from .bloom import render_bouquet, render_tuft
 from .scape import render_scape
 from .scene import render_scene
+from .vista import VISTA
 
 Layers = dict[str, np.ndarray]
 
@@ -84,4 +85,6 @@ PIECES: dict[str, Piece] = {
         for i, kind in enumerate(VIGNETTES)
     },
     "meadow": Piece(71, {"wide": (1920, 420), "narrow": (720, 300)}, _scene("meadow", 71), _colour_stack, _SCENE_Q),
+    # The download page's meadow, in layers the page moves on their own (vista.py; preview with vista_preview.py).
+    **{name: Piece(seed, variants, render, _colour_stack, quality) for name, (seed, variants, render, quality) in VISTA.items()},
 }
