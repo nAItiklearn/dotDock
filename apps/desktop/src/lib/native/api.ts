@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isTauri } from "../../providers/bridge";
 import type { ShortcutAction } from "../model/types";
-import type { DockSettings } from "./dock";
+import type { DockAppName, DockSettings } from "./dock";
 
 /**
  * The typed surface between the UI and the Rust core. Every method maps to one Tauri command
@@ -159,6 +159,8 @@ export interface NativeApi {
     get(): Promise<DockSettings>;
     /** `settings_dock_set` { settings: DockSettings } → DockSettings. A running dock applies it at once. */
     set(settings: DockSettings): Promise<DockSettings>;
+    /** `settings_dock_apps` () → DockAppName[], the apps of the dock's last scan by name; empty before the first. */
+    apps(): Promise<readonly DockAppName[]>;
   };
 
 }
@@ -175,7 +177,7 @@ export const unavailableNativeApi: NativeApi = {
   shortcuts: { register: unavailable },
   window: { openSettings: unavailable, setEditMode: unavailable },
   app: { info: unavailable, openDataFolder: unavailable },
-  dock: { get: unavailable, set: unavailable },
+  dock: { get: unavailable, set: unavailable, apps: unavailable },
 };
 
 const call = <T>(command: string, args?: Record<string, unknown>): Promise<T> => invoke<T>(command, args);
@@ -204,6 +206,7 @@ export const tauriNativeApi: NativeApi = {
   dock: {
     get: () => call("settings_dock_get"),
     set: (settings) => call("settings_dock_set", { settings }),
+    apps: () => call("settings_dock_apps"),
   },
 };
 

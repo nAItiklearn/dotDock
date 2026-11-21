@@ -485,3 +485,43 @@ pub async fn settings_dock_set(
     let _ = app.emit_to(DOCK_LABEL, "dock://settings", &store.settings);
     Ok(store.settings)
 }
+
+/// One app the dock knows, for the Items page: what the pinned ids are called.
+#[derive(Serialize, Debug, PartialEq, Eq)]
+pub struct DockAppName {
+    id: String,
+    name: String,
+}
+
+/// The apps of the dock's last catalogue scan, by name. Empty until the dock has scanned once.
+fn dock_app_names(cache: Option<dotdock_dock::store::CatalogueCache>) -> Vec<DockAppName> {
+    let mut apps: Vec<DockAppName> =
+        cache.map(|c| c.apps.into_iter().map(|a| DockAppName { id: a.id, name: a.name }).collect()).unwrap_or_default();
+    apps.sort_by_key(|a| a.name.to_lowercase());
+    apps
+}
+
+#[tauri::command]
+pub async fn settings_dock_apps() -> Result<Vec<DockAppName>, String> {
+    let dir = data_dir()?.join(DOCK_FOLDER);
+    Ok(dock_app_names(dotdock_dock::store::CatalogueCache::load(&dir.join(dotdock_dock::store::CACHE_FILE))))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dotdock_dock::catalogue::AppEntry;
+    use dotdock_dock::store::CatalogueCache;
+
+    fn entry(id: &str, name: &str) -> AppEntry {
+        AppEntry { id: id.to_owned(), name: name.to_owned(), ..AppEntry::default() }
+    }
+
+    #[test]
+    fn dock_app_names_are_sorted_by_name_and_empty_without_a_scan() {
+        assert!(dock_app_names(None).is_empty());
+        let cache = CatalogueCache::new("f".to_owned(), vec![entry("b", "zed"), entry("a", "Alacritty")]);
+        let ids: Vec<String> = dock_app_names(Some(cache)).into_iter().map(|a| a.id).collect();
+        assert_eq!(ids, ["a", "b"]);
+    }
+}

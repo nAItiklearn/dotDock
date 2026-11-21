@@ -224,7 +224,8 @@ pub fn run() {
             core_commands::app_info,
             core_commands::app_open_data_folder,
             core_commands::settings_dock_get,
-            core_commands::settings_dock_set
+            core_commands::settings_dock_set,
+            core_commands::settings_dock_apps
         ])
         .setup(move |app| {
             boot::mark("setup");

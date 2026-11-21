@@ -13,6 +13,11 @@ export type PageId =
   | "profiles"
   | "widgets"
   | "displays"
+  | "dock-items"
+  | "dock-tiles"
+  | "dock-look"
+  | "dock-behaviour"
+  | "dock-taskbar"
   | "agents"
   | "notch-look"
   | "themes"
@@ -55,6 +60,12 @@ export const PAGES: readonly PageMeta[] = [
   { id: "profiles", section: "home", title: "Profiles", icon: "layers", description: "Complete arrangements of widgets you can switch between." },
   { id: "widgets", section: "home", title: "Widgets", icon: "widgets", description: "Every widget, live. Add one to the active profile." },
   { id: "displays", section: "home", title: "Displays", icon: "display", description: "Each screen's resolution and scaling, and how close widgets may get to its edges." },
+
+  { id: "dock-items", section: "dock", title: "Items", icon: "dock", description: "The apps and stacks kept on the dock, in order." },
+  { id: "dock-tiles", section: "dock", title: "Tiles", icon: "widgets", description: "The live tiles at the end of the dock." },
+  { id: "dock-look", section: "dock", title: "Appearance", icon: "appearance", description: "How the dock bar is drawn over your desktop." },
+  { id: "dock-behaviour", section: "dock", title: "Behaviour", icon: "move", description: "Size, magnification, position and auto-hide." },
+  { id: "dock-taskbar", section: "dock", title: "Taskbar", icon: "display", description: "How the dock sits with maximised windows and the Windows taskbar." },
 
   { id: "agents", section: "notch", title: "Agents", icon: "notch", description: "The coding agents the notch follows, and how it tells you a task is done." },
   { id: "notch-look", section: "notch", title: "Appearance", icon: "appearance", description: "Where the notch sits, how big it is, and what it shows." },

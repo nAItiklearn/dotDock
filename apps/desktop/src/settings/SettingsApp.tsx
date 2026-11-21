@@ -8,6 +8,7 @@ import { Icon } from "../lib/ui/Icon";
 import { AboutPage } from "./pages/AboutPage";
 import { DataPage } from "./pages/DataPage";
 import { DisplaysPage } from "./pages/DisplaysPage";
+import { DockAppearancePage, DockBehaviourPage, DockItemsPage, DockTaskbarPage, DockTilesPage } from "./pages/DockPages";
 import { LayoutPage } from "./pages/LayoutPage";
 import { AgentsPage, NotchLookPage } from "./pages/NotchPages";
 import { ProfilesPage } from "./pages/ProfilesPage";
@@ -30,6 +31,11 @@ const PAGE_COMPONENTS: Readonly<Record<PageId, () => ReactNode>> = {
   profiles: () => <ProfilesPage />,
   widgets: () => <WidgetsPage />,
   displays: () => <DisplaysPage />,
+  "dock-items": () => <DockItemsPage />,
+  "dock-tiles": () => <DockTilesPage />,
+  "dock-look": () => <DockAppearancePage />,
+  "dock-behaviour": () => <DockBehaviourPage />,
+  "dock-taskbar": () => <DockTaskbarPage />,
   agents: () => <AgentsPage />,
   "notch-look": () => <NotchLookPage />,
   themes: () => <ThemesPage />,

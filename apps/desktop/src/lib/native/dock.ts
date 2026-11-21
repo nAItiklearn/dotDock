@@ -26,6 +26,12 @@ export interface DockSettings {
   readonly tiles: readonly string[];
 }
 
+/** An app the dock has seen, as `settings_dock_apps` returns it. */
+export interface DockAppName {
+  readonly id: string;
+  readonly name: string;
+}
+
 export const DOCK_EDGES: readonly DockEdge[] = ["bottom", "top", "left", "right"];
 
 /** The dock's own clamps (`src/dock/geometry.ts`): it never draws outside these. */
@@ -73,3 +79,80 @@ export const clampIconSize = (size: number): number =>
 
 export const clampMagnification = (factor: number): number =>
   Number.isFinite(factor) ? Math.min(DOCK_MAGNIFICATION_LIMITS.max, Math.max(DOCK_MAGNIFICATION_LIMITS.min, factor)) : DOCK_MAGNIFICATION_LIMITS.default;
+
+/** Every live tile the dock can show (`TILE_IDS` in `src/dock/model.ts`), with the name the dock gives it. */
+export const DOCK_TILE_NAMES = {
+  clock: "Clock",
+  analog: "Analog clock",
+  flip: "Flip clock",
+  world: "World clock",
+  agenda: "Today",
+  meeting: "Next meeting",
+  progress: "Progress",
+  sun: "Sun",
+  focus: "Focus",
+  stopwatch: "Stopwatch",
+  reminders: "Reminders",
+  hydration: "Water",
+  notes: "Notes",
+  media: "Now playing",
+  audio: "Sound",
+  mic: "Microphone",
+  memo: "Voice memo",
+  system: "System",
+  cpu: "Processor",
+  battery: "Battery",
+  network: "Network",
+  wind: "Wind",
+  toggles: "Quick settings",
+  contacts: "Contacts",
+  colour: "Colour picker",
+  convert: "Converter",
+  currency: "Currency",
+  emoji: "Emoji",
+  search: "Web search",
+  history: "History",
+} as const;
+export type DockTileId = keyof typeof DOCK_TILE_NAMES;
+export const DOCK_TILE_IDS = Object.keys(DOCK_TILE_NAMES) as DockTileId[];
+
+/** Names of the built-in stacks (`BUILTIN_NAMES` in `src/dock/strings.ts`); the user's own stacks are "Stack". */
+const STACK_NAMES: Readonly<Record<string, string>> = {
+  productivity: "Productivity",
+  communication: "Communication",
+  development: "Development",
+  ai: "AI",
+  creative: "Creative",
+  browsers: "Browsers",
+  media: "Media",
+  games: "Games",
+  utilities: "Utilities",
+  system: "System",
+  other: "Other",
+};
+const CUSTOM_STACK_NAME = "Stack";
+
+export const tileName = (id: string): string => (DOCK_TILE_NAMES as Readonly<Record<string, string>>)[id] ?? id;
+
+/** What a pinned item is called: the app's name from the dock's scan, or its stack's name. */
+export function pinnedName(item: PinnedItem, apps: readonly DockAppName[]): string {
+  if (item.kind === "stack") return `${STACK_NAMES[item.category] ?? CUSTOM_STACK_NAME} stack`;
+  return apps.find((a) => a.id === item.id)?.name ?? item.id;
+}
+
+export const pinnedKey = (item: PinnedItem): string => (item.kind === "app" ? `app:${item.id}` : `stack:${item.category}`);
+
+/** The list with the entry at `from` moved by `by` places, or the same list when it cannot move. */
+export function moveBy<T>(list: readonly T[], from: number, by: number): readonly T[] {
+  const to = from + by;
+  if (from < 0 || from >= list.length || to < 0 || to >= list.length || by === 0) return list;
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item as T);
+  return next;
+}
+
+export const removeAt = <T>(list: readonly T[], index: number): readonly T[] => list.filter((_, i) => i !== index);
+
+/** Tiles not on the dock yet, in catalogue order. */
+export const tilesNotOnDock = (onDock: readonly string[]): readonly DockTileId[] => DOCK_TILE_IDS.filter((id) => !onDock.includes(id));

@@ -7,7 +7,7 @@ import type {
   WallpaperAssignment,
   WallpaperItem,
 } from "./api";
-import { DEFAULT_DOCK_SETTINGS, type DockSettings } from "./dock";
+import { DEFAULT_DOCK_SETTINGS, type DockAppName, type DockSettings } from "./dock";
 
 /**
  * Development-only stand-in for the Rust core, so the desktop-only Settings pages can be designed and
@@ -36,7 +36,20 @@ export function createMockNativeApi(): NativeApi {
       ],
     },
   };
-  let dock: DockSettings = DEFAULT_DOCK_SETTINGS;
+  let dock: DockSettings = {
+    ...DEFAULT_DOCK_SETTINGS,
+    pinned: [
+      { kind: "app", id: "sample.files" },
+      { kind: "app", id: "sample.browser" },
+      { kind: "stack", category: "dev" },
+    ],
+    tiles: ["clock", "media", "system"],
+  };
+  const dockApps: DockAppName[] = [
+    { id: "sample.browser", name: "Sample browser" },
+    { id: "sample.files", name: "Sample file manager" },
+    { id: "sample.terminal", name: "Sample terminal" },
+  ];
   let assignments: WallpaperAssignment[] = [
     { monitorId: "DISPLAY1", wallpaperId: "meadow-dots-dark", fit: "fill" },
     { monitorId: "DISPLAY2", wallpaperId: null, fit: "fill" },
@@ -107,6 +120,7 @@ export function createMockNativeApi(): NativeApi {
         dock = next;
         return later(dock);
       },
+      apps: () => later(dockApps),
     },
   };
 }

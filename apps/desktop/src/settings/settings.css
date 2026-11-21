@@ -1229,3 +1229,124 @@ input,
     position: static;
   }
 }
+
+/* ---- dock: ordered lists */
+.ordered {
+  padding: 0 var(--row-pad-x);
+}
+.ordered__index {
+  flex: none;
+  width: var(--space-5);
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+}
+
+/* ---- dock: themes, each a miniature of the bar over the grass wallpaper */
+.dock-themes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+.dock-theme {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--card-radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.dock-theme:hover {
+  border-color: color-mix(in srgb, var(--text) 24%, transparent);
+}
+.dock-theme.is-selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 var(--hairline) var(--accent);
+}
+.dock-theme:focus-visible {
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: var(--focus-offset);
+}
+.dock-theme__name {
+  margin-top: var(--space-1);
+  padding: 0 var(--space-1);
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+.dock-theme__line {
+  padding: 0 var(--space-1);
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.dock-preview {
+  --pv-icon: 16px;
+  --pv-gap: 5px;
+  --pv-pad: 6px;
+  display: grid;
+  place-items: end center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding-bottom: var(--space-3);
+  border-radius: calc(var(--card-radius) - var(--space-1));
+  background-position: center;
+  background-size: cover;
+  overflow: hidden;
+}
+.dock-preview__bar {
+  /* --pv-solid, --pv-disc, --pv-edge and --pv-accent come from the theme's palette (DockPreview). */
+  display: flex;
+  align-items: center;
+  gap: var(--pv-gap);
+  padding: var(--pv-pad);
+  border: var(--hairline) solid var(--pv-edge);
+  border-radius: calc(var(--pv-icon) / 2 + var(--pv-pad));
+  background: var(--pv-solid);
+  box-shadow: var(--shadow);
+}
+.dock-preview__icon,
+.dock-preview__tile {
+  width: var(--pv-icon);
+  height: var(--pv-icon);
+  border-radius: 50%;
+  background: var(--pv-disc);
+}
+.dock-preview__tile {
+  width: calc(var(--pv-icon) * 2 + var(--pv-gap));
+  border-radius: calc(var(--pv-icon) / 3);
+  background: var(--pv-accent);
+}
+.dock-preview__divider {
+  width: var(--hairline);
+  height: var(--pv-icon);
+  background: var(--pv-edge);
+}
+/* The same mixes as the dock's own themes (src/dock/dock.css): glass is nearly clear over a real blur. */
+.dock-preview__bar[data-dock-theme="glass"] {
+  border-color: color-mix(in srgb, var(--pv-text) 18%, transparent);
+  background: color-mix(in srgb, var(--pv-solid) 30%, transparent);
+  -webkit-backdrop-filter: blur(var(--space-3)) saturate(1.2);
+  backdrop-filter: blur(var(--space-3)) saturate(1.2);
+}
+.dock-preview__bar[data-dock-theme="glass-lite"] {
+  background: color-mix(in srgb, var(--pv-solid) 78%, transparent);
+}
+.dock-preview__bar[data-dock-theme="minimal"] {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+/* Icons read as icons in every theme, as app icons do on the real dock; minimal lifts them off the desktop. */
+.dock-preview__icon {
+  background: color-mix(in srgb, var(--pv-text) 62%, var(--pv-disc));
+}
+.dock-preview__bar[data-dock-theme="minimal"] .dock-preview__icon,
+.dock-preview__bar[data-dock-theme="minimal"] .dock-preview__tile {
+  box-shadow: var(--shadow);
+}
