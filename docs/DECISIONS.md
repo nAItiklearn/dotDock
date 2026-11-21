@@ -145,3 +145,13 @@ Numbered D-019 because D-017 and D-018 exist on `main`; the backend track's bran
 - **Context:** visual QA over seven wallpapers showed the circle shape as an ellipse on Wide, Landscape, Portrait, Tall and Panorama. A 4x3 or 3x4 ellipse reads as an egg, and the reference desktop (`1747058098-43375-ss7-thumb.webp`) puts a wide photo in a pill.
 - **Decision:** the circle shape keeps fully round ends: a true circle on Small, Medium and Large, a pill (radius half the short side) on every other size. The dot ring is spaced evenly by distance along the pill, with an even count so it is symmetric on both axes. The option is titled "Circle or pill"; the stored value stays `circle`, so saved layouts need no migration.
 - **Rejected:** keeping the ellipse (eggs on 4x3 and 3x4); centring a true circle inside wide sizes (wastes most of the footprint).
+
+## D-034 Home screen: losing the window deselects in edit mode (home track)
+- **Context:** the empty desktop is click-through (D-010), so a click on it reaches Explorer and the overlay never sees it. The selection outline stayed on a widget until another widget was pressed ("stuck selection").
+- **Decision:** in edit mode the overlay holds the keyboard, so a click elsewhere takes the foreground from it. That `blur` deselects and moves focus to the overlay root (otherwise the widget takes the selection back when the window is focused again). Edit mode itself stays on; Done or Esc leaves it.
+- **Rejected:** making the whole screen a hit area while editing (breaks the click-through rule after the full-screen-block incident).
+
+## D-035 Widget colours follow the wallpaper only through theme tokens (home track)
+- **Context:** the owner's V1 rule is that widget colours adapt to the current wallpaper and update cleanly when it changes. The palette from a wallpaper is built on the theme track (`aa4d6d0`, `palette.ts`, `wallpaperTheme.ts`) and saved as the custom theme `custom-from-wallpaper`; the core on this branch has no wallpaper-change event.
+- **Decision:** the home screen takes every colour from the theme's CSS tokens (a test now fails on any literal colour in a home screen stylesheet) and repaints in one frame when they change (the photo caption ink is flushed in the same frame). A theme switch is instant, not cross-faded: a fade would run the stylesheet and the measured caption ink out of step. Deriving the palette again when Windows reports a new wallpaper belongs with the theme track's palette code and is logged as a blocker for the merge.
+- **Rejected:** copying the theme track's palette code into this branch (two copies, merge conflicts).
