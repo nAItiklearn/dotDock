@@ -9,13 +9,19 @@ export interface GlassRequest {
 }
 
 /**
+ * Corner radius of the glass plate as a share of the bar's thickness: the `--plate-round` of the glass theme in
+ * dock.css (a test keeps the two equal), so the acrylic is cut to exactly the drawn plate.
+ */
+export const GLASS_PLATE_ROUND = 0.3;
+
+/**
  * Where the core's acrylic plate goes. Only the `glass` theme asks for it (glass-lite and the opaque themes draw
- * their own fill), and only while the bar is on screen. The bar is a pill: its corner radius is half its thickness.
+ * their own fill), and only while the bar is on screen. The plate is a rounded rectangle with the theme's corners.
  */
 export function glassRequest(layout: BarLayout | null, theme: DockThemeId, hidden: boolean, dark: boolean): GlassRequest {
   if (!layout || hidden || theme !== "glass") return { shapes: [], dark };
   const bar = snapRect(layout.bar);
-  return { shapes: [{ ...bar, radius: Math.min(bar.w, bar.h) / 2 }], dark };
+  return { shapes: [{ ...bar, radius: Math.round(Math.min(bar.w, bar.h) * GLASS_PLATE_ROUND) }], dark };
 }
 
 export const sameGlass = (a: GlassRequest, b: GlassRequest): boolean =>
