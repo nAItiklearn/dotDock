@@ -51,7 +51,25 @@ function Check([string]$What, [bool]$Ok, [string]$Detail = '') {
 }
 
 function Get-ShownWallpaper {
-    (Get-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallPaper).WallPaper
+    # IDesktopWallpaper does not update the WallPaper value; the picture Windows renders is named in
+    # TranscodedImageCache (a 24-byte header, then the source path as UTF-16).
+    $desktop = Get-ItemProperty -Path 'HKCU:\Control Panel\Desktop'
+    $cache = $desktop.TranscodedImageCache
+    if ($cache -and $cache.Length -gt 24) {
+        return [Text.Encoding]::Unicode.GetString($cache, 24, $cache.Length - 24).Split([char]0)[0]
+    }
+    $desktop.WallPaper
+}
+
+# Windows renders a new wallpaper a moment after it is set; waits for the one expected, up to 15 s.
+function Wait-Shown([scriptblock]$Predicate) {
+    $deadline = (Get-Date).AddSeconds(15)
+    do {
+        $shown = Get-ShownWallpaper
+        if (& $Predicate $shown) { return $shown }
+        Start-Sleep -Milliseconds 250
+    } while ((Get-Date) -lt $deadline)
+    $shown
 }
 
 function Start-Fresh([string[]]$Arguments = @()) {
@@ -90,13 +108,14 @@ $picture = Join-Path $root 'picture.jpg'
 Copy-Item -LiteralPath $startPicture -Destination $picture
 Write-Output "Wallpaper before the run: $before"
 Set-Wallpaper -Path $picture -Style $style -Tile $tile
+$null = Wait-Shown { param($p) $p -eq $picture }
 
 $process = $null
 try {
     $process = Start-Fresh
     $applied = Wait-BootLine 'first start wallpaper: Applied\("meadow-dots"\)'
     Check 'first start applies meadow-dots' $applied ((Get-Content -LiteralPath $bootLog -ErrorAction SilentlyContinue) -join ' | ')
-    $shown = Get-ShownWallpaper
+    $shown = Wait-Shown { param($p) $p -like '*\meadow-dots-dark.jpg' }
     Check 'Windows shows meadow-dots-dark.jpg' ($shown -like '*\meadow-dots-dark.jpg') $shown
     Check 'the original wallpaper was snapshotted first' (Test-Path -LiteralPath (Join-Path $appDir 'windows-original.json'))
     Check 'the first-run marker is written' (Test-Path -LiteralPath (Join-Path $appDir 'first-run.json'))
@@ -104,6 +123,7 @@ try {
 
     # A second start: the marker exists, so nothing is applied again.
     Set-Wallpaper -Path $picture -Style $style -Tile $tile
+    $null = Wait-Shown { param($p) $p -eq $picture }
     $setups = @(Select-String -LiteralPath $bootLog -Pattern ' setup').Count
     $process = Start-Fresh
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
@@ -121,7 +141,7 @@ try {
     $restore = Start-Fresh @('--restore-windows')
     $restore.WaitForExit(30000) | Out-Null
     Check '--restore-windows succeeds' ($restore.ExitCode -eq 0) "exit=$($restore.ExitCode)"
-    $restored = Get-ShownWallpaper
+    $restored = Wait-Shown { param($p) (Split-Path $p -Leaf) -in @('original-wallpaper.jpg', 'picture.jpg') }
     # The fresh profile's snapshot was taken over the start picture, so that is what restore brings back
     # (from its private copy, original-wallpaper.jpg, or the picture itself).
     Check 'restore brings back the wallpaper from before the first start' ((Split-Path $restored -Leaf) -in @('original-wallpaper.jpg', 'picture.jpg')) $restored
