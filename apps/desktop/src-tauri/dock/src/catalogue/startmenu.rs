@@ -1,6 +1,6 @@
 //! Start menu shortcuts: both `Programs` folders, resolved through `IShellLinkW`.
 
-use super::AppEntry;
+use super::{AppEntry, Removed};
 use crate::com::{cast, from_wide, store_string, ComGuard};
 use crate::util::expand_env;
 use std::path::{Path, PathBuf};
@@ -105,20 +105,23 @@ fn read_link(lnk: &Path) -> Option<LinkInfo> {
 
 /// Reads one shortcut into a candidate. Shortcuts whose target no longer exists are dropped unless they carry
 /// an AppUserModelID (those launch through the shell, not the path); so are shortcuts to folders.
-fn candidate(lnk: PathBuf, folder: Option<String>) -> Option<AppEntry> {
-    let info = read_link(&lnk)?;
+fn candidate(lnk: PathBuf, folder: Option<String>) -> Result<AppEntry, Removed> {
+    let name = lnk.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+    let Some(info) = read_link(&lnk) else { return Err(Removed::new(&name, "shortcut cannot be read")) };
     match &info.target {
         Some(target) => {
             let path = Path::new(target);
-            if path.is_dir() || (!path.exists() && info.aumid.is_none()) {
-                return None;
+            if path.is_dir() {
+                return Err(Removed::new(&name, "shortcut to a folder"));
+            }
+            if !path.exists() && info.aumid.is_none() {
+                return Err(Removed::new(&name, "dead shortcut: its program is gone"));
             }
         }
-        None if info.aumid.is_none() => return None,
+        None if info.aumid.is_none() => return Err(Removed::new(&name, "shortcut with no target")),
         None => {}
     }
-    let name = lnk.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
-    Some(AppEntry {
+    Ok(AppEntry {
         name,
         aumid: info.aumid,
         icon_file: info.icon_file,
@@ -130,9 +133,9 @@ fn candidate(lnk: PathBuf, folder: Option<String>) -> Option<AppEntry> {
     })
 }
 
-/// Every shortcut in both Start menu folders as an unmerged candidate, all-users folder first. Resolving a
+/// Every shortcut in both Start menu folders as an unmerged candidate (or why it is not one), all-users folder first. Resolving a
 /// shortcut is a file open, so the work is spread over a few threads, each with its own COM apartment.
-pub fn scan() -> Vec<AppEntry> {
+pub fn scan() -> Vec<Result<AppEntry, Removed>> {
     let files: Vec<(PathBuf, Option<String>)> = roots().iter().flat_map(|root| shortcuts(root)).collect();
     let workers = std::thread::available_parallelism().map_or(1, |n| n.get()).min(MAX_WORKERS);
     let chunk = files.len().div_ceil(workers).max(1);
@@ -142,7 +145,7 @@ pub fn scan() -> Vec<AppEntry> {
             .map(|part| {
                 scope.spawn(move || {
                     let _com = ComGuard::new();
-                    part.iter().filter_map(|(lnk, folder)| candidate(lnk.clone(), folder.clone())).collect::<Vec<_>>()
+                    part.iter().map(|(lnk, folder)| candidate(lnk.clone(), folder.clone())).collect::<Vec<_>>()
                 })
             })
             .collect();

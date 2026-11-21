@@ -155,3 +155,17 @@ Numbered D-019 because D-017 and D-018 exist on `main`; the backend track's bran
 - **Voice memo** records with the WebView's microphone access and keeps audio in this device's IndexedDB, at most 12
   memos and 10 minutes each, with a 40-bar peak waveform per memo. Nothing is uploaded.
 - **Flip clock** is a face only: a new minute mounts a new card whose top folds once (none with reduced motion).
+
+## D-027 The dock's first layout is made once from the user's own apps (2026-11-21)
+A dock with nothing pinned shows only the running apps, which the owner read as broken ("only 2 of my apps").
+After the first catalogue with apps, an empty dock (no pins, no tiles) gets a starter layout: File Explorer, one
+browser (Chrome, Edge, Firefox or Brave, first installed), Terminal, VS Code or Cursor, Spotify or Media Player,
+Settings, then up to four stacks for categories with three or more apps, and the clock, media and system tiles
+(they need no account). A `laidOut` flag in `dock.json` makes it run once, so a user who later removes everything
+keeps the empty dock. Code: `dock/src/starter.rs`.
+
+## D-028 The catalogue leaves out duplicates and modes of another app, and says why (2026-11-21)
+Same-name entries are merged into one (the Start menu one wins and takes the package's publisher), and an entry
+named "<app> <more words>" that starts the same program as <app> is left out. Every dropped entry carries a reason;
+`catalogue_probe --removed` prints them and `docs/QA/dock-live/catalogue.md` lists them for this machine.
+Installers that are real apps (Visual Studio Installer, MySQL Installer) stay: they work and the user may need them.

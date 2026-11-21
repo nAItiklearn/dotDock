@@ -1,6 +1,6 @@
 //! Reads the Start menu and the AppsFolder and merges them into the catalogue.
 
-use super::{appsfolder, merge, startmenu, versioninfo, AppEntry};
+use super::{appsfolder, merge_with_report, startmenu, versioninfo, AppEntry, Removed};
 use crate::com::ComGuard;
 use std::path::Path;
 use std::time::{Duration, Instant};
@@ -18,22 +18,30 @@ pub struct Timings {
 #[derive(Clone, Debug)]
 pub struct Catalogue {
     pub apps: Vec<AppEntry>,
+    /// Everything left out, with the reason: dead shortcuts, uninstallers, help links, duplicates.
+    pub removed: Vec<Removed>,
     pub timings: Timings,
 }
 
 /// AppsFolder items are kept when something real stands behind them: a package, a protocol URL, a shell
 /// namespace object (`::{GUID}`, Control Panel and File Explorer), or an existing program. Folders and
 /// shortcuts to files that were uninstalled are not apps.
-fn launchable(entry: &AppEntry) -> bool {
+fn launchable(entry: &AppEntry) -> Result<(), Removed> {
     if entry.package_dir.is_some() {
-        return true;
+        return Ok(());
     }
     match entry.target.as_deref() {
-        None => true,
-        Some(t) if t.contains("://") || t.starts_with("::") => true,
+        None => Ok(()),
+        Some(t) if t.contains("://") || t.starts_with("::") => Ok(()),
         Some(t) => {
             let path = Path::new(t);
-            path.exists() && !path.is_dir()
+            if path.is_dir() {
+                Err(Removed::new(&entry.name, "a folder, not an app"))
+            } else if !path.exists() {
+                Err(Removed::new(&entry.name, "dead entry: its program is gone"))
+            } else {
+                Ok(())
+            }
         }
     }
 }
@@ -62,7 +70,7 @@ pub fn enumerate() -> Catalogue {
 
     // The AppsFolder enumeration is the slow part (the shell builds the whole list on the first call), so it
     // runs beside the Start menu scan instead of after it.
-    let (mut candidates, start_menu, shell_items, apps_folder) = std::thread::scope(|scope| {
+    let (candidates, start_menu, shell_items, apps_folder) = std::thread::scope(|scope| {
         let shell = scope.spawn(|| {
             let _com = ComGuard::new();
             let t = Instant::now();
@@ -75,15 +83,28 @@ pub fn enumerate() -> Catalogue {
         let (items, apps_folder) = shell.join().unwrap_or_default();
         (start, start_menu, items, apps_folder)
     });
-    candidates.extend(shell_items.into_iter().filter(launchable));
+    let mut removed = Vec::new();
+    let mut candidates: Vec<AppEntry> =
+        candidates.into_iter().filter_map(|c| c.map_err(|r| removed.push(r)).ok()).collect();
+    for item in shell_items {
+        match launchable(&item) {
+            Ok(()) => candidates.push(item),
+            Err(r) => removed.push(r),
+        }
+    }
 
     let t = Instant::now();
-    let mut apps = merge(candidates);
+    let (mut apps, dropped) = merge_with_report(candidates);
+    removed.extend(dropped);
     let merge = t.elapsed();
 
     let t = Instant::now();
     fill_publishers(&mut apps);
     let publishers = t.elapsed();
 
-    Catalogue { apps, timings: Timings { start_menu, apps_folder, merge, publishers, total: started.elapsed() } }
+    Catalogue {
+        apps,
+        removed,
+        timings: Timings { start_menu, apps_folder, merge, publishers, total: started.elapsed() },
+    }
 }
