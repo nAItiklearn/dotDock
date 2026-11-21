@@ -1,7 +1,11 @@
+import { useEffect, useState } from "react";
 import noticesMarkdown from "../../../../../THIRD_PARTY_NOTICES.md?raw";
 import { PRODUCT_NAME } from "../../lib/branding";
+import { getNativeApi, type UpdateStatus } from "../../lib/native/api";
+import { Button } from "../../lib/ui/controls";
 import { PageHeader, Row, Section } from "../ui/layout";
 import { parseNotices, splitInline, type InlinePart } from "../noticesText";
+import { updateView } from "../updateText";
 import { useAppInfo } from "../useAppInfo";
 
 const OPEN_METEO_URL = "https://open-meteo.com/";
@@ -24,6 +28,43 @@ function Inline({ line }: { readonly line: string }) {
   );
 }
 
+function UpdatesRow() {
+  const native = getNativeApi();
+  const [status, setStatus] = useState<UpdateStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [callFailed, setCallFailed] = useState(false);
+
+  useEffect(() => {
+    if (native.available) native.updater.status().then(setStatus, () => setCallFailed(true));
+  }, [native]);
+
+  const run = (task: () => Promise<void>): void => {
+    setBusy(true);
+    setCallFailed(false);
+    task()
+      .catch(() => setCallFailed(true))
+      .finally(() => setBusy(false));
+  };
+  const check = (): void => run(() => native.updater.check().then(setStatus));
+  const install = (): void => run(() => native.updater.install());
+
+  const view = updateView({ native: native.available, status, callFailed, formatTime: (ms) => new Date(ms).toLocaleString() });
+
+  return view.kind === "available" ? (
+    <Row id="updates" label="Update available" description={view.line}>
+      <Button icon="check" disabled={busy} onClick={install}>
+        {busy ? "Installing…" : `Install ${view.version}`}
+      </Button>
+    </Row>
+  ) : (
+    <Row id="updates" label="Check for updates" description={view.line}>
+      <Button icon="reset" disabled={!native.available || busy} onClick={check}>
+        {busy ? "Checking…" : "Check now"}
+      </Button>
+    </Row>
+  );
+}
+
 export function AboutPage() {
   const info = useAppInfo();
   const notices = parseNotices(noticesMarkdown);
@@ -34,6 +75,7 @@ export function AboutPage() {
         <Row id="version" label="Version" description={info ? `${info.build} on ${info.os}` : "Running in a browser preview"}>
           <span className="mono-path tabular">{info?.version ?? __APP_VERSION__}</span>
         </Row>
+        <UpdatesRow />
       </Section>
 
       <Section title="Credits">

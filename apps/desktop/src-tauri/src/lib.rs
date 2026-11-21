@@ -10,6 +10,7 @@ mod modules_host;
 mod providers;
 mod tiles_host;
 mod tray;
+mod updater;
 
 use desktop_host::HitRegions;
 use dotdock_shell::crash_guard::{self, StartDecision};
@@ -155,6 +156,8 @@ fn build_and_run(primary: bool) {
     let result = tauri::Builder::default()
         // A second launch opens Settings in the running instance (MASTER_SPEC 7.4).
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| tray::open_settings(app)))
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updater::UpdaterState::default())
         .manage(HitRegions::default())
         .register_uri_scheme_protocol(core_commands::WALLPAPER_SCHEME, |_ctx, request| {
             core_commands::serve_wallpaper(&request)
@@ -221,7 +224,10 @@ fn build_and_run(primary: bool) {
             core_commands::app_open_data_folder,
             core_commands::settings_dock_get,
             core_commands::settings_dock_set,
-            core_commands::settings_dock_apps
+            core_commands::settings_dock_apps,
+            updater::updater_status,
+            updater::updater_check,
+            updater::updater_install
         ])
         .setup(move |app| {
             // The plugin only lets a later launch through while the running app is still before its
@@ -249,6 +255,7 @@ fn build_and_run(primary: bool) {
                 let app = handle.clone();
                 std::thread::spawn(move || apply_first_run_wallpaper(&app, first));
             }
+            updater::schedule_startup_check(handle.clone());
             std::thread::spawn(|| {
                 std::thread::sleep(crash_guard::stable_after());
                 crash_guard::mark_stable();

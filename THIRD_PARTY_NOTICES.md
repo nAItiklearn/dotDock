@@ -21,7 +21,7 @@ Every dependency, font, sound, image and data source is listed here with its lic
 ## Rust crates (direct dependencies)
 | Crate | Licence |
 |---|---|
-| tauri, tauri-build, tauri-plugin-single-instance | MIT OR Apache-2.0 |
+| tauri, tauri-build, tauri-plugin-single-instance, tauri-plugin-updater | MIT OR Apache-2.0 |
 | windows | MIT OR Apache-2.0 |
 | sysinfo | MIT |
 | serde, serde_json | MIT OR Apache-2.0 |

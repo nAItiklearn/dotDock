@@ -332,3 +332,9 @@ Setting the dock by hand also marks the first layout as done, so it never replac
 ## D-036 The dock window is created before the desktop overlay (2026-11-21)
 - The first WebView2 window of the process pays for starting the browser (about 2.3 s cold on this machine). The
   dock is created first so it, not the overlay, gets the head start.
+## D-021 Version 1.0.0 and signed in-app updates
+- **One version, everywhere.** `tauri.conf.json`, every workspace `Cargo.toml` and `apps/desktop/package.json` say 1.0.0; release.yml refuses a tag that differs, and a Rust and a vitest test assert the config agrees.
+- **Updater:** `tauri-plugin-updater` (MIT OR Apache-2.0), endpoint `https://github.com/nAItiklearn/dotDock/releases/latest/download/latest.json`, minisign public key in `tauri.conf.json`. The private key lives only in `%LOCALAPPDATA%\dockDock\release\` (no password, so CI needs no prompt) and in the `TAURI_SIGNING_PRIVATE_KEY` / `_PASSWORD` repository secrets. Losing it means existing installs can never verify a new update, so it must be backed up off this machine.
+- **Quiet by design.** One check `STARTUP_CHECK_DELAY` (45 s) after start, no polling loop, no retry; offline costs one failed request. The check runs in the core, so the webview CSP and capabilities are unchanged. Install happens only on a click in Settings > About ("Update available"); the NSIS installer runs in passive mode.
+- **The "Check automatically" switch was removed** with its `updater_set_enabled` command: the one startup check replaces the daily schedule it described, and keeping it would need a persisted setting nothing else reads.
+- **CI bundles skip updater artifacts** (`createUpdaterArtifacts: false` merged on the command line) because pull requests have no signing key; only release.yml signs and writes `latest.json`.

@@ -5,6 +5,7 @@ import type {
   NativeApi,
   RestoreReport,
   StartupState,
+  UpdateStatus,
   WallpaperAssignment,
   WallpaperItem,
 } from "./api";
@@ -67,6 +68,7 @@ export function createMockNativeApi(): NativeApi {
     { id: "sample.files", name: "Sample file manager" },
     { id: "sample.terminal", name: "Sample terminal" },
   ];
+  let updates: UpdateStatus = { checkedAtMs: null, available: null, failed: false };
   let assignments: WallpaperAssignment[] = [
     { monitorId: "DISPLAY1", wallpaperId: "meadow-dots-dark", fit: "fill" },
     { monitorId: "DISPLAY2", wallpaperId: null, fit: "fill" },
@@ -98,7 +100,7 @@ export function createMockNativeApi(): NativeApi {
       refreshHz: 144,
     },
   ];
-  const info: AppInfo = { version: "0.1.0", build: "dev sample", os: "Windows 11", webview: "WebView2", dataDir: "C:\\Users\\you\\AppData\\Roaming\\dev.dotdock.desktop" };
+  const info: AppInfo = { version: "1.0.0", build: "dev sample", os: "Windows 11", webview: "WebView2", dataDir: "C:\\Users\\you\\AppData\\Roaming\\dev.dotdock.desktop" };
 
   return {
     available: true,
@@ -141,6 +143,14 @@ export function createMockNativeApi(): NativeApi {
     shortcuts: { register: () => later({ toggleEditMode: "ok", openSettings: "ok", nextProfile: "ok" }) },
     window: { openSettings: () => later(undefined), setEditMode: () => later(undefined) },
     app: { info: () => later(info), openDataFolder: () => later(undefined) },
+    updater: {
+      status: () => later(updates),
+      check: () => {
+        updates = { ...updates, checkedAtMs: Date.now(), failed: false };
+        return later(updates);
+      },
+      install: () => later(undefined),
+    },
     dock: {
       get: () => later(dock),
       set: (next) => {

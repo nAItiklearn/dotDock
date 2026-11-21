@@ -18,6 +18,7 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("startup", "startup-delay", "Windows startup delay", "wait seconds boot slow"),
 
   e("about", "version", "Version", "build release"),
+  e("about", "updates", "Check for updates", "update upgrade new version install download"),
   e("about", "licences", "Licences", "license third party notices fonts open source"),
   e("about", "attribution", "Credits and attribution", "open-meteo weather nothing affiliated"),
 

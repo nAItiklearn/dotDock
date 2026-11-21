@@ -98,6 +98,14 @@ export interface AppInfo {
   readonly dataDir: string;
 }
 
+export interface UpdateStatus {
+  /** Milliseconds since the Unix epoch of the last successful check. */
+  readonly checkedAtMs: number | null;
+  readonly available: { readonly version: string; readonly notes: string | null } | null;
+  /** The last check could not reach the update service. */
+  readonly failed: boolean;
+}
+
 /**
  * The dotDock environment, which runs as one unit: home screen, dock, taskbar replacement and notch.
  * The user has two choices over it, both applied at once and remembered.
@@ -182,6 +190,15 @@ export interface NativeApi {
     openDataFolder(): Promise<void>;
   };
 
+  updater: {
+    /** `updater_status` () → UpdateStatus */
+    status(): Promise<UpdateStatus>;
+    /** `updater_check` () → UpdateStatus */
+    check(): Promise<UpdateStatus>;
+    /** `updater_install` () → void. Downloads, verifies and runs the signed installer, which closes the app. */
+    install(): Promise<void>;
+  };
+
   dock: {
     /** `settings_dock_get` () → DockSettings, from the dock's own store. */
     get(): Promise<DockSettings>;
@@ -213,6 +230,7 @@ export const unavailableNativeApi: NativeApi = {
   shortcuts: { register: unavailable },
   window: { openSettings: unavailable, setEditMode: unavailable },
   app: { info: unavailable, openDataFolder: unavailable },
+  updater: { status: unavailable, check: unavailable, install: unavailable },
   dock: { get: unavailable, set: unavailable, apps: unavailable },
 };
 
@@ -248,6 +266,11 @@ export const tauriNativeApi: NativeApi = {
     setEditMode: (on) => call("overlay_edit_mode", { on }),
   },
   app: { info: () => call("app_info"), openDataFolder: () => call("app_open_data_folder") },
+  updater: {
+    status: () => call("updater_status"),
+    check: () => call("updater_check"),
+    install: () => call("updater_install"),
+  },
   dock: {
     get: () => call("settings_dock_get"),
     set: (settings) => call("settings_dock_set", { settings }),

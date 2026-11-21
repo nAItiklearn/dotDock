@@ -159,8 +159,9 @@ jobs:
         working-directory: apps/desktop/src-tauri
 
       # beforeBuildCommand (pnpm build) produces the frontend; output is target/release/bundle/nsis.
+      # Updater signatures need the release key, which only release.yml has, so CI bundles skip them.
       - name: Build bundle
-        run: pnpm tauri build --config src-tauri/tauri.sentinel.conf.json
+        run: pnpm tauri build --config src-tauri/tauri.sentinel.conf.json --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
       - name: Read app version
         id: app
