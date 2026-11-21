@@ -11,6 +11,7 @@ import { Icon } from "../../lib/ui/Icon";
 import { downloadText, pickTextFile } from "../ui/download";
 import { PageHeader, Row, Section } from "../ui/layout";
 import { ThemeEditor } from "../ui/ThemeEditor";
+import { WallpaperThemeSection } from "../ui/WallpaperTheme";
 import { offerUndo } from "../ui/undo";
 
 const MODE_OPTIONS: readonly { value: ThemeMode; label: string }[] = [
@@ -284,6 +285,7 @@ export function ThemesPage() {
     <>
       <PageHeader page="themes" />
       <ThemeChoice />
+      <WallpaperThemeSection />
       <CustomThemes />
       <ShapeAndMotion />
     </>

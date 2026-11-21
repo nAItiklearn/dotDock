@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { isTauri } from "../../providers/bridge";
 import type { ShortcutAction } from "../model/types";
 import type { DockAppName, DockSettings } from "./dock";
@@ -27,7 +28,6 @@ export interface BootStage {
 
 export interface StartupState {
   /** False means the stock Windows desktop is in charge and the overlay is closed. */
-  readonly useOurDesktop: boolean;
   readonly launchAtSignIn: boolean;
   readonly hideDesktopIcons: boolean;
   /** Informational: the Windows startup delay has been removed for this user. */
@@ -36,7 +36,7 @@ export interface StartupState {
   readonly lastBoot: { readonly startedAt: number; readonly stages: readonly BootStage[] } | null;
 }
 
-export type StartupToggle = "useOurDesktop" | "launchAtSignIn" | "hideDesktopIcons";
+export type StartupToggle = "launchAtSignIn" | "hideDesktopIcons";
 
 export interface RestoreReport {
   readonly wallpaperRestored: boolean;
@@ -98,8 +98,34 @@ export interface AppInfo {
   readonly dataDir: string;
 }
 
+/**
+ * The dotDock environment, which runs as one unit: home screen, dock, taskbar replacement and notch.
+ * The user has two choices over it, both applied at once and remembered.
+ */
+export interface EnvironmentState {
+  /** The whole environment is switched on. Off is plain Windows. */
+  readonly on: boolean;
+  /** The Windows taskbar stays: by choice, or because this build has no replacement for it. */
+  readonly windowsTaskbar: boolean;
+  /** This build has a taskbar replacement the user can switch to. */
+  readonly taskbarReplacement: boolean;
+  /** Parts that are meant to run and did not start, each with its reason in words. */
+  readonly problems: readonly string[];
+}
+
 export interface NativeApi {
   readonly available: boolean;
+
+  environment: {
+    /** `environment_get` () → EnvironmentState */
+    get(): Promise<EnvironmentState>;
+    /** `environment_set` { on } → EnvironmentState. Starts or stops everything now. */
+    setOn(on: boolean): Promise<EnvironmentState>;
+    /** `taskbar_set` { useWindows } → EnvironmentState. Rejects with the reason when the replacement cannot start. */
+    setWindowsTaskbar(useWindows: boolean): Promise<EnvironmentState>;
+    /** Hears the `environment://changed` event, which carries the full state. Resolves with the way to stop listening. */
+    onChange(handler: (state: EnvironmentState) => void): Promise<() => void>;
+  };
 
   startup: {
     /** `startup_get` () → StartupState */
@@ -126,6 +152,8 @@ export interface NativeApi {
     importFile(): Promise<WallpaperItem | null>;
     /** `wallpapers_remove` { id: string } → void. Only imported wallpapers can be removed. */
     remove(id: string): Promise<void>;
+    /** `wallpaper_current_image` () → raw file bytes. The picture Windows shows as the wallpaper; rejects for a solid colour. */
+    currentImage(): Promise<Blob>;
   };
 
   shortcuts: {
@@ -171,9 +199,17 @@ const unavailable = (): Promise<never> => Promise.reject(new NativeUnavailableEr
 
 export const unavailableNativeApi: NativeApi = {
   available: false,
+  environment: { get: unavailable, setOn: unavailable, setWindowsTaskbar: unavailable, onChange: unavailable },
   startup: { get: unavailable, set: unavailable, restoreWindows: unavailable },
   displays: { list: unavailable },
-  wallpapers: { list: unavailable, assignments: unavailable, assign: unavailable, importFile: unavailable, remove: unavailable },
+  wallpapers: {
+    list: unavailable,
+    assignments: unavailable,
+    assign: unavailable,
+    importFile: unavailable,
+    remove: unavailable,
+    currentImage: unavailable,
+  },
   shortcuts: { register: unavailable },
   window: { openSettings: unavailable, setEditMode: unavailable },
   app: { info: unavailable, openDataFolder: unavailable },
@@ -182,8 +218,16 @@ export const unavailableNativeApi: NativeApi = {
 
 const call = <T>(command: string, args?: Record<string, unknown>): Promise<T> => invoke<T>(command, args);
 
+const ENVIRONMENT_CHANGED = "environment://changed";
+
 export const tauriNativeApi: NativeApi = {
   available: true,
+  environment: {
+    get: () => call("environment_get"),
+    setOn: (on) => call("environment_set", { on }),
+    setWindowsTaskbar: (useWindows) => call("taskbar_set", { useWindows }),
+    onChange: (handler) => listen<EnvironmentState>(ENVIRONMENT_CHANGED, (event) => handler(event.payload)),
+  },
   startup: {
     get: () => call("startup_get"),
     set: (setting, value) => call("startup_set", { setting, value }),
@@ -196,6 +240,7 @@ export const tauriNativeApi: NativeApi = {
     assign: (monitorId, wallpaperId, fit) => call("wallpapers_assign", { monitorId, wallpaperId, fit }),
     importFile: () => call("wallpapers_import"),
     remove: (id) => call("wallpapers_remove", { id }),
+    currentImage: async () => new Blob([await call<ArrayBuffer>("wallpaper_current_image")]),
   },
   shortcuts: { register: (bindings) => call("shortcuts_register", { bindings }) },
   window: {

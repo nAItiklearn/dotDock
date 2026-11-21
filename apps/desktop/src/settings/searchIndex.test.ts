@@ -5,11 +5,13 @@ import { describe, expect, it } from "vitest";
 import { PAGES } from "./sections";
 import { SEARCH_ENTRIES, searchSettings } from "./searchIndex";
 
-const pagesDir = join(dirname(fileURLToPath(import.meta.url)), "pages");
-const pageSources = readdirSync(pagesDir)
-  .filter((f) => f.endsWith(".tsx"))
-  .map((f) => readFileSync(join(pagesDir, f), "utf8"))
-  .join("\n");
+const settingsDir = dirname(fileURLToPath(import.meta.url));
+const sourcesIn = (dir: string): string[] =>
+  readdirSync(join(settingsDir, dir))
+    .filter((f) => f.endsWith(".tsx"))
+    .map((f) => readFileSync(join(settingsDir, dir, f), "utf8"));
+// Row ids live in the pages and in the sections they embed.
+const pageSources = [...sourcesIn("pages"), ...sourcesIn("ui")].join("\n");
 
 describe("search index", () => {
   it("has unique ids", () => {

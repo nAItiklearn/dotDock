@@ -3,12 +3,12 @@ import { PRODUCT_NAME } from "../../lib/branding";
 import { BACKUP_SCHEMA, LAYOUT_SCHEMA, SETTINGS_SCHEMA, THEME_SCHEMA } from "../../lib/model/types";
 import { getNativeApi, type AppInfo, type RestoreReport, type StartupState } from "../../lib/native/api";
 import { getApp } from "../../lib/state/app";
-import { Button, Segmented } from "../../lib/ui/controls";
+import { Button } from "../../lib/ui/controls";
 import { Icon } from "../../lib/ui/Icon";
-import { NativeGate, useNativeResource, type NativeResource } from "../ui/native";
+import { EnvironmentSwitches } from "../ui/EnvironmentSwitches";
+import { NativeGate, useNativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
 import { useAppInfo } from "../useAppInfo";
-import { useStartupChange } from "./StartupPage";
 
 const COPIED_FLASH_MS = 2200;
 
@@ -153,31 +153,7 @@ function LogsRow({ info }: { readonly info: AppInfo | null }) {
   );
 }
 
-/** The last section in Settings: the switch between this desktop and the stock one (SETTINGS_IA.md). */
-function EnvironmentSection({ resource, state }: { readonly resource: NativeResource<StartupState>; readonly state: StartupState }) {
-  const change = useStartupChange(resource);
-  return (
-    <Section title={`${PRODUCT_NAME} and Windows`}>
-      <Row
-        id="use-desktop"
-        label="Use this desktop"
-        description="Switching to the Windows desktop restores your wallpaper and icons and closes the overlay. Nothing is deleted."
-      >
-        <Segmented
-          label="Which desktop"
-          value={state.useOurDesktop ? "ours" : "windows"}
-          options={[
-            { value: "ours", label: PRODUCT_NAME },
-            { value: "windows", label: "Windows" },
-          ]}
-          onChange={(next) => change("useOurDesktop", next === "ours")}
-        />
-      </Row>
-    </Section>
-  );
-}
-
-function RecoveryBody({ resource, state, info }: { readonly resource: NativeResource<StartupState>; readonly state: StartupState; readonly info: AppInfo | null }) {
+function RecoveryBody({ state, info }: { readonly state: StartupState; readonly info: AppInfo | null }) {
   return (
     <>
       <Section title="Way back">
@@ -199,7 +175,6 @@ function RecoveryBody({ resource, state, info }: { readonly resource: NativeReso
           </div>
         )}
       </Section>
-      <EnvironmentSection resource={resource} state={state} />
     </>
   );
 }
@@ -217,11 +192,12 @@ export function RecoveryPage() {
           "Restore the original wallpaper and icons if anything ever looks wrong.",
           "Open the folder with the logs, and copy a report for a bug.",
           "See how long the last start took, stage by stage.",
-          "Choose between this desktop and the stock Windows one, and switch back in one click.",
         ]}
       >
-        {(state) => <RecoveryBody resource={resource} state={state} info={info} />}
+        {(state) => <RecoveryBody state={state} info={info} />}
       </NativeGate>
+      {/* Last in Settings, low-key (D-021): the only two switches over the whole environment. */}
+      <EnvironmentSwitches />
     </>
   );
 }

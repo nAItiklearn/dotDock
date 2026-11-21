@@ -1,6 +1,7 @@
 import type {
   AppInfo,
   DisplayInfo,
+  EnvironmentState,
   NativeApi,
   RestoreReport,
   StartupState,
@@ -20,9 +21,42 @@ const later = <T>(value: T): Promise<T> => new Promise((resolve) => setTimeout((
 /** Thumbnails of the app's own bundled wallpapers, served from the web assets as in the real app. */
 const thumb = (id: string): string => `/wallpaper-thumbs/${id}.jpg`;
 
+/** A sample picture for "use my wallpaper": a dusk sky over a dark ridge, drawn on the spot. */
+function sampleWallpaper(): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = 320;
+  canvas.height = 180;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Promise.reject(new Error("no canvas"));
+  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  sky.addColorStop(0, "#1b2a5a");
+  sky.addColorStop(0.6, "#c4553f");
+  sky.addColorStop(1, "#f2b04a");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#0d0f1a";
+  ctx.beginPath();
+  ctx.moveTo(0, 150);
+  ctx.lineTo(80, 110);
+  ctx.lineTo(160, 140);
+  ctx.lineTo(250, 95);
+  ctx.lineTo(320, 130);
+  ctx.lineTo(320, 180);
+  ctx.lineTo(0, 180);
+  ctx.fill();
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("no image"))), "image/png"));
+}
+
 export function createMockNativeApi(): NativeApi {
+  // This build has no taskbar replacement yet, so the Windows taskbar always stays.
+  let environment: EnvironmentState = { on: true, windowsTaskbar: true, taskbarReplacement: false, problems: [] };
+  const listeners = new Set<(state: EnvironmentState) => void>();
+  const setEnvironment = (patch: Partial<EnvironmentState>): EnvironmentState => {
+    environment = { ...environment, ...patch };
+    listeners.forEach((listener) => listener(environment));
+    return environment;
+  };
   let startup: StartupState = {
-    useOurDesktop: true,
     launchAtSignIn: true,
     hideDesktopIcons: false,
     startupDelayRemoved: true,
@@ -85,6 +119,15 @@ export function createMockNativeApi(): NativeApi {
 
   return {
     available: true,
+    environment: {
+      get: () => later(environment),
+      setOn: (on) => later(setEnvironment({ on })),
+      setWindowsTaskbar: (windowsTaskbar) => later(setEnvironment({ windowsTaskbar: windowsTaskbar || !environment.taskbarReplacement })),
+      onChange: (handler) => {
+        listeners.add(handler);
+        return Promise.resolve(() => listeners.delete(handler));
+      },
+    },
     startup: {
       get: () => later(startup),
       set: (setting, value) => {
@@ -92,7 +135,7 @@ export function createMockNativeApi(): NativeApi {
         return later(startup);
       },
       restoreWindows: (): Promise<RestoreReport> => {
-        startup = { ...startup, useOurDesktop: false, launchAtSignIn: false, hideDesktopIcons: false };
+        startup = { ...startup, launchAtSignIn: false, hideDesktopIcons: false };
         return later({ wallpaperRestored: true, desktopIconsShown: false, autostartRemoved: true, startupDelayRestored: true });
       },
     },
@@ -110,6 +153,7 @@ export function createMockNativeApi(): NativeApi {
         if (index >= 0) wallpapers.splice(index, 1);
         return later(undefined);
       },
+      currentImage: sampleWallpaper,
     },
     shortcuts: { register: () => later({ toggleEditMode: "ok", openSettings: "ok", nextProfile: "ok" }) },
     window: { openSettings: () => later(undefined), setEditMode: () => later(undefined) },

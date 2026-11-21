@@ -55,7 +55,6 @@ const EN = {
   "settings.section.behaviour": "Behaviour",
   "settings.section.sound": "Notifications",
   "settings.section.connections": "Connections",
-  "settings.enabled": "Show the island",
   "settings.idle": "When nothing is running",
   "settings.idle.tiny": "Tiny pill",
   "settings.idle.hidden": "Hidden",

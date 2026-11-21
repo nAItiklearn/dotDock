@@ -53,7 +53,6 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("agents", "sound", "Play a sound when a task finishes", "chime alert notification done"),
   e("agents", "volume", "Chime volume", "sound loud quiet"),
 
-  e("notch-look", "notch-enabled", "Show the notch", "island hide off on"),
   e("notch-look", "notch-idle", "When nothing is running", "idle tiny pill hidden"),
   e("notch-look", "notch-style", "Dot style", "icon dots blocks stripes"),
   e("notch-look", "notch-scale", "Notch size", "scale bigger smaller"),
@@ -67,6 +66,7 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("notch-look", "notch-follow", "Follow the cursor to other monitors", "multi monitor screen"),
 
   e("themes", "theme", "Theme", "obsidian paper aurum colour color dark light palette"),
+  e("themes", "wallpaper-theme", "Theme from your wallpaper", "palette colours colors extract generate auto tint picture image desktop background accent apply undo"),
   e("themes", "theme-switch", "Switch automatically", "system windows schedule time day night light dark follow"),
   e("themes", "custom-themes", "Your themes", "editor create import export json accent oklch contrast custom"),
   e("themes", "radius", "Corner roundness", "radius shape round square cards"),
@@ -77,6 +77,8 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("wallpapers", "wallpaper-library", "Wallpaper library", "image background import desktop picture"),
   e("wallpapers", "wallpaper-fit", "Fit mode", "fill fit stretch tile center span"),
 
+  e("recovery", "environment-on", "dotDock theme", "turn off disable enable whole environment theme widgets dock notch wallpaper plain windows stock switch restore"),
+  e("recovery", "windows-taskbar", "Use the Windows taskbar", "hide replace dock taskbar real native bar restore advanced"),
 
   e("shortcuts", "shortcut-toggleEditMode", "Edit layout hotkey", "keyboard global bind"),
   e("shortcuts", "shortcut-openSettings", "Open Settings hotkey", "keyboard global bind"),
@@ -94,7 +96,6 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("recovery", "open-folder", "Logs and data folder", "boot.log panic log open explorer"),
   e("recovery", "diagnostics", "Diagnostics", "copy report support bug"),
   e("recovery", "boot-timing", "Boot timing", "speed startup seconds measure"),
-  e("recovery", "use-desktop", "Use this desktop", "windows stock switch back replace off environment"),
 ];
 
 export interface SearchHit extends SearchEntry {

@@ -3,7 +3,6 @@
 //! `src/lib/native/commands.test.ts` fails when the UI invokes a name this file (or lib.rs) does not register.
 
 use crate::desktop_host::{self, Hwnd};
-use dotdock_shell::core_prefs::{self, CorePrefs};
 use dotdock_shell::hotkey::{Hotkeys, Status};
 use dotdock_shell::wallpaper::{self, Fit};
 use dotdock_shell::wallpaper_library::mime_of;
@@ -27,16 +26,6 @@ fn data_dir() -> Result<PathBuf, String> {
     dotdock_shell::app_data_dir().ok_or_else(|| "the app data folder is not available".to_owned())
 }
 
-// ------------------------------------------------------------------ core prefs
-
-pub fn load_prefs() -> CorePrefs {
-    data_dir().map(|d| core_prefs::load(&d)).unwrap_or_default()
-}
-
-fn save_prefs(prefs: CorePrefs) -> Result<(), String> {
-    core_prefs::save(&data_dir()?, prefs).map_err(|e| e.to_string())
-}
-
 // --------------------------------------------------------------------- startup
 
 #[derive(Serialize)]
@@ -57,7 +46,6 @@ pub struct LastBoot {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StartupState {
-    use_our_desktop: bool,
     launch_at_sign_in: bool,
     hide_desktop_icons: bool,
     startup_delay_removed: bool,
@@ -66,7 +54,6 @@ pub struct StartupState {
 
 fn startup_state() -> StartupState {
     StartupState {
-        use_our_desktop: load_prefs().use_our_desktop,
         launch_at_sign_in: autostart::is_enabled(),
         hide_desktop_icons: desktop_icons::visible() == Some(false),
         startup_delay_removed: autostart::startup_delay_removed(),
@@ -80,7 +67,6 @@ fn startup_state() -> StartupState {
 #[derive(Deserialize, Clone, Copy, Debug)]
 #[serde(rename_all = "camelCase")]
 pub enum StartupToggle {
-    UseOurDesktop,
     LaunchAtSignIn,
     HideDesktopIcons,
 }
@@ -91,7 +77,7 @@ pub async fn startup_get() -> StartupState {
 }
 
 #[tauri::command]
-pub async fn startup_set(app: AppHandle, setting: StartupToggle, value: bool) -> Result<StartupState, String> {
+pub async fn startup_set(setting: StartupToggle, value: bool) -> Result<StartupState, String> {
     match setting {
         StartupToggle::LaunchAtSignIn if value => autostart::enable().map(|_| ()).map_err(|e| e.to_string())?,
         StartupToggle::LaunchAtSignIn => autostart::disable().map_err(|e| e.to_string())?,
@@ -100,23 +86,8 @@ pub async fn startup_set(app: AppHandle, setting: StartupToggle, value: bool) ->
             dotdock_shell::snapshot::ensure(false).map_err(|e| e.to_string())?;
             desktop_icons::set_visible(!value).map_err(|e| e.to_string())?;
         }
-        StartupToggle::UseOurDesktop => {
-            save_prefs(CorePrefs { use_our_desktop: value })?;
-            set_overlay_shown(&app, value);
-        }
     }
     Ok(startup_state())
-}
-
-fn set_overlay_shown(app: &AppHandle, shown: bool) {
-    let Some(window) = app.get_webview_window(crate::OVERLAY_LABEL) else { return };
-    if shown {
-        if let Ok(hwnd) = window.hwnd() {
-            desktop_host::show_without_activating(Hwnd::from_raw(hwnd.0));
-        }
-    } else {
-        let _ = window.hide();
-    }
 }
 
 /// What the in-app restore did, field for field as the Recovery page shows it.
@@ -221,7 +192,7 @@ pub struct WallpaperItem {
     thumbnail_url: String,
 }
 
-fn bundled_dir(app: &AppHandle) -> Result<PathBuf, String> {
+pub(crate) fn bundled_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path().resource_dir().map(|d| d.join("wallpapers")).map_err(|e| e.to_string())
 }
 
@@ -417,7 +388,7 @@ pub fn navigate_settings(window: &tauri::WebviewWindow, route: &str) {
 /// The overlay entered or left edit mode: it takes the keyboard while editing and is pushed back down after.
 #[tauri::command]
 pub fn overlay_edit_mode(app: AppHandle, on: bool) {
-    let Some(window) = app.get_webview_window(crate::OVERLAY_LABEL) else { return };
+    let Some(window) = app.get_webview_window(crate::home_host::OVERLAY_LABEL) else { return };
     if let Ok(hwnd) = window.hwnd() {
         desktop_host::set_typing(Hwnd::from_raw(hwnd.0), on);
     }

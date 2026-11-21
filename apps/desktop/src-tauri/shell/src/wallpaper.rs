@@ -26,6 +26,14 @@ pub enum Fit {
 }
 
 impl Fit {
+    /// The fit Windows reports; a position this build does not know reads as the default.
+    fn from_position(position: DESKTOP_WALLPAPER_POSITION) -> Self {
+        [Fit::Fill, Fit::Fit, Fit::Stretch, Fit::Tile, Fit::Center, Fit::Span]
+            .into_iter()
+            .find(|fit| fit.position() == position)
+            .unwrap_or_default()
+    }
+
     fn position(self) -> DESKTOP_WALLPAPER_POSITION {
         match self {
             Fit::Fill => DWPOS_FILL,
@@ -63,7 +71,17 @@ pub enum WallpaperError {
     Snapshot(#[from] snapshot::SnapshotError),
     #[error("manifest: {0}")]
     Manifest(String),
+    #[error("Windows is showing a solid colour, not a picture")]
+    SolidColour,
+    #[error("the wallpaper file is larger than {limit_mb} MB")]
+    TooLarge { limit_mb: u64 },
+    #[error("the wallpaper file could not be read: {0}")]
+    Read(String),
 }
+
+/// Largest wallpaper file Settings is handed to read the colours of; a 4K PNG is about a tenth of this.
+pub const MAX_IMAGE_BYTES: u64 = 64 * 1024 * 1024;
+const BYTES_PER_MB: u64 = 1024 * 1024;
 
 /// COM must be initialised on the calling thread; the guard undoes it.
 struct ComGuard;
@@ -90,6 +108,17 @@ fn take_pwstr(p: PWSTR) -> String {
         CoTaskMemFree(Some(p.0 as *const _));
         s
     }
+}
+
+/// How Windows fits wallpapers to the screen now; one setting for every monitor.
+pub fn fit() -> Result<Fit, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply().
+    let position = unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        wp.GetPosition()?
+    };
+    Ok(Fit::from_position(position))
 }
 
 /// Applies `path` to one monitor (device path from `monitors()`) or, with None, to every monitor.
@@ -156,6 +185,59 @@ pub fn original() -> Result<Option<PathBuf>, WallpaperError> {
     Ok([snap.wallpaper_copy, snap.wallpaper].into_iter().flatten().map(PathBuf::from).find(|p| p.is_file()))
 }
 
+/// The wallpaper file of every monitor, by device path. Monitors showing a solid colour are left out.
+pub fn assignments() -> Result<Vec<(String, PathBuf)>, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply(); each returned PWSTR is freed by take_pwstr.
+    unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        let mut out = Vec::new();
+        for i in 0..wp.GetMonitorDevicePathCount()? {
+            let id = take_pwstr(wp.GetMonitorDevicePathAt(i)?);
+            let path = take_pwstr(wp.GetWallpaper(&HSTRING::from(id.as_str()))?);
+            if !path.is_empty() {
+                out.push((id, PathBuf::from(path)));
+            }
+        }
+        Ok(out)
+    }
+}
+
+/// The wallpaper file Windows is showing on the primary monitor: the one at the origin of the virtual
+/// screen, or the first listed when none is. None when the wallpaper is a solid colour.
+pub fn current() -> Result<Option<PathBuf>, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply(); each returned PWSTR is freed by take_pwstr.
+    unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        let ids = (0..wp.GetMonitorDevicePathCount()?)
+            .map(|i| Ok(take_pwstr(wp.GetMonitorDevicePathAt(i)?)))
+            .collect::<windows::core::Result<Vec<String>>>()?;
+        let at_origin = ids.iter().find(|id| {
+            wp.GetMonitorRECT(&HSTRING::from(id.as_str())).is_ok_and(|rect| rect.left == 0 && rect.top == 0)
+        });
+        let Some(id) = at_origin.or(ids.first()) else { return Ok(None) };
+        let path = take_pwstr(wp.GetWallpaper(&HSTRING::from(id.as_str()))?);
+        Ok((!path.is_empty()).then(|| PathBuf::from(path)))
+    }
+}
+
+/// Reads a file, refusing one larger than `limit` bytes before reading any of it.
+fn read_limited(path: &Path, limit: u64) -> Result<Vec<u8>, WallpaperError> {
+    let size = std::fs::metadata(path).map_err(|e| WallpaperError::Read(e.to_string()))?.len();
+    if size > limit {
+        return Err(WallpaperError::TooLarge { limit_mb: limit / BYTES_PER_MB });
+    }
+    std::fs::read(path).map_err(|e| WallpaperError::Read(e.to_string()))
+}
+
+/// The bytes of the picture Windows is showing as the wallpaper, so Settings can read its colours.
+/// The path comes from Windows, never from the caller.
+pub fn current_image() -> Result<Vec<u8>, WallpaperError> {
+    let path = current()?.ok_or(WallpaperError::SolidColour)?;
+    read_limited(&path, MAX_IMAGE_BYTES)
+}
+
 #[derive(Deserialize)]
 struct Manifest {
     wallpapers: Vec<ManifestEntry>,
@@ -179,6 +261,28 @@ mod tests {
         let all = bundled(&dir).expect("shipped manifest parses");
         assert!(all.len() >= 32, "16 wallpapers x dark/light");
         assert!(all.iter().all(|(_, p)| p.is_file()), "every manifest entry has its file");
+    }
+
+    #[test]
+    fn a_file_over_the_limit_is_refused_and_one_at_the_limit_is_read() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let file = dir.path().join("wall.jpg");
+        std::fs::write(&file, [7u8; 16]).expect("write");
+        assert_eq!(read_limited(&file, 16).expect("at the limit"), vec![7u8; 16]);
+        assert!(matches!(read_limited(&file, 15), Err(WallpaperError::TooLarge { .. })));
+    }
+
+    #[test]
+    fn a_missing_file_is_a_read_error_not_a_panic() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        assert!(matches!(read_limited(&dir.path().join("gone.jpg"), 16), Err(WallpaperError::Read(_))));
+    }
+
+    #[test]
+    fn every_fit_reads_back_from_its_windows_position() {
+        for fit in [Fit::Fill, Fit::Fit, Fit::Stretch, Fit::Tile, Fit::Center, Fit::Span] {
+            assert_eq!(Fit::from_position(fit.position()), fit);
+        }
     }
 
     #[test]

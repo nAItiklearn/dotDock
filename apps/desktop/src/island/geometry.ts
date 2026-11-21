@@ -26,7 +26,7 @@ export const BASE = {
 /** Height of the scene strip in px at scale 1. */
 export const SCENE_HEIGHT = SCENE_ROWS * SCENE_CELL;
 
-export type Mode = "off" | "hidden" | "tiny" | "island";
+export type Mode = "hidden" | "tiny" | "island";
 
 export interface Rows {
   /** The dim line above the state row. */
@@ -37,7 +37,6 @@ export interface Rows {
 
 /** Which of the looks the island has right now. */
 export function modeFor(settings: IslandSettings, session: SessionView | null): Mode {
-  if (!settings.enabled) return "off";
   if (!session) return settings.idle === "hidden" ? "hidden" : "tiny";
   return "island";
 }

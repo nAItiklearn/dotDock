@@ -5,13 +5,13 @@ import type { ThemeRole } from "./schema";
 type Palette = Readonly<Record<ThemeRole, string>>;
 
 /** Neutral ramp per mode: OKLCH lightness and chroma, plus an alpha where the role is translucent. */
-interface Step {
+export interface Step {
   readonly l: number;
   readonly c: number;
   readonly a?: number;
 }
 
-const DARK_RAMP = {
+export const DARK_RAMP = {
   bg: { l: 0.175, c: 0.005 },
   surface: { l: 0.205, c: 0.006, a: 0.86 },
   surface2: { l: 0.235, c: 0.007 },
@@ -21,7 +21,7 @@ const DARK_RAMP = {
   dotOff: { l: 0.95, c: 0.005, a: 0.14 },
 } as const satisfies Record<string, Step>;
 
-const LIGHT_RAMP = {
+export const LIGHT_RAMP = {
   bg: { l: 0.915, c: 0.006 },
   surface: { l: 0.965, c: 0.004, a: 0.92 },
   surface2: { l: 0.88, c: 0.007 },
@@ -32,13 +32,13 @@ const LIGHT_RAMP = {
 } as const satisfies Record<string, Step>;
 
 /** Status colours keep fixed hues so "danger" stays red whatever the accent is. */
-const STATUS = {
+export const STATUS = {
   dark: { danger: { l: 0.7, c: 0.14, h: 22 }, success: { l: 0.74, c: 0.05, h: 135 } },
   light: { danger: { l: 0.52, c: 0.17, h: 24 }, success: { l: 0.54, c: 0.08, h: 135 } },
 } as const;
 
-const WHITE: Rgba = { r: 255, g: 255, b: 255, a: 1 };
-const INK: Rgba = { r: 17, g: 17, b: 17, a: 1 };
+export const WHITE: Rgba = { r: 255, g: 255, b: 255, a: 1 };
+export const INK: Rgba = { r: 17, g: 17, b: 17, a: 1 };
 
 /** Text colour for use on top of the accent: whichever of white or near-black reads better. */
 export function readableOn(background: Rgba): string {

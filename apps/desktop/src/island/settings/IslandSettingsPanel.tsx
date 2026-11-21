@@ -96,7 +96,6 @@ export function IslandSettingsPanel() {
       {connection ? <ConnectionSection connection={connection} /> : null}
 
       <Group title={t("settings.section.display")}>
-        <Row label={t("settings.enabled")}>{({ id }) => <Switch id={id} checked={settings.enabled} onChange={(enabled) => set({ enabled })} />}</Row>
         <Row label={t("settings.idle")} group>{({ labelId }) => <Segmented labelId={labelId} value={settings.idle} options={IDLE_OPTIONS} onChange={(idle) => set({ idle })} />}</Row>
         <Row label={t("settings.iconStyle")} group>
           {({ labelId }) => <Segmented labelId={labelId} value={settings.iconStyle} options={STYLE_OPTIONS} onChange={(iconStyle) => set({ iconStyle })} />}

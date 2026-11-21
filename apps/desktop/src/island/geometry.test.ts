@@ -24,11 +24,6 @@ const ALL = { subtitle: true, scene: true } as const;
 const NONE = { subtitle: false, scene: false } as const;
 
 describe("modeFor", () => {
-  it("is off when the island is disabled, even mid-task", () => {
-    expect(modeFor(settings({ enabled: false }), SESSION)).toBe("off");
-    expect(modeFor(settings({ enabled: false }), null)).toBe("off");
-  });
-
   it("idles as a tiny pill or hides, as the setting says", () => {
     expect(modeFor(settings({ idle: "tiny" }), null)).toBe("tiny");
     expect(modeFor(settings({ idle: "hidden" }), null)).toBe("hidden");
@@ -82,11 +77,10 @@ describe("layoutFor", () => {
 });
 
 describe("plateSize", () => {
-  it("sizes the tiny pill and keeps hidden and off at the same size so nothing jumps", () => {
+  it("sizes the tiny pill and keeps hidden at the same size so nothing jumps", () => {
     const tiny = plateSize("tiny", ALL, 1);
     expect(tiny).toEqual({ w: BASE.tinyWidth, h: BASE.tinyHeight });
     expect(plateSize("hidden", ALL, 1)).toEqual(tiny);
-    expect(plateSize("off", ALL, 1)).toEqual(tiny);
   });
 
   it("uses the full layout for the island", () => {

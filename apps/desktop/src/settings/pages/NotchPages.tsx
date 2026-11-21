@@ -169,7 +169,7 @@ export function AgentsPage() {
                 <SliderValue>{t("settings.unit.seconds", { value: settings.doneLingerSecs })}</SliderValue>
               </span>
             </Row>
-            <ToggleRow id="sound" setting="sound" label="Play a sound" description="A short chime, made by the app. Silent while the notch is off." settings={settings} />
+            <ToggleRow id="sound" setting="sound" label="Play a sound" description="A short chime, made by the app." settings={settings} />
             <Row
               id="volume"
               label="Volume"
@@ -199,7 +199,6 @@ export function AgentsPage() {
 export function NotchLookPage() {
   const { settings } = useIsland();
   const available = hasIslandBackend();
-  const off = !settings.enabled;
   return (
     <>
       <PageHeader page="notch-look" />
@@ -208,7 +207,6 @@ export function NotchLookPage() {
       ) : (
         <>
           <Section title="Notch">
-            <ToggleRow id="notch-enabled" setting="enabled" label={t("settings.enabled")} description="Off hides the notch everywhere. Agents stay connected." settings={settings} />
             <Row
               id="notch-idle"
               label={t("settings.idle")}
@@ -216,7 +214,7 @@ export function NotchLookPage() {
               isDefault={settings.idle === DEFAULT_SETTINGS.idle}
               onReset={() => actions.updateSettings({ idle: DEFAULT_SETTINGS.idle })}
             >
-              <Segmented label={t("settings.idle")} value={settings.idle} options={IDLE_OPTIONS} disabled={off} onChange={(idle) => actions.updateSettings({ idle })} />
+              <Segmented label={t("settings.idle")} value={settings.idle} options={IDLE_OPTIONS} onChange={(idle) => actions.updateSettings({ idle })} />
             </Row>
             <Row
               id="notch-style"
@@ -225,7 +223,7 @@ export function NotchLookPage() {
               isDefault={settings.iconStyle === DEFAULT_SETTINGS.iconStyle}
               onReset={() => actions.updateSettings({ iconStyle: DEFAULT_SETTINGS.iconStyle })}
             >
-              <Segmented label={t("settings.iconStyle")} value={settings.iconStyle} options={STYLE_OPTIONS} disabled={off} onChange={(iconStyle) => actions.updateSettings({ iconStyle })} />
+              <Segmented label={t("settings.iconStyle")} value={settings.iconStyle} options={STYLE_OPTIONS} onChange={(iconStyle) => actions.updateSettings({ iconStyle })} />
             </Row>
             <Row
               id="notch-scale"
@@ -235,7 +233,7 @@ export function NotchLookPage() {
               onReset={() => actions.updateSettings({ scale: DEFAULT_SETTINGS.scale })}
             >
               <span className="control-with-value">
-                <Slider label={t("settings.scale")} value={settings.scale} {...SCALE_RANGE} disabled={off} valueText={percent(settings.scale)} onChange={(scale) => actions.updateSettings({ scale })} />
+                <Slider label={t("settings.scale")} value={settings.scale} {...SCALE_RANGE} valueText={percent(settings.scale)} onChange={(scale) => actions.updateSettings({ scale })} />
                 <SliderValue>{percent(settings.scale)}</SliderValue>
               </span>
             </Row>
@@ -251,7 +249,7 @@ export function NotchLookPage() {
                   label={t("settings.topOffset")}
                   value={settings.topOffset}
                   {...OFFSET_RANGE}
-                  disabled={off}
+                 
                   valueText={`${settings.topOffset} pixels`}
                   onChange={(topOffset) => actions.updateSettings({ topOffset })}
                 />
@@ -260,15 +258,15 @@ export function NotchLookPage() {
             </Row>
           </Section>
           <Section title="What it shows">
-            <ToggleRow id="notch-detail" setting="showDetail" label={t("settings.showDetail")} description="The file being edited or the command being run." settings={settings} disabled={off} />
-            <ToggleRow id="notch-tokens" setting="showTokens" label={t("settings.showTokens")} description="Only real counts the agent reports." settings={settings} disabled={off} />
-            <ToggleRow id="notch-elapsed" setting="showElapsed" label={t("settings.showElapsed")} description="How long the current task has been running." settings={settings} disabled={off} />
-            <ToggleRow id="notch-project" setting="showProject" label={t("settings.showProject")} description="The folder the agent is working in." settings={settings} disabled={off} />
-            <ToggleRow id="notch-scene" setting="showScene" label={t("settings.showScene")} description="The beetle and its landscape along the bottom edge." settings={settings} disabled={off} />
+            <ToggleRow id="notch-detail" setting="showDetail" label={t("settings.showDetail")} description="The file being edited or the command being run." settings={settings} />
+            <ToggleRow id="notch-tokens" setting="showTokens" label={t("settings.showTokens")} description="Only real counts the agent reports." settings={settings} />
+            <ToggleRow id="notch-elapsed" setting="showElapsed" label={t("settings.showElapsed")} description="How long the current task has been running." settings={settings} />
+            <ToggleRow id="notch-project" setting="showProject" label={t("settings.showProject")} description="The folder the agent is working in." settings={settings} />
+            <ToggleRow id="notch-scene" setting="showScene" label={t("settings.showScene")} description="The beetle and its landscape along the bottom edge." settings={settings} />
           </Section>
           <Section title="Movement">
-            <ToggleRow id="notch-aside" setting="moveAside" label={t("settings.moveAside")} description="Slides out of the way so you can click what is under it." settings={settings} disabled={off} />
-            <ToggleRow id="notch-follow" setting="followCursor" label={t("settings.followCursor")} description="Moves when the cursor touches the top edge of another screen." settings={settings} disabled={off} />
+            <ToggleRow id="notch-aside" setting="moveAside" label={t("settings.moveAside")} description="Slides out of the way so you can click what is under it." settings={settings} />
+            <ToggleRow id="notch-follow" setting="followCursor" label={t("settings.followCursor")} description="Moves when the cursor touches the top edge of another screen." settings={settings} />
           </Section>
         </>
       )}
