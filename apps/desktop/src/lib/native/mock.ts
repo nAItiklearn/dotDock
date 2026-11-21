@@ -33,7 +33,7 @@ async function sampleWallpaper(): Promise<Blob> {
 
 export function createMockNativeApi(): NativeApi {
   // This build has no taskbar replacement yet, so the Windows taskbar always stays.
-  let environment: EnvironmentState = { on: true, windowsTaskbar: true, taskbarReplacement: false, problems: [] };
+  let environment: EnvironmentState = { on: true, windowsTaskbar: false, taskbarReplacement: true, problems: [] };
   const listeners = new Set<(state: EnvironmentState) => void>();
   const setEnvironment = (patch: Partial<EnvironmentState>): EnvironmentState => {
     environment = { ...environment, ...patch };

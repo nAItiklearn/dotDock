@@ -15,13 +15,17 @@ function environment(): EnvironmentStore {
   return shared;
 }
 
-/** What the theme switch does in this build: widgets, notch and wallpaper; the dock is not part of it yet. */
+/** What the theme switch does: the dock, widgets, notch and wallpaper, as one. */
 export const THEME_DESCRIPTION =
-  "Your widgets, the notch and dotDock's wallpaper, as one. Off gives Windows its desktop back: its taskbar, its startup list and your own wallpaper, the one you had before dotDock or the one you picked while it was off. On brings dotDock back as you left it. Your settings and layouts are kept either way.";
+  "The dock, your widgets, the notch and dotDock's wallpaper, as one. Off gives Windows its desktop back: its taskbar, its startup list and your own wallpaper, the one you had before dotDock or the one you picked while it was off. On brings dotDock back as you left it. Your settings and layouts are kept either way.";
 
-/** Why the taskbar switch cannot move yet: nothing in this build replaces the Windows taskbar. */
+/** What "Use the Windows taskbar" does while the dock can take the taskbar's place. */
+export const TASKBAR_SWITCH =
+  "Shows the Windows taskbar again, with its own auto-hide setting, and hides the dotDock dock. Your widgets, the notch and the wallpaper stay.";
+
+/** Why the taskbar switch cannot move: the dock did not start in this run, so nothing can replace the Windows taskbar. */
 export const TASKBAR_WITHOUT_DOCK =
-  "The Windows taskbar stays in this version, because the dock that can take its place is not part of it yet. This switch works once the dock is.";
+  "The dock did not start this time, so the Windows taskbar stays. Start dotDock again to bring the dock back; this switch works once it runs.";
 
 const WAITING_CHIP = { loading: "Reading…", unavailable: "Needs the desktop app", error: "Couldn't read" } as const;
 
@@ -73,9 +77,7 @@ export function EnvironmentSwitches() {
         id="windows-taskbar"
         label="Use the Windows taskbar"
         description={
-          shown?.taskbarReplacement
-            ? "Shows the Windows taskbar instead of the dock's replacement. The dock stays."
-            : TASKBAR_WITHOUT_DOCK
+          shown?.taskbarReplacement ? TASKBAR_SWITCH : TASKBAR_WITHOUT_DOCK
         }
       >
         <Switch

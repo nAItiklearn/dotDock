@@ -1,5 +1,24 @@
 # One line ending in the repository: LF. Tracks written on Windows mixed CRLF and LF, which made
-# every merge conflict on whole files (D-038). Windows batch files keep CRLF because cmd.exe needs it.
+# every merge conflict on whole files (D-040). Windows batch files keep CRLF because cmd.exe needs it.
 * text=auto eol=lf
 *.bat text eol=crlf
 *.cmd text eol=crlf
+
+# Never touched as text, whatever the content looks like.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.wav binary
+*.mp3 binary
+*.mp4 binary
+*.exe binary
+*.dll binary
+*.zip binary

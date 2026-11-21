@@ -21,7 +21,7 @@ export interface EnvironmentStore {
   reload(): void;
   /** Switches the whole environment on or off. The answer, or the reason it failed, comes back through the store and `report`. */
   setOn(on: boolean): Promise<void>;
-  /** Keeps the Windows taskbar, or lets the dock's replacement take its place. */
+  /** Shows the Windows taskbar without the dock, or lets the dock take the taskbar's place. */
   setWindowsTaskbar(useWindows: boolean): Promise<void>;
   /** The state as the switches should show it: the core's answer with the unanswered choices applied. */
   shown(state: EnvironmentStoreState): EnvironmentState | null;

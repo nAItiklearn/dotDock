@@ -436,3 +436,21 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
 - Scroll: the nav's stuck state is watched with an IntersectionObserver instead of reading `scrollY` per scroll
   event (a trace showed it forcing layout); parallax reads every position before writing any transform; art masks
   are fetched and decoded asynchronously (`Image.decode()`) two screens ahead instead of 900 px.
+
+## D-040 One line ending, LF, for the whole repository (V1 integration, 2026-11-21)
+- The theme track committed about 60 files converted from LF to CRLF, so merging it with the notch, dock and release
+  tracks conflicted on whole files. `.gitattributes` now says `* text=auto eol=lf` (batch files keep CRLF; binaries
+  are detected), the tree was renormalized once, and the later merges ran with `-X renormalize`.
+
+## D-041 "Use the Windows taskbar" gives Windows its whole bar back, and the dock goes with it (V1 integration, 2026-11-21)
+- Supersedes the D-021 line "the dock keeps running". With the dock host in the build, the lead's V1 spec is: off,
+  the dotDock dock takes the taskbar's place through the D0 restore guard (`dock_guard::hide_for_dock`); on, the
+  Windows taskbar comes back with its auto-hide setting restored and the dotDock dock is hidden. In
+  `shell/src/modules.rs` the dock and the taskbar part are both wanted only while the environment is on and the
+  Windows taskbar is not chosen; a replacement that fails to start puts the choice back and stops the dock again.
+- The dock joins the manager as `DockPart` (its window) and `TaskbarPart` (replacing the taskbar). The stored
+  `enabled` and `replaceTaskbar` of `dock.json` decide nothing any more: `DockSettings::governed` applies the parts,
+  and Settings' dock page goes through the running dock service, so `dock.json` has one writer.
+- When Windows refuses to hide its taskbar, or "Restore Windows desktop" brings it back, the switch moves to "Use the
+  Windows taskbar", so what Settings shows matches the screen.
+- The switch stays disabled, with copy that says so, only when the dock's backend did not start in that run.
