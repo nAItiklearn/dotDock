@@ -59,8 +59,9 @@ const SHOTS = [
   { name: "edit", setup: [st("setEditing(true)")], clip: DOCK },
   { name: "prefs", click: "Customise the dock", clip: TALL },
   { name: "gallery", rightClick: "Atlas Browser", menuItem: "Add a widget", clip: TALL },
-  { name: "tile-clock", click: "09", clickTile: 0, clip: TALL },
-  { name: "tile-media", click: "Now playing", clip: TALL },
+  { name: "tile-agenda", setup: [settings({ tiles: DAY })], clickTile: "agenda", clip: TALL },
+  { name: "tile-system", setup: [settings({ tiles: SYSTEM })], clickTile: "system", clip: TALL },
+  { name: "tile-focus", setup: [settings({ tiles: GAP_C })], clickTile: "focus", clip: TALL },
   { name: "tiles-gap-a", setup: [settings({ tiles: GAP_A })], clip: DOCK },
   { name: "tiles-gap-b", setup: [settings({ tiles: GAP_B })], clip: DOCK },
   { name: "tiles-gap-c", setup: [settings({ tiles: GAP_C })], clip: DOCK },
@@ -71,8 +72,9 @@ const SHOTS = [
   { name: "desktop", clip: FULL },
 ];
 
-async function tileClick(c, index) {
-  const at = await c.eval(`(() => { const t = [...document.querySelectorAll('.dock__row > .slot')].filter((s) => s.querySelector('.face--tile'))[${index}]; const r = t.getBoundingClientRect(); return [Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)]; })()`);
+/** Clicks the live tile with this id, which opens its popover. */
+async function tileClick(c, id) {
+  const at = await c.eval(`(() => { const t = document.querySelector('.dock__row > .slot[data-tile="${id}"]'); if (!t) throw new Error('no tile ${id}'); const r = t.getBoundingClientRect(); return [Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)]; })()`);
   await c.click(at[0], at[1]);
 }
 
