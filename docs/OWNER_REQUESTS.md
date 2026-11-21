@@ -49,6 +49,13 @@ animation must work, bug-free). Glass theme deadline 12:15; deferred and removed
 ## Whole environment
 - [ ] Smooth like Linux, no bloat: no needless polling, low idle CPU, quick start.
 
+## Release
+- [ ] Auto-update inside the app: users get new versions from the app itself, without uninstalling or downloading
+      again from the website (signed updates from GitHub Releases). Later job, after the dock, notch, home screen and
+      website are done (2026-11-21 13:20).
+- [ ] The dock, the notch and the website each score above 4.8 on design, performance, accuracy and functionality,
+      scored separately (2026-11-21 13:15).
+
 ## Website
 - [ ] Features in a bento grid of cards with real screenshots, a notch carousel, zoom-on-scroll videos at the end; every page proofread and current (2026-11-21 10:45).
 - [ ] Animated pixel scenes on home, Privacy and Features, never overlapping text, mobile-friendly (2026-11-21 11:00).
