@@ -20,7 +20,7 @@ export interface Placement {
   readonly widget: string;
   /** Id of one of the widget's declared sizes; anything else renders at the widget's default size. */
   readonly size: string;
-  /** Top-left position in grid cells. */
+  /** Top-left position in grid cells, in steps of 1 / POSITION_STEPS: widgets are placed freely. */
   readonly x: number;
   readonly y: number;
   /** Only what the user changed; fields not listed here follow the widget's defaults. */

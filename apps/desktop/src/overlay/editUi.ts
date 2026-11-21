@@ -1,7 +1,7 @@
 import { createStore } from "zustand/vanilla";
 import { useStore } from "zustand";
 import type { Guide } from "../lib/layout/guides";
-import type { Cell, Placement, Rect } from "../lib/model/types";
+import type { Cell, Placement } from "../lib/model/types";
 
 export type DrawerTab = "add" | "selected";
 
@@ -18,8 +18,6 @@ export interface EditUiState {
   readonly gesture: "move" | "resize" | null;
   /** A widget held still on the plain desktop: lifted to say it can move, before it has moved. */
   readonly liftedId: string | null;
-  /** Where the dragged widget will land, in cells. */
-  readonly ghost: Rect | null;
   readonly guides: readonly Guide[];
   readonly drawerOpen: boolean;
   readonly drawerTab: DrawerTab;
@@ -36,7 +34,6 @@ const initial: EditUiState = {
   activeId: null,
   gesture: null,
   liftedId: null,
-  ghost: null,
   guides: [],
   drawerOpen: false,
   drawerTab: "add",

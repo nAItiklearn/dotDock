@@ -9,6 +9,18 @@ export interface GridMetrics {
 
 export const pitch = (m: GridMetrics): number => m.cell + m.gap;
 
+/**
+ * Widgets sit anywhere, not on whole cells: positions are cells in steps of 1 / POSITION_STEPS (2.75 px
+ * at the default pitch, finer than the eye can tell from free placement). A power of two, so sums of
+ * positions and sizes are exact in floating point and edges that touch compare equal.
+ */
+export const POSITION_STEPS = 32;
+
+/** A position rounded to the nearest step. */
+export function quantize(cells: number): number {
+  return Math.round(cells * POSITION_STEPS) / POSITION_STEPS || 0;
+}
+
 /** Pixel size of `n` cells including the gaps between them. */
 export function spanPx(n: number, m: GridMetrics): number {
   return n * m.cell + Math.max(0, n - 1) * m.gap;

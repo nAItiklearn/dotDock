@@ -10,16 +10,27 @@
 
 /* ---- per-widget chrome */
 /* Drawn on the widget's own edge (inset 0, the card radius), so outline and widget never disagree by a pixel. */
+/*
+ * No outline at rest: widgets in edit mode look exactly like widgets. Hover draws a soft hairline;
+ * the selected widget keeps a slightly firmer one and lifts on a shadow. Never dashes, never the accent.
+ */
 .slot-chrome__frame {
   position: absolute;
   inset: 0;
-  border: var(--hairline) dashed color-mix(in srgb, var(--text) 45%, transparent);
+  border: var(--hairline) solid transparent;
   border-radius: var(--radius-lg);
   pointer-events: none;
-  transition: border-color var(--dur-fast) var(--ease-out);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-med) var(--ease-out);
 }
-.slot-chrome__frame.is-selected {
-  border: var(--focus-width) solid var(--accent);
+.overlay__slot:hover .slot-chrome__frame {
+  border-color: color-mix(in srgb, var(--text) 18%, transparent);
+}
+.slot-chrome__frame.is-selected,
+.overlay__slot:hover .slot-chrome__frame.is-selected {
+  border-color: color-mix(in srgb, var(--text) 32%, transparent);
+  box-shadow: var(--shadow);
 }
 
 .slot-chrome__remove {
@@ -133,7 +144,8 @@
   top: 0;
   left: 0;
   z-index: 7;
-  background: var(--accent);
+  /* Shown only while an edge or centre is magnetically aligned with a neighbour. */
+  background: color-mix(in srgb, var(--text) 40%, transparent);
   pointer-events: none;
   will-change: transform;
 }
@@ -142,18 +154,6 @@
 }
 .guide--y {
   height: var(--hairline);
-}
-.ghost {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  border: var(--focus-width) dashed var(--accent);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  pointer-events: none;
-  transition: transform var(--dur-fast) var(--ease-out);
-  will-change: transform;
 }
 /* Invisible, but reported to the core as a hit area so the pointer stays ours for the whole drag. */
 .drag-shield {
@@ -258,6 +258,7 @@
 
 .gallery {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   margin: 0;
   padding: 0;
@@ -265,6 +266,7 @@
 }
 .gallery-card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   padding: var(--space-3);
   border: var(--hairline) solid var(--border);
@@ -299,6 +301,7 @@
 }
 .gallery-card__actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);

@@ -1,6 +1,6 @@
 import type { SizeSpec } from "../../widgets/sizes";
-import type { Bounds, Cell } from "../model/types";
-import { pitch, roundToCell, spanPx, type GridMetrics } from "./grid";
+import type { Bounds, Cell, Rect } from "../model/types";
+import { pitch, quantize, spanPx, type GridMetrics } from "./grid";
 
 /** Pointer travel (px) before a press becomes a drag; below it the press is just a click that selects. */
 export const DRAG_THRESHOLD_PX = 4;
@@ -9,9 +9,55 @@ export function passedDragThreshold(dx: number, dy: number): boolean {
   return Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX;
 }
 
-/** The cell a widget snaps to when its pointer has travelled (dx, dy) pixels from where it started. */
+/**
+ * Where a dragged widget goes when its pointer has travelled (dx, dy) pixels from where it started:
+ * exactly under the pointer, to the nearest position step. There is no coarse grid to snap to.
+ */
 export function dragTarget(origin: Cell, dx: number, dy: number, metrics: GridMetrics): Cell {
-  return { x: origin.x + roundToCell(dx, metrics), y: origin.y + roundToCell(dy, metrics) };
+  return { x: quantize(origin.x + dx / pitch(metrics)), y: quantize(origin.y + dy / pitch(metrics)) };
+}
+
+/** How close (px) an edge or centre must come to a neighbour's before it is pulled into line. */
+export const MAGNET_PX = 10;
+
+/** Positions on one axis where `size` lines up with a neighbour spanning [start, start + span). */
+function alignments(start: number, span: number, size: number): readonly number[] {
+  return [
+    start, // starts line up
+    start + span - size, // ends line up
+    start + (span - size) / 2, // centres line up
+    start + span, // just after it, one gap apart
+    start - size, // just before it, one gap apart
+  ];
+}
+
+function nearest(value: number, candidates: readonly number[], reach: number): number {
+  let best = value;
+  let bestDistance = reach;
+  for (const c of candidates) {
+    const d = Math.abs(c - value);
+    if (d <= bestDistance) {
+      best = c;
+      bestDistance = d;
+    }
+  }
+  return best;
+}
+
+/**
+ * A soft magnet: an edge or centre that comes within {@link MAGNET_PX} of a neighbour's edge or centre,
+ * or of the screen edge, is pulled into line with it; anywhere else the widget stays exactly where the
+ * pointer put it. Footprints include the trailing gap, so "just after" keeps the usual spacing.
+ */
+export function magnetize(target: Rect, others: readonly Rect[], bounds: Bounds, metrics: GridMetrics): Cell {
+  const reach = MAGNET_PX / pitch(metrics);
+  const xs: number[] = [0, bounds.cols - target.w];
+  const ys: number[] = [0, bounds.rows - target.h];
+  for (const o of others) {
+    xs.push(...alignments(o.x, o.w, target.w));
+    ys.push(...alignments(o.y, o.h, target.h));
+  }
+  return { x: quantize(nearest(target.x, xs, reach)), y: quantize(nearest(target.y, ys, reach)) };
 }
 
 /**

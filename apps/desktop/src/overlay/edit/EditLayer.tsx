@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
-import { cellStartPx, spanPx, type GridMetrics } from "../../lib/layout/grid";
+import { cellStartPx, type GridMetrics } from "../../lib/layout/grid";
 import type { Guide } from "../../lib/layout/guides";
 import { footprintOf } from "../../lib/layout/ops";
 import { getApp } from "../../lib/state/app";
@@ -42,7 +42,6 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
   const drawerOpen = useEditUi((s) => s.drawerOpen);
   const gesture = useEditUi((s) => s.gesture);
   const guides = useEditUi((s) => s.guides);
-  const ghost = useEditUi((s) => s.ghost);
   const showGuides = useSettingsStore((s) => s.settings.layout.guides);
   const controller = useRef<GestureController | null>(null);
   const metricsRef = useRef(metrics);
@@ -139,17 +138,6 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
       {showGuides
         ? guides.map((g) => <div key={`${g.axis}${g.edge}${g.at}`} className={`guide guide--${g.axis}`} style={guideStyle(g, metrics)} aria-hidden="true" />)
         : null}
-      {ghost ? (
-        <div
-          className="ghost"
-          aria-hidden="true"
-          style={{
-            width: spanPx(ghost.w, metrics),
-            height: spanPx(ghost.h, metrics),
-            transform: `translate3d(${cellStartPx(ghost.x, metrics)}px, ${cellStartPx(ghost.y, metrics)}px, 0)`,
-          }}
-        />
-      ) : null}
       <UndoToast />
       <Toolbar openSettings={openSettings} />
       {drawerOpen ? <Drawer metrics={metrics} /> : null}

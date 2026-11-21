@@ -1,4 +1,4 @@
-import { dragTarget, passedDragThreshold, sizesByProximity } from "../../lib/layout/gesture";
+import { dragTarget, magnetize, passedDragThreshold, sizesByProximity } from "../../lib/layout/gesture";
 import { cellStartPx, type GridMetrics } from "../../lib/layout/grid";
 import { computeGuides } from "../../lib/layout/guides";
 import { footprintOf, moveTo, rectOf, resizeTo } from "../../lib/layout/ops";
@@ -30,6 +30,11 @@ interface Active {
   valid: readonly Placement[] | null;
   pointerX: number;
   pointerY: number;
+  /** The offset (px) the dragged widget is drawn at: the pointer's, or pulled into line by the magnet. */
+  shownX: number;
+  shownY: number;
+  /** True while `valid` is the resolution of the spot under the pointer (not an older, still-good one). */
+  validHere: boolean;
   frame: number;
 }
 
@@ -41,8 +46,9 @@ const SCALE_ONLY_TRANSITION = "scale var(--dur-fast) var(--ease-out)";
  *
  * Everything on the hot path is a compositor property. The dragged widget follows the pointer through
  * the independent CSS `translate` property, written straight to the element once per animation frame;
- * React is only told when the snapped *cell* changes, which is rare. Neighbours pushed aside by the
- * preview animate with the slot's own transform transition.
+ * React is only told when a neighbour has to move aside, and only those neighbours re-render. There is
+ * no coarse grid: the widget goes where the pointer takes it, and a soft magnet lines it up with nearby
+ * edges and centres.
  */
 export class GestureController {
   private active: Active | null = null;
@@ -91,6 +97,9 @@ export class GestureController {
       valid: null,
       pointerX: h.pointerX,
       pointerY: h.pointerY,
+      shownX: h.pointerX - h.startX,
+      shownY: h.pointerY - h.startY,
+      validHere: false,
       frame: 0,
     };
     this.listen(h.el);
@@ -153,6 +162,9 @@ export class GestureController {
       valid: null,
       pointerX: e.clientX,
       pointerY: e.clientY,
+      shownX: 0,
+      shownY: 0,
+      validHere: false,
       frame: 0,
     };
     this.listen(slot);
@@ -188,8 +200,8 @@ export class GestureController {
       if (a.kind === "move") a.el.classList.add("is-dragging");
     }
     if (a.kind === "move") {
-      a.el.style.translate = `${dx}px ${dy}px`;
       this.previewMove(a, dx, dy);
+      a.el.style.translate = `${a.shownX}px ${a.shownY}px`;
     } else {
       this.previewResize(a);
     }
@@ -197,23 +209,37 @@ export class GestureController {
 
   private previewMove(a: Active, dx: number, dy: number): void {
     const metrics = this.env.getMetrics();
-    const cell = dragTarget(a.origin, dx, dy, metrics);
+    const ctx = this.env.layout.getState().context();
+    const { w, h } = footprintOf(widgetCatalog, a.origin);
+    const others = a.base.filter((p) => p.id !== a.id).map((p) => rectOf(widgetCatalog, p));
+    const free = dragTarget(a.origin, dx, dy, metrics);
+    const cell = magnetize({ ...free, w, h }, others, ctx.bounds, metrics);
     const key = `${cell.x},${cell.y}`;
-    if (key === a.lastKey) return;
-    a.lastKey = key;
-    const next = moveTo(a.base, a.id, cell, this.env.layout.getState().context());
-    // A drop spot with no room keeps the last good preview rather than flickering.
-    if (!next) return;
-    a.valid = next;
-    const moved = next.find((p) => p.id === a.id);
-    if (!moved) return;
-    const rect = rectOf(widgetCatalog, moved);
-    const others = next.filter((p) => p.id !== a.id).map((p) => rectOf(widgetCatalog, p));
-    editUi.setState({
-      preview: this.changed(a, next, false),
-      ghost: rect,
-      guides: this.env.getSettings().layout.guides ? computeGuides(rect, others) : [],
-    });
+    if (key !== a.lastKey) {
+      a.lastKey = key;
+      // A spot with no room keeps the last good preview rather than flickering.
+      const next = moveTo(a.base, a.id, cell, ctx);
+      a.validHere = next !== null;
+      if (next) {
+        a.valid = next;
+        const moved = next.find((p) => p.id === a.id);
+        const rect = moved ? rectOf(widgetCatalog, moved) : null;
+        const settled = next.filter((p) => p.id !== a.id).map((p) => rectOf(widgetCatalog, p));
+        editUi.setState({
+          preview: this.changed(a, next, false),
+          guides: rect && this.env.getSettings().layout.guides ? computeGuides(rect, settled) : [],
+        });
+      }
+    }
+    // Drawn where it will land (inside the screen, pulled by the magnet), so the drop never jumps.
+    const landing = a.valid?.find((p) => p.id === a.id);
+    if (landing && a.validHere) {
+      a.shownX = cellStartPx(landing.x, metrics) - cellStartPx(a.origin.x, metrics);
+      a.shownY = cellStartPx(landing.y, metrics) - cellStartPx(a.origin.y, metrics);
+    } else {
+      a.shownX = dx;
+      a.shownY = dy;
+    }
   }
 
   private previewResize(a: Active): void {
@@ -229,7 +255,7 @@ export class GestureController {
       if (size.id === a.lastKey) return;
       a.lastKey = size.id;
       a.valid = next;
-      editUi.setState({ preview: this.changed(a, next, true), ghost: null, guides: [] });
+      editUi.setState({ preview: this.changed(a, next, true), guides: [] });
       return;
     }
   }
@@ -260,7 +286,7 @@ export class GestureController {
     const result = commit && a.started ? a.valid : null;
     if (a.started && a.kind === "move") this.settleMove(a, result);
 
-    editUi.setState({ preview: null, activeId: null, gesture: null, liftedId: null, ghost: null, guides: [] });
+    editUi.setState({ preview: null, activeId: null, gesture: null, liftedId: null, guides: [] });
     if (result) {
       this.env.layout.getState().commit(result);
       const done = result.find((p) => p.id === a.id);
@@ -291,10 +317,8 @@ export class GestureController {
       return;
     }
     const metrics = this.env.getMetrics();
-    const dx = a.pointerX - a.startX;
-    const dy = a.pointerY - a.startY;
-    const residualX = cellStartPx(a.origin.x, metrics) + dx - cellStartPx(final.x, metrics);
-    const residualY = cellStartPx(a.origin.y, metrics) + dy - cellStartPx(final.y, metrics);
+    const residualX = cellStartPx(a.origin.x, metrics) + a.shownX - cellStartPx(final.x, metrics);
+    const residualY = cellStartPx(a.origin.y, metrics) + a.shownY - cellStartPx(final.y, metrics);
     el.style.transition = SCALE_ONLY_TRANSITION;
     el.style.transform = `translate3d(${cellStartPx(final.x, metrics)}px, ${cellStartPx(final.y, metrics)}px, 0)`;
     el.style.translate = `${residualX}px ${residualY}px`;
