@@ -11,3 +11,15 @@ export function useViewport(): Size {
   }, []);
   return size;
 }
+
+/** window.devicePixelRatio, kept current when the window moves to a screen with another scale (an OS event, no polling). */
+export function useDevicePixelRatio(): number {
+  const [dpr, setDpr] = useState(() => window.devicePixelRatio || 1);
+  useEffect(() => {
+    const query = window.matchMedia(`(resolution: ${dpr}dppx)`);
+    const update = (): void => setDpr(window.devicePixelRatio || 1);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, [dpr]);
+  return dpr;
+}

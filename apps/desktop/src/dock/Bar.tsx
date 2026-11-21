@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useReducedMotion } from "./useReducedMotion";
-import { useViewport } from "./useViewport";
+import { useDevicePixelRatio, useViewport } from "./useViewport";
 import { actions } from "./bridge";
 import { DockEngine, PLATE_OVERLAP, type LayoutItem } from "./engine";
 import {
@@ -13,6 +13,7 @@ import {
   metricsFor,
   RATIO,
   SCREEN_MARGIN,
+  toDevicePixel,
   type Metrics,
   type Rect,
 } from "./geometry";
@@ -80,6 +81,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const pointerInside = useDockStore((s) => s.pointerInside);
   const reduced = useReducedMotion();
   const viewport = useViewport();
+  const dpr = useDevicePixelRatio();
   const [roving, setRoving] = useState<string>("library");
   const [dropReady, setDropReady] = useState(false);
 
@@ -91,10 +93,30 @@ export function Bar({ hidden, onLayout }: BarProps) {
   );
   const icon = fitIconSize(settings.iconSize, entries.map(lengthKind), (vertical ? viewport.h : viewport.w) - 2 * SCREEN_MARGIN, vertical);
   // One object per icon size: `measure` depends on it, and a new object on every render would re-measure (and force a layout) on every render.
-  const metrics = useMemo(() => metricsFor(icon), [icon]);
+  const metrics = useMemo(() => metricsFor(icon, dpr), [icon, dpr]);
   const peak = clampMagnification(settings.magnification);
 
   const dockRef = useRef<HTMLDivElement>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const dock = dockRef.current;
+    const anchor = anchorRef.current;
+    if (!dock || !anchor) return undefined;
+    // Centring puts the bar at half the free space, which can fall between two device pixels: nudge the whole
+    // anchor by less than one device pixel so every edge inside lands on the grid. Runs when the bar's size
+    // changes (an observer, not a timer), never per frame.
+    const align = (): void => {
+      anchor.style.translate = "";
+      const r = dock.getBoundingClientRect();
+      const dx = toDevicePixel(r.left, dpr) - r.left;
+      const dy = toDevicePixel(r.top, dpr) - r.top;
+      anchor.style.translate = dx === 0 && dy === 0 ? "" : `${dx}px ${dy}px`;
+    };
+    align();
+    const observer = new ResizeObserver(align);
+    observer.observe(dock);
+    return () => observer.disconnect();
+  }, [dpr, edge, viewport.w, viewport.h]);
   const rowRef = useRef<HTMLDivElement>(null);
   const plateStart = useRef<HTMLDivElement>(null);
   const plateMid = useRef<HTMLDivElement>(null);
@@ -480,7 +502,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
   } as CSSProperties;
 
   return (
-    <div className="dock-anchor" data-edge={edge} data-axis={vertical ? "y" : "x"} data-mag={peak > 1 && !reduced ? "on" : "off"} style={vars}>
+    <div ref={anchorRef} className="dock-anchor" data-edge={edge} data-axis={vertical ? "y" : "x"} data-mag={peak > 1 && !reduced ? "on" : "off"} style={vars}>
       <div
         ref={dockRef}
         className="dock"
@@ -510,6 +532,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
               peak={peak}
               open={(entry.kind === "stack" && stack?.category === entry.category.id) || (entry.kind === "add" && gallery !== null) || (entry.kind === "more" && prefs !== null) || (entry.kind === "tile" && tile?.id === entry.id)}
               handlers={handlers}
+              dpr={dpr}
             />
           ))}
         </div>
