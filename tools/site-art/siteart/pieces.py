@@ -76,10 +76,6 @@ PIECES: dict[str, Piece] = {
     "tuft-left": Piece(41, {"wide": (280, 190), "narrow": (150, 110)}, _tuft(41, "left"), _colour_stack, _FLAT),
     "tuft-right": Piece(42, {"wide": (280, 190), "narrow": (150, 110)}, _tuft(42, "right"), _colour_stack, _FLAT),
     **{
-        f"scene-{kind}": Piece(61 + i, {"wide": (1200, 560), "narrow": (560, 440)}, _scene(kind, 61 + i), _colour_stack, _SCENE_Q)
-        for i, kind in enumerate(("dock", "island", "home", "themes"))
-    },
-    **{
         f"band-{kind}": Piece(81 + i, {"wide": (1920, 300), "narrow": (720, 240)}, _band(kind, 81 + i), _colour_stack, _SCENE_Q | {"cloud": (100, 100), "sea": (78, 60), "line": (80, 80)})
         for i, kind in enumerate(VIGNETTES)
     },
