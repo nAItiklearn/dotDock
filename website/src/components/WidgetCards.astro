@@ -23,18 +23,17 @@ interface Tile {
 }
 
 const tiles: Tile[] = [
-  { kind: "clock", name: "Clock", note: "Blocks, dots or stripes", h: 2, span: [5, 4, 4], style: "blocks" },
+  { kind: "clock", name: "Clock", note: "In blocks", h: 2, span: [5, 4, 4], style: "blocks" },
   { kind: "date", name: "Date", note: "Today, in dots", h: 2, span: [2, 2, 2] },
-  { kind: "calendar", name: "Month", note: "Today ringed in red", h: 2, span: [3, 4, 4] },
   { kind: "ring", name: "Battery", note: "Charge as a ring", h: 2, span: [2, 2, 2] },
-  { kind: "photo", name: "Photo", note: "Your own picture", h: 2, span: [2, 2, 4] },
-  { kind: "todo", name: "To-do", note: "Tick it and it stays ticked", h: 2, span: [3, 4, 4] },
-  { kind: "ram", name: "Memory", note: "RAM, a dot per slice", h: 2, span: [2, 3, 2] },
-  { kind: "disk", name: "Disk", note: "Your drive as a ring", h: 2, span: [2, 3, 2] },
-  { kind: "forecast", name: "Forecast", note: "Five days, from Open-Meteo", h: 2, span: [3, 6, 4] },
+  { kind: "photo", name: "Photo", note: "Your own picture", h: 2, span: [3, 2, 4] },
+  { kind: "ram", name: "Memory", note: "RAM, a dot per slice", h: 2, span: [2, 2, 2] },
+  { kind: "clock", name: "Clock", note: "In dots", h: 2, span: [4, 4, 4], style: "dots" },
+  { kind: "disk", name: "Disk", note: "Your drive as a ring", h: 2, span: [2, 2, 2] },
+  { kind: "clock", name: "Clock", note: "In stripes", h: 2, span: [4, 6, 4], style: "stripes" },
   { kind: "music", name: "Now playing", note: "Any player on your PC", h: 1, span: [5, 6, 4], playing: true },
   { kind: "timer", name: "Focus timer", note: "A dot for every minute left", h: 1, span: [4, 3, 4] },
-  { kind: "weather", name: "Weather", note: "The sky where you choose", h: 1, span: [3, 3, 4] },
+  { kind: "batpill", name: "Battery", note: "Charge and time left", h: 1, span: [3, 3, 4] },
 ];
 ---
 
@@ -43,7 +42,7 @@ const tiles: Tile[] = [
     <SectionHead label="The home screen" titleId="widgets-title">
       <Fragment slot="title">Made to be <span class="dim">glanced at.</span></Fragment>
       <Fragment slot="lede">
-        Time, date, month, battery and the timer on this page are live and read only this device. A hollow dot marks a sample value.
+        Time, date, battery and the timer on this page are live and read only this device. A hollow dot marks a sample value.
       </Fragment>
     </SectionHead>
 

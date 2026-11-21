@@ -2,14 +2,10 @@
 export type WidgetKind =
   | "clock"
   | "date"
-  | "calendar"
   | "ring"
   | "batpill"
   | "ram"
   | "disk"
-  | "weather"
-  | "forecast"
   | "music"
   | "timer"
-  | "todo"
   | "photo";

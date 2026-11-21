@@ -145,3 +145,12 @@ Numbered D-021 because D-020 exists on this branch; renumber on merge if another
 - **Visit counter.** `/api/visits` is the site's only on-demand route (Vercel adapter, static pages otherwise). One Redis number (Upstash through the Vercel Marketplace), `KV_REST_API_*` or `UPSTASH_REDIS_REST_*`. A browser counts once per day (the day is kept in localStorage); nothing else is stored, no IP, no cookie. Without credentials the route answers 503 and the footer line stays hidden. Local preview is `tools/preview.mjs` because Astro's preview does not support the Vercel adapter. Reverse: delete `src/pages/api`, `src/lib/visits.ts`, `src/scripts/visits.ts`, the adapter lines in `astro.config.mjs`.
 - **No per-part toggles on the site.** dotDock is presented as one environment; the "modular, switch off what you do not want" section was removed on the owner's instruction.
 - **Videos.** `VideoSlot.astro` renders only when `public/video/<name>.mp4` and `<name>-poster.webp` exist, so nothing empty or faked ships. See docs/design/LAUNCH_VIDEO.md for the cuts.
+
+## D-036 Website shows only the widgets V1 offers (2026-11-21, website track)
+- The app's widget catalogue (`apps/desktop/src/overlay/catalog.ts`, identical on every branch) does not offer the
+  weather, calendar, notes, to-do or quote widgets in V1 (below the 4.5 bar). The site showed calendar, to-do,
+  weather and a five-day forecast as home-screen widgets, so they are gone from the widget bento, the wall, the
+  showcase desktops and the Features widgets row, together with their markup, styles and the calendar script
+  (no dead code). In their place: the clock in dots and stripes, memory, disk and the battery pill, all offered.
+- Open-Meteo is still used by V1, through the dock's weather tiles; the privacy and licence pages now say so
+  (same text on the download-page branch).

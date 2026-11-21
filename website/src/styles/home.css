@@ -118,9 +118,6 @@
   height: auto;
   filter: none;
 }
-.bento .w-todo__list {
-  gap: calc(var(--k) * 13);
-}
 .bento .w--circle {
   justify-self: center;
   width: auto;

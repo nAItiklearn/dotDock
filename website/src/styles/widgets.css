@@ -244,55 +244,8 @@ html[data-theme="paper"] .w-clock__digits {
   width: auto;
 }
 
-/* ---------- Calendar ---------- */
-.w-cal {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--k) * 6);
-  padding: calc(var(--k) * 18) calc(var(--k) * 24) calc(var(--k) * 14);
-}
-.w-cal__head {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  font-family: var(--font-dot);
-  font-variation-settings: "ROND" 100;
-  font-weight: 800;
-  font-size: max(15px, calc(var(--k) * 24));
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.w-cal__today {
-  color: var(--accent-text);
-}
-.w-cal__grid {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: 1fr;
-  align-items: center;
-  justify-items: center;
-  font-family: var(--font-mono);
-  font-size: max(9px, calc(var(--k) * 13));
-}
-.w-cal__day {
-  display: grid;
-  place-items: center;
-  width: max(14px, calc(var(--k) * 21));
-  height: max(14px, calc(var(--k) * 21));
-  border-radius: 50%;
-}
-.w-cal__day--today {
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-weight: 600;
-}
 
-/* ---------- RAM, weather, battery pill ---------- */
+/* ---------- RAM, battery pill ---------- */
 .w-ram {
   position: absolute;
   inset: 0;
@@ -317,44 +270,6 @@ html[data-theme="paper"] .w-clock__digits {
   width: calc(var(--k) * 150);
   height: auto;
 }
-.w-weather {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  gap: calc(var(--k) * 18);
-  padding: 0 calc(var(--k) * 30);
-}
-.w-weather__temp {
-  height: calc(var(--k) * 46);
-  width: auto;
-  flex: none;
-  color: var(--text);
-}
-.w-weather__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.w-weather__cond {
-  font-size: max(12px, calc(var(--k) * 16));
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.w-weather__range {
-  color: var(--text-dim);
-  font-weight: 400;
-  margin-left: 0.35em;
-}
-.w-weather__text .caps {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-}
 .w-bat {
   position: absolute;
   inset: 0;
@@ -377,7 +292,7 @@ html[data-theme="paper"] .w-clock__digits {
   text-overflow: ellipsis;
 }
 
-/* A hollow dot marks a sample value; time, date, calendar and battery are live and carry none. */
+/* A hollow dot marks a sample value; time, date and battery are live and carry none. */
 .sample-mark {
   position: absolute;
   z-index: 1;
@@ -394,7 +309,7 @@ html[data-theme="paper"] .w-clock__digits {
   right: 15%;
 }
 
-/* ---------- Music, timer, to-do, forecast ---------- */
+/* ---------- Music, timer ---------- */
 .w-music {
   position: absolute;
   inset: 0;
@@ -534,101 +449,8 @@ html[data-theme="paper"] .w-clock__digits {
   transform: none;
 }
 
-.w-todo {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--k) * 10);
-  padding: calc(var(--k) * 22) calc(var(--k) * 24);
-}
-.w-todo__list {
-  display: grid;
-  gap: calc(var(--k) * 8);
-}
-.w-todo__item {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--k) * 10);
-  cursor: pointer;
-  font-size: max(12px, calc(var(--k) * 15));
-}
-.w-todo__item input {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
-}
-.w-todo__box {
-  position: relative;
-  flex: none;
-  width: calc(var(--k) * 18);
-  height: calc(var(--k) * 18);
-  min-width: 14px;
-  min-height: 14px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--text-dim);
-  transition: background-color var(--dur-fast) var(--ease-out);
-}
-.w-todo__item input:checked + .w-todo__box {
-  background: var(--accent);
-  box-shadow: none;
-}
-.w-todo__item input:checked + .w-todo__box::after {
-  content: "";
-  position: absolute;
-  left: 34%;
-  top: 22%;
-  width: 24%;
-  height: 46%;
-  border: solid var(--accent-ink);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-.w-todo__item input:checked ~ .w-todo__text {
-  color: var(--text-dim);
-  text-decoration: line-through;
-}
-.w-todo__item input:focus-visible + .w-todo__box {
-  outline: 2px solid var(--accent-text);
-  outline-offset: 2px;
-}
 
-.w-fc {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: calc(var(--k) * 22) calc(var(--k) * 28) calc(var(--k) * 24);
-}
-.w-fc__days {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  text-align: center;
-}
-.w-fc__day {
-  display: grid;
-  gap: calc(var(--k) * 6);
-  justify-items: center;
-}
-.w-fc__hi {
-  font-family: var(--font-mono);
-  font-size: max(13px, calc(var(--k) * 22));
-  font-weight: 500;
-}
 /* The day's range among the week's, as a short column of dots. */
-.w-fc__range {
-  display: block;
-  width: calc(var(--k) * 8);
-  height: calc(var(--k) * 52);
-  min-width: 6px;
-}
-.w-fc__lo {
-  font-family: var(--font-mono);
-  font-size: max(11px, calc(var(--k) * 15));
-  color: var(--text-dim);
-}
 
 /* Music, playing: our own cover, the track, a progress line that moves and a quiet level meter. */
 .w-music__cover {

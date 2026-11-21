@@ -1,6 +1,6 @@
 ---
 /**
- * One widget, drawn in code. The live kinds (clock, date, calendar, ring, batpill, timer) are
+ * One widget, drawn in code. The live kinds (clock, date, ring, batpill, timer) are
  * filled in by src/scripts/live.ts from this device; the others show sample values and say so.
  * Sizes are in grid cells, like the product's grid. Visuals follow apps/desktop/src/widgets.
  */
@@ -34,16 +34,12 @@ const picture = owner ? { image: owner, alt: "A portrait" } : { image: ridge, al
 const SIZE: Record<WidgetKind, [number, number]> = {
   clock: [6, 2],
   date: [2, 2],
-  calendar: [3, 2],
   ring: [2, 2],
   batpill: [3, 1],
   ram: [2, 2],
   disk: [2, 2],
-  weather: [3, 1],
-  forecast: [4, 2],
   music: [4, 1],
   timer: [3, 1],
-  todo: [3, 2],
   photo: [2, 2],
 };
 const [w, h] = SIZE[kind];
@@ -56,18 +52,6 @@ const SAMPLE = {
   diskPercent: 61,
   diskUsedGb: 312,
   diskTotalGb: 512,
-  weatherTemp: 17,
-  weatherHigh: 19,
-  weatherLow: 11,
-  weatherText: "Overcast",
-  days: [
-    { day: "Mon", high: 19, low: 11 },
-    { day: "Tue", high: 17, low: 10 },
-    { day: "Wed", high: 16, low: 9 },
-    { day: "Thu", high: 18, low: 10 },
-    { day: "Fri", high: 21, low: 12 },
-  ],
-  todos: ["Pick a wallpaper", "Pin apps to the dock", "Try the Obsidian theme", "Connect Claude Code"],
   track: { title: "Wind Meadow", artist: "Sample track", seconds: 214, at: 0.38 },
 };
 
@@ -87,18 +71,6 @@ function dotGrid(cols: number, rows: number, fraction: number): { on: string; of
 }
 const ram = dotGrid(6, 4, SAMPLE.ramPercent / 100);
 const art = dotGrid(3, 3, 0.55);
-
-/* The forecast's range column: one dot per step of the week's span, lit from the day's low to its high. */
-const FC_DOTS = 7;
-const weekLow = Math.min(...SAMPLE.days.map((d) => d.low));
-const weekHigh = Math.max(...SAMPLE.days.map((d) => d.high));
-function rangeDots(low: number, high: number): { cy: number; on: boolean }[] {
-  const step = (weekHigh - weekLow) / (FC_DOTS - 1);
-  return Array.from({ length: FC_DOTS }, (_, i) => {
-    const t = weekHigh - i * step;
-    return { cy: i + 0.5, on: t <= high + step / 2 && t >= low - step / 2 };
-  });
-}
 
 const RING_R = 44;
 const RING_LEN = 2 * Math.PI * RING_R;
@@ -135,20 +107,6 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
           <span class="w-pct__sign" aria-hidden="true">%</span>
         </span>
         <span class="caps" data-battery-caption>Battery</span>
-      </div>
-    </section>
-  )
-}
-
-{
-  kind === "calendar" && (
-    <section class="w w--card" style={style} aria-label="Calendar" data-calendar>
-      <div class="w-cal">
-        <div class="w-cal__head">
-          <span class="w-cal__today tabular" data-cal-today />
-          <span class="w-cal__month" data-cal-month />
-        </div>
-        <ol class="w-cal__grid" data-cal-grid />
       </div>
     </section>
   )
@@ -200,49 +158,6 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
           <span class="w-pct__sign" aria-hidden="true">%</span>
         </span>
         <span class="w-disk__size tabular">C: {SAMPLE.diskUsedGb}/{SAMPLE.diskTotalGb} GB</span>
-      </div>
-    </section>
-  )
-}
-
-{
-  kind === "weather" && (
-    <section class="w w--pill w--sample" style={style} aria-label={`Weather, sample value ${SAMPLE.weatherTemp} degrees`}>
-      <div class="w-weather">
-        <DotMatrix class="dm w-weather__temp" text={`${SAMPLE.weatherTemp}°`} matrixStyle="dots" height={28} label={`${SAMPLE.weatherTemp} degrees`} />
-        <div class="w-weather__text">
-          <span class="w-weather__cond">
-            {SAMPLE.weatherText} <span class="w-weather__range tabular">{SAMPLE.weatherHigh}&deg; / {SAMPLE.weatherLow}&deg;</span>
-          </span>
-          <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-{
-  kind === "forecast" && (
-    <section class="w w--card w--sample" style={style} aria-label="Five-day forecast, sample values">
-      <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
-      <div class="w-fc">
-        <span class="caps w-fc__title">5 days</span>
-        <ul class="w-fc__days">
-          {
-            SAMPLE.days.map((d) => (
-              <li class="w-fc__day">
-                <span class="caps">{d.day}</span>
-                <span class="w-fc__hi tabular">{d.high}&deg;</span>
-                <svg class="w-fc__range" viewBox={`0 0 1 ${FC_DOTS}`} aria-hidden="true">
-                  {rangeDots(d.low, d.high).map((dot) => (
-                    <circle cx="0.5" cy={dot.cy} r="0.3" fill={dot.on ? "var(--accent)" : "var(--dot-off)"} />
-                  ))}
-                </svg>
-                <span class="w-fc__lo tabular">{d.low}&deg;</span>
-              </li>
-            ))
-          }
-        </ul>
       </div>
     </section>
   )
@@ -321,29 +236,6 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
   )
 }
 
-{
-  kind === "todo" && (
-    <section class="w w--card w--sample" style={style} aria-label="To-do list, sample items">
-      <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
-      <div class="w-todo">
-        <span class="caps w-todo__title">To-do</span>
-        <ul class="w-todo__list">
-          {
-            SAMPLE.todos.map((t, i) => (
-              <li>
-                <label class="w-todo__item">
-                  <input type="checkbox" checked={i === 0} />
-                  <span class="w-todo__box" aria-hidden="true" />
-                  <span class="w-todo__text">{t}</span>
-                </label>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-    </section>
-  )
-}
 {
   kind === "photo" && (
     <section class="w w--photo" style={style} aria-label="Photo widget">
