@@ -112,6 +112,11 @@ export function syncHitRegions(root: HTMLElement): () => void {
   });
   watchAll();
   mutations.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-hit"] });
+  // Panels, menus and toasts slide or scale in, and a box measured on their first frame is not where they
+  // come to rest. Neither a resize nor a DOM change marks the end of that motion, so measure again then:
+  // otherwise the edge the panel moved away from passes clicks through to the desktop.
+  root.addEventListener("animationend", push);
+  root.addEventListener("transitionend", push);
   window.addEventListener("resize", push);
   activeInvalidate = push;
   push();
@@ -120,6 +125,8 @@ export function syncHitRegions(root: HTMLElement): () => void {
     cancelAnimationFrame(frame);
     resize.disconnect();
     mutations.disconnect();
+    root.removeEventListener("animationend", push);
+    root.removeEventListener("transitionend", push);
     window.removeEventListener("resize", push);
   };
 }
