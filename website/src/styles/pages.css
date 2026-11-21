@@ -243,6 +243,11 @@
   font-size: 0.92em;
   color: var(--text);
 }
+/* Notices carry long file paths and URLs with no spaces; on a phone they break rather than push the page wide. */
+.prose li,
+.prose p {
+  overflow-wrap: anywhere;
+}
 .prose hr {
   width: 100%;
   border: 0;

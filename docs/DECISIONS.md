@@ -155,3 +155,19 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
 - **Motion is transform and opacity only**, paused off screen by an IntersectionObserver (no timers), and none at all under reduced motion.
 - **A render that lacks a colour hides that layer** (lib/art.ts): without a mask a layer paints its whole box, which showed as a solid pink or cream block on a phone. Roles are now listed from every render.
 - **QA browsers stay off the owner's screen** (owner, 12:15): tools/cdp.mjs opens Chrome off screen with occlusion tracking off, so frame times stay real.
+
+## D-034 Website: phone nav, notices wrap, the download page's links (2026-11-21, website track)
+- **Below 480 px the nav shows the mark without the wordmark text.** With the text, the menu button sat 13 to 53 px
+  past the right edge of the pill at 390 and 414 px and was clipped, so a phone had no way to the other pages. The
+  link keeps its accessible name. The layout check (tools/layout-check.js) now reports any control off the page.
+- **Licence notices wrap long paths and URLs** (`overflow-wrap: anywhere` in `.prose`), which pushed /license to
+  416 px wide on a 390 px phone.
+- **The download page links only to things that exist today:** the repository (watch for releases), its Releases
+  page and the source. The download button, size and SHA-256 appear only when `tools/release-data.mjs` finds a
+  published release with an installer asset, and then point at that asset's own GitHub Releases URL; nothing is typed by hand.
+- **The visit counter's 503 when it has no database stays** (lead's decision in HANDOFF): Lighthouse counts it as a
+  console error only on a local preview without credentials; with them (fake Upstash, tools/try-visits.sh) the
+  download page scores 100/100/100.
+- **This branch's Features page is the older one.** The main-site branch rebuilt Features without the pixel scenes;
+  its text-over-art finding on the dock scene at 390/414 belongs to the page that is being replaced, so it is left
+  for the merge, where the main-site version wins.

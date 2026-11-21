@@ -64,6 +64,15 @@ async () => {
         }
       }
 
+      // Every control a visitor can use must be on the page, nav included: a menu button pushed past the edge of the
+      // floating nav is clipped away, not scrolled to.
+      for (const el of d.querySelectorAll("a[href],button,summary,input,select,textarea")) {
+        if (el.closest("noscript,[hidden],.sr-only,.skip-link,details:not([open]) > :not(summary)")) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1 || d.defaultView.getComputedStyle(el).visibility === "hidden") continue;
+        if (r.right > w + 1 || r.left < -1) add("control off the page", (el.getAttribute("aria-label") || el.textContent || el.tagName).trim().slice(0, 40));
+      }
+
       for (const stage of d.querySelectorAll(".stage")) {
         const sr = stage.getBoundingClientRect();
         if (sr.width < 1) continue;
