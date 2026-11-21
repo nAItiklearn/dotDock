@@ -905,6 +905,7 @@ dependencies = [
  "dotdock-dock",
  "dotdock-island",
  "dotdock-shell",
+ "dotdock-tiles",
  "serde",
  "serde_json",
  "sysinfo",
@@ -968,6 +969,22 @@ dependencies = [
  "thiserror 2.0.21",
  "ureq",
  "windows",
+]
+
+[[package]]
+name = "dotdock-tiles"
+version = "0.1.0"
+dependencies = [
+ "base64 0.23.1",
+ "dotdock-shell",
+ "notify",
+ "png",
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "tempfile",
+ "windows",
+ "windows-core",
 ]
 
 [[package]]

@@ -115,61 +115,91 @@ pub fn make_id(aumid: Option<&str>, target: Option<&str>, arguments: Option<&str
     format!("lnk:{}", normalise_path(shortcut.unwrap_or_default()))
 }
 
+/// An entry the catalogue left out, and why. Listed in the dock's QA (docs/QA/dock-live/catalogue.md).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct Removed {
+    pub name: String,
+    pub reason: String,
+}
+
+impl Removed {
+    pub fn new(name: &str, reason: impl Into<String>) -> Removed {
+        Removed { name: name.to_owned(), reason: reason.into() }
+    }
+}
+
 /// Words that mark a shortcut as something other than an app: uninstallers, readmes, help, web links.
-const NOISE_WORDS: [&str; 12] = [
-    "uninstall",
-    "uninstaller",
-    "readme",
-    "documentation",
-    "manual",
-    "license",
-    "licence",
-    "eula",
-    "changelog",
-    "website",
-    "homepage",
-    "help",
+const NOISE_WORDS: [(&str, &str); 14] = [
+    ("uninstall", "uninstaller"),
+    ("uninstaller", "uninstaller"),
+    ("readme", "readme"),
+    ("documentation", "documentation"),
+    ("manual", "documentation"),
+    ("license", "licence text"),
+    ("licence", "licence text"),
+    ("eula", "licence text"),
+    ("changelog", "release notes"),
+    ("website", "web link"),
+    ("homepage", "web link"),
+    ("help", "help link"),
+    ("tutor", "tutorial"),
+    ("troubleshooter", "troubleshooter"),
 ];
 /// Phrases (in normalised-name form) with the same meaning.
-const NOISE_PHRASES: [&str; 6] =
-    ["release notes", "read me", "what s new", "getting started", "user guide", "quick start"];
-/// First words that make a shortcut a link or an uninstaller ("Visit our website", "Remove Foo").
-const NOISE_LEADING: [&str; 2] = [" visit ", " remove "];
+const NOISE_PHRASES: [(&str, &str); 9] = [
+    ("release notes", "release notes"),
+    ("read me", "readme"),
+    ("what s new", "release notes"),
+    ("getting started", "help link"),
+    ("user guide", "documentation"),
+    ("quick start", "help link"),
+    ("module docs", "documentation"),
+    ("tap virtual ethernet adapter", "driver set-up step"),
+    ("additional tools", "set-up step"),
+];
+/// First words that make a shortcut a link, an uninstaller or a set-up step ("Visit our website", "Remove Foo").
+const NOISE_LEADING: [(&str, &str); 3] =
+    [(" visit ", "web link"), (" remove ", "uninstaller"), (" install ", "set-up step")];
 /// Targets with these extensions are documents or links, not programs.
 const DOCUMENT_EXTENSIONS: [&str; 12] =
     ["txt", "pdf", "html", "htm", "chm", "rtf", "md", "url", "doc", "docx", "xml", "log"];
 /// Executable base names an uninstaller ships under.
 const UNINSTALLER_EXE_PREFIXES: [&str; 3] = ["unins", "uninst", "uninstall"];
 
-/// True for shortcuts that are not apps and must not reach the dock.
-pub fn is_noise(name: &str, target: Option<&str>, arguments: Option<&str>) -> bool {
+/// Why a shortcut is not an app and must not reach the dock, or `None` for an app.
+pub fn noise_reason(name: &str, target: Option<&str>, arguments: Option<&str>) -> Option<&'static str> {
     let normalised = normalise_name(name);
     let padded = format!(" {normalised} ");
-    if NOISE_WORDS.iter().any(|w| padded.contains(&format!(" {w} "))) {
-        return true;
+    if let Some((_, why)) = NOISE_WORDS.iter().find(|(w, _)| padded.contains(&format!(" {w} "))) {
+        return Some(why);
     }
-    if NOISE_PHRASES.iter().any(|p| normalised.contains(p)) || NOISE_LEADING.iter().any(|w| padded.starts_with(w)) {
-        return true;
+    if let Some((_, why)) = NOISE_PHRASES.iter().find(|(p, _)| normalised.contains(p)) {
+        return Some(why);
     }
-    if let Some(t) = target {
-        let exe = file_name_lower(t).unwrap_or_default();
-        let stem = exe.rsplit_once('.').map_or(exe.as_str(), |(s, _)| s);
-        if UNINSTALLER_EXE_PREFIXES.iter().any(|p| stem.starts_with(p)) {
-            return true;
-        }
-        if exe == "msiexec.exe" && arguments.is_some_and(|a| a.to_lowercase().contains("/x")) {
-            return true;
-        }
-        if let Some((_, ext)) = exe.rsplit_once('.') {
-            if DOCUMENT_EXTENSIONS.contains(&ext) {
-                return true;
-            }
-        }
-        if t.starts_with("http://") || t.starts_with("https://") {
-            return true;
-        }
+    if let Some((_, why)) = NOISE_LEADING.iter().find(|(w, _)| padded.starts_with(w)) {
+        return Some(why);
     }
-    false
+    let t = target?;
+    let exe = file_name_lower(t).unwrap_or_default();
+    let stem = exe.rsplit_once('.').map_or(exe.as_str(), |(s, _)| s);
+    if UNINSTALLER_EXE_PREFIXES.iter().any(|p| stem.starts_with(p)) {
+        return Some("uninstaller");
+    }
+    if exe == "msiexec.exe" && arguments.is_some_and(|a| a.to_lowercase().contains("/x")) {
+        return Some("uninstaller");
+    }
+    if exe.rsplit_once('.').is_some_and(|(_, ext)| DOCUMENT_EXTENSIONS.contains(&ext)) {
+        return Some("document, not a program");
+    }
+    if t.starts_with("http://") || t.starts_with("https://") {
+        return Some("web link");
+    }
+    None
+}
+
+/// True for shortcuts that are not apps and must not reach the dock.
+pub fn is_noise(name: &str, target: Option<&str>, arguments: Option<&str>) -> bool {
+    noise_reason(name, target, arguments).is_some()
 }
 
 fn merge_keys(entry: &AppEntry) -> Vec<String> {
@@ -225,10 +255,17 @@ fn absorb(base: &mut AppEntry, extra: AppEntry) {
 /// name seen, drops noise, assigns ids and sorts by name. Candidates should be given Start menu first, so the
 /// shortcut's name and launch path win over the AppsFolder duplicate.
 pub fn merge(candidates: Vec<AppEntry>) -> Vec<AppEntry> {
+    merge_with_report(candidates).0
+}
+
+/// `merge`, and every candidate it left out with the reason.
+pub fn merge_with_report(candidates: Vec<AppEntry>) -> (Vec<AppEntry>, Vec<Removed>) {
+    let mut removed = Vec::new();
     let mut merged: Vec<AppEntry> = Vec::new();
     let mut by_key: HashMap<String, usize> = HashMap::new();
     for candidate in candidates {
-        if is_noise(&candidate.name, candidate.target.as_deref(), candidate.arguments.as_deref()) {
+        if let Some(why) = noise_reason(&candidate.name, candidate.target.as_deref(), candidate.arguments.as_deref()) {
+            removed.push(Removed::new(&candidate.name, why));
             continue;
         }
         let keys = merge_keys(&candidate);
@@ -248,7 +285,8 @@ pub fn merge(candidates: Vec<AppEntry>) -> Vec<AppEntry> {
             by_key.insert(key, index);
         }
     }
-    for entry in &mut merged {
+    let mut kept = drop_twins(merged, &mut removed);
+    for entry in &mut kept {
         entry.id = make_id(
             entry.aumid.as_deref(),
             entry.target.as_deref(),
@@ -256,9 +294,47 @@ pub fn merge(candidates: Vec<AppEntry>) -> Vec<AppEntry> {
             entry.shortcut.as_deref().map(|p| p.to_string_lossy()).as_deref(),
         );
     }
-    merged.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()).then_with(|| a.id.cmp(&b.id)));
-    merged.dedup_by(|b, a| a.id == b.id);
-    merged
+    kept.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()).then_with(|| a.id.cmp(&b.id)));
+    kept.dedup_by(|b, a| a.id == b.id);
+    (kept, removed)
+}
+
+/// Program file name an entry starts, lower case.
+fn program(entry: &AppEntry) -> Option<String> {
+    entry.target.as_deref().and_then(file_name_lower).filter(|exe| exe.ends_with(".exe"))
+}
+
+/// Two entries with one name are one app for the user (a per-user and a per-machine install, an old and a new
+/// package): the first is kept and takes what it lacks from the other. An entry named after another plus more
+/// words that starts the same program ("Vim Diff", "Firefox Private Browsing", "Windows PowerShell (x86)") is a
+/// mode of that app, reachable from the app itself, and is left out.
+fn drop_twins(entries: Vec<AppEntry>, removed: &mut Vec<Removed>) -> Vec<AppEntry> {
+    let mut kept: Vec<AppEntry> = Vec::new();
+    let mut by_name: HashMap<String, usize> = HashMap::new();
+    for entry in entries {
+        let name = normalise_name(&entry.name);
+        if let Some(&i) = by_name.get(&name) {
+            removed.push(Removed::new(&entry.name, "duplicate of an app with the same name"));
+            absorb(&mut kept[i], entry);
+            continue;
+        }
+        by_name.insert(name, kept.len());
+        kept.push(entry);
+    }
+    let programs: Vec<(String, Option<String>)> = kept.iter().map(|e| (normalise_name(&e.name), program(e))).collect();
+    let mut out = Vec::with_capacity(kept.len());
+    for entry in kept {
+        let name = normalise_name(&entry.name);
+        let exe = program(&entry);
+        let base = programs
+            .iter()
+            .find(|(other, other_exe)| exe.is_some() && other_exe == &exe && name.starts_with(&format!("{other} ")));
+        match base {
+            Some((other, _)) => removed.push(Removed::new(&entry.name, format!("a mode of {other}, opened from it"))),
+            None => out.push(entry),
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -296,6 +372,51 @@ mod tests {
         for (name, target, noise) in cases {
             assert_eq!(is_noise(name, target, None), noise, "{name} {target:?}");
         }
+    }
+
+    #[test]
+    fn set_up_steps_tutorials_and_module_docs_are_noise_with_a_reason() {
+        assert_eq!(
+            noise_reason("Add a new TAP virtual ethernet adapter", Some("C:\\T\\addtap.bat"), None),
+            Some("driver set-up step")
+        );
+        assert_eq!(noise_reason("Install Additional Tools for Node.js", None, None), Some("set-up step"));
+        assert_eq!(noise_reason("Python 3.13 Module Docs (64-bit)", None, None), Some("documentation"));
+        assert_eq!(noise_reason("Vim tutor", None, None), Some("tutorial"));
+        assert_eq!(noise_reason("Power Automate Troubleshooter", None, None), Some("troubleshooter"));
+        assert_eq!(noise_reason("Google Docs", None, None), None);
+        assert_eq!(noise_reason("Visual Studio Installer", None, None), None);
+    }
+
+    #[test]
+    fn two_entries_with_one_name_are_one_app() {
+        let mut a = entry("Cursor", Some("C:\\Users\\me\\Cursor\\Cursor.exe"));
+        a.shortcut = Some("C:\\Menu\\Cursor.lnk".into());
+        let mut b = entry("Cursor", None);
+        b.aumid = Some("Anysphere.Cursor".into());
+        b.publisher = Some("Anysphere".into());
+        let (kept, removed) = merge_with_report(vec![a, b]);
+        assert_eq!(kept.len(), 1);
+        assert_eq!(kept[0].publisher.as_deref(), Some("Anysphere"));
+        assert_eq!(removed, vec![Removed::new("Cursor", "duplicate of an app with the same name")]);
+    }
+
+    #[test]
+    fn modes_of_one_program_are_left_out_but_different_programs_stay() {
+        let mut vim = entry("Vim", Some("C:\\Vim\\vim.exe"));
+        vim.shortcut = Some("C:\\Menu\\Vim.lnk".into());
+        let mut diff = entry("Vim Diff", Some("C:\\Vim\\vim.exe"));
+        diff.arguments = Some("-d".into());
+        let ps = entry("Windows PowerShell", Some("C:\\Windows\\System32\\powershell.exe"));
+        let ps86 = entry("Windows PowerShell (x86)", Some("C:\\Windows\\SysWOW64\\powershell.exe"));
+        let git = entry("Git", Some("C:\\Git\\git.exe"));
+        let bash = entry("Git Bash", Some("C:\\Git\\git-bash.exe"));
+        let (kept, removed) = merge_with_report(vec![vim, diff, ps, ps86, git, bash]);
+        let names: Vec<_> = kept.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, ["Git", "Git Bash", "Vim", "Windows PowerShell"]);
+        let gone: Vec<_> = removed.iter().map(|r| r.name.as_str()).collect();
+        assert_eq!(gone, ["Vim Diff", "Windows PowerShell (x86)"]);
+        assert!(removed[0].reason.contains("mode of vim"));
     }
 
     #[test]

@@ -246,3 +246,89 @@ A wallpaper or custom theme drives colour and shadow strength only. Material, tr
 ## D-033 The notch live harness never shares the desktop with another dotDock (notch track)
 - **Context:** the app is single-instance per user. A notch test copy left running by an interrupted session blocked the dock track's real dock, and a capture tool of another track once attached to the notch app's DevTools port.
 - **Decision:** a separate app identifier was not used: it would move the app's data folder, and the island's feed folder (`%LOCALAPPDATA%\dev.dotdock.desktop\agents`) and the hook paths the replays write to would no longer be the real ones. Instead `tools/capture/island-live.sh` refuses to start while another track holds `screen.lock` (under 20 minutes old) or while any `dotdock.exe` that is not this worktree's build runs, takes the lock itself, runs the app on a private DevTools port (47913), and `live_end` stops exactly the processes it started and releases the lock.
+## D-024 Native tile providers: one core API for the dock UI, with the UI's own wire (tiles track)
+- **Decision:** `dotdock-tiles` serves the dock UI through `DockTiles` (`dock.rs`), which speaks the wire the dock UI branch defined in `tiles/ui-types.ts` and `tiles/backend.ts`: seven feeds (`contacts`, `meeting`, `stopwatch`, `mic`, `hydration`, `agenda`, `audio`), each `{ data, issue }`, delivered on `dock://tiles` as a partial update; the live mic level on `dock://mic-level`; and six commands (contact, join meeting, stopwatch, toggle mic, hydration, audio). `wire.rs` holds those shapes and the pure mapping from provider states; it is tested against the JSON the UI expects. The first-wave tiles of the UI use this. The second-wave tiles (clipboard, screenshots, downloads, shelf, toggles, system history, voice memo, colour picker) have no UI yet and keep the generic `TileHub` protocol (`protocol.rs`, mirrored and parity-tested against `tilesProtocol.ts`).
+- **The core owns the stopwatch and the water log**, as the UI contract says ("nothing is computed by the UI that the core knows better"): `stopwatch.rs` and `hydration.rs` keep their state in the tiles data folder (`stopwatch.json`, `hydration.json`, written through a temp file and a rename, and only changed in memory after the write succeeded). The stopwatch counts from a Unix start time, so it keeps counting across a restart. The water log starts a new local day at midnight; the reminder window (8:00 to 22:00), interval (60 min), goal (2000 ml) and glass (250 ml) are constants, because the UI has no command to change them and an unused setting would be dead code. The reminder time is only reported; showing the notice is the UI's job.
+- **Issues the core produces:** `no-device` (no playback or capture device), `needs-setup` (the Windows calendar has no events and no account), `error` (a provider would not start or a read failed). `unsupported` is the UI's word for a core that predates a feed, and `offline` belongs to network feeds, which the core has none of.
+- **Not committed from the earlier session:** `apps/desktop/src/dock/tiles/models/*` (TypeScript stopwatch, hydration, progress, reminders, focus and world-clock models). The UI branch computes progress, focus and reminders itself, and the core owns the stopwatch and the water log, so those files had no consumer.
+- **Process-wide MTA:** the MTA is kept alive for the whole run (`CoIncrementMTAUsage` in `com.rs`). Without it, Windows tore the apartment down when the last worker ended, the `windows` crate's cached WinRT factories died with it, and the next calendar start crashed in `RequestStoreAsync` (reproduced with a test, `calendar::store`).
+- **Tests that play a sound** (microphone meter, voice memo recording) are `#[ignore]`d and run with `cargo test -p dotdock-tiles -- --ignored`: they play a system sound through the speakers and listen to its loopback, which is audible and takes the one process-wide `PlaySound` slot. They refuse to run while the output is muted (loopback is silent then), start the sound before the loopback stream opens, and the recording test tries up to three times, because on this laptop's driver a loopback stream stays silent about one try in six.
+- **Reverse:** drop `dock.rs`, `wire.rs`, `stopwatch.rs`, `hydration.rs` and `zone.rs`; `TileHub` still works on its own.
+
+## D-026 CoolDock-gap tiles: where each one's data comes from (dock UI, 2026-11-21)
+- **Sun arc** computes sunrise and sunset locally (sunrise equation, within a few minutes) for a bundled city. It
+  follows the city in the device's own time zone unless the user picks one; no location permission, no network.
+- **Wind** reads optional `windKmh`, `windFromDeg`, `gustKmh` on the weather provider. Until the core fetches them the
+  tile says "Not available" rather than guessing (blocker B-002).
+- **Currency** reads a new `rates` tile feed (European Central Bank reference rates, cached by the core so it works
+  offline). Not a field of the unit converter: rates change and have a source date, units do not.
+- **Web search** opens addresses through a new `dock_open_url` command that accepts http(s) only; a typed site opens
+  directly. Engines: DuckDuckGo (default, no account, no tracking), Google, Bing, Ecosia, Brave.
+- **History** is the dock's own record of apps it opened (launches that succeeded), newest first, on this device only.
+  CoolDock's history is browser history; reading another app's history is out of scope for a local-first dock.
+- **Voice memo** records with the WebView's microphone access and keeps audio in this device's IndexedDB, at most 12
+  memos and 10 minutes each, with a 40-bar peak waveform per memo. Nothing is uploaded.
+- **Flip clock** is a face only: a new minute mounts a new card whose top folds once (none with reduced motion).
+
+## D-027 The dock's first layout is made once from the user's own apps (2026-11-21)
+A dock with nothing pinned shows only the running apps, which the owner read as broken ("only 2 of my apps").
+After the first catalogue with apps, an empty dock (no pins, no tiles) gets a starter layout: File Explorer, one
+browser (Chrome, Edge, Firefox or Brave, first installed), Terminal, VS Code or Cursor, Spotify or Media Player,
+Settings, then up to four stacks for categories with three or more apps, and the clock, media and system tiles
+(they need no account). A `laidOut` flag in `dock.json` makes it run once, so a user who later removes everything
+keeps the empty dock. Code: `dock/src/starter.rs`.
+
+## D-028 The catalogue leaves out duplicates and modes of another app, and says why (2026-11-21)
+Same-name entries are merged into one (the Start menu one wins and takes the package's publisher), and an entry
+named "<app> <more words>" that starts the same program as <app> is left out. Every dropped entry carries a reason;
+`catalogue_probe --removed` prints them and `docs/QA/dock-live/catalogue.md` lists them for this machine.
+Installers that are real apps (Visual Studio Installer, MySQL Installer) stay: they work and the user may need them.
+
+## D-029 The dock lives at the bottom only (owner, 2026-11-21 11:35)
+The dock replaces the taskbar, so it sits at the bottom, centred, on the primary monitor. The host has no other
+edge: the app bar is always `ABE_BOTTOM`, the window ends at the bottom of the work area or the granted strip, and
+the plan reserves a strip or not. `DockSettings.edge` stays on the wire for the UI, but the service puts every
+loaded or saved setting back at the bottom (`at_the_bottom`), so an old file or a stale control cannot move it.
+Setting the dock by hand also marks the first layout as done, so it never replaces the user's choice.
+
+## D-031 The dock is bottom-only (2026-11-21, owner decision)
+- The dock is the taskbar, so it sits bottom-centre and nowhere else. The position setting, its control in the
+  customise panel, the fixture's edge picker, every top/left/right and vertical code path (geometry, engine, regions,
+  previews, panels, CSS) and their tests are removed. `geometry.test.ts` "the dock is bottom-centred" and
+  `store.test.ts` "the dock's position" guard it.
+- The core's `DockSettings.edge` stays on the wire for now (the Rust struct requires it); the UI types it as
+  `"bottom"` and normalises anything else on the way in, so a `dock.json` from an older build still draws at the bottom.
+
+## D-032 The first-run dock is laid out by the core, not the UI (2026-11-21)
+- The dock host already lays out an empty dock once from the machine's apps (D-027, `dock/src/starter.rs`), with a
+  `laidOut` flag in `dock.json`. A second seeder in the UI, remembered in WebView local storage, would race it and
+  forget itself whenever the WebView profile is reset, so the UI has none: one owner, one flag, in the core.
+
+## D-033 Live dock runs use a debug build with the UI embedded (2026-11-21)
+- A plain debug build loads the UI from `devUrl` (`localhost:1420`), and other tracks keep their own Vite servers on
+  that port, so a live run could show another branch's UI. Live runs use
+  `cargo build -p dotdock --features tauri/custom-protocol` after `vite build`: the exe serves `dist/` itself, as a
+  release build does, and runs exactly this branch's dock.
+
+## D-034 No native glass plate; glass is the CSS frosted plate (2026-11-21)
+- Live runs showed a sheet over the whole monitor while the dock ran. Hiding windows one at a time showed it was the
+  native glass plate (`DotDockGlassPlate`): DWM drew its backdrop over the plate's whole monitor-sized window
+  although its window region was the pill (checked with `GetWindowRgnBox`), as flat grey (211,211,211) with the
+  system backdrop (the plate is never active, so DWM draws the inactive fallback colour) and as flat light
+  (242,243,244) with the accent-policy acrylic. Neither blurred the desktop.
+- The plate, its `dock_set_glass` command and the UI's `nativeGlass` are removed. The Glass look is the CSS
+  frosted plate the owner approved; it steps down to glass-lite when transparency is off or battery saver is on.
+  The start guard (`tools/dock-tests/guard.ps1`) fails on any change of the screen outside the bar, so a sheet
+  cannot come back unnoticed.
+
+## D-035 Full screen is judged from the foreground window, not the shell's "busy" (2026-11-21)
+- `SHQueryUserNotificationState` answered `QUNS_BUSY` all the time while dotDock ran, because dotDock's own dock
+  and desktop windows cover the monitor. The dock took that as "a full-screen app is in front" and hid itself on
+  the first change of foreground, so it vanished when the last window was minimised.
+- Now full screen is the shell's screen-saver, Direct3D and presentation states, or a foreground window of
+  another process (not the shell's desktop or taskbar) that covers its whole monitor and is not maximised
+  (`frozen::fills_monitor`, unit-tested).
+
+## D-036 The dock window is created before the desktop overlay (2026-11-21)
+- The first WebView2 window of the process pays for starting the browser (about 2.3 s cold on this machine). The
+  dock is created first so it, not the overlay, gets the head start.

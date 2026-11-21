@@ -3,10 +3,12 @@
 //!
 //! The manager itself (`dotdock_shell::modules`) knows nothing about windows. A part is a
 //! `Lifecycle`; `start_enabled` registers each part this build has, and a part registered there
-//! starts at once if the environment is on. The dock host plugs in beside the home screen and the
-//! notch, with one `register` line per part it owns (`ModuleId::Dock`, `ModuleId::Taskbar`); until
-//! it does, the Windows taskbar stays and Settings says there is no replacement to switch to.
+//! starts at once if the environment is on. The dock host owns two parts: the dock (`ModuleId::Dock`)
+//! and its taking the Windows taskbar's place (`ModuleId::Taskbar`). When the dock's backend could
+//! not start, neither is registered: the Windows taskbar stays and Settings says there is no
+//! replacement to switch to.
 
+use crate::dock_host::{DockPart, DockState, TaskbarPart};
 use crate::home_host::{Home, HomeState};
 use crate::island_host::{IslandSlot, Notch};
 use crate::tray;
@@ -37,6 +39,11 @@ pub fn start_enabled(app: &AppHandle) -> std::io::Result<()> {
     let app = app.clone();
     std::thread::Builder::new().name("modules-start".into()).spawn(move || {
         let modules = app.state::<Modules>();
+        // The dock first: it is what the user reaches for, so its window gets the first WebView2 start-up.
+        if app.try_state::<DockState>().is_some() {
+            modules.register(ModuleId::Dock, Box::new(DockPart::new(app.clone())));
+            modules.register(ModuleId::Taskbar, Box::new(TaskbarPart::new(app.clone())));
+        }
         modules.register(ModuleId::Home, Box::new(Home::new(app.clone())));
         // Without a Claude Code folder the notch has nothing to watch: it is not part of this run, rather
         // than a part that failed, so the theme switch carries no warning for most users.

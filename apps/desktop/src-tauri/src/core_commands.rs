@@ -101,8 +101,10 @@ pub struct RestoreReport {
 }
 
 #[tauri::command]
-pub async fn restore_windows() -> Result<RestoreReport, String> {
+pub async fn restore_windows(app: AppHandle) -> Result<RestoreReport, String> {
     let report = dotdock_shell::restore::restore_windows().map_err(|e| e.to_string())?;
+    // The taskbar is back: the dock must not take its place again at the next change.
+    crate::dock_host::taskbar_released(&app);
     Ok(RestoreReport {
         wallpaper_restored: report.wallpaper_restored.is_some() || !report.had_snapshot,
         desktop_icons_shown: report.desktop_icons_restored || !report.had_snapshot,
@@ -434,26 +436,36 @@ fn dock_store_path() -> Result<PathBuf, String> {
 
 /// The dock host keeps its data in this folder under the app data folder.
 const DOCK_FOLDER: &str = "dock";
-const DOCK_LABEL: &str = "dock";
 
+/// The running dock's settings when its backend is up (the store has one writer, the dock service); the stored
+/// file otherwise.
 #[tauri::command]
-pub async fn settings_dock_get() -> Result<dotdock_dock::protocol::DockSettings, String> {
-    Ok(dotdock_dock::store::StoreData::load(&dock_store_path()?).settings)
+pub async fn settings_dock_get(app: AppHandle) -> Result<dotdock_dock::protocol::DockSettings, String> {
+    match app.try_state::<crate::dock_host::DockState>() {
+        Some(dock) => Ok(dock.settings()),
+        None => Ok(dotdock_dock::store::StoreData::load(&dock_store_path()?).settings),
+    }
 }
 
-/// Writes the dock's settings to its store and tells a running dock window, which applies them at once.
+/// Hands the dock's settings to the running dock service, which stores them and tells the dock window; without a
+/// running dock they are written to its store for the next start.
 #[tauri::command]
 pub async fn settings_dock_set(
     app: AppHandle,
     settings: dotdock_dock::protocol::DockSettings,
 ) -> Result<dotdock_dock::protocol::DockSettings, String> {
     settings.validate()?;
+    if let Some(dock) = app.try_state::<crate::dock_host::DockState>() {
+        return match dock.set_settings(settings) {
+            dotdock_dock::protocol::CommandResult::Ok => Ok(dock.settings()),
+            dotdock_dock::protocol::CommandResult::Failed { reason } => Err(reason),
+        };
+    }
     let path = dock_store_path()?;
     let mut store = dotdock_dock::store::StoreData::load(&path);
     store.settings = settings;
     let bytes = serde_json::to_vec_pretty(&store).map_err(|e| e.to_string())?;
     dotdock_dock::store::write_atomic(&path, &bytes).map_err(|e| e.to_string())?;
-    let _ = app.emit_to(DOCK_LABEL, "dock://settings", &store.settings);
     Ok(store.settings)
 }
 

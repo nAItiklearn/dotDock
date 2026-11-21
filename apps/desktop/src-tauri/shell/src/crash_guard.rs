@@ -53,23 +53,34 @@ pub enum StartDecision {
 
 /// Call first thing at startup.
 pub fn on_start() -> StartDecision {
-    let mut state = load();
     let now = now_ms();
+    let (state, tripped) = count_start(load(), now);
+    if tripped {
+        boot_log::record("crash-guard: tripped, restoring Windows");
+        let outcome = restore::restore_windows();
+        boot_log::record(&format!("crash-guard: restore {outcome:?}"));
+    }
+    save(&state);
+    if tripped {
+        StartDecision::Tripped
+    } else {
+        StartDecision::Proceed
+    }
+}
+
+/// Counts a start at `now` (Unix ms): whether it makes a crash loop, and the state to keep. A loop is the third start
+/// within `UNSTABLE_WINDOW` with no stable run between; tripping clears the count and remembers when.
+fn count_start(mut state: State, now: u64) -> (State, bool) {
     let window_ms = u64::try_from(UNSTABLE_WINDOW.as_millis()).unwrap_or(u64::MAX);
     // Starts older than the window can no longer be part of a loop.
     state.unstable_starts.retain(|&t| now.saturating_sub(t) < window_ms);
     state.unstable_starts.push(now);
     if state.unstable_starts.len() >= MAX_UNSTABLE_STARTS {
-        boot_log::record("crash-guard: tripped, restoring Windows");
-        let outcome = restore::restore_windows();
-        boot_log::record(&format!("crash-guard: restore {outcome:?}"));
         state.unstable_starts.clear();
         state.tripped_at = Some(now);
-        save(&state);
-        return StartDecision::Tripped;
+        return (state, true);
     }
-    save(&state);
-    StartDecision::Proceed
+    (state, false)
 }
 
 /// Call once the app has run long enough to count as stable; clears this start from the count.
@@ -107,4 +118,43 @@ pub fn install_panic_hook() {
         boot_log::record(&format!("panic thread={thread} at={location} {message}"));
         dock_guard::restore_after_dock();
     }));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const MINUTE: u64 = 60_000;
+
+    fn starts(at: &[u64]) -> (State, bool) {
+        let mut state = State::default();
+        let mut tripped = false;
+        for &t in at {
+            (state, tripped) = count_start(state, t);
+        }
+        (state, tripped)
+    }
+
+    #[test]
+    fn the_third_quick_start_trips_the_guard() {
+        assert!(!starts(&[0]).1);
+        assert!(!starts(&[0, MINUTE]).1);
+        let (state, tripped) = starts(&[0, MINUTE, 2 * MINUTE]);
+        assert!(tripped);
+        assert_eq!(state.tripped_at, Some(2 * MINUTE));
+        assert!(state.unstable_starts.is_empty(), "tripping starts the count again");
+    }
+
+    #[test]
+    fn starts_spread_beyond_the_window_never_trip_it() {
+        assert!(!starts(&[0, 3 * MINUTE, 6 * MINUTE, 9 * MINUTE, 12 * MINUTE]).1);
+    }
+
+    #[test]
+    fn a_stable_run_in_between_resets_the_count() {
+        let (mut state, _) = starts(&[0, MINUTE]);
+        state.unstable_starts.clear(); // what `mark_stable` writes
+        let (_, tripped) = count_start(state, 2 * MINUTE);
+        assert!(!tripped);
+    }
 }

@@ -48,6 +48,12 @@
 
 ## v2: the dock (in progress)
 **Release rule (owner, 2026-11-20):** release the app and the website once everything averages 4.8 on the rubric and every phase of `docs/QA/V2_TEST_PLAN.md` has passed.
+- Spec `docs/DOCK_SPEC.md`, research `docs/design/DOCK_RESEARCH.md`, benchmark vs the macOS Dock and CoolDock `docs/design/DOCK_BENCHMARK.md`, contract `docs/dock/CONTRACT.md` + `apps/desktop/src/dock/protocol.ts`.
+- D0 safety: done so far: both restore paths show the taskbar and restore auto-hide (tested live). Running: sentinel watchdog and hard-kill test (safety track).
+- D1 + D2 running (backend track): app catalogue, automatic category classifier, icons, running windows, launch, thumbnail and app-bar spikes.
+- D3 running (UI track): dock bar, magnification, category stacks, App Library, edit mode, three themes.
+- D6 running (tiles track): native providers in `apps/desktop/src-tauri/tiles/` (crate `dotdock-tiles`, no UI framework). `DockTiles` serves the UI's seven first-wave feeds and six commands in the shapes of the UI's `ui-types.ts` (audio, microphone and its level, calendar as next meeting and agenda, contacts, plus a core-owned stopwatch and water log); `TileHub` serves the second wave (clipboard, screenshots, downloads, shelf, toggles, system history, voice memo, colour picker). Providers run only while a tile that needs them is on the dock. `cargo test -p dotdock-tiles`: 166 passed, 2 audible tests run on request (`-- --ignored`); clippy `-D warnings` clean. What each tile reads and what was measured: `docs/dock/TILES.md`. Decisions: D-024. Host wiring (Tauri commands and events) is the integration step.
+- Rule: the Windows taskbar is never hidden for real use until D4 passes and the owner reviews it (`replaceTaskbar` defaults to off).
 
 Merged on main:
 - D0 safety: taskbar marker, sentinel watchdog, recovery at start; 120/120 real restore tests; sentinel bundled in the MSVC installer.

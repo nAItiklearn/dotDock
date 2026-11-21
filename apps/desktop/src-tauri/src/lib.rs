@@ -2,11 +2,13 @@
 
 mod core_commands;
 mod desktop_host;
+mod dock_host;
 mod home_host;
 mod island_host;
 mod lifecycle;
 mod modules_host;
 mod providers;
+mod tiles_host;
 mod tray;
 
 use desktop_host::HitRegions;
@@ -157,6 +159,7 @@ fn build_and_run(primary: bool) {
         .register_uri_scheme_protocol(core_commands::WALLPAPER_SCHEME, |_ctx, request| {
             core_commands::serve_wallpaper(&request)
         })
+        .register_asynchronous_uri_scheme_protocol(dotdock_dock::icons::SCHEME, dock_host::serve_icon)
         .invoke_handler(tauri::generate_handler![
             home_host::providers_ready,
             home_host::overlay_ready,
@@ -176,6 +179,28 @@ fn build_and_run(primary: bool) {
             island_host::island_disconnect_agent,
             island_host::island_connection,
             island_host::island_set_settings,
+            dock_host::dock_ready,
+            dock_host::dock_launch,
+            dock_host::dock_activate,
+            dock_host::dock_close_window,
+            dock_host::dock_set_category,
+            dock_host::dock_save_categories,
+            dock_host::dock_set_settings,
+            dock_host::dock_set_regions,
+            dock_host::dock_preview,
+            dock_host::dock_set_focus,
+            tiles_host::dock_tiles_watch,
+            tiles_host::dock_tiles_unwatch,
+            tiles_host::dock_mic_watch,
+            tiles_host::dock_mic_unwatch,
+            tiles_host::dock_contact,
+            tiles_host::dock_join_meeting,
+            tiles_host::dock_stopwatch,
+            tiles_host::dock_toggle_mic,
+            tiles_host::dock_hydration,
+            tiles_host::dock_audio,
+            tiles_host::dock_toggles,
+            tiles_host::dock_open_url,
             media_command,
             weather_search,
             weather_set_place,
@@ -211,6 +236,11 @@ fn build_and_run(primary: bool) {
             // Decided before any window exists: the first window creates the traces of an earlier run.
             let first_start = dotdock_shell::app_data_dir().and_then(|dir| first_run::claim(&dir));
             modules_host::install(&handle);
+            // The dock's backend and host come up without a window; the dock and taskbar parts decide
+            // whether it shows and whether it takes the taskbar's place.
+            dock_host::start(&handle)?;
+            boot::mark("dock-started");
+            tiles_host::start(&handle);
             // The parts start on their own thread: building a window waits for the main thread, which
             // is only free once setup returns.
             modules_host::start_enabled(&handle)?;
@@ -227,12 +257,16 @@ fn build_and_run(primary: bool) {
         })
         .build(tauri::generate_context!())
         .map(|app| {
-            app.run(|_, event| match event {
+            app.run(|app, event| match event {
                 // With every window closed (the home screen and notch off, Settings closed) the tray
                 // keeps dotDock running. Only an explicit exit, which carries a code, quits.
                 tauri::RunEvent::ExitRequested { api, code: None, .. } => api.prevent_exit(),
                 // A clean exit is never a crash, and never leaves the taskbar hidden.
                 tauri::RunEvent::Exit => {
+                    // The hosts first: the dock host stops its taskbar worker, so nothing hides the
+                    // taskbar after the restore.
+                    tiles_host::shutdown(app);
+                    dock_host::shutdown(app);
                     dock_guard::restore_after_dock();
                     crash_guard::mark_stable();
                 }

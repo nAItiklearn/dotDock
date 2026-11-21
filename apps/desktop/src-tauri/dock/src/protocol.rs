@@ -182,7 +182,7 @@ pub struct DockApp {
     pub name: String,
     pub category: CategoryId,
     pub filed_by: FiledBy,
-    /// `dock-icon://<hash>.png`, served by the host from the icon cache.
+    /// `dock-icon://<hash>.png` as the backend names it; the host turns it into `http://dock-icon.localhost/...` for the window.
     pub icon: String,
     pub publisher: Option<String>,
     /// Epoch ms the app was first seen.
@@ -251,6 +251,22 @@ pub const DEFAULT_ICON_SIZE: u32 = 48;
 pub const DEFAULT_MAGNIFICATION: f64 = 1.6;
 
 impl DockSettings {
+    /// The same settings with the dock at the bottom: the only edge it lives on, since it replaces the taskbar
+    /// (D-029). An older file or a UI that still names another edge gets the bottom.
+    pub fn at_the_bottom(mut self) -> DockSettings {
+        self.edge = DockEdge::Bottom;
+        self
+    }
+
+    /// The same settings as the environment's parts decide them: the dock shows only while its part runs, and it
+    /// takes the taskbar's place only while the taskbar part runs too. The stored `enabled` and `replace_taskbar`
+    /// are not the user's switches any more (D-021): the environment switch and "Use the Windows taskbar" are.
+    pub fn governed(mut self, dock_part: bool, taskbar_part: bool) -> DockSettings {
+        self.enabled = dock_part;
+        self.replace_taskbar = dock_part && taskbar_part;
+        self
+    }
+
     /// Rejects values the dock cannot draw: no icon size, or a magnification that is not a number or shrinks.
     pub fn validate(&self) -> Result<(), &'static str> {
         if self.icon_size == 0 {
@@ -362,12 +378,13 @@ impl Serialize for CommandResult {
 pub const EVENT_APPS: &str = "dock://apps";
 pub const EVENT_WINDOWS: &str = "dock://windows";
 pub const EVENT_SETTINGS: &str = "dock://settings";
+/// The App Library's global shortcut was pressed (payload `"toggle"`).
+pub const EVENT_LIBRARY: &str = "dock://library";
+/// The cursor entered or left the rectangles from `dock_set_regions` (payload `{ "inside": bool }`).
+pub const EVENT_POINTER: &str = "dock://pointer";
 pub use crate::frozen::EVENT_FROZEN;
 
 /// One event for the dock window; `name()` and the serialised payload are what the host emits.
-///
-/// `Frozen` is not in `protocol.ts` yet: it is additive (`"dock://frozen": FrozenState`) and is added there by
-/// the integration step. Until then the host can use it to stop the dock window rendering.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DockEvent {
     Apps(Vec<DockApp>),
@@ -401,6 +418,18 @@ impl DockEvent {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn the_parts_not_the_stored_switches_decide_the_dock_and_the_taskbar() {
+        let stored = DockSettings { enabled: false, replace_taskbar: true, ..DockSettings::default() };
+        let neither = stored.clone().governed(false, true);
+        assert!(!neither.enabled && !neither.replace_taskbar, "no dock part: no dock and the Windows taskbar stays");
+        let dock_only = stored.clone().governed(true, false);
+        assert!(dock_only.enabled && !dock_only.replace_taskbar, "Use the Windows taskbar: dock beside it");
+        let both = stored.clone().governed(true, true);
+        assert!(both.enabled && both.replace_taskbar, "the dock takes the taskbar's place");
+        assert_eq!(both.icon_size, stored.icon_size, "everything else is the user's");
+    }
 
     #[test]
     fn category_ids_validate() {

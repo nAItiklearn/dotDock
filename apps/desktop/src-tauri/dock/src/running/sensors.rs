@@ -10,7 +10,7 @@
 
 use super::enumerate::passes_style_rules;
 use crate::com::{pcwstr, wide};
-use crate::frozen::FrozenState;
+use crate::frozen::{fills_monitor, Edges, FrozenState};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::io;
@@ -20,7 +20,8 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 use windows::core::{w, GUID};
-use windows::Win32::Foundation::{HANDLE, HMODULE, HWND, LPARAM, LRESULT, WPARAM};
+use windows::Win32::Foundation::{HANDLE, HMODULE, HWND, LPARAM, LRESULT, RECT, WPARAM};
+use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::System::Power::{
     RegisterPowerSettingNotification, UnregisterPowerSettingNotification, HPOWERNOTIFY, POWERBROADCAST_SETTING,
@@ -30,11 +31,12 @@ use windows::Win32::System::SystemServices::GUID_CONSOLE_DISPLAY_STATE;
 use windows::Win32::UI::Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK};
 use windows::Win32::UI::Shell::SHQueryUserNotificationState;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, DeregisterShellHookWindow, DestroyWindow, DispatchMessageW, GetMessageW,
-    KillTimer, PostMessageW, PostQuitMessage, RegisterClassW, RegisterShellHookWindow, RegisterWindowMessageW,
-    SetTimer, TranslateMessage, UnregisterClassW, DEVICE_NOTIFY_WINDOW_HANDLE, MSG, PBT_APMRESUMEAUTOMATIC,
-    PBT_POWERSETTINGCHANGE, WINDOW_EX_STYLE, WM_CLOSE, WM_DESTROY, WM_DISPLAYCHANGE, WM_POWERBROADCAST, WM_TIMER,
-    WM_WTSSESSION_CHANGE, WNDCLASSW, WS_EX_TOOLWINDOW, WS_POPUP,
+    CreateWindowExW, DefWindowProcW, DeregisterShellHookWindow, DestroyWindow, DispatchMessageW, GetClassNameW,
+    GetForegroundWindow, GetMessageW, GetWindowRect, GetWindowThreadProcessId, IsZoomed, KillTimer, PostMessageW,
+    PostQuitMessage, RegisterClassW, RegisterShellHookWindow, RegisterWindowMessageW, SetTimer, TranslateMessage,
+    UnregisterClassW, DEVICE_NOTIFY_WINDOW_HANDLE, MSG, PBT_APMRESUMEAUTOMATIC, PBT_POWERSETTINGCHANGE,
+    WINDOW_EX_STYLE, WM_CLOSE, WM_DESTROY, WM_DISPLAYCHANGE, WM_POWERBROADCAST, WM_TIMER, WM_WTSSESSION_CHANGE,
+    WNDCLASSW, WS_EX_TOOLWINDOW, WS_POPUP,
 };
 
 /// Quiet time after the first event before the list is recomputed, so a burst (an app opening three windows)
@@ -117,6 +119,42 @@ pub struct Registrations {
     pub window_event_hooks: usize,
 }
 
+/// Window classes of the shell's own desktop and taskbar, which cover the monitor without being an app.
+const SHELL_CLASSES: [&str; 3] = ["Progman", "WorkerW", "Shell_TrayWnd"];
+
+/// Whether the foreground window is another app's full-screen window (see `frozen::fills_monitor`). dotDock's own
+/// windows and the shell's desktop never count.
+fn foreground_fills_monitor() -> bool {
+    // SAFETY: read-only queries about the foreground window; a window that went away answers with errors or zeros.
+    unsafe {
+        let hwnd = GetForegroundWindow();
+        if hwnd.is_invalid() {
+            return false;
+        }
+        let mut pid = 0u32;
+        GetWindowThreadProcessId(hwnd, Some(&mut pid));
+        if pid == std::process::id() {
+            return false;
+        }
+        let mut class = [0u16; 64];
+        let len = GetClassNameW(hwnd, &mut class);
+        let class = String::from_utf16_lossy(&class[..usize::try_from(len).unwrap_or(0)]);
+        if SHELL_CLASSES.contains(&class.as_str()) {
+            return false;
+        }
+        let mut rect = RECT::default();
+        if GetWindowRect(hwnd, &mut rect).is_err() {
+            return false;
+        }
+        let mut info = MONITORINFO { cbSize: size_of::<MONITORINFO>() as u32, ..Default::default() };
+        if !GetMonitorInfoW(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mut info).as_bool() {
+            return false;
+        }
+        let edges = |r: RECT| Edges { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+        fills_monitor(edges(rect), edges(info.rcMonitor), IsZoomed(hwnd).as_bool())
+    }
+}
+
 pub fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|p| p.into_inner())
 }
@@ -182,7 +220,8 @@ impl Context {
     fn recheck_full_screen(&mut self) {
         // SAFETY: a plain shell query.
         if let Ok(state) = unsafe { SHQueryUserNotificationState() } {
-            self.update_frozen(|s| s.with_notification_state(state.0));
+            let fills = foreground_fills_monitor();
+            self.update_frozen(|s| s.with_full_screen(state.0, fills));
         }
     }
 

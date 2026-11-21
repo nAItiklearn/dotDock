@@ -114,6 +114,21 @@ pub fn key_from_url(url: &str) -> Option<IconKey> {
     IconKey::from_hash(hash)
 }
 
+/// The scheme name the host registers (the part of `URL_SCHEME` before `://`).
+pub const SCHEME: &str = "dock-icon";
+
+/// The URL the dock window can load an icon from. WebView2 has no custom schemes: the host's handler for
+/// `dock-icon` is reached at `http://dock-icon.localhost/<hash>.png`, so that is the form the window is given.
+/// Anything that is not a `dock-icon://` URL (an app with no icon yet is an empty string) is returned as it is.
+pub fn webview_url(url: &str) -> String {
+    url.strip_prefix(URL_SCHEME).map_or_else(|| url.to_owned(), |name| format!("http://{SCHEME}.localhost/{name}"))
+}
+
+/// The `dock-icon://` URL a request to the host's handler names, from the path of the request (`/<hash>.png`).
+pub fn url_from_request_path(path: &str) -> String {
+    format!("{URL_SCHEME}{}", path.trim_start_matches('/'))
+}
+
 /// The folder the icons live in: `<local app data>\dev.dotdock.desktop\dock-icons`.
 pub fn default_cache_dir() -> Option<PathBuf> {
     std::env::var_os("LOCALAPPDATA").map(|p| PathBuf::from(p).join(APP_FOLDER).join(CACHE_FOLDER))
@@ -167,6 +182,31 @@ mod tests {
         let key = IconKey::new("x", &[IconSource::File("C:\\x.exe".into())]);
         assert!(key.url().starts_with("dock-icon://"));
         assert_eq!(key_from_url(&key.url()), Some(key));
+    }
+
+    #[test]
+    fn the_window_gets_the_form_webview2_can_load_and_the_handler_reads_it_back() {
+        let key = IconKey::new("x", &[IconSource::File("C:\\x.exe".into())]);
+        let for_window = webview_url(&key.url());
+        assert_eq!(URL_SCHEME, format!("{SCHEME}://"));
+        assert_eq!(for_window, format!("http://dock-icon.localhost/{}.png", key.hash()));
+        // A request for it reaches the handler with this path.
+        let path = for_window.strip_prefix("http://dock-icon.localhost").unwrap();
+        assert_eq!(key_from_url(&url_from_request_path(path)), Some(key));
+    }
+
+    #[test]
+    fn urls_that_are_not_icons_are_left_alone() {
+        assert_eq!(webview_url(""), "");
+        assert_eq!(webview_url("https://example.com/a.png"), "https://example.com/a.png");
+    }
+
+    #[test]
+    fn a_crafted_request_path_still_names_no_file() {
+        for path in ["/../../secrets.png", "//server/share.png", "/..%2f..%2fsecrets.png", "/0123456789abcdef.exe", "/"]
+        {
+            assert_eq!(key_from_url(&url_from_request_path(path)), None, "{path}");
+        }
     }
 
     #[test]

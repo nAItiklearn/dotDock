@@ -133,3 +133,6 @@ export function finishedRecently(state: TimerState, plan: PomodoroPlan, now: num
   const finishedAt = state.startedAt + (target - state.bankedMs);
   return now - finishedAt <= windowMs;
 }
+
+/** Names one finish of the timer, so the dock and the home screen agree on which of them chimes for it. */
+export const finishKey = (state: TimerState): string => `${state.startedAt ?? 0}:${state.mode}:${state.phase}:${state.focusDone}`;

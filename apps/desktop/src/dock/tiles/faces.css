@@ -1,0 +1,337 @@
+/*
+ * The compact faces of the live tiles that sit on the dock. A face is --d-icon tall (already scaled by the
+ * magnification the slot was drawn for) and as long as its length ratio; everything inside is a share of --d-icon.
+ */
+.tile {
+  --mark: calc(var(--d-icon) * 0.78);
+  color: var(--text);
+}
+/* Tiles with a mark and words: the mark sits near the left edge, the words and a quick button follow. */
+.tile--agenda,
+.tile--meeting,
+.tile--focus,
+.tile--stopwatch,
+.tile--reminders,
+.tile--progress,
+.tile--contacts,
+.tile--notes,
+.tile--convert,
+.tile--world,
+.tile--network {
+  gap: calc(var(--d-icon) * 0.14);
+  padding: 0 calc(var(--d-icon) * 0.12) 0 calc(var(--d-icon) * 0.1);
+}
+
+/* The transparent button over a tile that opens its popover. Whatever does its own job sits above it. */
+.tile__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.tile__hit:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: calc(var(--focus-ring) * -1);
+}
+.tile__hit:disabled {
+  cursor: default;
+}
+@media (hover: hover) {
+  .dock-anchor[data-mag="off"] .tile:has(.tile__hit):hover {
+    background: var(--disc-hover);
+  }
+}
+.tile[data-open="true"] {
+  box-shadow:
+    0 0 0 var(--focus-ring) var(--accent),
+    var(--lift-shadow);
+}
+.tile[data-state="pending"] > :not(.tile__hit) {
+  opacity: 0.45;
+}
+.tile[data-state="issue"] .tile__title {
+  color: var(--text-dim);
+}
+
+.tile__mark {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--mark);
+  height: var(--mark);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+.tile__mark .icon {
+  height: 46%;
+  width: auto;
+}
+.tile__mark[data-tone="accent"] {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-2));
+  color: var(--accent);
+}
+.tile__mark[data-tone="danger"] {
+  background: color-mix(in srgb, var(--danger) 22%, var(--surface-2));
+  color: var(--danger);
+}
+.tile__mark[data-tone="dim"] {
+  background: transparent;
+}
+.tile__digits {
+  font-family: var(--font-dot);
+  font-size: calc(var(--d-icon) * 0.34);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--text);
+}
+.tile__ringvalue {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.tile__mark .dot-ring {
+  position: absolute;
+  inset: -6%;
+  width: 112%;
+  height: 112%;
+}
+
+.tile__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.tile__title {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tile__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tile__sub[data-urgent="true"] {
+  color: var(--accent);
+}
+
+/* A quick button on a tile: start, pause, join. */
+.tile__action {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(var(--d-icon) * 0.62);
+  height: calc(var(--d-icon) * 0.62);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.tile__action[data-tone="urgent"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.tile__action .icon {
+  height: 48%;
+  width: auto;
+}
+.tile__action:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+@media (hover: hover) {
+  .tile__action:not(:disabled):hover {
+    transform: scale(1.08);
+  }
+}
+.tile__action:not(:disabled):active {
+  transform: scale(var(--press));
+}
+.tile__action:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}
+
+/* Round tiles: the system ring, the microphone, sound. */
+.tile--system,
+.tile--mic,
+.tile--audio,
+.tile--hydration,
+.tile--cpu,
+.tile--battery,
+.tile--analog,
+.tile--colour,
+.tile--emoji {
+  justify-content: center;
+  padding: 0;
+}
+.tile .dot-ring {
+  position: absolute;
+  inset: 4%;
+  width: 92%;
+  height: 92%;
+}
+.system__value {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+.tile__ringed {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text);
+}
+.tile__ringed .icon {
+  height: 38%;
+  width: auto;
+}
+.tile__ringed[data-tone="danger"] {
+  color: var(--danger);
+}
+.tile__hit--act {
+  border-radius: var(--radius-pill);
+}
+
+.tile--hydration .glass {
+  width: 74%;
+  height: 74%;
+}
+
+/* People: overlapping initials. */
+.avatars {
+  display: flex;
+  align-items: center;
+  margin-left: calc(var(--d-icon) * 0.04);
+}
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(var(--d-icon) * 0.68);
+  height: calc(var(--d-icon) * 0.68);
+  border: var(--face-hair, var(--hairline)) solid var(--disc-edge);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-dot);
+  font-size: calc(var(--d-icon) * 0.26);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.avatars .avatar + .avatar {
+  margin-left: calc(var(--d-icon) * -0.16);
+}
+.avatar--more {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.face--tile[data-size="compact"] .tile__text,
+.face--tile[data-size="compact"] .tile__action {
+  display: none;
+}
+.face--tile[data-size="compact"] .tile {
+  justify-content: center;
+  padding: 0;
+}
+.face--tile[data-size="compact"] .avatars .avatar:nth-child(n + 2) {
+  display: none;
+}
+
+.system__value[data-low="true"] {
+  color: var(--danger);
+}
+.analog {
+  width: 82%;
+  height: 82%;
+}
+.swatch {
+  display: grid;
+  place-items: center;
+  width: 72%;
+  height: 72%;
+  border: var(--face-hair, var(--hairline)) solid var(--disc-edge);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+.swatch .icon {
+  height: 46%;
+  width: auto;
+}
+.emoji {
+  font-size: calc(var(--d-icon) * 0.5);
+  line-height: 1;
+}
+
+/* Quick settings: round switches on the tile; each is its own button above the one that opens the popover. */
+.tile--toggles {
+  gap: calc(var(--d-icon) * 0.12);
+  padding: 0 calc(var(--d-icon) * 0.14);
+}
+.tile__toggle {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(var(--d-icon) * 0.7);
+  height: calc(var(--d-icon) * 0.7);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.tile__toggle .icon {
+  height: 50%;
+  width: auto;
+}
+.tile__toggle[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface-2));
+  color: var(--accent);
+}
+.tile__toggle:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+@media (hover: hover) {
+  .tile__toggle:not(:disabled):hover {
+    transform: scale(1.08);
+  }
+}
+.tile__toggle:not(:disabled):active {
+  transform: scale(var(--press));
+}
+.tile__toggle:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}

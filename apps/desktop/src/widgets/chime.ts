@@ -23,6 +23,28 @@ export function primeChime(): void {
   void context.resume();
 }
 
+/** True when this window may play a chime now: its audio has been started by a click. */
+export function chimeReady(): boolean {
+  return context?.state === "running";
+}
+
+const CLAIM_KEY = "dotdock.chime.claim";
+
+/**
+ * Several windows can see the same timer finish (the home screen's widget and the dock's focus tile). The first
+ * to claim a finish plays its chime; the others stay quiet. `finish` names the finish, e.g. when the run started.
+ */
+export function claimChime(finish: string): boolean {
+  try {
+    if (localStorage.getItem(CLAIM_KEY) === finish) return false;
+    localStorage.setItem(CLAIM_KEY, finish);
+    return true;
+  } catch {
+    // No storage to coordinate through: better a doubled chime than none.
+    return true;
+  }
+}
+
 export function playChime(): void {
   const ctx = context;
   if (!ctx || ctx.state !== "running") return;

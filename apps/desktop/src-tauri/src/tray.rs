@@ -100,7 +100,7 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
             &edit,
             &visibility,
             &PredefinedMenuItem::separator(app)?,
-            &MenuItem::with_id(app, ID_RESTORE, "Restore Windows desktop and quit", true, None::<&str>)?,
+            &MenuItem::with_id(app, ID_RESTORE, "Quit and restore Windows", true, None::<&str>)?,
             &MenuItem::with_id(app, ID_QUIT, "Quit", true, None::<&str>)?,
         ],
     )?;

@@ -11,6 +11,7 @@
 node_modules/
 dist/
 target/
+target-gnu/
 *.log
 .DS_Store
 

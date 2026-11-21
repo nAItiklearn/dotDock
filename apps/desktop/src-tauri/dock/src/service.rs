@@ -16,6 +16,7 @@ use crate::protocol::{
 use crate::running::sensors::{self, Sensors, Signal};
 use crate::running::worker::{IconFor, WindowWorker};
 use crate::running::{control, AppIndex};
+use crate::starter::starter_layout;
 use crate::store::{CatalogueCache, DebouncedFile, StoreData, CACHE_FILE, STORE_FILE};
 use crate::thumbnail::Previews;
 use crate::util::{normalise_path, now_ms};
@@ -292,12 +293,15 @@ impl DockService {
     }
 
     pub fn set_settings(&self, settings: DockSettings) -> CommandResult {
+        let settings = settings.at_the_bottom();
         if let Err(reason) = settings.validate() {
             return CommandResult::failed(reason);
         }
         {
             let mut state = lock(&self.inner.state);
             state.store.settings = settings.clone();
+            // The user has chosen what is on the dock, so the first layout never replaces it.
+            state.store.laid_out = true;
             self.inner.store_file.save_json(&state.store);
         }
         let _ = self.inner.events.send(DockEvent::Settings(settings));
@@ -396,8 +400,12 @@ impl Inner {
             let before = state.apps.clone();
             state.entries = entries.clone();
             self.refile(&mut state);
-            if store_dirty {
+            let (laid_out_dirty, laid_out) = self.lay_out_once(&mut state);
+            if store_dirty || laid_out_dirty {
                 self.store_file.save_json(&state.store);
+            }
+            if let Some(settings) = laid_out {
+                let _ = self.events.send(DockEvent::Settings(settings));
             }
             (state.apps.clone(), state.apps != before)
         };
@@ -408,6 +416,23 @@ impl Inner {
         if changed {
             let _ = self.events.send(DockEvent::Apps(apps));
         }
+    }
+
+    /// Places the first layout once, on a dock that has nothing on it, after the first catalogue with apps.
+    /// Returns whether the store changed, and the new settings when the layout was placed.
+    fn lay_out_once(&self, state: &mut State) -> (bool, Option<DockSettings>) {
+        if state.store.laid_out || state.apps.is_empty() {
+            return (false, None);
+        }
+        state.store.laid_out = true;
+        let settings = &mut state.store.settings;
+        if !settings.pinned.is_empty() || !settings.tiles.is_empty() {
+            return (true, None);
+        }
+        let (pinned, tiles) = starter_layout(&state.apps);
+        settings.pinned = pinned;
+        settings.tiles = tiles;
+        (true, Some(settings.clone()))
     }
 
     /// Recomputes every app's category from the classifier and the user's filings.

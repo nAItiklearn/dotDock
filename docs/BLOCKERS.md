@@ -24,3 +24,9 @@ SPI_SETDESKWALLPAPER in the core, event to the theme, palette re-derived and app
 own writes) and its Rust test; (2) the hard live test with widgets (4 wallpaper changes, theme on/off x3, restore
 script) and genuine before/applied/undone recaptures, which need a fresh `dotdock.exe` of this branch. Unblock by
 freeing space (finished worktrees' `target-gnu`, ~8 GB each), then build with the existing `target-gnu`.
+## B-002 Core feeds for the wind, currency and web search tiles (dock UI, 2026-11-21)
+- **Need (dock host / core track):** (1) add `wind_speed_10m,wind_direction_10m,wind_gusts_10m` to the Open-Meteo
+  `current` query in `shell/src/providers/weather.rs` and send them as `windKmh`, `windFromDeg`, `gustKmh`;
+  (2) a `rates` feed (`{ base, publishedAt, rates }`, ECB daily XML, cached on disk); (3) `dock_open_url { url }`
+  that opens http(s) only, in the default browser.
+- **Meanwhile:** each tile shows its designed "Not available" state in the real app and works in the harness.
