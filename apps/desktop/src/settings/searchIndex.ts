@@ -45,7 +45,6 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("dock-behaviour", "dock-magnification", "Dock magnification", "zoom grow hover"),
   e("dock-behaviour", "dock-auto-hide", "Hide the dock automatically", "autohide auto-hide slide"),
   e("dock-taskbar", "dock-reserve-space", "Keep windows clear of the dock", "maximise maximize app bar reserve space overlap"),
-  e("dock-taskbar", "dock-windows-taskbar", "Windows taskbar and the dock", "replace taskbar"),
 
   e("agents", "agent-claude", "Claude Code", "agent connect disconnect hooks notch island ai"),
   e("agents", "agent-codex", "Codex", "agent openai logs notch island ai"),
@@ -78,7 +77,6 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("wallpapers", "wallpaper-fit", "Fit mode", "fill fit stretch tile center span"),
 
   e("recovery", "environment-on", "dotDock theme", "turn off disable enable whole environment theme widgets dock notch wallpaper plain windows stock switch restore"),
-  e("recovery", "windows-taskbar", "Use the Windows taskbar", "hide replace dock taskbar real native bar restore advanced"),
 
   e("shortcuts", "shortcut-toggleEditMode", "Edit layout hotkey", "keyboard global bind"),
   e("shortcuts", "shortcut-openSettings", "Open Settings hotkey", "keyboard global bind"),

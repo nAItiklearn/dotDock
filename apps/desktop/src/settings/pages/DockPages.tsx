@@ -21,7 +21,6 @@ import {
   type DockThemeId,
 } from "../../lib/native/dock";
 import { Button, IconButton, SelectField, Slider, Switch } from "../../lib/ui/controls";
-import { hrefFor } from "../sections";
 import { NativeGate, useNativeResource, useNativeWrite, type NativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
 
@@ -334,11 +333,6 @@ export function DockTaskbarPage() {
               description="Maximised windows stop at the dock instead of going under it, as they do with the taskbar."
             >
               <Switch label="Keep windows clear of the dock" checked={settings.reserveSpace} onChange={(reserveSpace) => change({ ...settings, reserveSpace })} />
-            </Row>
-            <Row id="dock-windows-taskbar" label="Windows taskbar" description="Whether the dock replaces the Windows taskbar is the last switch in Settings, under Recovery.">
-              <a className="ui-button" href={hrefFor("recovery")}>
-                Open Recovery
-              </a>
             </Row>
           </Section>
         )}

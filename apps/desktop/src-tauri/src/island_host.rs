@@ -257,12 +257,18 @@ pub fn island_disconnect(s: State<'_, IslandSlot>) -> Res<dotdock_island::servic
 }
 
 #[tauri::command]
-pub fn island_connect_agent(agent: Connectable, s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
+pub fn island_connect_agent(
+    agent: Connectable,
+    s: State<'_, IslandSlot>,
+) -> Res<dotdock_island::service::ConnectionStatus> {
     s.with(|h| h.service.connect_agent(agent).map_err(|e| e.to_string()))?
 }
 
 #[tauri::command]
-pub fn island_disconnect_agent(agent: Connectable, s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
+pub fn island_disconnect_agent(
+    agent: Connectable,
+    s: State<'_, IslandSlot>,
+) -> Res<dotdock_island::service::ConnectionStatus> {
     s.with(|h| h.service.disconnect_agent(agent).map_err(|e| e.to_string()))?
 }
 

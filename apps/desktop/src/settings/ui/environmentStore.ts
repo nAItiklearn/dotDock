@@ -5,7 +5,6 @@ import type { NativeState } from "./native";
 /** Choices sent to the core and not yet answered. The switches show them at once. */
 export interface PendingChoices {
   readonly on?: boolean;
-  readonly windowsTaskbar?: boolean;
 }
 
 export interface EnvironmentStoreState {
@@ -21,8 +20,6 @@ export interface EnvironmentStore {
   reload(): void;
   /** Switches the whole environment on or off. The answer, or the reason it failed, comes back through the store and `report`. */
   setOn(on: boolean): Promise<void>;
-  /** Shows the Windows taskbar without the dock, or lets the dock take the taskbar's place. */
-  setWindowsTaskbar(useWindows: boolean): Promise<void>;
   /** The state as the switches should show it: the core's answer with the unanswered choices applied. */
   shown(state: EnvironmentStoreState): EnvironmentState | null;
 }
@@ -86,7 +83,6 @@ export function createEnvironmentStore(getApi: () => NativeApi, report: (message
     },
     reload: read,
     setOn: (on) => change({ on }, (api) => api.environment.setOn(on)),
-    setWindowsTaskbar: (windowsTaskbar) => change({ windowsTaskbar }, (api) => api.environment.setWindowsTaskbar(windowsTaskbar)),
     shown(state) {
       if (state.env.status !== "ready") return null;
       return { ...state.env.data, ...state.pending };

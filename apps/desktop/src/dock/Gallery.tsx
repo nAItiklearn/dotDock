@@ -79,7 +79,6 @@ function Preview({ item }: { readonly item: GalleryItem }) {
 }
 
 function Card({ item, onDragStart }: { readonly item: GalleryItem; readonly onDragStart: (item: GalleryItem, e: DragEvent) => void }) {
-  const note = `gallery-note-${item.key}`;
   const chips =
     item.kind === "tile" && item.tile
       ? [t(`gallery.shape.${shapeOf(item.tile)}`), t(`gallery.action.${actionOf(item.tile)}`)]
@@ -101,18 +100,11 @@ function Card({ item, onDragStart }: { readonly item: GalleryItem; readonly onDr
             ))}
           </p>
         ) : null}
-        {item.kind === "optin" ? (
-          <p id={note} className="gcard__note">
-            {t("gallery.optin.note")}
-          </p>
-        ) : null}
       </div>
       <button
         type="button"
         className="gcard__action"
         data-primary={isAddable(item) ? "true" : undefined}
-        disabled={item.kind === "optin"}
-        aria-describedby={item.kind === "optin" ? note : undefined}
         aria-label={`${item.onDock ? t("gallery.remove") : t("gallery.add")} ${item.name}`}
         onClick={() => toggleOnDock(item)}
       >

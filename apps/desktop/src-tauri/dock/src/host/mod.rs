@@ -38,6 +38,9 @@ pub trait Hooks: Send + Sync + 'static {
     fn taskbar_refused(&self, reason: &str);
     /// The kill switch (Ctrl+Alt+Shift+D) was pressed: quit now, putting the Windows taskbar back.
     fn quit(&self);
+    /// Windows announced that the desktop wallpaper changed (`WM_SETTINGCHANGE` / `SPI_SETDESKWALLPAPER`). The host's
+    /// window is a top-level one, so it hears the broadcast that a message-only window would miss.
+    fn wallpaper_changed(&self) {}
 }
 
 /// The dock window and what the host knows about it.

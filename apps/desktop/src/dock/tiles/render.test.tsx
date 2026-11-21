@@ -530,19 +530,15 @@ describe("the widget gallery", () => {
     expect(button(html, "Add Games")).toBeDefined();
   });
 
-  it("keeps a closed slot for GitHub, Linear and Vercel, which cannot be added yet", () => {
+  it("shows no developer or account card in this version (V2, D-037)", () => {
     const html = gallery();
-    for (const name of ["GitHub", "Linear", "Vercel"]) {
-      const add = button(html, `Add ${name}`);
-      expect(add).toContain('disabled=""');
-      expect(add).toContain("aria-describedby");
-    }
-    expect(html).toContain("Needs an account. It stays off until you connect it in the dock settings.");
+    for (const name of ["GitHub", "Linear", "Vercel", "Developer"]) expect(html).not.toContain(name);
+    expect(html).not.toContain("Needs an account");
   });
 
   it("shows the groups with how many cards each holds", () => {
     const html = gallery();
-    for (const words of ["All", "Time", "Focus and health", "Media and sound", "System", "People", "Developer", "Stacks"]) expect(html).toContain(words);
+    for (const words of ["All", "Time", "Focus and health", "Media and sound", "System", "People", "Stacks"]) expect(html).toContain(words);
     expect(html).toContain('role="tablist"');
     expect(html).toMatch(/aria-selected="true"[^>]*>All/);
   });
@@ -595,9 +591,9 @@ describe("the dock settings popover", () => {
     expect(html.indexOf("Items")).toBeLessThan(html.indexOf("Icon size"));
   });
 
-  it("ends with the taskbar switch and a reset", () => {
+  it("ends with a reset, and has no taskbar switch: the dock replaces the taskbar while the theme is on", () => {
     const html = prefs({ replaceTaskbar: true });
-    expect(html).toMatch(/role="switch" class="prefs__switch" aria-checked="true"><span>Replace the Windows taskbar/);
+    expect(html).not.toContain("Windows taskbar");
     expect(button(html, "Reset the dock")).toBeDefined();
   });
 

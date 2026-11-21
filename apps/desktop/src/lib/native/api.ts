@@ -113,10 +113,6 @@ export interface UpdateStatus {
 export interface EnvironmentState {
   /** The whole environment is switched on. Off is plain Windows. */
   readonly on: boolean;
-  /** The Windows taskbar stays: by choice, or because this build has no replacement for it. */
-  readonly windowsTaskbar: boolean;
-  /** This build has a taskbar replacement the user can switch to. */
-  readonly taskbarReplacement: boolean;
   /** Parts that are meant to run and did not start, each with its reason in words. */
   readonly problems: readonly string[];
 }
@@ -129,8 +125,6 @@ export interface NativeApi {
     get(): Promise<EnvironmentState>;
     /** `environment_set` { on } → EnvironmentState. Starts or stops everything now. */
     setOn(on: boolean): Promise<EnvironmentState>;
-    /** `taskbar_set` { useWindows } → EnvironmentState. Rejects with the reason when the replacement cannot start. */
-    setWindowsTaskbar(useWindows: boolean): Promise<EnvironmentState>;
     /** Hears the `environment://changed` event, which carries the full state. Resolves with the way to stop listening. */
     onChange(handler: (state: EnvironmentState) => void): Promise<() => void>;
   };
@@ -211,7 +205,7 @@ const unavailable = (): Promise<never> => Promise.reject(new NativeUnavailableEr
 
 export const unavailableNativeApi: NativeApi = {
   available: false,
-  environment: { get: unavailable, setOn: unavailable, setWindowsTaskbar: unavailable, onChange: unavailable },
+  environment: { get: unavailable, setOn: unavailable, onChange: unavailable },
   startup: { get: unavailable, set: unavailable, restoreWindows: unavailable },
   displays: { list: unavailable },
   wallpapers: {
@@ -238,7 +232,6 @@ export const tauriNativeApi: NativeApi = {
   environment: {
     get: () => call("environment_get"),
     setOn: (on) => call("environment_set", { on }),
-    setWindowsTaskbar: (useWindows) => call("taskbar_set", { useWindows }),
     onChange: (handler) => listen<EnvironmentState>(ENVIRONMENT_CHANGED, (event) => handler(event.payload)),
   },
   startup: {

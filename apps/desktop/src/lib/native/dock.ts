@@ -10,7 +10,7 @@ export type PinnedItem = { readonly kind: "app"; readonly id: string } | { reado
 
 export interface DockSettings {
   readonly schema: 1;
-  /** Owned by the "Use the Windows taskbar" switch at the end of Settings; never edited here. */
+  /** Decided by the dotDock theme switch (the dock runs while the theme is on); never edited here. */
   readonly enabled: boolean;
   readonly replaceTaskbar: boolean;
   /** Always "bottom": the dock sits at the bottom only (owner, 2026-11-21). Passed through, never edited. */

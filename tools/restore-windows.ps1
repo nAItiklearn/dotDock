@@ -63,10 +63,16 @@ if ($snap) {
 
     Step 'Restore wallpaper' {
         # Prefer the private copy: the original path may be a file Windows has since overwritten
-        # (Spotlight and slideshow write to TranscodedWallpaper).
-        $source = $snap.wallpaperCopy
-        if (-not ($source -and (Test-Path -LiteralPath $source))) { $source = $snap.wallpaper }
+        # (Spotlight and slideshow write to TranscodedWallpaper). Never a relative or missing path (D-042).
+        $source = Select-RestoreWallpaper $snap
+        if (-not $source) { throw "no usable wallpaper in the snapshot (copy '$($snap.wallpaperCopy)', original '$($snap.wallpaper)'); left as it is" }
         Set-Wallpaper -Path $source -Style $snap.wallpaperStyle -Tile $snap.tileWallpaper
+    }
+
+    Step 'Check the wallpaper Windows has on record' {
+        $now = Get-RegistryWallpaper
+        if (-not $now.Exists) { throw "the registry WallPaper '$($now.Path)' is not a file that exists" }
+        Write-Output "Wallpaper on record exists: $($now.Path)"
     }
 
     if ($snap.PSObject.Properties.Name -contains 'taskbarAutoHide' -and $null -ne $snap.taskbarAutoHide) {

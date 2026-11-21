@@ -442,15 +442,33 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
   tracks conflicted on whole files. `.gitattributes` now says `* text=auto eol=lf` (batch files keep CRLF; binaries
   are detected), the tree was renormalized once, and the later merges ran with `-X renormalize`.
 
-## D-041 "Use the Windows taskbar" gives Windows its whole bar back, and the dock goes with it (V1 integration, 2026-11-21)
-- Supersedes the D-021 line "the dock keeps running". With the dock host in the build, the lead's V1 spec is: off,
-  the dotDock dock takes the taskbar's place through the D0 restore guard (`dock_guard::hide_for_dock`); on, the
-  Windows taskbar comes back with its auto-hide setting restored and the dotDock dock is hidden. In
-  `shell/src/modules.rs` the dock and the taskbar part are both wanted only while the environment is on and the
-  Windows taskbar is not chosen; a replacement that fails to start puts the choice back and stops the dock again.
-- The dock joins the manager as `DockPart` (its window) and `TaskbarPart` (replacing the taskbar). The stored
-  `enabled` and `replaceTaskbar` of `dock.json` decide nothing any more: `DockSettings::governed` applies the parts,
-  and Settings' dock page goes through the running dock service, so `dock.json` has one writer.
-- When Windows refuses to hide its taskbar, or "Restore Windows desktop" brings it back, the switch moves to "Use the
-  Windows taskbar", so what Settings shows matches the screen.
-- The switch stays disabled, with copy that says so, only when the dock's backend did not start in that run.
+## D-041 No "Use the Windows taskbar" switch in V1; the dock replaces the taskbar while the theme is on (owner, 2026-11-21 22:30)
+- Owner decision: V1 has one switch at the end of Settings, the dotDock theme. The taskbar switch, its copy, the
+  `taskbar_set` command and the TypeScript state for it (`windowsTaskbar`, `taskbarReplacement`) are gone, and so are
+  the dock's own "Replace the Windows taskbar" switch and the Dock > Taskbar link to it. A choice between the dock and
+  the Windows taskbar is a V2 item; `Modules::set_windows_taskbar` in `shell/src/modules.rs` keeps that choice's
+  logic and tests for it, and no V1 code calls it.
+- The dock joins the module manager as `DockPart` (its window) and `TaskbarPart` (taking the taskbar's place through
+  the D0 restore guard, `dock_guard::hide_for_dock`; the manager restores the taskbar after every stop and failed
+  start). The stored `enabled` and `replaceTaskbar` of `dock.json` decide nothing any more:
+  `DockSettings::governed` applies the parts, and Settings' dock page goes through the running dock service, so
+  `dock.json` has one writer.
+- When Windows refuses to hide its taskbar, the host has already put it back; that is logged and the next theme start
+  tries again. "Restore Windows desktop" switches the dotDock theme off, so the dock does not hide the taskbar again
+  until the user switches the theme back on.
+
+## D-042 dotDock never hands Windows a wallpaper path that is not an absolute path to a file (V1 integration, 2026-11-21)
+- Incident: the owner's desktop went black because the wallpaper had been set to the literal path
+  `:LOCALAPPDATA\dev.dotdock.desktop\original-wallpaper.jpeg` (a shell variable mangled by an ad-hoc test command).
+- `wallpaper::apply` (Settings, the first start, the theme hand-over) refuses such a path and sets the saved copy of
+  the user's wallpaper (`wallpaperCopy`) instead, with a line in the log; with no usable copy it fails and sets
+  nothing. `restore::restore_windows` (the in-app restore, the sentinel's and the uninstaller's) only hands Windows a
+  usable candidate. `tools/restore-windows.ps1` does the same and afterwards checks that the registry's `WallPaper`
+  names a file that exists, and says so.
+- Following the wallpaper (B-home-1, B-theme-disk): the dock host's hidden top-level window hears
+  `WM_SETTINGCHANGE` / `SPI_SETDESKWALLPAPER` (a message-only window would not), the core waits for the burst to go
+  quiet (400 ms, on a channel: no polling, no timer while nothing happens), ignores dotDock's own writes (noted by
+  every path that sets the wallpaper, matched by path within 10 s) and a missing file, and emits one
+  `wallpaper://changed`. The home screen re-derives the theme only while the theme in use is the one made from the
+  wallpaper, in one store update the dock and widgets share. It only reads: the records of the user's original
+  wallpaper are never written by it.

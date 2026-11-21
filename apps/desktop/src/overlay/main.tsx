@@ -1,7 +1,11 @@
 import { StrictMode } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { createRoot } from "react-dom/client";
 import "../design-system/tokens.css";
+import { getNativeApi } from "../lib/native/api";
 import { displayFromLocation, initApp } from "../lib/state/app";
+import { sampleImage } from "../lib/theme/imageSample";
+import { EVENT_WALLPAPER_CHANGED, followWallpaper } from "../lib/theme/wallpaperFollow";
 import { applyCurrentAppearance } from "../lib/theme/useAppearance";
 import { connectProviders, isTauri } from "../providers/bridge";
 import { widgetCatalog } from "./catalog";
@@ -28,4 +32,12 @@ void Promise.all([document.fonts.ready, app.start()]).then(() => {
   );
   connectProviders().catch((err: unknown) => console.error("providers failed to connect", err));
   syncTypingFocus();
+  // The home screen follows the Windows wallpaper for every window: the dock and Settings read the same settings.
+  if (isTauri()) {
+    void listen(EVENT_WALLPAPER_CHANGED, () => {
+      followWallpaper(app.settings, () => getNativeApi().wallpapers.currentImage(), sampleImage).catch((err: unknown) =>
+        console.error("following the wallpaper failed", err),
+      );
+    });
+  }
 });

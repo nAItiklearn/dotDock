@@ -23,6 +23,7 @@ pub mod sentinel;
 pub mod snapshot;
 pub mod taskbar;
 pub mod wallpaper;
+pub mod wallpaper_follow;
 pub mod wallpaper_library;
 
 use std::path::PathBuf;

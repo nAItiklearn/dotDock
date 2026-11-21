@@ -6,10 +6,9 @@ import { categoryLabel, t, type StringKey } from "./strings";
 
 /**
  * The widget gallery: what can be added to the dock, grouped and searchable. Tiles come from the dock's own list;
- * stacks from the categories that are not on the dock yet; and the accounts-based tiles (GitHub, Linear, Vercel)
- * have a reserved slot that stays closed until the integrations track publishes their protocol.
+ * stacks from the categories that are not on the dock yet. Account-based developer tiles are a V2 item (D-037).
  */
-export const GALLERY_CATEGORIES = ["time", "focus", "media", "system", "tools", "people", "developer", "stacks"] as const;
+export const GALLERY_CATEGORIES = ["time", "focus", "media", "system", "tools", "people", "stacks"] as const;
 export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
 
 const TILE_CATEGORY: Readonly<Record<TileId, GalleryCategory>> = {
@@ -46,11 +45,7 @@ const TILE_CATEGORY: Readonly<Record<TileId, GalleryCategory>> = {
   memo: "media",
 };
 
-/** Services that need an account. They are opt-in, and have no tile until their feeds and protocol exist. */
-export const OPT_IN_SERVICES = ["github", "linear", "vercel"] as const;
-export type OptInService = (typeof OPT_IN_SERVICES)[number];
-
-export type GalleryKind = "tile" | "stack" | "optin";
+export type GalleryKind = "tile" | "stack";
 
 export interface GalleryItem {
   /** Stable across renders and unique in the gallery. */
@@ -70,7 +65,6 @@ export interface GalleryItem {
   readonly tone?: CategoryTone;
   /** Apps of a stack, for the count on its card. */
   readonly appCount?: number;
-  readonly service?: OptInService;
 }
 
 export interface GalleryInput {
@@ -117,19 +111,7 @@ export function galleryItems(input: GalleryInput): GalleryItem[] {
         appCount: count,
       }),
     );
-  const optIn = OPT_IN_SERVICES.map(
-    (service): GalleryItem => ({
-      key: `optin:${service}`,
-      kind: "optin",
-      category: "developer",
-      name: t(`gallery.optin.${service}` as StringKey),
-      about: t(`gallery.optin.${service}.about` as StringKey),
-      keywords: t("gallery.keywords.optin"),
-      onDock: false,
-      service,
-    }),
-  );
-  return [...tiles, ...stacks, ...optIn];
+  return [...tiles, ...stacks];
 }
 
 /**
@@ -182,7 +164,7 @@ export function dropIndex(middles: readonly number[], pointer: number): number {
 }
 
 /** Whether a card can be added right now: it is not already on the dock, and is not a slot that is still closed. */
-export const isAddable = (item: GalleryItem): boolean => item.kind !== "optin" && !item.onDock;
+export const isAddable = (item: GalleryItem): boolean => !item.onDock;
 
 /** What a dragged card carries, so the bar can tell it from anything else dropped on it. */
 export const GALLERY_MIME = "application/x-dotdock-widget";

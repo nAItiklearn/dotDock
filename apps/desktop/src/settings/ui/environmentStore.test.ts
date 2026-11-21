@@ -4,8 +4,6 @@ import { createEnvironmentStore } from "./environmentStore";
 
 const state = (patch: Partial<EnvironmentState> = {}): EnvironmentState => ({
   on: true,
-  windowsTaskbar: false,
-  taskbarReplacement: true,
   problems: [],
   ...patch,
 });
@@ -27,7 +25,6 @@ function fakeCore(initial: EnvironmentState) {
     environment: {
       get,
       setOn: (on) => respond(`on=${on}`),
-      setWindowsTaskbar: (useWindows) => respond(`windowsTaskbar=${useWindows}`),
       onChange: (handler) => {
         listener = handler;
         return Promise.resolve(() => undefined);
@@ -86,35 +83,13 @@ describe("createEnvironmentStore", () => {
     environment.load();
     await flush();
 
-    const done = environment.setWindowsTaskbar(false);
-    expect(environment.shown(environment.store.getState())?.windowsTaskbar).toBe(false);
-    core.settle("the taskbar replacement did not start: Explorer keeps showing the taskbar");
+    const done = environment.setOn(false);
+    expect(environment.shown(environment.store.getState())?.on).toBe(false);
+    core.settle("the settings could not be saved");
     await done;
-    expect(report).toHaveBeenCalledWith("That didn't change: the taskbar replacement did not start: Explorer keeps showing the taskbar");
+    expect(report).toHaveBeenCalledWith("That didn't change: the settings could not be saved");
     expect(environment.store.getState().pending).toEqual({});
-    expect(environment.shown(environment.store.getState())?.windowsTaskbar).toBe(false);
-  });
-
-  it("shows the old position again after a refusal", async () => {
-    const core = fakeCore(state({ windowsTaskbar: true }));
-    const environment = createEnvironmentStore(() => core.api, vi.fn());
-    environment.load();
-    await flush();
-    const done = environment.setWindowsTaskbar(false);
-    expect(environment.shown(environment.store.getState())?.windowsTaskbar).toBe(false);
-    core.settle(new Error("no"));
-    await done;
-    expect(environment.shown(environment.store.getState())?.windowsTaskbar).toBe(true);
-  });
-
-  it("keeps the two switches independent while both wait for an answer", async () => {
-    const core = fakeCore(state());
-    const environment = createEnvironmentStore(() => core.api, vi.fn());
-    environment.load();
-    await flush();
-    void environment.setOn(false);
-    void environment.setWindowsTaskbar(true);
-    expect(environment.shown(environment.store.getState())).toMatchObject({ on: false, windowsTaskbar: true });
+    expect(environment.shown(environment.store.getState())?.on).toBe(true);
   });
 
   it("follows changes the core pushes, such as the environment turned off from elsewhere", async () => {

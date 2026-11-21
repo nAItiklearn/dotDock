@@ -189,11 +189,10 @@ describe("Dock / Taskbar", () => {
     expect((await lastWrite()).reserveSpace).toBe(false);
   });
 
-  it("never edits the Windows taskbar choice itself; it links to the switch at the end of Settings", async () => {
+  it("never edits whether the dock runs or replaces the taskbar; the theme switch decides that", async () => {
     render(<DockTaskbarPage />);
-    const link = await screen.findByRole("link", { name: "Open Recovery" });
-    expect(link.getAttribute("href")).toContain("recovery");
-    fireEvent.click(screen.getByRole("switch", { name: "Keep windows clear of the dock" }));
+    expect(screen.queryByText(/Windows taskbar/)).toBeNull();
+    fireEvent.click(await screen.findByRole("switch", { name: "Keep windows clear of the dock" }));
     const written = await lastWrite();
     expect(written.enabled).toBe(START.enabled);
     expect(written.replaceTaskbar).toBe(START.replaceTaskbar);

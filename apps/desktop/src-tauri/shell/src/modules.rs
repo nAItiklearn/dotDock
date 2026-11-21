@@ -200,13 +200,9 @@ impl Inner {
         self.slots.get(&id).is_some_and(|s| s.lifecycle.is_some())
     }
 
-    /// Whether the user's choices call for this part, before asking whether what it needs is up. "Use the
-    /// Windows taskbar" gives Windows its own bar back: the dock and its taking the taskbar's place both stop.
+    /// Whether the user's choices call for this part, before asking whether what it needs is up.
     fn wanted(&self, id: ModuleId) -> bool {
-        match id {
-            ModuleId::Dock | ModuleId::Taskbar => self.choices.environment && !self.choices.windows_taskbar,
-            ModuleId::Home | ModuleId::Notch => self.choices.environment,
-        }
+        self.choices.environment && (id != ModuleId::Taskbar || !self.choices.windows_taskbar)
     }
 
     fn requirement_met(&self, id: ModuleId) -> bool {
@@ -339,8 +335,6 @@ impl Inner {
                 // Saving the old choice is best effort: the file still holds it unless this very write fails.
                 let _ = self.persist();
                 self.slot(ModuleId::Taskbar).error = None;
-                // Back on the Windows taskbar, so the dock that started for the replacement stops again.
-                self.reconcile(restore);
                 Err(ModuleError::StartFailed { module: ModuleId::Taskbar, reason })
             }
             _ => Ok(()),
@@ -575,15 +569,14 @@ mod tests {
     }
 
     #[test]
-    fn the_windows_taskbar_choice_puts_the_real_taskbar_back_and_hides_the_dock() {
+    fn the_windows_taskbar_choice_keeps_the_dock_and_stops_only_the_replacement() {
         let r = full(None);
         clear(&r.log);
         let after = r.modules.set_windows_taskbar(true).expect("windows taskbar");
-        assert_eq!(entries(&r.log), ["stop taskbar", "restore taskbar", "stop dock"]);
+        assert_eq!(entries(&r.log), ["stop taskbar", "restore taskbar"]);
         assert!(after.windows_taskbar && after.on);
-        assert_eq!(state(&r.modules, ModuleId::Dock), State::Stopped);
+        assert_eq!(state(&r.modules, ModuleId::Dock), State::Running);
         assert_eq!(state(&r.modules, ModuleId::Taskbar), State::Stopped);
-        assert_eq!(state(&r.modules, ModuleId::Home), State::Running, "the rest of the environment stays");
     }
 
     #[test]
@@ -592,7 +585,7 @@ mod tests {
         r.modules.set_windows_taskbar(true).expect("windows taskbar");
         clear(&r.log);
         let after = r.modules.set_windows_taskbar(false).expect("dock taskbar");
-        assert_eq!(entries(&r.log), ["start dock", "start taskbar"]);
+        assert_eq!(entries(&r.log), ["start taskbar"]);
         assert!(!after.windows_taskbar);
     }
 
@@ -604,7 +597,7 @@ mod tests {
         clear(&r.log);
         r.modules.set_windows_taskbar(true).expect("windows taskbar");
         r.modules.set_environment(true).expect("on");
-        assert_eq!(entries(&r.log), ["start home", "start notch"], "no dock and no replacement: the choice held");
+        assert_eq!(entries(&r.log), ["start home", "start dock", "start notch"], "no replacement: the choice held");
     }
 
     #[test]
@@ -647,7 +640,6 @@ mod tests {
             })
         );
         assert!(r.modules.environment().windows_taskbar, "the switch is back on Windows");
-        assert_eq!(state(&r.modules, ModuleId::Dock), State::Stopped, "and the dock went with it");
         assert!(load(&dir.path().join(FILE)).windows_taskbar, "and the file says so too");
         assert!(r.restores.load(Ordering::SeqCst) >= 2, "every failed start restores the real taskbar");
     }
@@ -689,7 +681,7 @@ mod tests {
             Environment { on: false, windows_taskbar: true, taskbar_replacement: true, problems: vec![] }
         );
         second.modules.set_environment(true).expect("on");
-        assert_eq!(entries(&second.log), ["start home", "start notch"], "the Windows taskbar, so no dock");
+        assert_eq!(entries(&second.log), ["start home", "start dock", "start notch"]);
     }
 
     #[test]

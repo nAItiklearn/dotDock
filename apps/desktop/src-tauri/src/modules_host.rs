@@ -1,5 +1,5 @@
-//! Wires the module manager into the app: the two switches at the end of Settings, the event that
-//! tells every window their answer, and the one place where the parts are plugged in.
+//! Wires the module manager into the app: the dotDock theme switch at the end of Settings, the event
+//! that tells every window its answer, and the one place where the parts are plugged in.
 //!
 //! The manager itself (`dotdock_shell::modules`) knows nothing about windows. A part is a
 //! `Lifecycle`; `start_enabled` registers each part this build has, and a part registered there
@@ -135,14 +135,4 @@ fn switch_theme(app: &AppHandle, on: bool) -> Result<Environment, String> {
     // The parts' own change already told every window; this one carries the hand-over problem too.
     let _ = app.emit(EVENT_CHANGED, environment.clone());
     Ok(environment)
-}
-
-/// Keeps the Windows taskbar (`use_windows`), or lets the dock's replacement take its place.
-#[tauri::command]
-pub async fn taskbar_set(app: AppHandle, use_windows: bool) -> Result<Environment, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        app.state::<Modules>().set_windows_taskbar(use_windows).map_err(|e| e.to_string())
-    })
-    .await
-    .map_err(|e| e.to_string())?
 }

@@ -5,6 +5,7 @@
 //! The dock window is a transparent sheet over the primary monitor, hidden until the UI has asked for its first
 //! snapshot, click-through except where the UI says it draws something (`dock_set_regions`).
 
+use crate::lifecycle;
 use dotdock_dock::backdrop;
 use dotdock_dock::host::{DockHost, Hooks};
 use dotdock_dock::icons::{self, webview_url};
@@ -12,7 +13,6 @@ use dotdock_dock::protocol::{
     Category, CategoryId, CommandResult, DockApp, DockEvent, DockSettings, DockSnapshot, DockWindow, PreviewArgs, Rect,
 };
 use dotdock_dock::service::{DockService, ServiceConfig};
-use crate::lifecycle;
 use dotdock_shell::modules::{Lifecycle, Modules};
 use dotdock_shell::{boot_log, dock_guard};
 use std::sync::{Arc, Mutex, PoisonError};
@@ -102,8 +102,12 @@ impl Hooks for AppHooks {
     }
 
     fn taskbar_refused(&self, reason: &str) {
-        boot_log::record(&format!("dock: the taskbar could not be hidden: {reason}"));
-        use_windows_taskbar(&self.0);
+        // The host has already put the taskbar back; the next start of the dotDock theme tries again.
+        boot_log::record(&format!("dock: the taskbar could not be hidden, the Windows taskbar stays: {reason}"));
+    }
+
+    fn wallpaper_changed(&self) {
+        crate::wallpaper_host::announce(&self.0);
     }
 
     fn quit(&self) {
@@ -113,25 +117,18 @@ impl Hooks for AppHooks {
     }
 }
 
-/// Switches to the Windows taskbar, as "Use the Windows taskbar" does, so the choice Settings shows matches the
-/// screen. Runs on a thread of its own: the hook can fire while the module manager is busy starting a part.
-fn use_windows_taskbar(app: &AppHandle) {
+/// The "Restore Windows desktop" action gave Windows its desktop back, taskbar included: the dotDock theme goes off,
+/// so the dock does not take the taskbar's place again. Switching the theme on brings everything back. Runs on a
+/// thread of its own: stopping the parts waits for their windows, which the main thread must be free to close.
+pub fn taskbar_released(app: &AppHandle) {
     let app = app.clone();
-    let spawned = std::thread::Builder::new().name("dock-taskbar-back".into()).spawn(move || {
-        if let Err(error) = app.state::<Modules>().set_windows_taskbar(true) {
-            boot_log::record(&format!("dock: could not switch to the Windows taskbar: {error}"));
+    let spawned = std::thread::Builder::new().name("dock-theme-off".into()).spawn(move || {
+        if let Err(error) = app.state::<Modules>().set_environment(false) {
+            boot_log::record(&format!("dock: the theme could not go off after the restore: {error}"));
         }
     });
     if let Err(error) = spawned {
-        boot_log::record(&format!("dock: could not switch to the Windows taskbar: {error}"));
-    }
-}
-
-/// The "Restore Windows desktop" action put the taskbar back by itself: the dock must stop taking its place, or the
-/// next change of settings would hide it again.
-pub fn taskbar_released(app: &AppHandle) {
-    if app.try_state::<DockState>().is_some() {
-        use_windows_taskbar(app);
+        boot_log::record(&format!("dock: the theme could not go off after the restore: {error}"));
     }
 }
 

@@ -130,23 +130,53 @@
   align-items: center;
   gap: var(--space-3);
 }
+/* The track and its filled part are two flat bars under a transparent range input. */
+.isl-slider__track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 160px;
+}
+.isl-slider__track::before,
+.isl-slider__fill {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.isl-slider__track::before {
+  right: 0;
+  background: var(--dot-off);
+}
+.isl-slider__fill {
+  width: var(--fill);
+  background: var(--accent);
+}
 .isl-slider input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 160px;
+  position: relative;
+  width: 100%;
   height: var(--isl-control-h);
   margin: 0;
   background: transparent;
   cursor: pointer;
 }
-.isl-slider input[type="range"]:disabled {
+.isl-slider input[type="range"]:disabled,
+.isl-slider__track:has(input:disabled) .isl-slider__fill {
   opacity: 0.4;
+}
+.isl-slider input[type="range"]:disabled {
   cursor: default;
 }
 .isl-slider input[type="range"]::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: var(--radius-pill);
-  background: linear-gradient(to right, var(--accent) var(--fill), var(--dot-off) var(--fill));
+  background: transparent;
 }
 .isl-slider input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;

@@ -9,13 +9,11 @@ import { bootSummary, RecoveryPage } from "./RecoveryPage";
 afterEach(() => setNativeApi(null));
 
 describe("Recovery page", () => {
-  it("ends Settings with the two low-key switches, the theme first, then the taskbar", () => {
+  it("ends Settings with the one low-key switch, the dotDock theme, and no taskbar switch", () => {
     setNativeApi(createMockNativeApi());
     const html = renderToStaticMarkup(<RecoveryPage />);
-    const theme = html.indexOf("dotDock theme");
-    const taskbar = html.indexOf("Use the Windows taskbar");
-    expect(theme).toBeGreaterThan(-1);
-    expect(taskbar).toBeGreaterThan(theme);
+    expect(html).toContain("dotDock theme");
+    expect(html).not.toContain("Use the Windows taskbar");
   });
 
   it("is the last page of the last section, so the switches really are the end of Settings", () => {

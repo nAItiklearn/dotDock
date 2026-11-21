@@ -168,11 +168,6 @@ export function Prefs({ from, drawn }: { readonly from: Rect; /** The theme the 
         </section>
 
         <section className="prefs__group">
-          <h3 className="caps">{t("prefs.taskbar")}</h3>
-          <Switch checked={settings.replaceTaskbar} label={t("prefs.taskbar.replace")} onChange={(replaceTaskbar) => void actions.updateSettings({ replaceTaskbar })} />
-        </section>
-
-        <section className="prefs__group">
           <button type="button" className="prefs__reset" data-confirm={resetStep === "confirm" ? "true" : undefined} onClick={reset}>
             {resetStep === "confirm" ? t("prefs.reset.confirm") : t("prefs.reset")}
           </button>

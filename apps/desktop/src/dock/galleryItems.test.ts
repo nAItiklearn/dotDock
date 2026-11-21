@@ -7,7 +7,6 @@ import {
   GALLERY_CATEGORIES,
   galleryItems,
   isAddable,
-  OPT_IN_SERVICES,
   placeTile,
   type GalleryInput,
 } from "./galleryItems";
@@ -51,11 +50,10 @@ describe("galleryItems", () => {
     expect(items.find((i) => i.key === "stack:media")?.appCount).toBe(2);
   });
 
-  it("reserves a closed slot for each account-based service", () => {
-    const slots = items.filter((i) => i.kind === "optin");
-    expect(slots.map((i) => i.service)).toEqual([...OPT_IN_SERVICES]);
-    expect(slots.every((i) => i.category === "developer" && !i.onDock)).toBe(true);
-    expect(OPT_IN_SERVICES).toEqual(["github", "linear", "vercel"]);
+  it("offers no developer or account tile in this version (V2, D-037)", () => {
+    expect(items.every((i) => i.kind === "tile" || i.kind === "stack")).toBe(true);
+    expect((GALLERY_CATEGORIES as readonly string[]).includes("developer")).toBe(false);
+    expect(items.some((i) => /github|linear|vercel/i.test(i.name))).toBe(false);
   });
 
   it("gives every card its own key and puts it in a group that exists", () => {
@@ -70,10 +68,9 @@ describe("galleryItems", () => {
 
 describe("isAddable", () => {
   const items = galleryItems(input());
-  it("is true for what is not on the dock, and false for what is, and for closed slots", () => {
+  it("is true for what is not on the dock, and false for what is", () => {
     expect(isAddable(items.find((i) => i.key === "tile:media") ?? items[0]!)).toBe(true);
     expect(isAddable(items.find((i) => i.key === "tile:clock") ?? items[0]!)).toBe(false);
-    expect(isAddable(items.find((i) => i.kind === "optin") ?? items[0]!)).toBe(false);
   });
 });
 
@@ -84,7 +81,6 @@ describe("filterGallery", () => {
   it("shows everything with no search and no group, and one group when picked", () => {
     expect(filterGallery(items, "", "all")).toHaveLength(items.length);
     expect(keys(filterGallery(items, "", "people"))).toEqual(["tile:contacts"]);
-    expect(keys(filterGallery(items, "", "developer"))).toEqual(["optin:github", "optin:linear", "optin:vercel"]);
   });
 
   it("finds a tile by its name, best match first", () => {
@@ -105,11 +101,6 @@ describe("filterGallery", () => {
 
   it("ignores accents and case", () => {
     expect(keys(filterGallery(items, "CALENDÁR", "all"))).toContain("tile:agenda");
-  });
-
-  it("finds the closed slots by their service", () => {
-    expect(keys(filterGallery(items, "github", "all"))).toEqual(["optin:github"]);
-    expect(keys(filterGallery(items, "deployments", "all"))).toContain("optin:vercel");
   });
 
   it("keeps a search inside the group that is picked", () => {

@@ -32,8 +32,9 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 use windows::Win32::UI::Shell::ABN_POSCHANGED;
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, GetMessageW, PostMessageW, PostQuitMessage,
-    RegisterClassW, RegisterWindowMessageW, TranslateMessage, UnregisterClassW, MSG, SPI_SETWORKAREA, WINDOW_EX_STYLE,
-    WM_APP, WM_CLOSE, WM_DESTROY, WM_DISPLAYCHANGE, WM_HOTKEY, WM_SETTINGCHANGE, WNDCLASSW, WS_EX_TOOLWINDOW, WS_POPUP,
+    RegisterClassW, RegisterWindowMessageW, TranslateMessage, UnregisterClassW, MSG, SPI_SETDESKWALLPAPER,
+    SPI_SETWORKAREA, WINDOW_EX_STYLE, WM_APP, WM_CLOSE, WM_DESTROY, WM_DISPLAYCHANGE, WM_HOTKEY, WM_SETTINGCHANGE,
+    WNDCLASSW, WS_EX_TOOLWINDOW, WS_POPUP,
 };
 
 const CLASS_NAME: windows::core::PCWSTR = w!("DotDockDockHost");
@@ -99,6 +100,8 @@ thread_local! {
     /// A message that needs the window placed again arrived while a call into the shell was blocking this
     /// thread (the shell sends messages to us from inside such calls). It is handled right after.
     static REPLACE_AGAIN: Cell<bool> = const { Cell::new(false) };
+    /// The same for an announcement that the desktop wallpaper changed: it is passed on right after.
+    static WALLPAPER_AGAIN: Cell<bool> = const { Cell::new(false) };
 }
 
 fn px(rect: RECT) -> PxRect {
@@ -241,10 +244,18 @@ fn with_controller(f: impl FnOnce(&mut Controller), on_reentry: impl FnOnce()) {
                 if REPLACE_AGAIN.take() {
                     controller.apply(false);
                 }
+                if WALLPAPER_AGAIN.take() {
+                    controller.hooks.wallpaper_changed();
+                }
             }
         }
         Err(_) => on_reentry(),
     });
+}
+
+/// `WM_SETTINGCHANGE` with `SPI_SETDESKWALLPAPER`: Windows' broadcast that the desktop wallpaper changed.
+fn is_wallpaper_announcement(message: u32, wparam: WPARAM) -> bool {
+    message == WM_SETTINGCHANGE && wparam.0 == SPI_SETDESKWALLPAPER.0 as usize
 }
 
 unsafe extern "system" fn wnd_proc(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
@@ -259,6 +270,10 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, message: u32, wparam: WPARAM, lpa
         }
         WM_DISPLAYCHANGE => {
             with_controller(|c| c.apply(true), || REPLACE_AGAIN.set(true));
+            LRESULT(0)
+        }
+        WM_SETTINGCHANGE if is_wallpaper_announcement(message, wparam) => {
+            with_controller(|c| c.hooks.wallpaper_changed(), || WALLPAPER_AGAIN.set(true));
             LRESULT(0)
         }
         WM_SETTINGCHANGE if wparam.0 == SPI_SETWORKAREA.0 as usize => {
@@ -449,5 +464,21 @@ fn run(parts: Parts, published: &AtomicIsize, ready: &std::sync::mpsc::SyncSende
         }
         drop(controller);
         let _ = UnregisterClassW(CLASS_NAME, Some(instance.into()));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use windows::Win32::UI::WindowsAndMessaging::SPI_SETDESKPATTERN;
+
+    #[test]
+    fn only_the_wallpaper_setting_change_is_a_wallpaper_announcement() {
+        let wallpaper = WPARAM(SPI_SETDESKWALLPAPER.0 as usize);
+        assert!(is_wallpaper_announcement(WM_SETTINGCHANGE, wallpaper));
+        assert!(!is_wallpaper_announcement(WM_SETTINGCHANGE, WPARAM(SPI_SETWORKAREA.0 as usize)), "the work area");
+        assert!(!is_wallpaper_announcement(WM_SETTINGCHANGE, WPARAM(SPI_SETDESKPATTERN.0 as usize)), "the pattern");
+        assert!(!is_wallpaper_announcement(WM_SETTINGCHANGE, WPARAM(0)), "a policy or locale change");
+        assert!(!is_wallpaper_announcement(WM_DISPLAYCHANGE, wallpaper), "another message with the same number");
     }
 }

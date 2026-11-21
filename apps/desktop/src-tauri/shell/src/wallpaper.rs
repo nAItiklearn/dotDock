@@ -1,7 +1,7 @@
 //! Sets the real Windows wallpaper per monitor via `IDesktopWallpaper`. Because Windows itself
 //! draws it, the user's wallpaper is on screen from the first frame of sign-in, before any app runs.
 
-use crate::snapshot;
+use crate::{boot_log, snapshot, wallpaper_follow};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use windows::core::{HSTRING, PCWSTR, PWSTR};
@@ -121,13 +121,38 @@ pub fn fit() -> Result<Fit, WallpaperError> {
     Ok(Fit::from_position(position))
 }
 
-/// Applies `path` to one monitor (device path from `monitors()`) or, with None, to every monitor.
-pub fn apply(path: &Path, monitor: Option<&str>, fit: Fit) -> Result<(), WallpaperError> {
-    if !path.is_file() {
-        return Err(WallpaperError::Missing(path.display().to_string()));
+/// A path Windows may be handed as the wallpaper: absolute (a drive or a share, never relative to the working
+/// folder) and an existing file. A path that is neither once left Windows with a black desktop (D-042).
+pub fn is_usable(path: &Path) -> bool {
+    path.is_absolute() && path.is_file()
+}
+
+/// What to set when asked for `wanted`: `wanted` itself when it is usable, else the saved copy of the user's own
+/// wallpaper when that is, else nothing.
+pub fn choose_path(wanted: &Path, saved_copy: Option<&Path>, usable: impl Fn(&Path) -> bool) -> Option<PathBuf> {
+    if usable(wanted) {
+        return Some(wanted.to_path_buf());
     }
+    saved_copy.filter(|copy| usable(copy)).map(Path::to_path_buf)
+}
+
+/// Applies `path` to one monitor (device path from `monitors()`) or, with None, to every monitor. A path that is
+/// not absolute or does not exist is refused; the saved copy of the user's own wallpaper is set instead (logged).
+pub fn apply(path: &Path, monitor: Option<&str>, fit: Fit) -> Result<(), WallpaperError> {
     // The original wallpaper must be on record before the first change, so restore always works.
     snapshot::ensure(false)?;
+    let saved_copy = snapshot::load()?.and_then(|s| s.wallpaper_copy).map(PathBuf::from);
+    let chosen = choose_path(path, saved_copy.as_deref(), is_usable)
+        .ok_or_else(|| WallpaperError::Missing(path.display().to_string()))?;
+    if chosen != path {
+        boot_log::record(&format!(
+            "wallpaper: refused {} (not an absolute path to a file), set the saved copy {} instead",
+            path.display(),
+            chosen.display()
+        ));
+    }
+    let path = chosen.as_path();
+    wallpaper_follow::note_own_write(path);
     let _com = ComGuard::new()?;
     // SAFETY: standard COM activation of the shell's wallpaper object; all calls use owned HSTRINGs.
     unsafe {
@@ -261,6 +286,32 @@ mod tests {
         let all = bundled(&dir).expect("shipped manifest parses");
         assert!(all.len() >= 32, "16 wallpapers x dark/light");
         assert!(all.iter().all(|(_, p)| p.is_file()), "every manifest entry has its file");
+    }
+
+    #[test]
+    fn only_an_absolute_path_to_an_existing_file_is_handed_to_windows() {
+        let dir = tempfile::tempdir().expect("dir");
+        let picture = dir.path().join("picture.jpeg");
+        std::fs::write(&picture, b"jpeg").expect("write");
+        assert!(is_usable(&picture));
+        assert!(!is_usable(&dir.path().join("gone.jpeg")), "missing");
+        assert!(!is_usable(dir.path()), "a folder");
+        // The path that blacked out the desktop: a shell variable mangled into a relative path.
+        assert!(!is_usable(Path::new(r":LOCALAPPDATA\dev.dotdock.desktop\original-wallpaper.jpeg")));
+        assert!(!is_usable(Path::new(r"dev.dotdock.desktop\original-wallpaper.jpeg")), "relative");
+        assert!(!is_usable(Path::new(r"\dev.dotdock.desktop\original-wallpaper.jpeg")), "no drive");
+    }
+
+    #[test]
+    fn a_refused_path_falls_back_to_the_saved_copy_and_never_to_another_bad_one() {
+        let dir = tempfile::tempdir().expect("dir");
+        let copy = dir.path().join("original-wallpaper.jpeg");
+        std::fs::write(&copy, b"jpeg").expect("write");
+        let mangled = Path::new(r":LOCALAPPDATA\dev.dotdock.desktop\original-wallpaper.jpeg");
+        assert_eq!(choose_path(mangled, Some(&copy), is_usable), Some(copy.clone()));
+        assert_eq!(choose_path(&copy, None, is_usable), Some(copy.clone()), "a usable path is kept");
+        assert_eq!(choose_path(mangled, Some(mangled), is_usable), None, "a bad copy is refused too");
+        assert_eq!(choose_path(mangled, None, is_usable), None);
     }
 
     #[test]

@@ -11,6 +11,7 @@ mod providers;
 mod tiles_host;
 mod tray;
 mod updater;
+mod wallpaper_host;
 
 use desktop_host::HitRegions;
 use dotdock_shell::crash_guard::{self, StartDecision};
@@ -171,7 +172,6 @@ fn build_and_run(primary: bool) {
             home_host::overlay_work_area,
             modules_host::environment_get,
             modules_host::environment_set,
-            modules_host::taskbar_set,
             island_host::island_ready,
             island_host::island_state,
             island_host::island_set_regions,
@@ -243,6 +243,8 @@ fn build_and_run(primary: bool) {
             // Decided before any window exists: the first window creates the traces of an earlier run.
             let first_start = dotdock_shell::app_data_dir().and_then(|dir| first_run::claim(&dir));
             modules_host::install(&handle);
+            // Before the dock host: its window passes Windows' wallpaper announcements on.
+            wallpaper_host::start(&handle)?;
             // The dock's backend and host come up without a window; the dock and taskbar parts decide
             // whether it shows and whether it takes the taskbar's place.
             dock_host::start(&handle)?;

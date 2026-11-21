@@ -82,13 +82,35 @@ function Set-DesktopIconsVisible([bool]$Visible) {
     [void][DotDock.Native]::SendMessage((Get-DesktopDefView), $wmCommand, [IntPtr]$toggleIconsCommand, [IntPtr]::Zero)
 }
 
+# A path Windows may be handed as the wallpaper: a drive or share path (never relative to the current folder)
+# to a file that exists. Anything else once left Windows with a black desktop (docs/DECISIONS.md D-042).
+function Test-UsableWallpaperPath([string]$Path) {
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $false }
+    if ($Path -notmatch '^(?:[A-Za-z]:\\|\\\\[^\\]+\\)') { return $false }
+    return (Test-Path -LiteralPath $Path -PathType Leaf)
+}
+
+# The first usable picture of the snapshot: its private copy, then the original path. $null when neither is.
+function Select-RestoreWallpaper($Snapshot) {
+    foreach ($candidate in @($Snapshot.wallpaperCopy, $Snapshot.wallpaper)) {
+        if (Test-UsableWallpaperPath $candidate) { return [string]$candidate }
+    }
+    return $null
+}
+
 function Set-Wallpaper([string]$Path, [string]$Style, [string]$Tile) {
+    if (-not (Test-UsableWallpaperPath $Path)) { throw "refusing wallpaper path '$Path': not an absolute path to a file" }
     if ($null -ne $Style) { Set-ItemProperty -Path $script:DesktopKey -Name WallpaperStyle -Value $Style }
     if ($null -ne $Tile) { Set-ItemProperty -Path $script:DesktopKey -Name TileWallpaper -Value $Tile }
     $spiSetDeskWallpaper = 0x0014
     $updateAndBroadcast = 0x01 -bor 0x02
-    $value = if ($Path) { $Path } else { '' }
-    [void][DotDock.Native]::SystemParametersInfo($spiSetDeskWallpaper, 0, $value, $updateAndBroadcast)
+    [void][DotDock.Native]::SystemParametersInfo($spiSetDeskWallpaper, 0, $Path, $updateAndBroadcast)
+}
+
+# The wallpaper Windows has on record after a change, and whether that file exists.
+function Get-RegistryWallpaper {
+    $path = (Get-ItemProperty -Path $script:DesktopKey -Name WallPaper -ErrorAction SilentlyContinue).WallPaper
+    [pscustomobject]@{ Path = $path; Exists = (Test-UsableWallpaperPath $path) }
 }
 
 # ---------- Taskbar (dock phase) ----------
