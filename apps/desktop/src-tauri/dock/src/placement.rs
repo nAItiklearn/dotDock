@@ -5,8 +5,6 @@
 //! everything else (magnified icons, stack popovers, previews, the App Library) is drawn on the rest of the
 //! sheet. The space the dock *reserves* (the app bar) is only the strip the bar itself occupies.
 
-use crate::protocol::DockEdge;
-
 /// A rectangle in physical pixels, edges as Win32 gives them (`right` and `bottom` are exclusive).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PxRect {
@@ -51,22 +49,15 @@ pub fn reserve_depth_px(icon_size: u32, scale: f64) -> i32 {
     (reserve_depth_css(icon_size) * scale).ceil() as i32
 }
 
-/// The rectangle of the dock window.
+/// The rectangle of the dock window, which always sits along the bottom of the monitor (D-029).
 ///
-/// - With a granted strip (the app bar is registered) the window runs from the strip's outer edge, which is
-///   where other bars stopped, to the opposite edge of the monitor.
-/// - Floating, it runs from the edge of the work area, so the dock rests above a visible taskbar instead of
-///   over it.
+/// - With a granted strip (the app bar is registered) the window ends at the strip's bottom, which is where other
+///   bars stopped.
+/// - Floating, it ends at the bottom of the work area, so the dock rests above a visible taskbar instead of over it.
 ///
-/// The other axis always spans the whole monitor: the sheet has to hold popovers and the App Library.
-pub fn window_rect(monitor: PxRect, work: PxRect, edge: DockEdge, granted: Option<PxRect>) -> PxRect {
-    let docked = granted.unwrap_or(work);
-    match edge {
-        DockEdge::Bottom => PxRect { bottom: docked.bottom, ..monitor },
-        DockEdge::Top => PxRect { top: docked.top, ..monitor },
-        DockEdge::Left => PxRect { left: docked.left, ..monitor },
-        DockEdge::Right => PxRect { right: docked.right, ..monitor },
-    }
+/// It always spans the whole monitor otherwise: the sheet has to hold popovers and the App Library.
+pub fn window_rect(monitor: PxRect, work: PxRect, granted: Option<PxRect>) -> PxRect {
+    PxRect { bottom: granted.unwrap_or(work).bottom, ..monitor }
 }
 
 #[cfg(test)]
@@ -104,36 +95,25 @@ mod tests {
     fn a_reserving_dock_starts_where_the_other_bars_stop() {
         // The taskbar holds the bottom 48 px, so the system grants the strip above it.
         let granted = PxRect { left: 0, top: 948, right: 1920, bottom: 1032 };
-        let window = window_rect(MONITOR, WORK, DockEdge::Bottom, Some(granted));
+        let window = window_rect(MONITOR, WORK, Some(granted));
         assert_eq!(window, PxRect { left: 0, top: 0, right: 1920, bottom: 1032 });
     }
 
     #[test]
     fn a_floating_dock_rests_on_the_work_area() {
-        assert_eq!(window_rect(MONITOR, WORK, DockEdge::Bottom, None), PxRect { bottom: 1032, ..MONITOR });
-        let side = PxRect { left: 60, ..MONITOR };
-        assert_eq!(window_rect(MONITOR, side, DockEdge::Left, None), side);
+        assert_eq!(window_rect(MONITOR, WORK, None), PxRect { bottom: 1032, ..MONITOR });
     }
 
     #[test]
-    fn every_edge_keeps_the_far_side_of_the_monitor() {
-        let granted = |edge| match edge {
-            DockEdge::Bottom => PxRect { top: 996, ..MONITOR },
-            DockEdge::Top => PxRect { bottom: 84, ..MONITOR },
-            DockEdge::Left => PxRect { right: 84, ..MONITOR },
-            DockEdge::Right => PxRect { left: 1836, ..MONITOR },
-        };
-        let rect = |edge| window_rect(MONITOR, MONITOR, edge, Some(granted(edge)));
-        assert_eq!(rect(DockEdge::Bottom), MONITOR);
-        assert_eq!(rect(DockEdge::Top), MONITOR);
-        assert_eq!(rect(DockEdge::Left), MONITOR);
-        assert_eq!(rect(DockEdge::Right), MONITOR);
+    fn a_dock_with_its_own_strip_covers_the_monitor_down_to_the_strip() {
+        let granted = PxRect { top: 996, ..MONITOR };
+        assert_eq!(window_rect(MONITOR, MONITOR, Some(granted)), MONITOR);
     }
 
     #[test]
     fn a_bar_on_a_secondary_monitor_keeps_its_offset() {
         let second = PxRect { left: 1920, top: 0, right: 3840, bottom: 1080 };
         let granted = PxRect { left: 1920, top: 996, right: 3840, bottom: 1080 };
-        assert_eq!(window_rect(second, second, DockEdge::Bottom, Some(granted)), second);
+        assert_eq!(window_rect(second, second, Some(granted)), second);
     }
 }

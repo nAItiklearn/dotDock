@@ -2,15 +2,15 @@
 //! hide the Windows taskbar. Pure, so every combination is tested without a screen.
 
 use crate::frozen::FrozenState;
-use crate::protocol::{DockEdge, DockSettings};
+use crate::protocol::DockSettings;
 
 /// Everything the host needs to make true.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Plan {
     /// The dock window is on screen.
     pub visible: bool,
-    /// Keep a strip along this edge free of maximised windows.
-    pub reserve: Option<DockEdge>,
+    /// Keep the strip along the bottom free of maximised windows.
+    pub reserve: bool,
     /// The Windows taskbar is hidden.
     pub hide_taskbar: bool,
 }
@@ -35,7 +35,7 @@ pub fn plan(settings: &DockSettings, inputs: Inputs) -> Plan {
     let live = settings.enabled && inputs.window && inputs.ui_ready;
     Plan {
         visible: live && !inputs.frozen.frozen(),
-        reserve: (live && settings.reserve_space && !settings.auto_hide).then_some(settings.edge),
+        reserve: live && settings.reserve_space && !settings.auto_hide,
         hide_taskbar: live && settings.replace_taskbar,
     }
 }
@@ -59,16 +59,16 @@ mod tests {
     #[test]
     fn a_fresh_install_shows_the_dock_and_reserves_space_but_leaves_the_taskbar_alone() {
         let plan = plan(&DockSettings::default(), READY);
-        assert_eq!(plan, Plan { visible: true, reserve: Some(DockEdge::Bottom), hide_taskbar: false });
+        assert_eq!(plan, Plan { visible: true, reserve: true, hide_taskbar: false });
     }
 
     #[test]
     fn nothing_happens_before_the_ui_can_draw() {
         let early = Inputs { ui_ready: false, ..READY };
         let loud = settings(|s| s.replace_taskbar = true);
-        assert_eq!(plan(&loud, early), Plan { visible: false, reserve: None, hide_taskbar: false });
+        assert_eq!(plan(&loud, early), Plan { visible: false, reserve: false, hide_taskbar: false });
         let no_window = Inputs { window: false, ..READY };
-        assert_eq!(plan(&loud, no_window), Plan { visible: false, reserve: None, hide_taskbar: false });
+        assert_eq!(plan(&loud, no_window), Plan { visible: false, reserve: false, hide_taskbar: false });
     }
 
     #[test]
@@ -77,7 +77,7 @@ mod tests {
             s.enabled = false;
             s.replace_taskbar = true;
         });
-        assert_eq!(plan(&off, READY), Plan { visible: false, reserve: None, hide_taskbar: false });
+        assert_eq!(plan(&off, READY), Plan { visible: false, reserve: false, hide_taskbar: false });
     }
 
     #[test]
@@ -87,16 +87,9 @@ mod tests {
     }
 
     #[test]
-    fn the_reserved_strip_follows_the_edge() {
-        for edge in [DockEdge::Top, DockEdge::Left, DockEdge::Right, DockEdge::Bottom] {
-            assert_eq!(plan(&settings(|s| s.edge = edge), READY).reserve, Some(edge));
-        }
-    }
-
-    #[test]
     fn floating_and_auto_hiding_docks_reserve_nothing() {
-        assert_eq!(plan(&settings(|s| s.reserve_space = false), READY).reserve, None);
-        assert_eq!(plan(&settings(|s| s.auto_hide = true), READY).reserve, None);
+        assert!(!plan(&settings(|s| s.reserve_space = false), READY).reserve);
+        assert!(!plan(&settings(|s| s.auto_hide = true), READY).reserve);
     }
 
     #[test]
@@ -108,7 +101,7 @@ mod tests {
             FrozenState { fullscreen: true, ..FrozenState::default() },
         ] {
             let plan = plan(&replace, Inputs { frozen, ..READY });
-            assert_eq!(plan, Plan { visible: false, reserve: Some(DockEdge::Bottom), hide_taskbar: true });
+            assert_eq!(plan, Plan { visible: false, reserve: true, hide_taskbar: true });
         }
     }
 }

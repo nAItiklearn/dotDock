@@ -5,109 +5,81 @@
 //! bar when dropped, so an early return or a panic cannot leave a bar registered; `Drop` also runs on the
 //! unwinding path of the panic hook the app installs.
 
-use crate::protocol::DockEdge;
 use std::io;
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT};
 use windows::Win32::Graphics::Gdi::{
     GetMonitorInfoW, MonitorFromPoint, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTOPRIMARY,
 };
 use windows::Win32::UI::Shell::{
-    SHAppBarMessage, ABE_BOTTOM, ABE_LEFT, ABE_RIGHT, ABE_TOP, ABM_NEW, ABM_QUERYPOS, ABM_REMOVE, ABM_SETPOS,
-    APPBARDATA,
+    SHAppBarMessage, ABE_BOTTOM, ABM_NEW, ABM_QUERYPOS, ABM_REMOVE, ABM_SETPOS, APPBARDATA,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     MoveWindow, SystemParametersInfoW, SPI_GETWORKAREA, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
 };
 
-fn abe(edge: DockEdge) -> u32 {
-    match edge {
-        DockEdge::Bottom => ABE_BOTTOM,
-        DockEdge::Top => ABE_TOP,
-        DockEdge::Left => ABE_LEFT,
-        DockEdge::Right => ABE_RIGHT,
-    }
-}
-
-/// The strip of `monitor` along `edge`, `thickness` px deep.
-pub fn strip(monitor: RECT, edge: DockEdge, thickness: i32) -> RECT {
-    match edge {
-        DockEdge::Bottom => RECT { top: monitor.bottom - thickness, ..monitor },
-        DockEdge::Top => RECT { bottom: monitor.top + thickness, ..monitor },
-        DockEdge::Left => RECT { right: monitor.left + thickness, ..monitor },
-        DockEdge::Right => RECT { left: monitor.right - thickness, ..monitor },
-    }
+/// The strip along the bottom of `monitor`, `thickness` px deep. The dock lives at the bottom only (D-029).
+pub fn strip(monitor: RECT, thickness: i32) -> RECT {
+    RECT { top: monitor.bottom - thickness, ..monitor }
 }
 
 /// Keeps the depth the dock asked for after the system has moved the strip out of the way of other bars.
-pub fn with_thickness(queried: RECT, edge: DockEdge, thickness: i32) -> RECT {
-    match edge {
-        DockEdge::Bottom => RECT { top: queried.bottom - thickness, ..queried },
-        DockEdge::Top => RECT { bottom: queried.top + thickness, ..queried },
-        DockEdge::Left => RECT { right: queried.left + thickness, ..queried },
-        DockEdge::Right => RECT { left: queried.right - thickness, ..queried },
-    }
+pub fn with_thickness(queried: RECT, thickness: i32) -> RECT {
+    RECT { top: queried.bottom - thickness, ..queried }
 }
 
 /// A registered app bar. Removing it (and giving the screen space back) is `Drop`.
 pub struct AppBar {
     hwnd: HWND,
     callback_message: u32,
-    edge: DockEdge,
     rect: RECT,
 }
 
-fn data(hwnd: HWND, callback_message: u32, edge: DockEdge, rect: RECT) -> APPBARDATA {
+fn data(hwnd: HWND, callback_message: u32, rect: RECT) -> APPBARDATA {
     APPBARDATA {
         cbSize: size_of::<APPBARDATA>() as u32,
         hWnd: hwnd,
         uCallbackMessage: callback_message,
-        uEdge: abe(edge),
+        uEdge: ABE_BOTTOM,
         rc: rect,
         lParam: LPARAM(0),
     }
 }
 
 impl AppBar {
-    /// Registers `hwnd` as an app bar on `edge` of its monitor, `thickness` px deep, moves the window into
+    /// Registers `hwnd` as an app bar along the bottom of its monitor, `thickness` px deep, moves the window into
     /// the strip the system grants, and returns the guard. `callback_message` receives `ABN_*` notifications.
-    pub fn register(hwnd: isize, edge: DockEdge, thickness: i32, callback_message: u32) -> io::Result<AppBar> {
-        let mut bar = AppBar::new(hwnd, edge, callback_message)?;
+    pub fn register(hwnd: isize, thickness: i32, callback_message: u32) -> io::Result<AppBar> {
+        let mut bar = AppBar::new(hwnd, callback_message)?;
         bar.place(thickness)?;
         Ok(bar)
     }
 
-    /// Registers `hwnd` as an app bar on `edge` of `monitor` and reserves a strip `thickness` px deep without
-    /// moving the window: the dock draws on a larger sheet and only the strip under its bar is kept free.
-    pub fn claim(
-        hwnd: isize,
-        monitor: RECT,
-        edge: DockEdge,
-        thickness: i32,
-        callback_message: u32,
-    ) -> io::Result<AppBar> {
-        let mut bar = AppBar::new(hwnd, edge, callback_message)?;
+    /// Registers `hwnd` as an app bar along the bottom of `monitor` and reserves a strip `thickness` px deep
+    /// without moving the window: the dock draws on a larger sheet and only the strip under its bar is kept free.
+    pub fn claim(hwnd: isize, monitor: RECT, thickness: i32, callback_message: u32) -> io::Result<AppBar> {
+        let mut bar = AppBar::new(hwnd, callback_message)?;
         bar.reserve(monitor, thickness);
         Ok(bar)
     }
 
-    fn new(hwnd: isize, edge: DockEdge, callback_message: u32) -> io::Result<AppBar> {
+    fn new(hwnd: isize, callback_message: u32) -> io::Result<AppBar> {
         let hwnd = HWND(hwnd as *mut _);
-        let mut new = data(hwnd, callback_message, edge, RECT::default());
+        let mut new = data(hwnd, callback_message, RECT::default());
         // SAFETY: SHAppBarMessage with a fully initialised APPBARDATA; ABM_NEW returns TRUE on success.
         if unsafe { SHAppBarMessage(ABM_NEW, &mut new) } == 0 {
             return Err(io::Error::other("the shell refused to register the app bar"));
         }
-        Ok(AppBar { hwnd, callback_message, edge, rect: RECT::default() })
+        Ok(AppBar { hwnd, callback_message, rect: RECT::default() })
     }
 
     /// Asks for the strip of `monitor`, lets the system adjust it for other bars and claims it. Call again to
     /// change the thickness or after a display change. Returns the strip granted.
     pub fn reserve(&mut self, monitor: RECT, thickness: i32) -> RECT {
-        let mut abd = data(self.hwnd, self.callback_message, self.edge, strip(monitor, self.edge, thickness));
+        let mut abd = data(self.hwnd, self.callback_message, strip(monitor, thickness));
         // SAFETY: QUERYPOS and SETPOS read and write only the APPBARDATA we pass.
         unsafe {
             SHAppBarMessage(ABM_QUERYPOS, &mut abd);
-            abd.rc = with_thickness(abd.rc, self.edge, thickness);
+            abd.rc = with_thickness(abd.rc, thickness);
             SHAppBarMessage(ABM_SETPOS, &mut abd);
         }
         self.rect = abd.rc;
@@ -140,7 +112,7 @@ impl AppBar {
 
 impl Drop for AppBar {
     fn drop(&mut self) {
-        let mut abd = data(self.hwnd, self.callback_message, self.edge, self.rect);
+        let mut abd = data(self.hwnd, self.callback_message, self.rect);
         // SAFETY: ABM_REMOVE for the bar this guard registered.
         unsafe {
             SHAppBarMessage(ABM_REMOVE, &mut abd);
@@ -194,27 +166,16 @@ mod tests {
     const MONITOR: RECT = RECT { left: 0, top: 0, right: 1920, bottom: 1080 };
 
     #[test]
-    fn strips_hug_their_edge() {
-        let s = |edge| strip(MONITOR, edge, 80);
-        assert_eq!((s(DockEdge::Bottom).top, s(DockEdge::Bottom).bottom), (1000, 1080));
-        assert_eq!((s(DockEdge::Top).top, s(DockEdge::Top).bottom), (0, 80));
-        assert_eq!((s(DockEdge::Left).left, s(DockEdge::Left).right), (0, 80));
-        assert_eq!((s(DockEdge::Right).left, s(DockEdge::Right).right), (1840, 1920));
-        assert_eq!(s(DockEdge::Bottom).left, 0);
-        assert_eq!(s(DockEdge::Bottom).right, 1920);
+    fn the_strip_hugs_the_bottom_edge_across_the_whole_monitor() {
+        let s = strip(MONITOR, 80);
+        assert_eq!((s.left, s.top, s.right, s.bottom), (0, 1000, 1920, 1080));
     }
 
     #[test]
     fn the_depth_survives_the_system_moving_the_strip() {
         // Another bar already holds the bottom 48 px, so the system returns the strip above it.
         let queried = RECT { left: 0, top: 1000, right: 1920, bottom: 1032 };
-        let kept = with_thickness(queried, DockEdge::Bottom, 80);
+        let kept = with_thickness(queried, 80);
         assert_eq!((kept.top, kept.bottom), (952, 1032));
-        let top = with_thickness(RECT { left: 0, top: 40, right: 1920, bottom: 120 }, DockEdge::Top, 80);
-        assert_eq!((top.top, top.bottom), (40, 120));
-        let left = with_thickness(RECT { left: 30, top: 0, right: 110, bottom: 1080 }, DockEdge::Left, 60);
-        assert_eq!((left.left, left.right), (30, 90));
-        let right = with_thickness(RECT { left: 1800, top: 0, right: 1890, bottom: 1080 }, DockEdge::Right, 60);
-        assert_eq!((right.left, right.right), (1830, 1890));
     }
 }

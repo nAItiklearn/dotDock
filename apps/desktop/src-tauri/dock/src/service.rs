@@ -293,12 +293,15 @@ impl DockService {
     }
 
     pub fn set_settings(&self, settings: DockSettings) -> CommandResult {
+        let settings = settings.at_the_bottom();
         if let Err(reason) = settings.validate() {
             return CommandResult::failed(reason);
         }
         {
             let mut state = lock(&self.inner.state);
             state.store.settings = settings.clone();
+            // The user has chosen what is on the dock, so the first layout never replaces it.
+            state.store.laid_out = true;
             self.inner.store_file.save_json(&state.store);
         }
         let _ = self.inner.events.send(DockEvent::Settings(settings));

@@ -18,6 +18,7 @@ $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 Import-Module (Join-Path $here 'Capture.psm1') -Force
 Import-Module (Join-Path $here 'Windows.psm1') -Force
+Import-Module (Join-Path $here 'Cdp.psm1') -Force
 Add-Type -ReferencedAssemblies System.Drawing -Namespace DotDock -Name Diff -MemberDefinition @'
 [DllImport("user32.dll")] public static extern bool IsWindowVisible(System.IntPtr h);
 /// Fraction of pixels outside `keep` (x, y, w, h) whose colour moved by more than `tolerance` (sum of channels).
@@ -53,7 +54,6 @@ $SHADOW = 40
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 $before = Join-Path $OutDir 'guard-before.png'
 $after = Join-Path $OutDir 'guard-after.png'
-$cdp = Join-Path $here 'cdp.mjs'
 $results = @()
 function Check([string]$Caption, [bool]$Ok, [string]$Detail = '') {
   $script:results += [pscustomobject]@{ Step = $Caption; Ok = $Ok; Detail = $Detail }
@@ -67,14 +67,14 @@ $deadline = (Get-Date).AddSeconds(40)
 $shown = $false
 while ((Get-Date) -lt $deadline -and -not $shown) {
   Start-Sleep -Milliseconds 250
-  try { $shown = ((& node $cdp $CdpPort 'dock.html' 'document.querySelector(".dock") !== null') -join '') -eq 'true' } catch { $shown = $false }
+  $shown = (Invoke-Dock $CdpPort 'document.querySelector(".dock") !== null') -eq $true
 }
 Check 'The dock draws its bar' $shown
 Start-Sleep -Milliseconds 1500
 
 if ($shown) {
   Save-Screen $after
-  $bar = (& node $cdp $CdpPort 'dock.html' '(() => { const r = document.querySelector(".dock").getBoundingClientRect(); const s = devicePixelRatio; return { x: Math.round(r.x * s + screenX * s), y: Math.round(r.y * s + screenY * s), w: Math.round(r.width * s), h: Math.round(r.height * s) }; })()') -join '' | ConvertFrom-Json
+  $bar = Invoke-Dock $CdpPort '(() => { const r = document.querySelector(".dock").getBoundingClientRect(); const s = devicePixelRatio; return { x: Math.round(r.x * s + screenX * s), y: Math.round(r.y * s + screenY * s), w: Math.round(r.width * s), h: Math.round(r.height * s) }; })()'
   $kx = $bar.x - $SHADOW; $ky = $bar.y - $SHADOW; $kw = $bar.w + 2 * $SHADOW; $kh = $bar.h + 2 * $SHADOW
   $changed = [DotDock.Diff]::Outside($before, $after, $kx, $ky, $kw, $kh, $TOLERANCE)
   Check 'Nothing outside the bar changed on screen (no opaque or white sheet)' ($changed -le $MAX_CHANGED) ('{0:P2} of the screen outside the bar changed' -f $changed)

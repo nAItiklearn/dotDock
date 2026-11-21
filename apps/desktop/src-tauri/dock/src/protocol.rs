@@ -251,6 +251,13 @@ pub const DEFAULT_ICON_SIZE: u32 = 48;
 pub const DEFAULT_MAGNIFICATION: f64 = 1.6;
 
 impl DockSettings {
+    /// The same settings with the dock at the bottom: the only edge it lives on, since it replaces the taskbar
+    /// (D-029). An older file or a UI that still names another edge gets the bottom.
+    pub fn at_the_bottom(mut self) -> DockSettings {
+        self.edge = DockEdge::Bottom;
+        self
+    }
+
     /// Rejects values the dock cannot draw: no icon size, or a magnification that is not a number or shrinks.
     pub fn validate(&self) -> Result<(), &'static str> {
         if self.icon_size == 0 {

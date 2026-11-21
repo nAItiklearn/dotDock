@@ -17,7 +17,7 @@ use crate::com::{pcwstr, wide};
 use crate::frozen::FrozenState;
 use crate::glass::{Glass, Shape};
 use crate::placement::{reserve_depth_px, window_rect, PxRect};
-use crate::protocol::{DockEdge, DockSettings, EVENT_LIBRARY};
+use crate::protocol::{DockSettings, EVENT_LIBRARY};
 use std::cell::{Cell, RefCell};
 use std::io;
 use std::sync::atomic::{AtomicIsize, Ordering};
@@ -73,7 +73,6 @@ pub enum Command {
 /// A strip registered with the shell, and what it was registered for.
 struct Bar {
     guard: AppBar,
-    edge: DockEdge,
     asked: Option<Reservation>,
     granted: PxRect,
 }
@@ -169,26 +168,22 @@ impl Controller {
         self.sync_visibility(plan.visible);
     }
 
-    fn sync_bar(&mut self, reserve: Option<DockEdge>) {
+    fn sync_bar(&mut self, reserve: bool) {
         match (reserve, &self.bar) {
-            (None, _) => self.bar = None,
-            (Some(edge), Some(bar)) if bar.edge == edge => {}
-            (Some(edge), _) => {
-                // Dropping the old registration first: the shell keeps one bar per window.
-                self.bar = None;
-                self.register_bar(edge);
-            }
+            (false, _) => self.bar = None,
+            (true, Some(_)) => {}
+            (true, None) => self.register_bar(),
         }
     }
 
-    fn register_bar(&mut self, edge: DockEdge) {
+    fn register_bar(&mut self) {
         let Ok(monitor) = primary_monitor() else { return };
         let depth = reserve_depth_px(self.settings.icon_size, self.scale());
-        match AppBar::claim(self.hwnd.0 as isize, monitor, edge, depth, WM_APPBAR) {
+        match AppBar::claim(self.hwnd.0 as isize, monitor, depth, WM_APPBAR) {
             Ok(guard) => {
                 let granted = px(guard.rect());
                 let asked = Some(Reservation { monitor: px(monitor), depth });
-                self.bar = Some(Bar { guard, edge, asked, granted });
+                self.bar = Some(Bar { guard, asked, granted });
             }
             Err(error) => self.hooks.log(&format!("app bar not registered: {error}")),
         }
@@ -211,7 +206,7 @@ impl Controller {
             }
             bar.granted
         });
-        let target = window_rect(px(monitor), px(work), self.settings.edge, granted);
+        let target = window_rect(px(monitor), px(work), granted);
         if self.rect != Some(target) || force {
             if let Some(window) = self.window {
                 window::place(window, target);

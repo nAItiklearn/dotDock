@@ -169,3 +169,10 @@ Same-name entries are merged into one (the Start menu one wins and takes the pac
 named "<app> <more words>" that starts the same program as <app> is left out. Every dropped entry carries a reason;
 `catalogue_probe --removed` prints them and `docs/QA/dock-live/catalogue.md` lists them for this machine.
 Installers that are real apps (Visual Studio Installer, MySQL Installer) stay: they work and the user may need them.
+
+## D-029 The dock lives at the bottom only (owner, 2026-11-21 11:35)
+The dock replaces the taskbar, so it sits at the bottom, centred, on the primary monitor. The host has no other
+edge: the app bar is always `ABE_BOTTOM`, the window ends at the bottom of the work area or the granted strip, and
+the plan reserves a strip or not. `DockSettings.edge` stays on the wire for the UI, but the service puts every
+loaded or saved setting back at the bottom (`at_the_bottom`), so an old file or a stale control cannot move it.
+Setting the dock by hand also marks the first layout as done, so it never replaces the user's choice.
