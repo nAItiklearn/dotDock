@@ -21,9 +21,11 @@ export type WallpaperMode = "dark" | "light";
 /** The generated theme is one custom theme, replaced each time, so repeated tries do not pile up. */
 export const WALLPAPER_THEME_ID = "custom-from-wallpaper";
 
-/** WCAG 2.2 AA: 4.5:1 for text, 3:1 for graphical objects such as the accent. */
+/**
+ * WCAG 2.2 AA for text, 4.5:1. The accent is held to it as well, not to the 3:1 of graphics: widgets
+ * set small labels in it (the weekday under the date, the active profile), so it is read as text.
+ */
 export const AA_TEXT = 4.5;
-const AA_GRAPHIC = 3;
 /** Step of the search for a passing lightness; finer than one 8-bit step of grey. */
 const LIGHTNESS_STEP = 1 / 256;
 /** The neutral ramps' own chroma is the unit of tint: 1 reproduces `deriveColors`, more follows the picture. */
@@ -109,7 +111,7 @@ export function themeFromPalette(
   const success = keepIfPassing("success", STATUS[mode].success, readable);
 
   const accentPasses = (color: Rgba): boolean =>
-    contrastRatio(color, bg) >= AA_GRAPHIC && contrastRatio(color, card) >= AA_GRAPHIC && ink(color) >= AA_TEXT;
+    readable(color) && ink(color) >= AA_TEXT;
   const accentColor = accentPasses(accentStart) ? accentStart : firstPassing(accentLch, direction, accentPasses);
   if (accentColor !== accentStart) adjusted.push("accent");
 
@@ -150,9 +152,7 @@ export function auditAa(colors: Readonly<Record<ThemeRole, string>>): readonly C
     for (const [groundName, ground] of grounds) pairs.push([`${name} on ${groundName}`, get(role), ground, AA_TEXT]);
   }
   pairs.push(["Label on accent", get("accentInk"), get("accent"), AA_TEXT]);
-  for (const [groundName, ground] of grounds.slice(0, 2)) {
-    pairs.push([`Accent on ${groundName}`, get("accent"), ground, AA_GRAPHIC]);
-  }
+  for (const [groundName, ground] of grounds) pairs.push([`Accent on ${groundName}`, get("accent"), ground, AA_TEXT]);
   return pairs.map(([label, fg, back, target]) => {
     const ratio = contrastRatio(fg, back);
     return { label, ratio, target, pass: ratio >= target };

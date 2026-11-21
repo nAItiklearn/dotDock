@@ -68,7 +68,7 @@ function Result({ source, palette }: { readonly source: Source; readonly palette
     const theme = themeFromPalette(palette, mode, accent);
     return { theme, doc: buildThemeDoc(theme, mode, themeNameFor(source.fileName)), checks: auditAa(theme.colors) };
   }, [palette, mode, accent, source.fileName]);
-  // The weakest body-text pair is what a reader would notice; the accent pairs only need 3:1.
+  // The weakest pair is what a reader would notice; every pair, the accent included, is held to 4.5:1.
   const weakestText = Math.min(...built.checks.filter((c) => c.target === AA_TEXT).map((c) => c.ratio));
   const allPass = built.checks.every((c) => c.pass);
 
@@ -122,7 +122,7 @@ function Result({ source, palette }: { readonly source: Source; readonly palette
 
       {built.theme.accentFromPicture ? null : <p className="row__desc">{NO_COLOUR_NOTE}</p>}
       {built.theme.adjusted.includes("accent") ? (
-        <p className="row__desc">The accent was nudged {mode === "dark" ? "lighter" : "darker"} so labels on it stay readable.</p>
+        <p className="row__desc">The accent was nudged {mode === "dark" ? "lighter" : "darker"} so it reads as text and labels on it stay readable.</p>
       ) : null}
 
       <ThemePreview theme={built.doc} metrics={metrics} />

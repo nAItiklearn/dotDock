@@ -118,9 +118,9 @@ describe("themeFromPalette: text is readable whatever the picture", () => {
 
 describe("themeFromPalette: the picture shows through", () => {
   it("uses the picture's vivid colour as the accent when it already reads well", () => {
-    const palette = paletteOf(picture(16, [{ color: [60, 62, 64], count: 192 }, { color: [230, 60, 90], count: 64 }]));
+    const palette = paletteOf(picture(16, [{ color: [60, 62, 64], count: 192 }, { color: [250, 110, 130], count: 64 }]));
     const theme = themeFromPalette(palette, "dark");
-    expect(theme.colors.accent).toBe("#e63c5a");
+    expect(theme.colors.accent).toBe("#fa6e82");
     expect(theme.colors.dotOn).toBe(theme.colors.accent);
     expect(theme.accentFromPicture).toBe(true);
     expect(theme.adjusted).not.toContain("accent");
@@ -159,7 +159,11 @@ describe("themeFromPalette: the picture shows through", () => {
   it("keeps the surfaces nearly neutral under a grey picture, and uses the theme's own accent", () => {
     const dark = themeFromPalette(flat([100, 100, 100]), "dark");
     expect(dark.accentFromPicture).toBe(false);
-    expect(dark.colors.accent).toBe(OBSIDIAN.colors.accent);
+    // Obsidian's red reads at 4.5:1 as text only a touch lighter; it keeps its hue.
+    const obsidian = rgbToOklch(parseColor(OBSIDIAN.colors.accent) ?? { r: 0, g: 0, b: 0, a: 1 });
+    const darkAccent = rgbToOklch(parseColor(dark.colors.accent) ?? { r: 0, g: 0, b: 0, a: 1 });
+    expect(hueDistance(darkAccent.h, obsidian.h)).toBeLessThan(10);
+    expect(darkAccent.l - obsidian.l).toBeLessThan(0.05);
     expect(rgbToOklch(parseColor(dark.colors.bg) ?? { r: 0, g: 0, b: 0, a: 1 }).c).toBeLessThan(0.01);
     // Paper's red cannot carry a label at 4.5:1 as it is, so it is deepened slightly and keeps its hue.
     const light = themeFromPalette(flat([200, 200, 200]), "light");
@@ -217,10 +221,11 @@ describe("auditAa", () => {
     expect(auditAa(broken).some((c) => c.label === "Text on background" && !c.pass)).toBe(true);
   });
 
-  it("checks body text at 4.5 and the accent at 3, and lists a pair for each surface", () => {
+  it("checks body text and the accent at 4.5, because widgets set small labels in the accent, and lists a pair for each surface", () => {
     const checks = auditAa(themeFromPalette(flat([20, 40, 120]), "dark").colors);
     expect(checks.find((c) => c.label === "Text on cards")?.target).toBe(4.5);
-    expect(checks.find((c) => c.label === "Accent on background")?.target).toBe(3);
+    expect(checks.find((c) => c.label === "Accent on background")?.target).toBe(4.5);
+    expect(checks.find((c) => c.label === "Accent on raised cards")?.target).toBe(4.5);
     expect(new Set(checks.map((c) => c.label)).size).toBe(checks.length);
   });
 
