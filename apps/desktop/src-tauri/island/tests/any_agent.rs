@@ -255,3 +255,27 @@ fn a_quiet_session_without_a_process_goes_stale() {
     let (snapshot, _) = engine.snapshot(stale);
     assert!(snapshot.sessions.iter().all(|v| v.id != CODEX_ID), "a Codex turn that stopped writing is dropped");
 }
+
+#[test]
+fn the_state_tour_shows_every_phase_in_turn() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let path = dir.path().join("agents").join("tour.jsonl");
+    let mut reader = FeedReader::new();
+    let mut engine = Engine::new(EngineConfig::default());
+    let mut seen = Vec::new();
+    for line in fixture("generic-states.jsonl").lines() {
+        append_line(&path, line);
+        let at = serde_json::from_str::<Value>(line).expect("json")["at"].as_u64().expect("at");
+        for state in reader.read(&path, at) {
+            engine.apply_state(state);
+        }
+        let (snapshot, _) = engine.snapshot(at);
+        let tour = view(&snapshot, "feed-aider-tour-1");
+        seen.push(tour.phase);
+        if tour.phase == Phase::Limit || tour.phase == Phase::Error {
+            assert!(tour.problem.is_some(), "{:?} carries its problem", tour.phase);
+        }
+    }
+    use Phase::*;
+    assert_eq!(seen, [Thinking, Reading, Searching, Editing, Running, Waiting, Done, Paused, Limit, Error, Stopped]);
+}

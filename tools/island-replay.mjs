@@ -7,10 +7,11 @@
 //   copilot   piped into the real hook program, exactly as Copilot CLI runs it (`--agent copilot --event <name>`)
 //   opencode  appended to the feed folder in the OpenCode plugin's format
 //   generic   appended to the feed folder in the agent feed protocol (docs/ISLAND_PROTOCOL.md)
+//   states    the same, one line per phase: every state of the island in turn, for captures
 // Lines the island must skip (the fixtures carry some on purpose) are delivered too.
 //
 // Usage:
-//   node tools/island-replay.mjs --agent <codex|copilot|opencode|generic> --hook <dotdock-island-hook.exe>
+//   node tools/island-replay.mjs --agent <codex|copilot|opencode|generic|states> --hook <dotdock-island-hook.exe>
 //        [--codex-home <dir>] [--pace <ms>] [--hold <ms>] [--shots <dir> --prefix <nn> [--crop x,y,w,h]]
 //
 // With --shots, the screen is captured (tools/capture/screenshot.ps1) after every line the island can read.
@@ -30,7 +31,14 @@ const CODEX_ID = '01a04e65-47c8-70c1-b898-8d5452cb24b0';
 /// Time for the island's animation to settle before a capture.
 const SETTLE_MS = 900;
 
-export const FIXTURE = { codex: 'codex-rollout.jsonl', copilot: 'copilot-hooks.jsonl', opencode: 'opencode-feed.jsonl', generic: 'generic-feed.jsonl' };
+export const FIXTURE = {
+  codex: 'codex-rollout.jsonl',
+  copilot: 'copilot-hooks.jsonl',
+  opencode: 'opencode-feed.jsonl',
+  generic: 'generic-feed.jsonl',
+  /// One line per phase, in the feed protocol, for a capture of every state (the website's notch carousel).
+  states: 'generic-states.jsonl',
+};
 /// Phases of the agent feed protocol (docs/ISLAND_PROTOCOL.md, section 3); a line naming another is skipped.
 const PHASES = new Set(['thinking', 'reading', 'searching', 'editing', 'running', 'waiting', 'done', 'paused', 'limit', 'error', 'stopped', 'idle']);
 const OPTIONS = new Set(['agent', 'hook', 'codex-home', 'pace', 'hold', 'shots', 'prefix', 'crop']);

@@ -65,6 +65,10 @@ test('the generic replay captures exactly the states the island shows, and skips
   ]);
 });
 
+test('the state tour captures every phase of the feed protocol once, in order', () => {
+  assert.deepEqual(labels('states'), ['thinking', 'reading', 'searching', 'editing', 'running', 'waiting', 'done', 'paused', 'limit', 'error', 'stopped']);
+});
+
 test('copilot lines carry their event name for the hook, and a line without a session is not captured', () => {
   const items = lines('copilot').map((line) => prepare('copilot', line, NOW, PID));
   const read = items.find((i) => i.event === 'preToolUse');
