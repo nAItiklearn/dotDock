@@ -78,7 +78,7 @@ describe("buildEntries", () => {
 
   it("drops pinned items whose app or category is gone, and unknown tile ids", () => {
     const entries = buildEntries(
-      input({ pinned: [{ kind: "app", id: "uninstalled" }, { kind: "stack", category: "custom:gone" }], tiles: ["weather", "clock", "clock"] }),
+      input({ pinned: [{ kind: "app", id: "uninstalled" }, { kind: "stack", category: "custom:gone" }], tiles: ["stocks", "clock", "clock"] }),
       { ...options, status: false },
     );
     expect(keys(entries)).toEqual(["library", "divider:0", "tile:clock", "more"]);

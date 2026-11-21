@@ -170,7 +170,7 @@ describe("placeTile", () => {
   });
 
   it("keeps ids this version does not know, after the others", () => {
-    expect(placeTile(["clock", "weather", "media"], "focus", 1)).toEqual(["clock", "focus", "media", "weather"]);
+    expect(placeTile(["clock", "stocks", "media"], "focus", 1)).toEqual(["clock", "focus", "media", "stocks"]);
   });
 });
 

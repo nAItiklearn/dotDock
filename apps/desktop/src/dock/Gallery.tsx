@@ -49,7 +49,7 @@ function Preview({ item }: { readonly item: GalleryItem }) {
   const apps = useDockStore((s) => s.apps);
   const style = { "--d-icon": `${GALLERY.icon}px` } as CSSProperties;
   if (item.kind === "tile" && item.tile) {
-    const box: CSSProperties = { ...style, width: lengthOf(item.tile, GALLERY.icon, false), height: GALLERY.icon };
+    const box: CSSProperties = { ...style, width: lengthOf(item.tile, GALLERY.icon), height: GALLERY.icon };
     return (
       <div className="gcard__tile" style={box} role="img" aria-label={t("gallery.preview", { name: item.name })} inert>
         <Tile id={item.tile} controls={PREVIEW_CONTROLS} />
@@ -141,7 +141,7 @@ export function Gallery({ open }: { readonly open: OpenGallery }) {
   const shown = useMemo(() => filterGallery(items, query, group), [items, query, group]);
   const counts = useMemo(() => categoryCounts(items, query), [items, query]);
   const anchor: Rect = open.from;
-  const pos = placeBesideDock(anchor, { w: GALLERY.w, h: GALLERY.h }, settings.edge, viewport, GALLERY.gapToDock);
+  const pos = placeBesideDock(anchor, { w: GALLERY.w, h: GALLERY.h }, viewport, GALLERY.gapToDock);
 
   useLayoutEffect(() => {
     markOpenPainted("gallery");
@@ -175,7 +175,7 @@ export function Gallery({ open }: { readonly open: OpenGallery }) {
   } as CSSProperties;
 
   return (
-    <div className="popover gallery" role="dialog" aria-label={t("gallery.title")} style={style} data-edge={settings.edge} data-open="true">
+    <div className="popover gallery" role="dialog" aria-label={t("gallery.title")} style={style} data-open="true">
       <div className="popover__plate" />
       <div className="popover__content">
         <header className="popover__head">

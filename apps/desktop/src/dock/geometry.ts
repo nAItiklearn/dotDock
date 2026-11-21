@@ -1,5 +1,3 @@
-import type { DockEdge } from "./protocol";
-
 /**
  * Dock layout, in px at 100 % scaling. Every size on screen derives from the icon size and these named
  * ratios: the TypeScript side sets them as CSS custom properties, the stylesheet never repeats them.
@@ -14,32 +12,20 @@ export const MAGNIFY_WEIGHT = { app: 1, stack: 0.3, control: 0.6 } as const;
 export const renderScale = (weight: number, peak: number): number => 1 + (Math.max(peak, 1) - 1) * weight;
 
 /**
- * The box of a face inside its slot: `along` px of length on the dock's axis and `across` px across it, hanging
- * from the slot's screen-edge side and centred on the axis. Plain numbers (px): nothing in it needs resolving
- * again when the engine rewrites the face's transform.
+ * The box of a face inside its slot: `along` px wide and `across` px tall, standing on the slot's bottom (the
+ * screen edge) and centred across it. Plain numbers (px): nothing in it needs resolving again when the engine
+ * rewrites the face's transform.
  */
 export interface FaceBox {
   readonly width: number;
   readonly height: number;
-  readonly left?: string | number;
-  readonly right?: number;
-  readonly top?: string | number;
-  readonly bottom?: number;
-  readonly marginLeft?: number;
-  readonly marginTop?: number;
+  readonly left: string;
+  readonly bottom: number;
+  readonly marginLeft: number;
 }
 
-export function faceBox(edge: DockEdge, along: number, across: number): FaceBox {
-  switch (edge) {
-    case "bottom":
-      return { width: along, height: across, left: "50%", marginLeft: -along / 2, bottom: 0 };
-    case "top":
-      return { width: along, height: across, left: "50%", marginLeft: -along / 2, top: 0 };
-    case "left":
-      return { width: across, height: along, top: "50%", marginTop: -along / 2, left: 0 };
-    case "right":
-      return { width: across, height: along, top: "50%", marginTop: -along / 2, right: 0 };
-  }
+export function faceBox(along: number, across: number): FaceBox {
+  return { width: along, height: across, left: "50%", marginLeft: -along / 2, bottom: 0 };
 }
 
 /** Ratios of the icon size, so one number scales the whole bar. */
@@ -60,51 +46,54 @@ export const RATIO = {
   label: 0.5,
 } as const;
 
-/** Length of each kind of item along the axis, in icon sizes: [horizontal dock, vertical dock]. */
+/** Length of each kind of item along the dock, in icon sizes. */
 export const LENGTH_RATIO = {
-  item: [1, 1],
-  divider: [RATIO.divider, RATIO.divider],
-  clock: [2.3, 1.55],
-  media: [3.8, 1],
-  system: [1.05, 1.05],
-  /** Tiles with words beside a round mark: on a vertical dock only the mark stays, so they are one item long. */
-  agenda: [3.6, 1],
-  meeting: [3.9, 1],
-  focus: [2.8, 1],
-  stopwatch: [2.6, 1],
-  hydration: [1, 1],
-  reminders: [3.1, 1],
-  progress: [2.5, 1],
-  contacts: [2.1, 1],
-  mic: [1, 1],
-  audio: [1, 1],
-  cpu: [1, 1],
-  battery: [1, 1],
-  analog: [1, 1],
-  notes: [3.1, 1],
-  colour: [1, 1],
-  convert: [2.8, 1],
-  emoji: [1, 1],
-  world: [3.1, 1],
-  network: [3.2, 1],
-  toggles: [3.4, 1],
-  flip: [2.2, 1.2],
-  sun: [3.8, 1],
-  wind: [2.7, 1],
-  currency: [3.6, 1],
-  search: [2.8, 1],
-  history: [3.1, 1],
-  memo: [2.8, 1],
+  item: 1,
+  divider: RATIO.divider,
+  clock: 2.3,
+  media: 3.8,
+  system: 1.05,
+  agenda: 3.6,
+  meeting: 3.9,
+  focus: 2.8,
+  stopwatch: 2.6,
+  hydration: 1,
+  reminders: 3.1,
+  progress: 2.5,
+  contacts: 2.1,
+  mic: 1,
+  audio: 1,
+  cpu: 1,
+  battery: 1,
+  analog: 1,
+  notes: 3.1,
+  colour: 1,
+  convert: 2.8,
+  emoji: 1,
+  world: 3.1,
+  network: 3.2,
+  toggles: 3.4,
+  flip: 2.2,
+  sun: 3.8,
+  wind: 2.7,
+  weather: 2.7,
+  currency: 3.6,
+  search: 2.8,
+  history: 3.1,
+  memo: 2.8,
   /** Measured once drawn; this estimate only sizes the dock before the first measurement. */
-  status: [3.2, 2.3],
+  status: 3.2,
 } as const;
 export type LengthKind = keyof typeof LENGTH_RATIO;
 
 /** How a tile sits on the dock: a round mark alone, or a mark with words beside it. */
 export type TileShape = "round" | "wide";
 
-/** A tile is wide when it is clearly longer than it is tall on a horizontal dock. */
-export const shapeOf = (kind: LengthKind): TileShape => (LENGTH_RATIO[kind][0] > LENGTH_RATIO[kind][1] * 1.2 ? "wide" : "round");
+/** Length, in icon sizes, past which a tile is clearly longer than it is tall. */
+const WIDE_FROM = 1.2;
+
+/** A tile is wide when it is clearly longer than it is tall. */
+export const shapeOf = (kind: LengthKind): TileShape => (LENGTH_RATIO[kind] > WIDE_FROM ? "wide" : "round");
 
 export interface Metrics {
   readonly icon: number;
@@ -142,29 +131,27 @@ export function metricsFor(iconSize: number, dpr = 1): Metrics {
   return { icon, gap, pad, bar: icon + 2 * pad, edge: toDevicePixel(base * RATIO.edge, dpr), reach: RATIO.reach * (icon + gap) };
 }
 
-export const isVertical = (edge: DockEdge): boolean => edge === "left" || edge === "right";
-
-/** Length of one item along the axis at a given icon size. */
-export function lengthOf(kind: LengthKind, icon: number, vertical: boolean, dpr = 1): number {
-  return toDevicePixel(LENGTH_RATIO[kind][vertical ? 1 : 0] * icon, dpr);
+/** Length of one item along the dock at a given icon size. */
+export function lengthOf(kind: LengthKind, icon: number, dpr = 1): number {
+  return toDevicePixel(LENGTH_RATIO[kind] * icon, dpr);
 }
 
 /** Total length of a row of items at the given icon size, gaps and padding included. */
-export function rowLength(kinds: readonly LengthKind[], icon: number, vertical: boolean): number {
+export function rowLength(kinds: readonly LengthKind[], icon: number): number {
   const m = metricsFor(icon);
-  const items = kinds.reduce((sum, kind) => sum + lengthOf(kind, m.icon, vertical), 0);
+  const items = kinds.reduce((sum, kind) => sum + lengthOf(kind, m.icon), 0);
   return items + Math.max(0, kinds.length - 1) * m.gap + 2 * m.pad;
 }
 
 /**
- * The icon size the dock actually uses: the requested one, shrunk until the row fits the screen along its
- * axis (like macOS does), never below the minimum.
+ * The icon size the dock actually uses: the requested one, shrunk until the row fits the screen's width (like
+ * macOS does), never below the minimum.
  */
-export function fitIconSize(requested: number, kinds: readonly LengthKind[], available: number, vertical: boolean): number {
+export function fitIconSize(requested: number, kinds: readonly LengthKind[], available: number): number {
   const wanted = Math.round(clampIconSize(requested));
   if (kinds.length === 0 || available <= 0) return wanted;
   // The row length is linear in the icon size (up to rounding), so one probe gives the whole slope.
-  const perIcon = rowLength(kinds, ICON_LIMITS.max, vertical) / ICON_LIMITS.max;
+  const perIcon = rowLength(kinds, ICON_LIMITS.max) / ICON_LIMITS.max;
   const fits = Math.floor(available / perIcon);
   return Math.max(ICON_LIMITS.min, Math.min(wanted, fits));
 }
@@ -232,42 +219,23 @@ export interface Point {
 export const SCREEN_MARGIN = 12;
 
 /**
- * Where a floating panel sits next to the dock: on the side away from the screen edge, centred on the
- * anchor, nudged to stay on screen.
+ * Where a floating panel sits next to the dock: above it, centred on the anchor, nudged sideways to stay on
+ * screen.
  */
-export function placeBesideDock(anchor: Rect, size: Size, edge: DockEdge, viewport: Size, gap: number): Point {
-  const clamp = (value: number, extent: number, limit: number): number =>
-    Math.max(SCREEN_MARGIN, Math.min(value, limit - SCREEN_MARGIN - extent));
-  switch (edge) {
-    case "bottom":
-      return { x: clamp(anchor.x + anchor.w / 2 - size.w / 2, size.w, viewport.w), y: anchor.y - gap - size.h };
-    case "top":
-      return { x: clamp(anchor.x + anchor.w / 2 - size.w / 2, size.w, viewport.w), y: anchor.y + anchor.h + gap };
-    case "left":
-      return { x: anchor.x + anchor.w + gap, y: clamp(anchor.y + anchor.h / 2 - size.h / 2, size.h, viewport.h) };
-    case "right":
-      return { x: anchor.x - gap - size.w, y: clamp(anchor.y + anchor.h / 2 - size.h / 2, size.h, viewport.h) };
-  }
+export function placeBesideDock(anchor: Rect, size: Size, viewport: Size, gap: number): Point {
+  const x = anchor.x + anchor.w / 2 - size.w / 2;
+  return { x: Math.max(SCREEN_MARGIN, Math.min(x, viewport.w - SCREEN_MARGIN - size.w)), y: anchor.y - gap - size.h };
 }
 
-/** The point on a drawn item that faces the middle of the screen: where menus attach. */
-export function anchorPoint(r: Rect, edge: DockEdge): Point {
-  switch (edge) {
-    case "bottom":
-      return { x: r.x + r.w / 2, y: r.y };
-    case "top":
-      return { x: r.x + r.w / 2, y: r.y + r.h };
-    case "left":
-      return { x: r.x + r.w, y: r.y + r.h / 2 };
-    case "right":
-      return { x: r.x, y: r.y + r.h / 2 };
-  }
+/** The point on a drawn item that faces the middle of the screen (the middle of its top): where menus attach. */
+export function anchorPoint(r: Rect): Point {
+  return { x: r.x + r.w / 2, y: r.y };
 }
 
-/** Where a context menu opens when it is anchored at a point: away from the dock. */
-export function placeMenu(at: Point, size: Size, edge: DockEdge, viewport: Size, gap = 0): Point {
-  const x = isVertical(edge) ? (edge === "left" ? at.x + gap : at.x - size.w - gap) : at.x - size.w / 2;
-  const y = isVertical(edge) ? at.y - size.h / 2 : edge === "bottom" ? at.y - size.h - gap : at.y + gap;
+/** Where a context menu opens when it is anchored at a point: above it, away from the dock. */
+export function placeMenu(at: Point, size: Size, viewport: Size, gap = 0): Point {
+  const x = at.x - size.w / 2;
+  const y = at.y - size.h - gap;
   return {
     x: Math.max(SCREEN_MARGIN, Math.min(x, viewport.w - SCREEN_MARGIN - size.w)),
     y: Math.max(SCREEN_MARGIN, Math.min(y, viewport.h - SCREEN_MARGIN - size.h)),
@@ -349,12 +317,10 @@ export interface PreviewLayout {
 }
 
 /** Layout of the preview panel for a number of windows: thumbnails for the first few, titles for all. */
-export function previewLayout(windowCount: number, vertical: boolean): PreviewLayout {
+export function previewLayout(windowCount: number): PreviewLayout {
   const shown = Math.min(windowCount, PREVIEW.maxSlots);
-  const cols = vertical ? 1 : shown;
-  const rows = vertical ? shown : 1;
-  const wellW = cols * PREVIEW.slotW + (cols - 1) * PREVIEW.slotGap;
-  const wellH = rows * PREVIEW.slotH + (rows - 1) * PREVIEW.slotGap;
+  const wellW = shown * PREVIEW.slotW + (shown - 1) * PREVIEW.slotGap;
+  const wellH = PREVIEW.slotH;
   const titles = Math.min(windowCount, PREVIEW.maxRows);
   return {
     w: wellW + 2 * PREVIEW.pad,

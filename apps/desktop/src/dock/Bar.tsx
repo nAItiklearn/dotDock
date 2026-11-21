@@ -9,7 +9,6 @@ import {
   contains,
   fitIconSize,
   isPopoverTile,
-  isVertical,
   metricsFor,
   RATIO,
   SCREEN_MARGIN,
@@ -22,7 +21,6 @@ import { isDraggable, Slot, type SlotHandlers } from "./items";
 import { maxGrowth } from "./magnify";
 import { activationTarget, buildEntries, isTileId, lengthKind, pinKey, pinOf, reorderBy, tileKey, unpin, type AppEntry, type BarEntry, type StackEntry } from "./model";
 import { markOpenStart } from "./openMarks";
-import type { DockEdge } from "./protocol";
 import { leavePreview, onBarHover } from "./previewIntent";
 import { dockZone, hotStrip } from "./regions";
 import { DRAG_THRESHOLD, dropIntent, moveKey, slideOffsets, type DropIntent, type LaneSpan } from "./reorder";
@@ -32,8 +30,7 @@ import { t } from "./strings";
 export interface BarLayout {
   /** The bar at rest, in window CSS px. */
   readonly bar: Rect;
-  readonly edge: DockEdge;
-  /** Most the row can grow along its axis while magnified. */
+  /** Most the row can grow sideways while magnified. */
   readonly growth: number;
   /** Room magnified items and the label need beyond the bar. */
   readonly headroom: number;
@@ -85,13 +82,11 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const [roving, setRoving] = useState<string>("library");
   const [dropReady, setDropReady] = useState(false);
 
-  const { edge } = settings;
-  const vertical = isVertical(edge);
   const entries = useMemo(
     () => buildEntries({ categories, apps, windows, settings }, { now: Date.now(), seen, editing, status: true, sizes: tileSizes }),
     [categories, apps, windows, settings, seen, editing, tileSizes],
   );
-  const icon = fitIconSize(settings.iconSize, entries.map(lengthKind), (vertical ? viewport.h : viewport.w) - 2 * SCREEN_MARGIN, vertical);
+  const icon = fitIconSize(settings.iconSize, entries.map(lengthKind), viewport.w - 2 * SCREEN_MARGIN);
   // One object per icon size: `measure` depends on it, and a new object on every render would re-measure (and force a layout) on every render.
   const metrics = useMemo(() => metricsFor(icon, dpr), [icon, dpr]);
   const peak = clampMagnification(settings.magnification);
@@ -116,7 +111,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
     const observer = new ResizeObserver(align);
     observer.observe(dock);
     return () => observer.disconnect();
-  }, [dpr, edge, viewport.w, viewport.h]);
+  }, [dpr, viewport.w, viewport.h]);
   const rowRef = useRef<HTMLDivElement>(null);
   const plateStart = useRef<HTMLDivElement>(null);
   const plateMid = useRef<HTMLDivElement>(null);
@@ -128,19 +123,19 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const frozen = useDockStore((s) => s.frozen);
   const [engine] = useState(
     () =>
-      new DockEngine({ peak, reach: metrics.reach, gap: metrics.gap, edge, reduced }, onBarHover),
+      new DockEngine({ peak, reach: metrics.reach, gap: metrics.gap, reduced }, onBarHover),
   );
   const items = useRef<readonly LayoutItem[]>([]);
   const origin = useRef(0);
   const zone = useRef<Pick<BarLayout, "bar" | "growth" | "headroom">>({ bar: { x: 0, y: 0, w: 0, h: 0 }, growth: 0, headroom: 0 });
   const press = useRef<Press | null>(null);
   const suppressClick = useRef(false);
-  const latest = useRef({ entries, editing, settings, vertical, edge, metrics });
-  latest.current = { entries, editing, settings, vertical, edge, metrics };
+  const latest = useRef({ entries, editing, settings, metrics });
+  latest.current = { entries, editing, settings, metrics };
 
   useEffect(() => {
-    engine.configure({ peak, reach: metrics.reach, gap: metrics.gap, edge, reduced });
-  }, [engine, peak, metrics.reach, metrics.gap, edge, reduced]);
+    engine.configure({ peak, reach: metrics.reach, gap: metrics.gap, reduced });
+  }, [engine, peak, metrics.reach, metrics.gap, reduced]);
   useEffect(() => () => engine.destroy(), [engine]);
   useEffect(() => engine.setFrozen(frozen), [engine, frozen]);
   useLayoutEffect(() => {
@@ -173,24 +168,24 @@ export function Bar({ hidden, onLayout }: BarProps) {
       measured.push({
         key,
         el: face,
-        start: vertical ? slot.offsetTop : slot.offsetLeft,
-        size: vertical ? slot.offsetHeight : slot.offsetWidth,
+        start: slot.offsetLeft,
+        size: slot.offsetWidth,
         weight: Number(slot.dataset.weight) || 0,
         render: Number.parseFloat(slot.style.getPropertyValue("--r")) || 1,
         name: slot.dataset.name ?? "",
         sub: slot.dataset.sub ?? "",
       });
     }
-    const lead = vertical ? dock.offsetTop : dock.offsetLeft;
+    const lead = dock.offsetLeft;
     items.current = measured;
     origin.current = lead;
-    engine.setLayout({ items: measured, barStart: 0, barSize: vertical ? dock.offsetHeight : dock.offsetWidth, cap: metrics.bar / 2, origin: lead });
+    engine.setLayout({ items: measured, barStart: 0, barSize: dock.offsetWidth, cap: metrics.bar / 2, origin: lead });
     const bar = { x: dock.offsetLeft, y: dock.offsetTop, w: dock.offsetWidth, h: dock.offsetHeight };
     const growth = maxGrowth(measured, peak, metrics.reach);
     const headroom = (peak - 1) * metrics.icon + RATIO.label * metrics.icon;
     zone.current = { bar, growth, headroom };
-    onLayout({ bar, edge, growth, headroom, metrics });
-  }, [engine, vertical, peak, metrics, edge, onLayout]);
+    onLayout({ bar, growth, headroom, metrics });
+  }, [engine, peak, metrics, onLayout]);
 
   useLayoutEffect(() => {
     measure();
@@ -212,12 +207,12 @@ export function Bar({ hidden, onLayout }: BarProps) {
       const store = useDockStore.getState();
       const point = { x: e.clientX, y: e.clientY };
       const { bar, growth, headroom } = zone.current;
-      const area = dockZone({ bar, edge, engaged: store.pointerInside, headroom, growth });
-      const wake = settings.autoHide && contains(hotStrip(bar, edge, viewport), point);
+      const area = dockZone({ bar, engaged: store.pointerInside, headroom, growth });
+      const wake = settings.autoHide && contains(hotStrip(bar, viewport), point);
       const inside = contains(area, point);
       const near = inside || wake;
       if (near !== store.pointerInside) store.setPointerInside(near);
-      engine.setPointer(inside && !latest.current.editing ? (vertical ? point.y : point.x) : null);
+      engine.setPointer(inside && !latest.current.editing ? point.x : null);
     };
     const onLeave = (): void => {
       useDockStore.getState().setPointerInside(false);
@@ -231,7 +226,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
       document.documentElement.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("blur", onLeave);
     };
-  }, [engine, edge, vertical, viewport, settings.autoHide]);
+  }, [engine, viewport, settings.autoHide]);
 
   useEffect(() => {
     if (!pointerInside || editing) engine.setPointer(null);
@@ -266,8 +261,8 @@ export function Bar({ hidden, onLayout }: BarProps) {
     const onMove = (e: PointerEvent): void => {
       const p = press.current;
       if (!p) return;
-      const { vertical: v, metrics: m } = latest.current;
-      const main = v ? e.clientY : e.clientX;
+      const { metrics: m } = latest.current;
+      const main = e.clientX;
       if (!p.started) {
         if (Math.hypot(e.clientX - p.startX, e.clientY - p.startY) < DRAG_THRESHOLD) return;
         p.started = true;
@@ -397,7 +392,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
       context: (entry: BarEntry, _event: MouseEvent | KeyboardEvent, face: HTMLElement) => {
         const store = useDockStore.getState();
         store.openStack(null);
-        store.setMenu({ key: entry.key, at: anchorPoint(rectOf(face), latest.current.edge) });
+        store.setMenu({ key: entry.key, at: anchorPoint(rectOf(face)) });
       },
       remove: (entry) => {
         const { settings: current } = latest.current;
@@ -414,7 +409,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
       },
       focused: (key) => setRoving(key),
       pointerDown: (entry, e) => {
-        const { editing: isEditing, entries: list, vertical: v } = latest.current;
+        const { editing: isEditing, entries: list } = latest.current;
         if (!isEditing || e.button !== 0 || !isDraggable(entry)) return;
         const me = items.current.find((i) => i.key === entry.key);
         if (!me) return;
@@ -424,7 +419,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
           if (!other || !isDraggable(other) || (other.kind === "tile") !== tileLane) return [];
           return [{ key: i.key, start: i.start, size: i.size, isStack: other.kind === "stack" }];
         });
-        const main = v ? e.clientY : e.clientX;
+        const main = e.clientX;
         press.current = {
           key: entry.key,
           isApp: entry.kind === "app",
@@ -444,8 +439,8 @@ export function Bar({ hidden, onLayout }: BarProps) {
   }, [engine]);
 
   const onRowKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
-    const back = vertical ? "ArrowUp" : "ArrowLeft";
-    const forward = vertical ? "ArrowDown" : "ArrowRight";
+    const back = "ArrowLeft";
+    const forward = "ArrowRight";
     if (e.key !== back && e.key !== forward && e.key !== "Home" && e.key !== "End") return;
     const stops = Array.from(e.currentTarget.querySelectorAll<HTMLElement>(".disc, .tile__hit"));
     const at = stops.indexOf(document.activeElement as HTMLElement);
@@ -469,14 +464,14 @@ export function Bar({ hidden, onLayout }: BarProps) {
     const id = e.dataTransfer.getData(GALLERY_MIME).replace(/^tile:/, "");
     if (!e.dataTransfer.types.includes(GALLERY_MIME) || !isTileId(id)) return;
     e.preventDefault();
-    const { settings: current, vertical: v } = latest.current;
+    const { settings: current } = latest.current;
     const middles = current.tiles
       .filter((tileId): tileId is typeof id => isTileId(tileId) && tileId !== id)
       .flatMap((tileId) => {
         const placed = items.current.find((i) => i.key === tileKey(tileId));
         return placed ? [origin.current + placed.start + placed.size / 2] : [];
       });
-    void actions.updateSettings({ tiles: placeTile(current.tiles, id, dropIndex(middles, v ? e.clientY : e.clientX)) });
+    void actions.updateSettings({ tiles: placeTile(current.tiles, id, dropIndex(middles, e.clientX)) });
   };
 
   const onBarContext = (e: MouseEvent): void => {
@@ -502,7 +497,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
   } as CSSProperties;
 
   return (
-    <div ref={anchorRef} className="dock-anchor" data-edge={edge} data-axis={vertical ? "y" : "x"} data-mag={peak > 1 && !reduced ? "on" : "off"} style={vars}>
+    <div ref={anchorRef} className="dock-anchor" data-mag={peak > 1 && !reduced ? "on" : "off"} style={vars}>
       <div
         ref={dockRef}
         className="dock"
@@ -519,14 +514,12 @@ export function Bar({ hidden, onLayout }: BarProps) {
           <div ref={plateStart} className="plate__cap plate__cap--start" />
           <div ref={plateEnd} className="plate__cap plate__cap--end" />
         </div>
-        <div ref={rowRef} className="dock__row" role="toolbar" aria-label={t("dock.label")} aria-orientation={vertical ? "vertical" : "horizontal"} onKeyDown={onRowKeyDown}>
+        <div ref={rowRef} className="dock__row" role="toolbar" aria-label={t("dock.label")} aria-orientation="horizontal" onKeyDown={onRowKeyDown}>
           {entries.map((entry) => (
             <Slot
               key={entry.key}
               entry={entry}
               icon={metrics.icon}
-              vertical={vertical}
-              edge={edge}
               editing={editing}
               roving={entry.key === rovingKey}
               peak={peak}

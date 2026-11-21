@@ -19,6 +19,14 @@ export const DEFAULT_SETTINGS: DockSettings = {
   tiles: [],
 };
 
+/**
+ * Settings as the dock uses them. The dock is bottom-only (D-number in docs/DECISIONS.md): a `dock.json` saved by an
+ * older build may still carry "top", "left" or "right", so the edge is pinned to "bottom" on the way in. The next
+ * settings write then stores "bottom" back, because the core still requires the field.
+ */
+export const normaliseSettings = (settings: DockSettings): DockSettings =>
+  settings.edge === "bottom" ? settings : { ...settings, edge: "bottom" };
+
 /** Whether the dock should stop drawing and ticking: any one of the core's reasons is enough. */
 export const isFrozen = (state: FrozenState): boolean => state.locked || state.displayOff || state.fullscreen;
 
@@ -166,10 +174,10 @@ export const useDockStore = create<DockStore>((set, get) => ({
   tileSizes: readTileSizes(),
 
   applySnapshot: (snapshot) =>
-    set({ ready: true, categories: snapshot.categories, apps: snapshot.apps, windows: snapshot.windows, settings: snapshot.settings }),
+    set({ ready: true, categories: snapshot.categories, apps: snapshot.apps, windows: snapshot.windows, settings: normaliseSettings(snapshot.settings) }),
   applyApps: (apps) => set({ apps }),
   applyWindows: (windows) => set({ windows }),
-  applySettings: (settings) => set({ settings }),
+  applySettings: (settings) => set({ settings: normaliseSettings(settings) }),
   setApps: (apps) => set({ apps }),
   markSeen: (ids) => {
     const { seen } = get();

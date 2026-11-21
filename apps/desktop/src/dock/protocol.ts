@@ -66,7 +66,13 @@ export interface DockWindow {
   readonly flashing: boolean;
 }
 
-export type DockEdge = "bottom" | "top" | "left" | "right";
+/**
+ * The dock is fixed to the bottom of the screen: it is the taskbar. The core's `DockSettings.edge` still has the
+ * older top, left and right values and still requires the field, so the UI keeps it on the wire, always sends
+ * "bottom", and pins anything else it receives to "bottom" (`normaliseSettings` in store.ts). Nothing in the UI
+ * reads it; the host track can treat the core field as ignored by the UI.
+ */
+export type DockEdge = "bottom";
 
 export interface DockSettings {
   readonly schema: 1;
@@ -74,6 +80,7 @@ export interface DockSettings {
   readonly enabled: boolean;
   /** Hide the native taskbar while the dock runs. Off by default until the owner has reviewed it. */
   readonly replaceTaskbar: boolean;
+  /** Always "bottom" in the UI; see `DockEdge`. */
   readonly edge: DockEdge;
   /** Reserve screen space (app bar) so maximised windows stop at the dock; false floats over them. */
   readonly reserveSpace: boolean;

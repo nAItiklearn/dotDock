@@ -2,7 +2,6 @@ import { memo, useState, type CSSProperties, type KeyboardEvent, type MouseEvent
 import { Icon } from "../design-system/Icon";
 import { LibraryMark } from "./DockIcons";
 import { faceBox, isPopoverTile, lengthOf, renderScale } from "./geometry";
-import type { DockEdge } from "./protocol";
 import { indicatorFor, lengthKind, magnifyWeight, type AppEntry, type BarEntry, type StackEntry } from "./model";
 import { plural, t } from "./strings";
 import { StatusPill, Tile } from "./tiles/Tile";
@@ -30,8 +29,6 @@ export interface SlotHandlers {
 export interface SlotProps {
   readonly entry: BarEntry;
   readonly icon: number;
-  readonly vertical: boolean;
-  readonly edge: DockEdge;
   readonly editing: boolean;
   /** The one item that is a tab stop; arrow keys move it. */
   readonly roving: boolean;
@@ -108,7 +105,7 @@ function StackMini({ entry }: { readonly entry: StackEntry }) {
   );
 }
 
-function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "icon" | "vertical" | "peak" | "edge" | "dpr"> & { readonly box: CSSProperties | undefined }) {
+function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "icon" | "peak" | "dpr"> & { readonly box: CSSProperties | undefined }) {
   const name = label(entry);
   const removable = editing && isRemovable(entry);
   const draggable = editing && isDraggable(entry);
@@ -241,11 +238,11 @@ function ResizeBadge({ name, compact, onResize }: { readonly name: string; reado
  * per render, and never redeclared on the face: a face that declares custom properties makes every style
  * recalculation of it re-resolve its whole subtree.
  */
-export const Slot = memo(function Slot({ entry, icon, vertical, edge, editing, roving, open, peak, handlers, dpr }: SlotProps) {
+export const Slot = memo(function Slot({ entry, icon, editing, roving, open, peak, handlers, dpr }: SlotProps) {
   const kind = lengthKind(entry);
   const weight = magnifyWeight(entry);
   const render = renderScale(weight, peak);
-  const length = kind === "status" ? null : lengthOf(kind, icon, vertical, dpr);
+  const length = kind === "status" ? null : lengthOf(kind, icon, dpr);
   const style = {
     "--len": length === null ? "auto" : `${length}px`,
     "--r": render,
@@ -253,7 +250,7 @@ export const Slot = memo(function Slot({ entry, icon, vertical, edge, editing, r
   } as CSSProperties;
   // The face's own box is plain pixels: a declaration that uses var() is substituted again every time the engine
   // rewrites the face's transform, and there are a dozen faces per frame.
-  const box: CSSProperties | undefined = length === null ? undefined : faceBox(edge, length * render, icon * render);
+  const box: CSSProperties | undefined = length === null ? undefined : faceBox(length * render, icon * render);
   return (
     <div
       className="slot"

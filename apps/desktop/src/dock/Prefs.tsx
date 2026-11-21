@@ -3,7 +3,6 @@ import { Icon } from "../design-system/Icon";
 import { actions } from "./bridge";
 import { clampIconSize, clampMagnification, ICON_LIMITS, MAGNIFICATION_LIMITS, placeBesideDock, PREFS, type Rect } from "./geometry";
 import { markOpenPainted } from "./openMarks";
-import type { DockEdge } from "./protocol";
 import { DEFAULT_SETTINGS, useDockStore } from "./store";
 import { t } from "./strings";
 import { DEFAULT_THEME, DOCK_THEMES, type DockThemeId } from "./theme";
@@ -12,7 +11,6 @@ import "./panels.css";
 import "./tiles/popovers.css";
 import "./prefs.css";
 
-const EDGES: readonly DockEdge[] = ["bottom", "top", "left", "right"];
 const SIZE_STEP = 2;
 const MAGNIFICATION_STEP = 0.05;
 const FACTOR_DIGITS = 2;
@@ -27,7 +25,7 @@ function Switch({ checked, label, onChange }: { readonly checked: boolean; reado
 }
 
 /**
- * What Reset puts back: the items, tiles, size, magnification, position, hiding and look the dock starts with. Whether
+ * What Reset puts back: the items, tiles, size, magnification, hiding and look the dock starts with. Whether
  * the dock runs and whether it replaces the taskbar are left as they are; those are not part of how the dock looks.
  */
 export function resetPatch(current: { readonly enabled: boolean; readonly replaceTaskbar: boolean }) {
@@ -46,7 +44,7 @@ export function Prefs({ from, drawn }: { readonly from: Rect; /** The theme the 
   const settings = useDockStore((s) => s.settings);
   const choice = useDockStore((s) => s.themeChoice);
   const viewport = useViewport();
-  const pos = placeBesideDock(from, { w: PREFS.w, h: PREFS.h }, settings.edge, viewport, PREFS.gapToDock);
+  const pos = placeBesideDock(from, { w: PREFS.w, h: PREFS.h }, viewport, PREFS.gapToDock);
   const size = Math.round(clampIconSize(settings.iconSize));
   const factor = clampMagnification(settings.magnification);
   const hint = drawnAsHint(choice, drawn);
@@ -86,7 +84,7 @@ export function Prefs({ from, drawn }: { readonly from: Rect; /** The theme the 
   } as CSSProperties;
 
   return (
-    <div className="popover prefs" role="dialog" aria-label={t("prefs.title")} style={style} data-edge={settings.edge} data-open="true">
+    <div className="popover prefs" role="dialog" aria-label={t("prefs.title")} style={style} data-open="true">
       <div className="popover__plate" />
       <div className="popover__content">
         <header className="popover__head">
@@ -121,17 +119,6 @@ export function Prefs({ from, drawn }: { readonly from: Rect; /** The theme the 
             </button>
           </div>
           <p className="tp-hint">{t("prefs.items.hint")}</p>
-        </section>
-
-        <section className="prefs__group">
-          <h3 className="caps">{t("prefs.position")}</h3>
-          <div className="prefs__segments" role="radiogroup" aria-label={t("prefs.position")}>
-            {EDGES.map((edge) => (
-              <button key={edge} type="button" role="radio" aria-checked={settings.edge === edge} onClick={() => void actions.updateSettings({ edge })}>
-                {t(`prefs.edge.${edge}`)}
-              </button>
-            ))}
-          </div>
         </section>
 
         <section className="prefs__group">

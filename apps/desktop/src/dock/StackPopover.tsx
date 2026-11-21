@@ -40,7 +40,6 @@ const StackPopover = memo(function StackPopover({ category: id, open }: { readon
   const allApps = useDockStore((s) => s.apps);
   // Running dots only matter while the popover is showing; a closed one does not re-render for window changes.
   const windows = useDockStore((s) => (isOpen ? s.windows : NO_WINDOWS));
-  const edge = useDockStore((s) => s.settings.edge);
   const viewport = useViewport();
 
   const apps = useMemo(() => appsInCategory(allApps, id), [allApps, id]);
@@ -53,7 +52,7 @@ const StackPopover = memo(function StackPopover({ category: id, open }: { readon
   const anchor = useRef<Rect>(HIDDEN_AT);
   if (open) anchor.current = open.from;
   const size = popoverSize(apps.length);
-  const pos = placeBesideDock(anchor.current, size, edge, viewport, POPOVER.gap);
+  const pos = placeBesideDock(anchor.current, size, viewport, POPOVER.gap);
   const label = category ? categoryLabel(category) : "";
   const tone = category?.tone ?? "neutral";
 
@@ -135,7 +134,7 @@ const StackPopover = memo(function StackPopover({ category: id, open }: { readon
   const gridStyle = { gridTemplateColumns: `repeat(${size.cols}, ${POPOVER.cellW}px)` } as CSSProperties;
 
   return (
-    <div className="popover" role="dialog" aria-label={label} style={panelStyle} data-edge={edge} data-open={isOpen ? "true" : "false"} aria-hidden={!isOpen}>
+    <div className="popover" role="dialog" aria-label={label} style={panelStyle} data-open={isOpen ? "true" : "false"} aria-hidden={!isOpen}>
       <div className="popover__plate" />
       <div className="popover__content">
         <header className="popover__head">
@@ -175,7 +174,7 @@ const StackPopover = memo(function StackPopover({ category: id, open }: { readon
                 onOpen={launch}
                 onContext={(a, e) => {
                   const r = e.currentTarget.getBoundingClientRect();
-                  useDockStore.getState().setMenu({ key: `app:${a.id}`, at: anchorPoint({ x: r.left, y: r.top, w: r.width, h: r.height }, edge) });
+                  useDockStore.getState().setMenu({ key: `app:${a.id}`, at: anchorPoint({ x: r.left, y: r.top, w: r.width, h: r.height }) });
                 }}
                 onHover={() => setSelected(i)}
               />

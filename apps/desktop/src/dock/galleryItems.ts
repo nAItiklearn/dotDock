@@ -39,6 +39,7 @@ const TILE_CATEGORY: Readonly<Record<TileId, GalleryCategory>> = {
   flip: "time",
   sun: "time",
   wind: "system",
+  weather: "system",
   currency: "tools",
   search: "tools",
   history: "tools",

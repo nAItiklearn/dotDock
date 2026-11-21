@@ -8,7 +8,7 @@ import { dev, devBackend } from "./devBackend";
 import { devTiles } from "./devTiles";
 import { perf } from "./perfHarness";
 import { auditDock } from "./layoutAudit";
-import { isVertical, metricsFor } from "../geometry";
+import { metricsFor } from "../geometry";
 import { sampleIcon } from "./sampleIcons";
 import { DEFAULT_WALLPAPER, installBackdrop, parseWallpaper, setWallpaper } from "./wallpapers";
 import "./DevPanel.css";
@@ -61,8 +61,7 @@ export function mountDevPanel(): void {
   /** The pixel audit at the icon size the dock is drawing now (it may have shrunk the requested one to fit). */
   const audit = () => {
     const icon = Number.parseFloat(getComputedStyle(document.querySelector(".dock-root") ?? document.documentElement).getPropertyValue("--d-icon"));
-    const { edge } = useDockStore.getState().settings;
-    return auditDock(metricsFor(icon).gap, isVertical(edge));
+    return auditDock(metricsFor(icon, window.devicePixelRatio).gap);
   };
   Object.assign(window, { dockDev: { dev, tiles: devTiles, store: useDockStore, actions, perf, audit, setWallpaper } });
   if (params.get("panel") === "0") return;

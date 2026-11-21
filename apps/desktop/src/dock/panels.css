@@ -117,15 +117,6 @@
   transform-origin: var(--menu-origin);
   animation: fade-in var(--dur-quick) linear;
 }
-.menu[data-edge="top"] {
-  --menu-origin: 50% 0;
-}
-.menu[data-edge="left"] {
-  --menu-origin: 0 50%;
-}
-.menu[data-edge="right"] {
-  --menu-origin: 100% 50%;
-}
 .menu__item {
   display: flex;
   align-items: center;

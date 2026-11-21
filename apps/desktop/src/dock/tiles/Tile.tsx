@@ -11,6 +11,7 @@ import { useMinuteClock } from "./hooks";
 import { AnalogFace, BatteryFace, ColourFace, ConvertFace, CpuFace, EmojiFace, NetworkFace, NotesFace, TogglesFace, WorldFace } from "./toolsFaces";
 import { CurrencyFace, FlipFace, HistoryFace, MemoFace, SearchFace, SunFace, WindFace } from "./moreFaces";
 import type { TileControls } from "./shell";
+import { WeatherFace } from "./weatherFace";
 
 const LOW_BATTERY = 20;
 
@@ -131,6 +132,8 @@ export function Tile({ id, controls }: { readonly id: TileId; readonly controls:
       return <SunFace controls={controls} />;
     case "wind":
       return <WindFace />;
+    case "weather":
+      return <WeatherFace />;
     case "currency":
       return <CurrencyFace controls={controls} />;
     case "search":

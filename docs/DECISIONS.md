@@ -147,3 +147,17 @@ Numbered D-019 because D-017 and D-018 exist on `main`; the backend track's bran
 - **Voice memo** records with the WebView's microphone access and keeps audio in this device's IndexedDB, at most 12
   memos and 10 minutes each, with a 40-bar peak waveform per memo. Nothing is uploaded.
 - **Flip clock** is a face only: a new minute mounts a new card whose top folds once (none with reduced motion).
+
+## D-031 The dock is bottom-only (2026-11-21, owner decision)
+- The dock is the taskbar, so it sits bottom-centre and nowhere else. The position setting, its control in the
+  customise panel, the fixture's edge picker, every top/left/right and vertical code path (geometry, engine, regions,
+  previews, panels, CSS) and their tests are removed. `geometry.test.ts` "the dock is bottom-centred" and
+  `store.test.ts` "the dock's position" guard it.
+- The core's `DockSettings.edge` stays on the wire for now (the Rust struct requires it); the UI types it as
+  `"bottom"` and normalises anything else on the way in, so a `dock.json` from an older build still draws at the bottom.
+
+## D-032 The first-run dock is laid out from the machine's own apps (2026-11-21)
+- When the dock has nothing pinned and no tiles and has never been laid out on this profile, the UI pins up to nine
+  installed apps (one or two per kind of work, apps the core recognised by name first), adds a stack for every
+  category that has apps (not "other"), and puts five tiles on the right: clock, weather, now playing, battery and the
+  day ahead. Seeding is remembered in local storage so a user who empties the dock on purpose is not reseeded.

@@ -516,10 +516,9 @@ const BODY: Record<PopoverTileId, () => ReactNode> = {
 
 /** The popover of one live tile: its full controls, opened beside the tile. Esc, a click away or the close button shuts it. */
 export function TilePopover({ open }: { readonly open: OpenTile }) {
-  const edge = useDockStore((s) => s.settings.edge);
   const viewport = useViewport();
   const size = TILE_POPOVER_SIZE[open.id];
-  const pos = placeBesideDock(open.from, { w: size.w, h: size.h }, edge, viewport, TILE_POPOVER.gap);
+  const pos = placeBesideDock(open.from, { w: size.w, h: size.h }, viewport, TILE_POPOVER.gap);
   const label = t(`tile.${open.id}`);
 
   useLayoutEffect(() => {
@@ -546,7 +545,7 @@ export function TilePopover({ open }: { readonly open: OpenTile }) {
   } as CSSProperties;
 
   return (
-    <div className="popover tilepop" role="dialog" aria-label={label} style={style} data-edge={edge} data-open="true" data-tile={open.id}>
+    <div className="popover tilepop" role="dialog" aria-label={label} style={style} data-open="true" data-tile={open.id}>
       <div className="popover__plate" />
       <div className="popover__content">
         <header className="popover__head">

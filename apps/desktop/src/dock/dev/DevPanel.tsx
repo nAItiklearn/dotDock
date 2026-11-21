@@ -3,7 +3,6 @@ import { useDockStore } from "../store";
 import { panelShownAtStart, togglesPanel } from "./panelKey";
 import type { EffectsChoice } from "../effects";
 import { TILE_IDS, type TileId } from "../model";
-import type { DockEdge } from "../protocol";
 import { DOCK_THEMES, type DockThemeId } from "../theme";
 import type { FeedName, TileIssue } from "../tiles/ui-types";
 import { dev } from "./devBackend";
@@ -14,7 +13,6 @@ import { seedFocus, seedReminders, type FocusSeed } from "./seeds";
 
 /** DEV ONLY. Fixture controls for the dock. Never part of the production build. */
 
-const EDGES: readonly DockEdge[] = ["bottom", "top", "left", "right"];
 const EFFECTS: readonly EffectsChoice[] = ["auto", "full", "lite"];
 const FEEDS: readonly FeedName[] = ["contacts", "meeting", "stopwatch", "mic", "hydration", "agenda", "audio"];
 const ISSUES: readonly (TileIssue | "none")[] = ["none", "unsupported", "no-device", "offline", "error", "needs-setup"];
@@ -58,14 +56,6 @@ function Fixture() {
       </header>
       {open ? (
         <div className="dev__body">
-          <label>
-            edge
-            <select value={settings.edge} onChange={(e) => set({ edge: e.target.value as DockEdge })}>
-              {EDGES.map((edge) => (
-                <option key={edge}>{edge}</option>
-              ))}
-            </select>
-          </label>
           <label>
             icon size {settings.iconSize}
             <input type="range" min={32} max={80} value={settings.iconSize} onChange={(e) => set({ iconSize: Number(e.target.value) })} />
