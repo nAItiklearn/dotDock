@@ -71,14 +71,15 @@ if (mode === "perf" || mode === "all") {
       await b.send("Emulation.setCPUThrottlingRate", { rate: slow });
       await toScene(`.live--${scene}`);
       await sleep(1500);
-      const still = await b.frames(6000, 0, ".live");
+      const first = await b.frames(6000, 0, ".live");
+      const steady = await b.frames(6000, 0, ".live");
       await b.evaluate(`scrollTo(0, document.querySelector('.live--${scene}').getBoundingClientRect().top + scrollY - innerHeight)`);
       await sleep(600);
       const scroll = await b.frames(3000, 6, ".live");
       await b.evaluate("scrollTo(0, 0)");
       await sleep(600);
       const paused = await b.evaluate(`document.querySelector('.live--${scene}').classList.contains('live--paused')`);
-      report.push(`${scene} @${w} cpu x${slow}: in view ${JSON.stringify(still)}; scrolling past ${JSON.stringify(scroll)}; paused off screen ${paused}`);
+      report.push(`${scene} @${w} cpu x${slow}: first 6 s in view (masks decoding) ${JSON.stringify(first)}; next 6 s ${JSON.stringify(steady)}; scrolling past ${JSON.stringify(scroll)}; paused off screen ${paused}`);
       await b.send("Emulation.setCPUThrottlingRate", { rate: 1 });
     }
   }

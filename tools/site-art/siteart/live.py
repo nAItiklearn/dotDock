@@ -372,7 +372,8 @@ def pond_reeds(half: int):
         n = 18 if narrow else 40
         for k in range(n):
             side = -1 if k % 2 == 0 else 1
-            edge = plan.uniform(0.0, 0.18 if narrow else 0.16)
+            # A phone shows only the middle of the narrow render, so its reeds stand further in.
+            edge = plan.uniform(0.15, 0.30) if narrow else plan.uniform(0.0, 0.16)
             x = (edge if side < 0 else 1.0 - edge) * width
             tall = plan.uniform(0.30, 0.62) * height
             lean = plan.uniform(-0.02, 0.01) * width

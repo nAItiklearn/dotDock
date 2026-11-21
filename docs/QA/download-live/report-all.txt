@@ -1,6 +1,6 @@
 reduced motion: running animations in the meadow = 0
 layout check /download at 390, 414, 768, 1024, 1280, 1440: {"pages":["/download"],"widths":[390,414,768,1024,1280,1440],"count":0,"problems":[]}
-frames @390: {"frames":362,"mean":16.6,"p95":16.8,"max":17.4,"dropped":0,"animations":21}
+frames @390: {"frames":362,"mean":16.62,"p95":16.8,"max":17.2,"dropped":0,"animations":21}
 paused off screen @390: true
-frames @1440: {"frames":360,"mean":16.69,"p95":16.8,"max":33.3,"dropped":1,"animations":21}
+frames @1440: {"frames":359,"mean":16.72,"p95":16.8,"max":49.9,"dropped":1,"animations":21}
 paused off screen @1440: true

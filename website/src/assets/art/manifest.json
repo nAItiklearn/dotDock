@@ -2914,7 +2914,7 @@
        "file": "live-pond-reeds-a-narrow-stalk-2x.webp",
        "w": 1440,
        "h": 960,
-       "bytes": 418
+       "bytes": 432
       }
      },
      "heart": {
@@ -2928,7 +2928,7 @@
        "file": "live-pond-reeds-a-narrow-heart-2x.webp",
        "w": 1440,
        "h": 960,
-       "bytes": 364
+       "bytes": 374
       }
      }
     }
@@ -2981,13 +2981,13 @@
        "file": "live-pond-reeds-b-narrow-stalk-1x.webp",
        "w": 720,
        "h": 480,
-       "bytes": 302
+       "bytes": 316
       },
       "2": {
        "file": "live-pond-reeds-b-narrow-stalk-2x.webp",
        "w": 1440,
        "h": 960,
-       "bytes": 370
+       "bytes": 398
       }
      },
      "heart": {
@@ -2995,13 +2995,13 @@
        "file": "live-pond-reeds-b-narrow-heart-1x.webp",
        "w": 720,
        "h": 480,
-       "bytes": 106
+       "bytes": 112
       },
       "2": {
        "file": "live-pond-reeds-b-narrow-heart-2x.webp",
        "w": 1440,
        "h": 960,
-       "bytes": 200
+       "bytes": 206
       }
      }
     }
