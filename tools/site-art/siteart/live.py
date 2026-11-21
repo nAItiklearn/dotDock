@@ -122,7 +122,7 @@ def _front(cv, width: int, height: int, narrow: bool, half: int, seed: int, kind
 # reaches the grass. It is drawn straight on the cell grid (no averaging), so the silhouette stays crisp: every
 # shape is a polygon in cell units, a cell belongs to it when its centre is inside, and the tone follows the form
 # (a lighter band along the top line, the far legs a shade lighter, mane, tail and hooves at full strength).
-# The parts are separate pieces so the page can move them: the head and neck, the mane on the crest, an ear, the
+# The parts are separate pieces so the page can move them: the head and neck (with the mane and an ear), the
 # tail. Coordinates are cells from the top-left of the horse's box; the hooves stand on row HORSE_GROUND.
 
 HORSE_GROUND = 28
@@ -176,7 +176,6 @@ _EYE = (5, 18)
 _NOSTRIL = (2, 26)
 
 HORSE_NECK = (17.0, 9.5)          # where the neck leaves the withers: the head dips and lifts about it
-HORSE_EAR = (7.6, 15.4)           # the root of the ear: it flicks about it
 HORSE_TAIL = (39.0, 8.0)          # the root of the tail: it sways about it
 
 
@@ -203,14 +202,12 @@ def horse_part(cv, width: int, height: int, narrow: bool, part: str) -> None:
         _paint(cv, gx, gy, _grid(_HOOVES_FAR), "heart", MID)
         _paint(cv, gx, gy, _grid(_BODY + _LEGS_NEAR) & ~_grid(_HOOVES_NEAR), "heart", MID, rim=SHADE)
         _paint(cv, gx, gy, _grid(_HOOVES_NEAR), "heart", LIT)
-    elif part == "head":
+    elif part == "head":                       # the head and neck, with the mane and the ear, dip and lift as one
         _paint(cv, gx, gy, _grid([_NECK, _HEAD, _MUZZLE, _CHEEK]) & ~_grid([_MANE]), "heart", MID)
+        _paint(cv, gx, gy, _grid([_MANE]), "heart", LIT)
+        _paint(cv, gx, gy, _grid([_EAR]) & ~_grid([_MANE]), "heart", LIT)
         cv.fill_cell("gold", gx + _EYE[0], gy + _EYE[1], LIT)
         cv.fill_cell("heart", gx + _NOSTRIL[0], gy + _NOSTRIL[1], LIT)
-    elif part == "mane":
-        _paint(cv, gx, gy, _grid([_MANE]), "heart", LIT)
-    elif part == "ear":
-        _paint(cv, gx, gy, _grid([_EAR]) & ~_grid([_MANE]), "heart", LIT)
     else:
         _paint(cv, gx, gy, _grid([_TAIL]), "heart", LIT)
 
@@ -507,7 +504,6 @@ def pivots() -> dict:
         cx, cy, r, floor = _octopus_place(w, h, narrow)
         out[variant] = {
             "paddock-head": horse_pivot(w, h, narrow, HORSE_NECK),
-            "paddock-ear": horse_pivot(w, h, narrow, HORSE_EAR),
             "paddock-tail": horse_pivot(w, h, narrow, HORSE_TAIL),
             "reef-head": [cx / w, (cy + 1.08 * r) / h],
             "reef-arms": [cx / w, floor / h],
@@ -548,8 +544,6 @@ _SCENES: dict[str, tuple[int, Callable]] = {
     "live-paddock-horse": (SEED_PADDOCK + 2, paddock_part("horse")),
     "live-paddock-head": (SEED_PADDOCK + 2, paddock_part("head")),
     "live-paddock-tail": (SEED_PADDOCK + 2, paddock_part("tail")),
-    "live-paddock-mane": (SEED_PADDOCK + 2, paddock_part("mane")),
-    "live-paddock-ear": (SEED_PADDOCK + 2, paddock_part("ear")),
     "live-paddock-sway-a": (SEED_PADDOCK + 10, paddock_sway(0)),
     "live-paddock-sway-b": (SEED_PADDOCK + 11, paddock_sway(1)),
     "live-pond-land": (SEED_POND, pond_land),

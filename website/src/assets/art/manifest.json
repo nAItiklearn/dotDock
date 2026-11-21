@@ -1710,13 +1710,13 @@
        "file": "live-paddock-head-wide-heart-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 388
+       "bytes": 232
       },
       "2": {
        "file": "live-paddock-head-wide-heart-2x.webp",
        "w": 3840,
        "h": 1200,
-       "bytes": 934
+       "bytes": 530
       }
      },
      "gold": {
@@ -1724,13 +1724,13 @@
        "file": "live-paddock-head-wide-gold-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 166
+       "bytes": 104
       },
       "2": {
        "file": "live-paddock-head-wide-gold-2x.webp",
        "w": 3840,
        "h": 1200,
-       "bytes": 486
+       "bytes": 262
       }
      }
     }
@@ -1744,13 +1744,13 @@
        "file": "live-paddock-head-narrow-heart-1x.webp",
        "w": 720,
        "h": 480,
-       "bytes": 240
+       "bytes": 194
       },
       "2": {
        "file": "live-paddock-head-narrow-heart-2x.webp",
        "w": 1440,
        "h": 960,
-       "bytes": 438
+       "bytes": 274
       }
      },
      "gold": {
@@ -1758,13 +1758,13 @@
        "file": "live-paddock-head-narrow-gold-1x.webp",
        "w": 720,
        "h": 480,
-       "bytes": 102
+       "bytes": 68
       },
       "2": {
        "file": "live-paddock-head-narrow-gold-2x.webp",
        "w": 1440,
        "h": 960,
-       "bytes": 192
+       "bytes": 118
       }
      }
     }
@@ -1783,13 +1783,13 @@
        "file": "live-paddock-horse-wide-heart-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 592
+       "bytes": 380
       },
       "2": {
        "file": "live-paddock-horse-wide-heart-2x.webp",
        "w": 3840,
        "h": 1200,
-       "bytes": 1174
+       "bytes": 956
       }
      }
     }
@@ -1803,13 +1803,13 @@
        "file": "live-paddock-horse-narrow-heart-1x.webp",
        "w": 720,
        "h": 480,
-       "bytes": 396
+       "bytes": 220
       },
       "2": {
        "file": "live-paddock-horse-narrow-heart-2x.webp",
        "w": 1440,
        "h": 960,
-       "bytes": 604
+       "bytes": 298
       }
      }
     }
@@ -2097,13 +2097,13 @@
        "file": "live-paddock-sway-a-wide-stalk-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 1084
+       "bytes": 1074
       },
       "2": {
        "file": "live-paddock-sway-a-wide-stalk-2x.webp",
        "w": 3840,
        "h": 1200,
-       "bytes": 1694
+       "bytes": 1692
       }
      },
      "gold": {
@@ -2111,7 +2111,7 @@
        "file": "live-paddock-sway-a-wide-gold-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 324
+       "bytes": 322
       },
       "2": {
        "file": "live-paddock-sway-a-wide-gold-2x.webp",
@@ -2125,13 +2125,13 @@
        "file": "live-paddock-sway-a-wide-heart-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 300
+       "bytes": 174
       },
       "2": {
        "file": "live-paddock-sway-a-wide-heart-2x.webp",
        "w": 3840,
        "h": 1200,
-       "bytes": 840
+       "bytes": 486
       }
      },
      "pink": {
@@ -2139,13 +2139,13 @@
        "file": "live-paddock-sway-a-wide-pink-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 320
+       "bytes": 318
       },
       "2": {
        "file": "live-paddock-sway-a-wide-pink-2x.webp",
        "w": 3840,
        "h": 1200,
-       "bytes": 858
+       "bytes": 854
       }
      },
      "violet": {
@@ -2153,13 +2153,13 @@
        "file": "live-paddock-sway-a-wide-violet-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 432
+       "bytes": 376
       },
       "2": {
        "file": "live-paddock-sway-a-wide-violet-2x.webp",
        "w": 3840,
        "h": 1200,
-       "bytes": 958
+       "bytes": 912
       }
      },
      "cream": {
@@ -2167,13 +2167,13 @@
        "file": "live-paddock-sway-a-wide-cream-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 384
+       "bytes": 404
       },
       "2": {
        "file": "live-paddock-sway-a-wide-cream-2x.webp",
        "w": 3840,
        "h": 1200,
-       "bytes": 912
+       "bytes": 926
       }
      }
     }
@@ -2453,13 +2453,13 @@
        "file": "live-paddock-tail-wide-heart-1x.webp",
        "w": 1920,
        "h": 600,
-       "bytes": 336
+       "bytes": 112
       },
       "2": {
        "file": "live-paddock-tail-wide-heart-2x.webp",
        "w": 3840,
        "h": 1200,
-       "bytes": 886
+       "bytes": 274
       }
      }
     }
@@ -2473,13 +2473,13 @@
        "file": "live-paddock-tail-narrow-heart-1x.webp",
        "w": 720,
        "h": 480,
-       "bytes": 190
+       "bytes": 88
       },
       "2": {
        "file": "live-paddock-tail-narrow-heart-2x.webp",
        "w": 1440,
        "h": 960,
-       "bytes": 374
+       "bytes": 132
       }
      }
     }
