@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import {
   useCallback,
   useEffect,
@@ -18,7 +17,7 @@ import { flushSync } from "react-dom";
 import { DotIcon } from "../../design-system/DotMatrix";
 import { Caps, IconButton, Surface } from "../../design-system/primitives";
 import { watchTheme } from "../../design-system/themes";
-import { isTauri } from "../../providers/bridge";
+import { holdKeyboard } from "../../lib/native/keyboardFocus";
 import { defineWidget, type WidgetProps } from "../definition";
 import { sizeSpec, type SizeId } from "../sizes";
 import { ACCEPTED_TYPES, loadPhoto, readPhotoFile, savePhoto, type PhotoProblem, type StoredPhoto } from "./blobs";
@@ -55,8 +54,7 @@ const PROBLEM_TEXT: Readonly<Record<PhotoProblem, string>> = {
  * other windows. It asks the core for the foreground while the dialog is open.
  */
 function holdForeground(on: boolean): void {
-  if (!isTauri()) return;
-  invoke("overlay_set_typing", { typing: on }).catch((err: unknown) => console.error("overlay_set_typing failed", err));
+  holdKeyboard("file-dialog", on);
 }
 
 interface Loaded {

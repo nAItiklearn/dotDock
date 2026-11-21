@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isTauri } from "../providers/bridge";
+import { holdKeyboard } from "../lib/native/keyboardFocus";
 
 interface HitRect {
   readonly x: number;
@@ -24,9 +25,12 @@ export function reportFirstFrame(): void {
   if (isTauri()) call("overlay_ready");
 }
 
-/** Reports edit mode to the core so it can raise the overlay and give it keyboard focus (command `overlay_edit_mode`). */
+/**
+ * Edit mode needs the keyboard (Esc, Ctrl+Z, Delete, arrows). The overlay stays at the bottom of the
+ * z-order and click-through outside its widgets; it only takes the foreground while editing.
+ */
 export function reportEditMode(on: boolean): void {
-  if (isTauri()) call("overlay_edit_mode", { on });
+  holdKeyboard("editing", on);
 }
 
 /**

@@ -166,11 +166,6 @@ export interface NativeApi {
   window: {
     /** `settings_open` { page?: string } → void. Opens or focuses the Settings window on a page id. */
     openSettings(page?: string): Promise<void>;
-    /**
-     * `overlay_edit_mode` { on: boolean } → void. The overlay reports entering or leaving edit mode so the
-     * core can raise it above normal windows and give it keyboard focus, then restore it afterwards.
-     */
-    setEditMode(on: boolean): Promise<void>;
   };
 
   app: {
@@ -201,7 +196,7 @@ export const unavailableNativeApi: NativeApi = {
   wallpapers: { list: unavailable, assignments: unavailable, assign: unavailable, importFile: unavailable, remove: unavailable },
   performance: { get: unavailable, set: unavailable, stats: unavailable },
   shortcuts: { register: unavailable },
-  window: { openSettings: unavailable, setEditMode: unavailable },
+  window: { openSettings: unavailable },
   app: { info: unavailable, openDataFolder: unavailable },
   updater: { status: unavailable, setEnabled: unavailable, check: unavailable },
 };
@@ -261,7 +256,6 @@ export const tauriNativeApi: NativeApi = {
   shortcuts: { register: (bindings) => call("shortcuts_register", { bindings }) },
   window: {
     openSettings: (page) => call("settings_open", { page: page ?? null }),
-    setEditMode: (on) => call("overlay_edit_mode", { on }),
   },
   app: { info: () => call("app_info"), openDataFolder: () => call("app_open_data_folder") },
   updater: {
