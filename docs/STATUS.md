@@ -1,5 +1,7 @@
 # Live status (rewritten every 30 min)
 
+**2026-11-21 (new session): sequential mode, owner request.** One feature at a time: fresh Opus builder finishes it, a separate fresh Opus reviewer scores it, merge only at 4.8 or more (nothing under 4.5) with every check green, then the next feature. Order: Notch, Theme, Settings, Download page, Home screen, Dock (host + UI), Developer tiles, Website. Now: **Notch** builder running.
+
 **Last check:** 2026-11-21 15:25. **Disk D:** 17 GB free (limit 12 GB). **Screen:** free.
 **Owner deadline (15:25): everything done in 4-6 hours.** Plan: notch, Settings, download page ready by 18:00; home screen 18:30; dock 19:30; whole-launcher run for the owner, then videos; website complete by 20:00, videos in at about 20:30; then auto-update, installer and deploy.
 
