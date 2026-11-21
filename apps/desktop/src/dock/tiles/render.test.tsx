@@ -629,7 +629,7 @@ describe("tiles in edit mode", () => {
   const slot = (id: TileId, size: "regular" | "compact", editing: boolean): string => {
     const handlers = { activate: noop, press: noop, pressKey: noop, context: noop, remove: noop, resize: noop, focused: noop, pointerDown: noop };
     return renderToStaticMarkup(
-      <Slot entry={{ kind: "tile", key: `tile:${id}`, id, size }} icon={48} vertical={false} edge="bottom" editing={editing} roving={false} peak={1.25} open={false} handlers={handlers} />,
+      <Slot entry={{ kind: "tile", key: `tile:${id}`, id, size }} icon={48} vertical={false} edge="bottom" editing={editing} roving={false} peak={1.25} open={false} handlers={handlers} dpr={1} />,
     );
   };
 
@@ -660,7 +660,7 @@ describe("tiles in edit mode", () => {
   it("marks a compact tile and gives it the length of one item", () => {
     expect(slot("agenda", "compact", false)).toContain('data-size="compact"');
     expect(slot("agenda", "compact", false)).toContain("--len:48px");
-    expect(slot("agenda", "regular", false)).toContain("--len:172.8px");
+    expect(slot("agenda", "regular", false)).toContain("--len:173px");
   });
 });
 

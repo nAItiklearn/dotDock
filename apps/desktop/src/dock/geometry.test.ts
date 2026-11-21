@@ -123,3 +123,19 @@ describe("previewLayout", () => {
     expect(many.h).toBeGreaterThan(previewLayout(1, false).h);
   });
 });
+
+describe("the device-pixel grid", () => {
+  it("puts every bar size and item length on whole device pixels at 100, 125 and 150 %", async () => {
+    const { metricsFor: m, lengthOf: len, LENGTH_RATIO: ratios } = await import("./geometry");
+    for (const dpr of [1, 1.25, 1.5]) {
+      for (const icon of [36, 45, 48, 57, 64]) {
+        const x = m(icon, dpr);
+        for (const v of [x.icon, x.gap, x.pad, x.bar, x.edge]) expect(Math.abs(v * dpr - Math.round(v * dpr))).toBeLessThan(1e-9);
+        for (const kind of Object.keys(ratios) as (keyof typeof ratios)[]) {
+          const l = len(kind, x.icon, false, dpr);
+          expect(Math.abs(l * dpr - Math.round(l * dpr))).toBeLessThan(1e-9);
+        }
+      }
+    }
+  });
+});

@@ -40,6 +40,8 @@ export interface SlotProps {
   /** This entry's popover is open. */
   readonly open: boolean;
   readonly handlers: SlotHandlers;
+  /** The screen's device pixels per CSS px: every length is laid on its grid. */
+  readonly dpr: number;
 }
 
 /** Whether an entry can be dragged in edit mode. */
@@ -106,7 +108,7 @@ function StackMini({ entry }: { readonly entry: StackEntry }) {
   );
 }
 
-function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "icon" | "vertical" | "peak" | "edge"> & { readonly box: CSSProperties | undefined }) {
+function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "icon" | "vertical" | "peak" | "edge" | "dpr"> & { readonly box: CSSProperties | undefined }) {
   const name = label(entry);
   const removable = editing && isRemovable(entry);
   const draggable = editing && isDraggable(entry);
@@ -239,11 +241,11 @@ function ResizeBadge({ name, compact, onResize }: { readonly name: string; reado
  * per render, and never redeclared on the face: a face that declares custom properties makes every style
  * recalculation of it re-resolve its whole subtree.
  */
-export const Slot = memo(function Slot({ entry, icon, vertical, edge, editing, roving, open, peak, handlers }: SlotProps) {
+export const Slot = memo(function Slot({ entry, icon, vertical, edge, editing, roving, open, peak, handlers, dpr }: SlotProps) {
   const kind = lengthKind(entry);
   const weight = magnifyWeight(entry);
   const render = renderScale(weight, peak);
-  const length = kind === "status" ? null : lengthOf(kind, icon, vertical);
+  const length = kind === "status" ? null : lengthOf(kind, icon, vertical, dpr);
   const style = {
     "--len": length === null ? "auto" : `${length}px`,
     "--r": render,

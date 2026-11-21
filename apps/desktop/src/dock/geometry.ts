@@ -89,12 +89,12 @@ export const LENGTH_RATIO = {
   network: [3.2, 1],
   toggles: [3.4, 1],
   flip: [2.2, 1.2],
-  sun: [3.1, 1],
+  sun: [3.8, 1],
   wind: [2.7, 1],
   currency: [3.6, 1],
   search: [2.8, 1],
   history: [3.1, 1],
-  memo: [2.6, 1],
+  memo: [2.8, 1],
   /** Measured once drawn; this estimate only sizes the dock before the first measurement. */
   status: [3.2, 2.3],
 } as const;
@@ -127,18 +127,26 @@ export function clampMagnification(peak: number): number {
   return Math.min(MAGNIFICATION_LIMITS.max, Math.max(MAGNIFICATION_LIMITS.min, peak));
 }
 
-export function metricsFor(iconSize: number): Metrics {
-  const icon = Math.round(clampIconSize(iconSize));
-  const gap = Math.round(icon * RATIO.gap);
-  const pad = Math.round(icon * RATIO.pad);
-  return { icon, gap, pad, bar: icon + 2 * pad, edge: Math.round(icon * RATIO.edge), reach: RATIO.reach * (icon + gap) };
+/**
+ * A length in CSS px moved to the nearest whole device pixel. At 125 % one CSS px is 1.25 device px, so a whole CSS
+ * px is not always a whole device pixel; every length the dock lays out goes through this so no edge is resampled.
+ */
+export const toDevicePixel = (css: number, dpr = 1): number => (dpr > 0 ? Math.round(css * dpr) / dpr : Math.round(css));
+
+/** The bar's sizes, each on the device-pixel grid of a screen at `dpr` (window.devicePixelRatio). */
+export function metricsFor(iconSize: number, dpr = 1): Metrics {
+  const base = Math.round(clampIconSize(iconSize));
+  const icon = toDevicePixel(base, dpr);
+  const gap = toDevicePixel(base * RATIO.gap, dpr);
+  const pad = toDevicePixel(base * RATIO.pad, dpr);
+  return { icon, gap, pad, bar: icon + 2 * pad, edge: toDevicePixel(base * RATIO.edge, dpr), reach: RATIO.reach * (icon + gap) };
 }
 
 export const isVertical = (edge: DockEdge): boolean => edge === "left" || edge === "right";
 
 /** Length of one item along the axis at a given icon size. */
-export function lengthOf(kind: LengthKind, icon: number, vertical: boolean): number {
-  return LENGTH_RATIO[kind][vertical ? 1 : 0] * icon;
+export function lengthOf(kind: LengthKind, icon: number, vertical: boolean, dpr = 1): number {
+  return toDevicePixel(LENGTH_RATIO[kind][vertical ? 1 : 0] * icon, dpr);
 }
 
 /** Total length of a row of items at the given icon size, gaps and padding included. */

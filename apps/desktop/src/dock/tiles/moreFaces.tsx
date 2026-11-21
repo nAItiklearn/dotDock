@@ -147,7 +147,8 @@ export function WindFace() {
           <path d="M12 20.5v-15M6.5 11l5.5-5.5 5.5 5.5" />
         </svg>
       </Mark>
-      <Words title={speed.format(kmh)} sub={[compassPoint(from), gust].filter((p) => p).join(" · ")} />
+      {/* The gust is in the label and the popover: beside the speed on a dock-sized tile it would be cut off. */}
+      <Words title={speed.format(kmh)} sub={compassPoint(from)} />
     </TileShell>
   );
 }
