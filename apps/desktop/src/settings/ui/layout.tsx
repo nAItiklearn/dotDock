@@ -38,10 +38,7 @@ export function PageHeader({ page }: { readonly page: PageId }) {
   }, [page]);
   return (
     <header className="page-header">
-      <div className="page-header__eyebrow">
-        <span className="status-dot" aria-hidden="true" />
-        <span className="caps">{section.title}</span>
-      </div>
+      <div className="page-header__eyebrow">{section.title}</div>
       <h1 ref={heading} tabIndex={-1} className="page-header__title">
         {meta.title}
       </h1>
@@ -75,7 +72,7 @@ export function Section({ title, description, children, actions }: SectionProps)
     <section className="section" aria-labelledby={id}>
       <div className="section__head">
         <div>
-          <h2 id={id} className="section__title caps">
+          <h2 id={id} className="section__title">
             {title}
           </h2>
           {description ? <p className="section__desc">{description}</p> : null}

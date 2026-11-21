@@ -1,12 +1,37 @@
+/* Inter for text and Inter Display for titles, as on the website (SIL OFL 1.1, THIRD_PARTY_NOTICES.md). */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-500.woff2") format("woff2");
+  font-weight: 500 600;
+  font-display: block;
+}
+@font-face {
+  font-family: "Inter Display";
+  src: url("/fonts/InterDisplay-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: block;
+}
+
 /* The Settings window. Built from the same tokens and controls as the desktop: no colours or radii of its own. */
 :root {
-  --sidebar-w: 264px;
-  --content-max: 820px;
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-title: "Inter Display", "Inter", system-ui, sans-serif;
+  --sidebar-w: 248px;
+  --content-max: 760px;
   --page-pad: 40px;
-  --row-pad-y: var(--space-4);
-  --row-pad-x: var(--space-5);
-  --nav-h: 40px;
-  --title-size: 44px;
+  --row-pad-y: var(--space-3);
+  --row-pad-x: var(--space-4);
+  --row-min-h: 52px;
+  --nav-h: 32px;
+  --nav-icon: 22px;
+  --title-size: 28px;
+  --card-radius: var(--radius-sm);
   --stage-h: 150px;
 }
 
@@ -73,8 +98,9 @@ input,
   flex-direction: column;
   gap: var(--space-4);
   min-height: 0;
-  padding: var(--space-5) var(--space-4);
+  padding: var(--space-5) var(--space-3);
   border-right: var(--hairline) solid var(--border);
+  background: var(--surface);
 }
 .sidebar__brand {
   display: flex;
@@ -135,9 +161,9 @@ input,
   align-items: center;
   gap: var(--space-3);
   height: var(--nav-h);
-  padding: 0 var(--space-4);
-  border-radius: var(--radius-pill);
-  color: var(--text-dim);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-xs);
+  color: var(--text);
   font-size: var(--text-md);
   font-weight: 500;
   text-decoration: none;
@@ -147,12 +173,25 @@ input,
 }
 .nav__item:hover {
   background: var(--surface-2);
-  color: var(--text);
 }
-/* The selected page is the white pill, as in the launcher menu this UI takes after. */
+/* The selected section is a quiet filled row, as in a system settings sidebar. */
 .nav__item[aria-current="page"] {
-  background: var(--text);
-  color: var(--bg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 var(--hairline) var(--border);
+}
+.nav__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--nav-icon);
+  height: var(--nav-icon);
+  border-radius: var(--radius-xs);
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+.nav__item[aria-current="page"] .nav__icon {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* ---- content */
@@ -172,21 +211,57 @@ input,
   margin-bottom: var(--space-6);
 }
 .page-header__eyebrow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+.sidebar__sub {
+  color: var(--text-dim);
+  font-size: var(--text-md);
 }
 .page-header__title {
-  margin: var(--space-3) 0 var(--space-2);
-  font-family: var(--font-dot);
+  margin: var(--space-2) 0 var(--space-1);
+  font-family: var(--font-title);
   font-size: var(--title-size);
   font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: 0.01em;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   outline: none;
 }
 .page-header__title--search {
   font-size: calc(var(--title-size) * 0.8);
+}
+/* A section's pages, as a segmented control under the title. */
+.tabs {
+  display: inline-flex;
+  gap: 2px;
+  margin-top: var(--space-5);
+  padding: 2px;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+}
+.tabs__item {
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--nav-h) - 4px);
+  padding: 0 var(--space-4);
+  border-radius: calc(var(--radius-xs) - 2px);
+  color: var(--text-dim);
+  font-size: var(--text-md);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.tabs__item:hover {
+  color: var(--text);
+}
+.tabs__item[aria-current="page"] {
+  background: var(--surface-2);
+  box-shadow: 0 0 0 var(--hairline) var(--border);
+  color: var(--text);
 }
 .page-header__desc {
   max-width: 56ch;
@@ -209,7 +284,11 @@ input,
 .section__title {
   margin: 0;
   color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
   font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .section__desc {
   margin: var(--space-1) 0 0;
@@ -223,7 +302,7 @@ input,
 }
 .card {
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   background: var(--surface);
   overflow: hidden;
 }
@@ -234,13 +313,24 @@ input,
   align-items: center;
   justify-content: space-between;
   gap: var(--space-5);
-  min-height: 64px;
+  min-height: var(--row-min-h);
   padding: var(--row-pad-y) var(--row-pad-x);
   transition: background-color var(--dur-slow) var(--ease-out);
 }
-.row + .row,
-.row + .editor {
-  border-top: var(--hairline) solid var(--border);
+/* Inset separators: the hairline starts where the text does, as in a grouped list. */
+.row,
+.editor {
+  position: relative;
+}
+.row + .row::before,
+.row + .editor::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--row-pad-x);
+  height: var(--hairline);
+  background: var(--border);
+  content: "";
 }
 .row--block {
   display: block;
@@ -400,7 +490,7 @@ input,
   justify-items: start;
   padding: var(--space-3);
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--surface-2);
   color: var(--text);
   font-family: var(--font-ui);
@@ -522,7 +612,7 @@ input,
   gap: var(--space-4);
   padding: var(--space-4);
   border: var(--hairline) dashed var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
 }
 .editor__group {
   display: grid;
@@ -588,7 +678,7 @@ input,
   align-items: flex-start;
   padding: var(--space-4);
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--bg);
   color: var(--text);
 }
@@ -629,7 +719,7 @@ input,
   gap: var(--space-3);
   padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--surface-2);
   font-size: var(--text-sm);
   line-height: 1.45;
@@ -671,7 +761,7 @@ input,
   margin: var(--space-5) auto;
   padding: calc(var(--space-6) * 1.5) var(--space-6);
   border: var(--hairline) dashed var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--card-radius);
   text-align: center;
 }
 .gate__icon {
@@ -785,7 +875,7 @@ input,
   gap: var(--space-4);
   padding: var(--space-3) var(--space-4);
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--surface);
   color: var(--text);
   text-decoration: none;
@@ -832,7 +922,7 @@ input,
   align-content: start;
   padding: var(--space-3);
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--surface-2);
 }
 .widget-card__stage {
@@ -881,7 +971,7 @@ input,
   width: 100%;
   padding: var(--space-2);
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--surface-2);
   color: var(--text);
   font-family: var(--font-ui);
@@ -911,7 +1001,7 @@ input,
   gap: var(--space-4);
   padding: var(--space-4);
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   background: var(--surface-2);
 }
 .display-card__head {

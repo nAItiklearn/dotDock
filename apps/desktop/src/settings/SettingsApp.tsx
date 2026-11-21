@@ -98,10 +98,7 @@ function SearchResults({ query, onPick }: { readonly query: string; readonly onP
   return (
     <section aria-label="Search results">
       <header className="page-header">
-        <div className="page-header__eyebrow">
-          <span className="status-dot" aria-hidden="true" />
-          <span className="caps">Search</span>
-        </div>
+        <div className="page-header__eyebrow">Search</div>
         <h1 className="page-header__title page-header__title--search">{hits.length === 0 ? "No match" : hits.length === 1 ? "1 match" : `${hits.length} matches`}</h1>
         <p className="page-header__desc">
           {hits.length === 0 ? `Nothing in Settings mentions "${query}". Try a shorter or different word.` : `For "${query}".`}
@@ -177,7 +174,7 @@ export function SettingsApp() {
         <div className="sidebar__brand" data-tauri-drag-region>
           <span className="status-dot" aria-hidden="true" />
           <span className="sidebar__name">{PRODUCT_NAME}</span>
-          <span className="caps">Settings</span>
+          <span className="sidebar__sub">Settings</span>
         </div>
         <label className="search">
           <Icon name="search" size={16} />
