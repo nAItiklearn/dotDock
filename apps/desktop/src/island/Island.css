@@ -83,21 +83,6 @@
 .island__standby .island__standby-lit {
   background: var(--accent);
   opacity: 1;
-  animation: standby-breathe 3.2s ease-in-out infinite;
-}
-@keyframes standby-breathe {
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .island__standby .island__standby-lit {
-    animation: none;
-  }
 }
 
 /* Rows are placed at their resting position (top) and slid by the plate's growth (y), so they ride its bottom edge. */

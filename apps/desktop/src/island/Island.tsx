@@ -9,6 +9,7 @@ import type { SessionView } from "./protocol";
 import { SceneCanvas } from "./scene/SceneCanvas";
 import { SCENE_CELL } from "./scene/layout";
 import { plateRadius } from "./squash";
+import { StandbyDot } from "./StandbyDot";
 import { useCurrentSession, useIslandStore } from "./store";
 import { detailLine, t } from "./strings";
 import { useRegions } from "./useRegions";
@@ -142,7 +143,7 @@ export function Island() {
             transition={{ duration: reduced ? 0 : 0.14, delay: mode === "tiny" && !reduced ? 0.16 : 0 }}
           >
             <i />
-            <i className="island__standby-lit" />
+            <StandbyDot breathing={mode === "tiny" && !reduced} />
             <i />
           </motion.div>
           <motion.div
