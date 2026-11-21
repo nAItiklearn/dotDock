@@ -156,24 +156,6 @@
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-}
-.shot-card--full .shot-card__img {
-  aspect-ratio: 16 / 7;
-}
-.shot-card__media--whole .shot-card__img {
-  aspect-ratio: auto;
-  object-fit: contain;
-}
-@media (max-width: 699px) {
-  .shot-card__img,
-  .shot-card--full .shot-card__img {
-    aspect-ratio: 4 / 3;
-  }
-  .shot-card__media--whole .shot-card__img {
-    aspect-ratio: auto;
-  }
 }
 
 /* A live widget standing in a card. */
