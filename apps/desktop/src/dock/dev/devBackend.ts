@@ -156,5 +156,8 @@ export const devBackend: DockBackend = {
   setFocus: (active) => {
     focusActive = active;
   },
+  setGlass: (request) => {
+    note(`glass ${request.shapes.length}`);
+  },
 };
 

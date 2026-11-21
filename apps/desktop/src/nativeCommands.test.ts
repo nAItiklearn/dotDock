@@ -56,7 +56,7 @@ function namedCommands(): Map<string, string[]> {
     const text = readFileSync(file, "utf8");
     for (const match of text.matchAll(/["'`]([a-z][a-z0-9]*(?:_[a-z0-9]+)+)["'`]/g)) {
       const name = match[1];
-      if (NOT_COMMANDS.has(name)) continue;
+      if (name === undefined || NOT_COMMANDS.has(name)) continue;
       found.set(name, [...(found.get(name) ?? []), relative(SRC, file)]);
     }
   }
@@ -68,7 +68,7 @@ function registeredCommands(lib: string): Set<string> {
   const list = lib.match(/generate_handler!\[([\s\S]*?)\]/);
   if (!list) throw new Error("no generate_handler! in lib.rs");
   return new Set(
-    list[1]
+    (list[1] ?? "")
       .split(",")
       .map((entry) => entry.trim().split("::").pop() ?? "")
       .filter((name) => name.length > 0),

@@ -5,6 +5,7 @@
 //! The dock window is a transparent sheet over the primary monitor, hidden until the UI has asked for its first
 //! snapshot, click-through except where the UI says it draws something (`dock_set_regions`).
 
+use dotdock_dock::backdrop;
 use dotdock_dock::glass::Shape;
 use dotdock_dock::host::{DockHost, GlassRequest, Hooks};
 use dotdock_dock::icons::{self, webview_url};
@@ -21,6 +22,8 @@ use tauri::{
 };
 
 pub const DOCK_LABEL: &str = "dock";
+/// The event that tells the dock whether its glass can be drawn (`DockBackdrop` in `protocol.ts`).
+const EVENT_BACKDROP: &str = "dock://backdrop";
 /// Folder of the dock's own files (`dock.json`, the catalogue cache) inside the app data folder.
 const DATA_FOLDER: &str = "dock";
 /// How long a request for an icon waits for an extraction in progress. A cold first run takes up to 20 s for a long
@@ -104,6 +107,8 @@ pub fn start(app: &AppHandle) -> tauri::Result<()> {
     if settings.enabled {
         ensure_window(app);
     }
+    let watcher = app.clone();
+    std::thread::Builder::new().name("dock-backdrop".into()).spawn(move || watch_backdrop(&watcher))?;
     let forwarder = app.clone();
     std::thread::Builder::new().name("dock-events".into()).spawn(move || {
         for event in events {
@@ -111,6 +116,20 @@ pub fn start(app: &AppHandle) -> tauri::Result<()> {
         }
     })?;
     Ok(())
+}
+
+/// Sends the backdrop whenever transparency or battery saver changes (see `backdrop`). The first reading goes out
+/// with the window's first snapshot, in `dock_ready`.
+fn watch_backdrop(app: &AppHandle) {
+    let mut last = backdrop::read();
+    loop {
+        std::thread::sleep(backdrop::CHECK_EVERY);
+        let now = backdrop::read();
+        if now != last {
+            let _ = app.emit_to(DOCK_LABEL, EVENT_BACKDROP, now);
+            last = now;
+        }
+    }
 }
 
 /// Stops the host (removing the reserved strip and the glass) at exit. The taskbar is restored by the caller's guard.
@@ -218,6 +237,7 @@ pub fn dock_ready(app: AppHandle, state: State<'_, DockState>) -> DockSnapshot {
     // The window listens before it asks, so it hears the current reasons to be frozen right after the snapshot.
     let frozen = state.service.frozen();
     let _ = app.emit_to(DOCK_LABEL, dotdock_dock::protocol::EVENT_FROZEN, frozen);
+    let _ = app.emit_to(DOCK_LABEL, EVENT_BACKDROP, backdrop::read());
     snapshot
 }
 

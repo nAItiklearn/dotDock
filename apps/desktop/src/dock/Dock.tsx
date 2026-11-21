@@ -7,7 +7,7 @@ import type { Rect } from "./geometry";
 import { loadContextMenu, loadGallery, loadLibrary, loadPrefs, loadPreview, loadStackPopover, loadTilePopover, usePanel, whenIdle } from "./prefetch";
 import { useDockStore } from "./store";
 import { isTranslucent, resolveTheme } from "./theme";
-import { useAutoHide, useKeyboardFocus, useNoticeTimeout, useRegions, type PanelRects } from "./useDockShell";
+import { useAutoHide, useKeyboardFocus, useNativeGlass, useNoticeTimeout, useRegions, type PanelRects } from "./useDockShell";
 import { useDockPalette } from "./useDockTheme";
 import { useViewport } from "./useViewport";
 import "./dock.css";
@@ -74,6 +74,7 @@ export function Dock() {
   const busy = pointerInside || editing || modal;
   const hidden = useAutoHide(autoHide && !frozen, busy);
   useRegions(layout, hidden, panels, viewport, modal);
+  useNativeGlass(layout, theme, hidden, mode === "dark");
   useKeyboardFocus(editing || modal);
   useNoticeTimeout();
 

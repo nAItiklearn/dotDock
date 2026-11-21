@@ -3,6 +3,8 @@ import { actions } from "./bridge";
 import type { Rect, Size } from "./geometry";
 import type { BarLayout } from "./Bar";
 import { computeRegions, sameRegions, snapRect } from "./regions";
+import { glassRequest, sameGlass, type GlassRequest } from "./nativeGlass";
+import type { DockThemeId } from "./theme";
 import { useDockStore } from "./store";
 
 /** How long the dock waits after the pointer leaves before an auto-hidden dock slides away. */
@@ -73,4 +75,15 @@ export function useNoticeTimeout(): void {
     const timer = window.setTimeout(() => useDockStore.getState().setNotice(null), NOTICE_MS);
     return () => window.clearTimeout(timer);
   }, [notice]);
+}
+
+/** Keeps the native glass behind the bar in step with the theme, the layout and auto-hide. */
+export function useNativeGlass(layout: BarLayout | null, theme: DockThemeId, hidden: boolean, dark: boolean): void {
+  const sent = useRef<GlassRequest>({ shapes: [], dark: false });
+  useEffect(() => {
+    const next = glassRequest(layout, theme, hidden, dark);
+    if (sameGlass(next, sent.current)) return;
+    sent.current = next;
+    actions.setGlass(next);
+  }, [layout, theme, hidden, dark]);
 }

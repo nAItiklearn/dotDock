@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { isTauri } from "../providers/bridge";
 import type { Rect } from "./geometry";
 import { activationTarget } from "./model";
+import type { GlassRequest } from "./nativeGlass";
 import type { Category, CategoryId, CommandResult, DockApp, DockBackdrop, DockSettings, DockSnapshot, DockWindow, FrozenState } from "./protocol";
 import { isFrozen, useDockStore } from "./store";
 import { t } from "./strings";
@@ -21,6 +22,8 @@ export interface DockBackend {
   setRegions: (rects: readonly Rect[]) => void;
   preview: (args: { hwnds: readonly string[]; anchor: Rect } | { hwnds: [] }) => void;
   setFocus: (active: boolean) => void;
+  /** Where the core draws Windows' acrylic behind the dock; no shapes takes it away. */
+  setGlass: (request: GlassRequest) => void;
 }
 
 export interface Handlers {
@@ -71,6 +74,7 @@ const tauriBackend: DockBackend = {
   setRegions: (rects) => fireAndForget("dock_set_regions", { rects }),
   preview: (args) => fireAndForget("dock_preview", args),
   setFocus: (active) => fireAndForget("dock_set_focus", { active }),
+  setGlass: (request) => fireAndForget("dock_set_glass", { shapes: request.shapes, dark: request.dark }),
 };
 
 /** A plain browser outside `vite dev` has no core to talk to: the dock stays empty. */
@@ -86,6 +90,7 @@ const detachedBackend: DockBackend = {
   setRegions: () => undefined,
   preview: () => undefined,
   setFocus: () => undefined,
+  setGlass: () => undefined,
 };
 
 let backend: DockBackend = isTauri() ? tauriBackend : detachedBackend;
@@ -128,6 +133,7 @@ export const actions = {
   setRegions: (rects: readonly Rect[]): void => backend.setRegions(rects),
   preview: (args: Parameters<DockBackend["preview"]>[0]): void => backend.preview(args),
   setFocus: (active: boolean): void => backend.setFocus(active),
+  setGlass: (request: GlassRequest): void => backend.setGlass(request),
 
   /** Opens an app. A failure shows a notice naming the app. */
   async launch(appId: string, name: string): Promise<void> {

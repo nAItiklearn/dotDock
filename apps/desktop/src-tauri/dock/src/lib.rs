@@ -15,6 +15,7 @@
 
 #[cfg(windows)]
 pub mod appbar;
+pub mod backdrop;
 pub mod catalogue;
 pub mod classify;
 #[cfg(windows)]
