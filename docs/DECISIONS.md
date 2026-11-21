@@ -150,3 +150,7 @@ Numbered D-019 because D-017 and D-018 exist on `main`; the backend track's bran
 - **Context:** the independent checker failed the developer tiles track (4.60): the code is clean and tested, but no part of the core creates `Integrations` or registers the `dock_integrations*` commands, so every tile reads "Not available" in the real app.
 - **Decision:** the developer tiles (GitHub, Vercel, AI tokens) are not in V1. The branch (`worktree-agent-a60a1abdd36a54bde`, last commit d80b027) stays as is for V2. The website and the dock's gallery stop offering them in V1.
 - **Rejected:** wiring the core at the last minute before the 22:00 release; it touches the dock host's startup path, which is itself being fixed.
+
+## D-038 Website ships with a short first-scroll hitch (lead, 2026-11-21 22:30)
+- **Context:** flattening the scenes cut the worst first fast-scroll frame from 533–1605 ms to 133–338 ms at 1440 px (median 17 ms) and 400–409 ms at 390 px, measured on a quiet machine. The rest runs no script: GPU raster of the large scene images. Lighthouse is 100/100/100 on all 7 pages.
+- **Decision:** ship V1 with it; the owner's budget is nearly out. Logged for V2: smaller back-layer tiles and fewer composited layers, then re-measure against the 50 ms target.
