@@ -66,3 +66,15 @@ animation must work, bug-free). Glass theme deadline 12:15; deferred and removed
 - [ ] Photo widget showcased with the owner's Drake and Travis Scott images, borderless.
 - [ ] No clipping at the page edge (the widgets grid was cut off on the left).
 - [ ] A new, rich, alive download page (scenery, varied flowers, high quality).
+
+## Dock tiles wishlist (2026-11-21, new session)
+- [ ] Add most of the tile types in `docs/design/reference/owner-dock-tiles-wishlist-2026-11-21.png` (reference only,
+      not shipped; build our own originals): media now-playing, unread mail, year/month/day progress dots, app folder,
+      calendar event + week strip, notes, reminders/to-do, CPU/RAM/battery rings, network speed graph, wind/compass,
+      digital/analogue/flip/world clocks, sunrise-sunset arc, hourly and daily weather, stocks list and chart,
+      revenue/visitors/sales counters (GitHub/Vercel style dev tiles), quick toggles (Wi-Fi, Bluetooth, brightness,
+      night light, keyboard), file and web search, voice recorder, emoji picker, audio output switcher, social
+      follower counters, timer/stopwatch/focus timer, currency converter, contribution heat-map, issue tracker tile.
+      Order: after the current dock, notch and website features pass 4.8; then one tile at a time, each tested and
+      scored before the next.
+- [ ] Test the dock with the macOS-style frosted glass theme (the one finished last session).
