@@ -84,7 +84,8 @@
   width: calc(var(--control-sm) * 1.4);
   height: calc(var(--control-sm) * 0.78);
   border-radius: var(--radius-pill);
-  background: var(--dot-off);
+  /* The dot-off tint (12 %) disappears on the light panel; an off switch must still read as a switch. */
+  background: color-mix(in srgb, var(--text) 26%, transparent);
   transition: background var(--dur-fast) var(--ease-out);
 }
 .prefs__switch i::after {

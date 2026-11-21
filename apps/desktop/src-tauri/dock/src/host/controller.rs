@@ -31,13 +31,19 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 };
 use windows::Win32::UI::Shell::ABN_POSCHANGED;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, GetMessageW, PostMessageW, PostQuitMessage,
-    RegisterClassW, RegisterWindowMessageW, TranslateMessage, UnregisterClassW, MSG, SPI_SETDESKWALLPAPER,
-    SPI_SETWORKAREA, WINDOW_EX_STYLE, WM_APP, WM_CLOSE, WM_DESTROY, WM_DISPLAYCHANGE, WM_HOTKEY, WM_SETTINGCHANGE,
-    WNDCLASSW, WS_EX_TOOLWINDOW, WS_POPUP,
+    CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, FindWindowExW, FindWindowW, GetMessageW,
+    IsWindowVisible, KillTimer, PostMessageW,
+    PostQuitMessage, RegisterClassW, RegisterWindowMessageW, SetTimer, TranslateMessage, UnregisterClassW, MSG,
+    SPI_SETDESKWALLPAPER, SPI_SETWORKAREA, WINDOW_EX_STYLE, WM_APP, WM_CLOSE, WM_DESTROY, WM_DISPLAYCHANGE, WM_HOTKEY,
+    WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WS_EX_TOOLWINDOW, WS_POPUP,
 };
 
 const CLASS_NAME: windows::core::PCWSTR = w!("DotDockDockHost");
+/// Explorer shows its taskbar again on its own after some broadcasts (a wallpaper or theme change among them), and
+/// then pops it over the dock at the screen edge. While the dock stands in for it, this timer looks once a second
+/// (one FindWindow and one IsWindowVisible per bar) and hides it again.
+const TASKBAR_WATCH_ID: usize = 0xD0C3;
+const TASKBAR_WATCH_MS: u32 = 1000;
 /// Posted to the host window when a command is waiting in the channel.
 const WM_WAKE: u32 = WM_APP + 1;
 /// The message the shell sends about app bars (`ABN_*` in `wParam`).
@@ -220,6 +226,12 @@ impl Controller {
         self.pause.set(!self.shown);
     }
 
+    fn keep_taskbar_hidden(&mut self) {
+        if self.plan().hide_taskbar && a_taskbar_is_visible() {
+            self.taskbar.rehide();
+        }
+    }
+
     fn on_taskbar_created(&mut self) {
         // Explorer started again: it has forgotten every app bar and built a visible taskbar.
         self.bar = None;
@@ -231,6 +243,25 @@ impl Controller {
         while let Ok(command) = self.commands.try_recv() {
             self.handle(command);
         }
+    }
+}
+
+/// Whether Explorer shows any taskbar (the main one or one on another monitor).
+fn a_taskbar_is_visible() -> bool {
+    // SAFETY: window lookups by class name and visibility queries on the handles they return.
+    unsafe {
+        let visible = |h: HWND| !h.is_invalid() && IsWindowVisible(h).as_bool();
+        if FindWindowW(w!("Shell_TrayWnd"), None).is_ok_and(visible) {
+            return true;
+        }
+        let mut after = None;
+        while let Ok(bar) = FindWindowExW(None, after, w!("Shell_SecondaryTrayWnd"), None) {
+            if visible(bar) {
+                return true;
+            }
+            after = Some(bar);
+        }
+        false
     }
 }
 
@@ -278,6 +309,10 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, message: u32, wparam: WPARAM, lpa
         }
         WM_SETTINGCHANGE if wparam.0 == SPI_SETWORKAREA.0 as usize => {
             with_controller(|c| c.place(false), || REPLACE_AGAIN.set(true));
+            LRESULT(0)
+        }
+        WM_TIMER if wparam.0 == TASKBAR_WATCH_ID => {
+            with_controller(Controller::keep_taskbar_hidden, || {});
             LRESULT(0)
         }
         WM_HOTKEY if wparam.0 == QUIT_HOTKEY_ID as usize => {
@@ -445,6 +480,7 @@ fn run(parts: Parts, published: &AtomicIsize, ready: &std::sync::mpsc::SyncSende
             hotkey,
         };
         CONTROLLER.with(|cell| *cell.borrow_mut() = Some(controller));
+        let _ = SetTimer(Some(hwnd), TASKBAR_WATCH_ID, TASKBAR_WATCH_MS, None);
         let _ = ready.send(Ok(()));
 
         let mut message = MSG::default();
@@ -453,6 +489,7 @@ fn run(parts: Parts, published: &AtomicIsize, ready: &std::sync::mpsc::SyncSende
             DispatchMessageW(&message);
         }
 
+        let _ = KillTimer(Some(hwnd), TASKBAR_WATCH_ID);
         // Dropping the controller removes the app bar, destroys the plate and stops the taskbar worker.
         let controller = CONTROLLER.with(|cell| cell.borrow_mut().take());
         if let Some(controller) = &controller {

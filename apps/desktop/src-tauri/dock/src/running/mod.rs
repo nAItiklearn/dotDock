@@ -74,7 +74,37 @@ impl AppIndex {
             return candidates.iter().find(|c| c.plain).or_else(|| candidates.first()).map(|c| c.id.as_str());
         }
         // A packaged app's window comes from a program inside its package folder.
-        self.by_package.iter().find(|(dir, _)| path.starts_with(dir.as_str())).map(|(_, id)| id.as_str())
+        if let Some((_, id)) = self.by_package.iter().find(|(dir, _)| path.starts_with(dir.as_str())) {
+            return Some(id);
+        }
+        // The folder is versioned and the catalogue may not know it (the app updated itself, or the scan has not
+        // read it yet), so the package family in the path is matched against the AppUserModelID too.
+        let family = package_family(&path)?;
+        let stem = path.rsplit('\\').next()?.trim_end_matches(".exe");
+        let mut found = self
+            .by_aumid
+            .iter()
+            .filter(|(aumid, _)| aumid.strip_prefix(family.as_str()).is_some_and(|rest| rest.starts_with('!')));
+        let first = found.next();
+        let suffix = format!("!{stem}");
+        let named = first.into_iter().chain(found).find(|(aumid, _)| aumid.ends_with(&suffix));
+        named.or(first).map(|(_, id)| id.as_str())
+    }
+}
+
+/// `<name>_<publisher id>` from a lower-case program path under `\windowsapps\<name>_<version>_<arch>__<publisher id>\`.
+fn package_family(path: &str) -> Option<String> {
+    let (_, rest) = path.split_once("\\windowsapps\\")?;
+    let folder = rest.split('\\').next()?;
+    let (name, _) = folder.split_once('_')?;
+    let (_, publisher) = folder.rsplit_once("__")?;
+    (!name.is_empty() && !publisher.is_empty()).then(|| format!("{name}_{publisher}"))
+}
+
+impl AppIndex {
+    #[cfg(test)]
+    fn len(&self) -> usize {
+        self.by_aumid.len()
     }
 }
 
@@ -100,6 +130,19 @@ mod tests {
             arguments: args.map(str::to_owned),
             ..AppEntry::default()
         }
+    }
+
+    #[test]
+    fn a_store_app_is_found_by_its_package_family_when_the_folder_is_unknown() {
+        let index = AppIndex::new(&[
+            app("spotify", Some("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"), None, None),
+            app("other", Some("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Helper"), None, None),
+        ]);
+        assert_eq!(index.len(), 2);
+        let exe = r"C:\Program Files\WindowsApps\SpotifyAB.SpotifyMusic_1.311.0.0_x64__zpdnekdrzrea0\Spotify.exe";
+        assert_eq!(index.resolve(None, Some(exe)), Some("spotify"));
+        assert_eq!(index.resolve(None, Some(r"C:\Program Files\WindowsApps\Other_1.0_x64__abc\x.exe")), None);
+        assert_eq!(index.resolve(None, Some(r"C:\Apps\Spotify.exe")), None);
     }
 
     #[test]

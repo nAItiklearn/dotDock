@@ -46,10 +46,11 @@
  */
 .dock-root[data-effects="full"] {
   --bar-shadow: var(--top-light), var(--shadow);
-  --panel-fill: color-mix(in srgb, var(--panel) 80%, transparent);
+  /* Near opaque: the blur has no desktop or app window to soften behind it (D-034), so text needs the fill. */
+  --panel-fill: color-mix(in srgb, var(--panel) 96%, transparent);
   --panel-filter: blur(22px) saturate(1.2);
   --panel-shadow: 0 18px 48px rgb(0 0 0 / 0.38);
-  --scrim: color-mix(in srgb, var(--bg) 72%, transparent);
+  --scrim: color-mix(in srgb, var(--bg) 92%, transparent);
   --scrim-filter: blur(28px);
 }
 .dock-root[data-effects="lite"] {
@@ -93,7 +94,8 @@
   --bar-fill: transparent;
   --bar-shadow: none;
   --border: transparent;
-  --disc: color-mix(in srgb, var(--surface-2) 38%, transparent);
+  /* No bar behind the items, so their discs carry the contrast for tile text on any wallpaper. */
+  --disc: color-mix(in srgb, var(--surface-2) 78%, transparent);
   --lift-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
 }
 
