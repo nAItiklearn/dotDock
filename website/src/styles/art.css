@@ -1,0 +1,174 @@
+/*
+ * Site art: dot masks painted in the page's theme colours (see src/lib/art.ts for the mask rules).
+ * Paper is ink on warm paper, Obsidian is cream on charcoal, Aurum is gold on black: the masks carry
+ * only coverage, so every colour here is a theme token and the art swaps with the theme for free.
+ */
+.art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--art-w) / var(--art-h);
+  pointer-events: none;
+  user-select: none;
+}
+.art__layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+.art__ink {
+  background: var(--art-stone);
+}
+.art__far {
+  background: var(--art-far);
+}
+.art__mid {
+  background: var(--art-mid);
+}
+.art__near,
+.art__stalk {
+  background: var(--art-near);
+}
+.art__cloud {
+  background: var(--art-cloud);
+}
+.art__sea {
+  background: var(--art-sea);
+}
+.art__line {
+  background: var(--art-petal);
+}
+.art__accent {
+  background: var(--art-sun);
+}
+.art__petal {
+  background: var(--art-petal);
+}
+.art__gold {
+  background: var(--art-gold);
+}
+.art__heart {
+  background: var(--art-heart);
+}
+/* The stippled shadow of the flowers: a light touch of grain, not an outline. */
+.art__grain {
+  background: var(--art-stone);
+  opacity: 0.4;
+}
+
+/* ---------- Hero: flowers either side of the headline, hills behind, the screen in front ---------- */
+.hero__land {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: clip;
+  background: var(--bg);
+}
+.hero__scape {
+  --scape-w: max(100%, 1500px);
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: var(--scape-w);
+  margin-left: calc(var(--scape-w) / -2);
+  /* Mist: the dots thin out at the foot of the hero so the page below starts clean. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 80%, transparent 100%);
+}
+@media (min-width: 1920px) {
+  .hero__scape {
+    --scape-w: 100%;
+  }
+}
+@media (max-width: 899px) {
+  .hero__scape {
+    --scape-w: 720px;
+  }
+}
+/* On a dark page the dots are light, so the ridges are toned down to stay behind the screen. */
+html:not([data-theme="paper"]) .hero__scape .art__far,
+html:not([data-theme="paper"]) .hero__scape .art__mid {
+  opacity: 0.85;
+}
+
+/*
+ * The bouquets rise from behind the screen. On wide pages they stand either side of the headline and slide
+ * out past the page edge as the page narrows, so they stay clear of the text; on narrow pages they hang
+ * below the call to action, in the gap above the screen.
+ */
+.hero__bloom {
+  --bloom-w: 480px;
+  position: absolute;
+  z-index: -1;
+  top: calc(var(--nav-h) * -1 + 24px);
+  width: var(--bloom-w);
+}
+/* The box edge stays clear of the text column: half the page minus the column's half width and the bloom. */
+.hero__bloom--l {
+  left: clamp(-300px, calc(50vw - 770px), 20px);
+}
+.hero__bloom--r {
+  right: clamp(-300px, calc(50vw - 770px), 20px);
+}
+@media (max-width: 899px) {
+  .hero__bloom {
+    --bloom-w: min(190px, 48vw);
+    top: auto;
+    /* Hung just below the call to action: the box starts under the button and runs behind the screen. */
+    bottom: calc(var(--bloom-w) * -300 / 190 - var(--space-3));
+  }
+  .hero__bloom--l {
+    left: 0;
+  }
+  .hero__bloom--r {
+    right: 0;
+  }
+}
+/* The tufts stand against the screen's lower corners, in front of its frame. */
+.hero__tuft {
+  --tuft-w: clamp(130px, 18vw, 280px);
+  position: absolute;
+  z-index: 3;
+  bottom: calc(var(--tuft-w) * -0.1);
+  width: var(--tuft-w);
+  pointer-events: none;
+}
+.hero__tuft--l {
+  left: calc(var(--tuft-w) * -0.3);
+}
+.hero__tuft--r {
+  right: calc(var(--tuft-w) * -0.3);
+}
+
+/* ---------- Bands: wide, low pictures between sections ---------- */
+.band {
+  position: relative;
+  width: 100%;
+  margin-top: clamp(40px, 6vw, 88px);
+  overflow: clip;
+  pointer-events: none;
+}
+.band > .art {
+  --band-w: max(100%, 1200px);
+  width: var(--band-w);
+  margin-left: calc(50% - var(--band-w) / 2);
+}
+@media (max-width: 899px) {
+  .band > .art {
+    --band-w: 720px;
+  }
+}
+
+/* Sections stay on their own: art never sits behind text, it stands between sections or beside them. */
+.section {
+  isolation: isolate;
+}
+
+/* The page itself is paper with a faint lattice of dots, never a flat white. */
+body {
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--text) 11%, transparent) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+}

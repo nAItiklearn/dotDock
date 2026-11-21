@@ -4,34 +4,38 @@
  * Token names and values mirror apps/desktop/src/design-system/tokens.css where the product has one.
  */
 :root {
-  --font-ui: "Geist", "Geist Fallback", system-ui, sans-serif;
+  --font-ui: "Inter", "Inter Fallback", system-ui, sans-serif;
+  --font-display: "Inter Display", "Inter", "Inter Fallback", system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, "Cascadia Mono", monospace;
   --font-dot: "Doto", "Doto Fallback", "Geist Mono", monospace;
 
   --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --space-24: 96px;
+  --space-2: 7px;
+  --space-3: 11px;
+  --space-4: 14px;
+  --space-5: 18px;
+  --space-6: 22px;
+  --space-8: 29px;
+  --space-10: 36px;
+  --space-12: 43px;
+  --space-16: 58px;
+  --space-24: 86px;
 
   --radius-pill: 999px;
-  --radius-lg: 28px;
-  --radius-md: 20px;
-  --radius-sm: 12px;
+  --radius-art: 25px;
+  --radius-card: 16px;
+  --radius-lg: 16px;
+  --radius-md: 13px;
+  --radius-sm: 11px;
 
-  --text-caps: 12px;
-  --tracking-caps: 0.14em;
+  --text-caps: 11px;
+  --tracking-caps: 0.12em;
   --hairline: 1px;
 
-  --page-margin: clamp(16px, 4vw, 64px);
-  --page-max: 1600px;
-  --nav-h: 72px;
+  --page-margin: clamp(14px, 3.6vw, 58px);
+  --page-max: 1124px;
+  --page-wide: 1268px;
+  --nav-h: 65px;
 
   /* Flat slate used to illustrate an unthemed Windows desktop in the safety demo. Not a theme colour. */
   --stock: #5d6f84;
@@ -68,12 +72,14 @@
 }
 
 html {
+  /* The whole design is drawn at nine tenths of the old scale: rem sizes follow this, the px tokens above were cut by the same tenth. */
+  font-size: 90%;
   background: var(--bg);
   color: var(--text);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-behavior: smooth;
-  scroll-padding-top: calc(var(--nav-h) + 24px);
+  scroll-padding-top: calc(var(--nav-h) + 22px);
 }
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -87,8 +93,9 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
-  font-size: 17px;
-  line-height: 1.55;
+  font-size: clamp(1rem, 0.95rem + 0.15vw, 1.125rem);
+  line-height: 1.5;
+  letter-spacing: -0.011em;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -172,13 +179,25 @@ button {
   margin-inline: auto;
   padding-inline: var(--page-margin);
 }
+.wrap--wide {
+  max-width: var(--page-wide);
+}
 
-/* Spaced mono caps: labels and captions. */
+/* Chip and label text: Inter 500, small, in the sentence case it is written in. */
 .caps {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-dim);
+  line-height: 1.3;
+}
+/* A field note: the tiny spaced mono caps that caption art and label data. */
+.note {
   font-family: var(--font-mono);
-  font-size: var(--text-caps);
-  font-weight: 450;
-  letter-spacing: var(--tracking-caps);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
   line-height: 1.3;
@@ -227,7 +246,7 @@ button {
   color: var(--text);
   font-size: 15px;
   font-weight: 500;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.011em;
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -274,11 +293,11 @@ button {
 /* ---------- Nav: a floating pill ---------- */
 .nav {
   position: fixed;
-  top: 14px;
+  top: 12px;
   left: 50%;
   z-index: 50;
-  width: min(calc(100% - 24px), 940px);
-  height: 58px;
+  width: min(calc(100% - 22px), 846px);
+  height: 52px;
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--bg) 74%, transparent);
@@ -318,6 +337,7 @@ button {
 .nav__links {
   display: none;
   gap: var(--space-8);
+  font-size: 14px;
 }
 .nav__links a {
   text-decoration: none;
@@ -339,6 +359,13 @@ button {
   padding: 0 var(--space-5);
   font-size: 14px;
 }
+/* Below 480px the wordmark text gives way to the mark alone, so the GitHub mark, the theme switch and the menu
+   all fit inside the pill; the link keeps its accessible name. */
+@media (max-width: 479.98px) {
+  .nav .wordmark__text {
+    display: none;
+  }
+}
 @media (min-width: 480px) {
   .nav__cta {
     display: inline-flex;
@@ -347,6 +374,70 @@ button {
 @media (min-width: 900px) {
   .nav__links {
     display: flex;
+  }
+}
+
+.nav__github {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--text-dim);
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.nav__github:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+/* On small screens the links fold into a menu; it is a <details>, so it works without script. */
+.nav__menu {
+  position: relative;
+}
+.nav__menu-button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+.nav__menu-button::-webkit-details-marker {
+  display: none;
+}
+.nav__menu[open] .nav__menu-button {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+.nav__sheet {
+  position: absolute;
+  top: calc(100% + 22px);
+  right: -8px;
+  display: grid;
+  min-width: 220px;
+  padding: var(--space-2);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  box-shadow: var(--shadow);
+}
+.nav__sheet a {
+  display: block;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--text);
+}
+.nav__sheet a:hover,
+.nav__sheet a[aria-current="page"] {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+@media (min-width: 900px) {
+  .nav__menu {
+    display: none;
   }
 }
 
@@ -399,7 +490,7 @@ button {
 /* ---------- Sections ---------- */
 .section {
   position: relative;
-  padding-block: clamp(64px, 9vw, 128px) 0;
+  padding-block: clamp(86px, 10vw, 144px) 0;
 }
 .section__head {
   display: grid;
@@ -412,25 +503,26 @@ button {
   align-items: center;
   gap: var(--space-2);
   padding: 7px 14px 7px 12px;
-  border: var(--hairline) solid var(--line-strong);
+  border: var(--hairline) solid var(--line);
   border-radius: var(--radius-pill);
-  background: var(--fill-faint);
+  background: var(--surface-2);
   color: var(--text);
 }
 .h2 {
-  max-width: 16ch;
-  font-size: clamp(2.5rem, 6.6vw, 6rem);
-  line-height: 0.96;
-  font-weight: 600;
-  letter-spacing: -0.055em;
+  max-width: 20ch;
+  font-family: var(--font-display);
+  font-size: clamp(2.125rem, 1.2rem + 2.4vw, 3.25rem);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 .h2 .dim {
   color: var(--text-dim);
 }
 .lede {
-  max-width: 52ch;
-  font-size: clamp(1.0625rem, 1.5vw, 1.3125rem);
+  max-width: 56ch;
+  font-size: clamp(1rem, 0.95rem + 0.15vw, 1.125rem);
   line-height: 1.5;
   color: var(--text-dim);
   text-wrap: pretty;
@@ -461,14 +553,14 @@ button {
   /* Nothing sits below it, so skipping its layout until it nears the viewport cannot misplace an anchor. */
   content-visibility: auto;
   contain-intrinsic-size: auto 880px;
-  margin-top: clamp(64px, 10vw, 140px);
+  margin-top: clamp(96px, 11vw, 160px);
 }
 .footer__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-10);
-  padding-block: var(--space-12);
-  border-top: var(--hairline) solid var(--line-strong);
+  padding-block: var(--space-12) clamp(24px, 4vw, 56px);
+  border-top: var(--hairline) solid var(--line);
 }
 @media (min-width: 900px) {
   .footer__grid {
@@ -476,18 +568,19 @@ button {
     gap: var(--space-8);
   }
 }
-.footer__brand {
-  margin-bottom: var(--space-3);
-  font-family: var(--font-dot);
-  font-variation-settings: "ROND" 100;
-  font-weight: 800;
-  font-size: 28px;
-  line-height: 1;
+.footer__lockup {
+  margin-bottom: var(--space-4);
 }
 .footer__about p {
   max-width: 34ch;
   font-size: 15px;
   color: var(--text-dim);
+}
+.footer__title {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--text);
 }
 .footer__list {
   display: grid;
@@ -502,46 +595,44 @@ button {
 .footer__list a:hover {
   color: var(--text);
 }
-/* The wordmark stands over a wallpaper that fades in from the page colour. */
+/* The lockup stands above a dotted lake; the scene is the footer's floor. */
 .footer__stage {
   position: relative;
   overflow: hidden;
-  height: clamp(240px, 40vw, 560px);
-}
-.footer__wp {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 70%;
-  display: none;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 60%);
-  mask-image: linear-gradient(to bottom, transparent, #000 60%);
-}
-html[data-theme="obsidian"] .footer__wp[data-for="obsidian"],
-html[data-theme="paper"] .footer__wp[data-for="paper"],
-html[data-theme="aurum"] .footer__wp[data-for="aurum"] {
-  display: block;
+  contain: paint;
 }
 .footer__mark {
-  position: absolute;
-  /* Whole word visible: sized so seven dot-font characters fit the width, lifted off the bottom edge. */
-  inset: auto 0 0.12em;
-  text-align: center;
+  /* Whole lockup visible: the mark and seven dot-font characters fit the width from 320 px up.
+     It stands above the lake, never on it. */
+  margin-top: clamp(8px, 2.4vw, 56px);
+  /* The dot glyphs overhang a 0.8 line box; the extra space keeps them off the lake. */
+  margin-bottom: 0.3em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.14em;
   font-family: var(--font-dot);
   font-variation-settings: "ROND" 100;
   font-weight: 800;
-  font-size: clamp(3.5rem, 15vw, 17rem);
+  font-size: clamp(3rem, 14vw, 16rem);
   line-height: 0.8;
   white-space: nowrap;
   color: var(--text);
   user-select: none;
 }
+.footer__mark-icon {
+  width: 0.76em;
+  height: 0.8em;
+}
+.footer__meadow .live {
+  margin-block: clamp(8px, 2vw, 24px) 0;
+}
 .footer__legal {
   display: grid;
   gap: var(--space-3);
   padding-block: var(--space-6) var(--space-10);
+  font-size: 13px;
+  color: var(--text-dim);
 }
 .footer__legal a {
   color: var(--text);
@@ -555,4 +646,11 @@ html[data-theme="aurum"] .footer__wp[data-for="aurum"] {
     grid-column: 2;
     grid-row: 1;
   }
+}
+
+.footer__visits {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }

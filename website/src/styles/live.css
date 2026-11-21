@@ -1,0 +1,490 @@
+/*
+ * Living scenes (components/LiveScene.astro). Each scene is its own band with a fixed aspect ratio, between two
+ * sections: nothing else is ever inside it, so the art cannot sit under or over text. Every motion is a transform
+ * or an opacity; nothing here changes layout. scripts/scene-motion.ts pauses a scene off screen, and under
+ * reduced motion the scene is a still and the loose petals and bubbles are not shown.
+ */
+.live {
+  /* Slow, out-of-step periods, so no two parts ever beat together. */
+  --live-sway: 6.8s;
+  --live-sway-late: 8.3s;
+  --live-lean: 1.4deg;
+  --live-bob: 5.6s;
+  --live-bob-late: 7.1s;
+  --live-bob-reach: -0.22cqw;
+  --live-twinkle: 6.2s;
+  --live-graze: 15s;
+  --live-graze-lift: 9deg;
+  --live-swish: 4.2s;
+  --live-swish-reach: 7deg;
+  --live-breathe: 5.2s;
+  --live-curl: 6.6s;
+  --live-curl-lean: 1.1deg;
+  --live-flap: 0.34s;
+  --live-flap-dragonfly: 0.1s;
+  --live-fin: 0.9s;
+  /* The band never needs more room than this on a phone or a narrow window: the stage is cropped at the sides
+     beyond it, so the subject in the middle keeps its size. */
+  --live-min-narrow: 560px;
+  --live-min-wide: 1200px;
+  position: relative;
+  overflow: clip;
+  pointer-events: none;
+  margin-block: clamp(32px, 5vw, 72px);
+}
+.live__stage {
+  --live-min: var(--live-min-narrow);
+  --live-stage: var(--live-stage-narrow);
+  --live-cell: var(--live-cell-narrow);
+  position: relative;
+  container-type: inline-size;
+  width: max(100%, var(--live-min));
+  margin-left: calc(50% - max(100%, var(--live-min)) / 2);
+  aspect-ratio: var(--live-ratio-narrow);
+}
+@media (min-width: 900px) {
+  .live__stage {
+    --live-min: var(--live-min-wide);
+    --live-stage: var(--live-stage-wide);
+    --live-cell: var(--live-cell-wide);
+    aspect-ratio: var(--live-ratio-wide);
+  }
+}
+.live__layer {
+  position: absolute;
+  inset: 0;
+  transform-origin: var(--live-pivot-narrow, 50% 100%);
+  will-change: transform;
+}
+@media (min-width: 900px) {
+  .live__layer {
+    transform-origin: var(--live-pivot-wide, 50% 100%);
+  }
+}
+.live__m-still {
+  will-change: auto;
+}
+
+/* ---------- Layer motions ---------- */
+/* Grass, reeds and weed lean from their roots, two sets out of step. */
+.live__m-sway,
+.live__m-sway-late {
+  transform-origin: 50% 100%;
+  animation: live-sway var(--live-sway) var(--ease-in-out) infinite;
+}
+.live__m-sway-late {
+  animation-duration: var(--live-sway-late);
+  animation-delay: calc(var(--live-sway-late) / -3);
+}
+@keyframes live-sway {
+  0%,
+  100% {
+    transform: skewX(0deg);
+  }
+  50% {
+    transform: skewX(var(--live-lean));
+  }
+}
+/* Lily pads rise and settle on the water. */
+.live__m-bob,
+.live__m-bob-late {
+  animation: live-bob var(--live-bob) var(--ease-in-out) infinite;
+}
+.live__m-bob-late {
+  animation-duration: var(--live-bob-late);
+  animation-delay: calc(var(--live-bob-late) / -2);
+}
+@keyframes live-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(var(--live-bob-reach));
+  }
+}
+/* Rings of light on the water and glints come and go in turn. */
+.live__m-twinkle,
+.live__m-twinkle-late {
+  will-change: opacity;
+  animation: live-twinkle var(--live-twinkle) var(--ease-in-out) infinite;
+}
+.live__m-twinkle-late {
+  animation-delay: calc(var(--live-twinkle) / -2);
+}
+@keyframes live-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+/* The horse grazes with its head down, now and then lifting it to look round, then lowering it again. */
+.live__m-graze {
+  animation: live-graze var(--live-graze) var(--ease-in-out) infinite;
+}
+@keyframes live-graze {
+  0%,
+  55%,
+  100% {
+    transform: rotate(0deg);
+  }
+  66%,
+  82% {
+    transform: rotate(var(--live-graze-lift));
+  }
+}
+/* Its tail swishes, rests, swishes again. */
+.live__m-swish {
+  animation: live-swish var(--live-swish) var(--ease-in-out) infinite;
+}
+@keyframes live-swish {
+  0%,
+  40%,
+  100% {
+    transform: rotate(0deg);
+  }
+  55% {
+    transform: rotate(var(--live-swish-reach));
+  }
+  70% {
+    transform: rotate(calc(var(--live-swish-reach) / -2));
+  }
+}
+/* The octopus breathes: its head swells a little and settles. */
+.live__m-breathe {
+  animation: live-breathe var(--live-breathe) var(--ease-in-out) infinite;
+}
+@keyframes live-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.035, 1.05);
+  }
+}
+/* Its arms curl and uncurl on the floor. */
+.live__m-curl {
+  animation: live-curl var(--live-curl) var(--ease-in-out) infinite;
+}
+@keyframes live-curl {
+  0%,
+  100% {
+    transform: skewX(0deg);
+  }
+  33% {
+    transform: skewX(var(--live-curl-lean));
+  }
+  66% {
+    transform: skewX(calc(var(--live-curl-lean) * -1));
+  }
+}
+
+/* ---------- Sprites: a stage-sized box carries the path, the sprite inside beats its wings or fins ---------- */
+.live__flight,
+.live__sprite {
+  position: absolute;
+  inset: 0;
+}
+.live__flight {
+  will-change: transform;
+}
+.live__sprite > .art {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: calc(var(--art-w) / var(--live-stage) * 100%);
+  will-change: transform;
+}
+/* A phone shows the calmer scene: the extra sprites are for the wide picture only. */
+.live__flight--wide {
+  display: none;
+}
+@media (min-width: 900px) {
+  .live__flight--wide {
+    display: block;
+  }
+}
+
+.live__beat-wings > .art {
+  animation: live-flap var(--live-flap) var(--ease-in-out) infinite alternate;
+}
+@keyframes live-flap {
+  to {
+    transform: scaleX(0.4);
+  }
+}
+/* A dragonfly's wings blur about their root on its back; the body holds still. */
+.live__beat-dragonfly .art__cloud {
+  transform-origin: 50% var(--live-wing-root);
+  will-change: transform;
+  animation: live-dragonfly-flap var(--live-flap-dragonfly) linear infinite alternate;
+}
+@keyframes live-dragonfly-flap {
+  to {
+    transform: scaleY(0.35);
+  }
+}
+/* A fish swims with a slow rise and fall. */
+.live__beat-fins > .art {
+  animation: live-fin var(--live-fin) var(--ease-in-out) infinite alternate;
+}
+@keyframes live-fin {
+  to {
+    transform: translateY(-0.12cqw) scaleX(0.94);
+  }
+}
+.live__flight--2 .live__sprite > .art {
+  animation-delay: -0.17s;
+}
+.live__flight--3 .live__sprite > .art {
+  animation-delay: -0.09s;
+}
+
+/* ---------- Paths ---------- */
+/* A dragonfly hovers, darts, and hovers again. */
+.live__path-hover {
+  animation: live-hover 15s var(--ease-out) infinite;
+}
+@keyframes live-hover {
+  0%,
+  20% {
+    transform: translate(0, 0);
+  }
+  26%,
+  48% {
+    transform: translate(12cqw, -2cqw);
+  }
+  54%,
+  76% {
+    transform: translate(22cqw, 2cqw);
+  }
+  84%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
+.live__path-dart {
+  animation: live-dart 19s var(--ease-out) infinite;
+  animation-delay: -6s;
+}
+@keyframes live-dart {
+  0%,
+  24% {
+    transform: translate(0, 0);
+  }
+  30%,
+  56% {
+    transform: translate(-10cqw, -4cqw);
+  }
+  62%,
+  80% {
+    transform: translate(-4cqw, 3cqw);
+  }
+  88%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
+.live__path-loop {
+  animation: live-loop 26s var(--ease-in-out) infinite;
+}
+.live__flight--3.live__path-loop {
+  animation-duration: 31s;
+  animation-direction: reverse;
+}
+@keyframes live-loop {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(6cqw, -5cqw);
+  }
+  50% {
+    transform: translate(12cqw, 0.5cqw);
+  }
+  75% {
+    transform: translate(5cqw, 3cqw);
+  }
+}
+.live__path-drift {
+  animation: live-drift 29s var(--ease-in-out) infinite;
+}
+@keyframes live-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(-8cqw, -4cqw);
+  }
+  60% {
+    transform: translate(-3cqw, -7cqw);
+  }
+  80% {
+    transform: translate(4cqw, -2cqw);
+  }
+}
+/* Fish cross the water and fade out before the edge, then come back from where they started. */
+.live__path-swim-left,
+.live__path-swim-right,
+.live__path-swim-far {
+  animation: live-swim-left 26s linear infinite;
+}
+.live__path-swim-right {
+  animation-name: live-swim-right;
+  animation-duration: 31s;
+  animation-delay: -12s;
+}
+.live__path-swim-far {
+  animation-duration: 38s;
+  animation-delay: -21s;
+}
+/* The fish is drawn facing left; this one swims the other way. */
+.live__path-swim-right .live__sprite > .art {
+  scale: -1 1;
+}
+@keyframes live-swim-left {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  10%,
+  85% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-16cqw, 1.5cqw);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-32cqw, 0);
+  }
+}
+@keyframes live-swim-right {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  10%,
+  85% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(16cqw, -1.5cqw);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(32cqw, 0);
+  }
+}
+
+/* ---------- Loose petals on the wind, or bubbles rising: one art cell each ---------- */
+.live__speck {
+  position: absolute;
+  width: calc(var(--live-cell) / var(--live-stage) * 100%);
+  aspect-ratio: 1;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.live__c-petal {
+  background: var(--art-petal);
+}
+.live__c-gold {
+  background: var(--art-gold);
+}
+.live__c-pink {
+  background: var(--vista-pink);
+}
+.live__c-violet {
+  background: var(--vista-violet);
+}
+.live__c-apricot {
+  background: var(--vista-apricot);
+}
+.live__c-cream {
+  background: var(--vista-cream);
+}
+.live__speck--petal {
+  animation: live-petal 18s linear infinite;
+}
+@keyframes live-petal {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scaleY(1);
+  }
+  8%,
+  92% {
+    opacity: 1;
+  }
+  25% {
+    transform: translate(-10cqw, 2cqw) scaleY(0.3);
+  }
+  50% {
+    transform: translate(-20cqw, 0.5cqw) scaleY(1);
+  }
+  75% {
+    transform: translate(-30cqw, 3cqw) scaleY(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-40cqw, 4cqw) scaleY(1);
+  }
+}
+.live__speck--bubble {
+  border-radius: 50%;
+  animation: live-bubble 9s linear infinite;
+}
+@keyframes live-bubble {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  12%,
+  80% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(0.5cqw, -10cqw);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-0.3cqw, -20cqw);
+  }
+}
+/* Petals start on the right and blow left; bubbles start near the floor. */
+.live__speck--petal.live__speck--1 { left: 92%; top: 62%; animation-delay: -2s; }
+.live__speck--petal.live__speck--2 { left: 74%; top: 70%; animation-duration: 22s; animation-delay: -11s; }
+.live__speck--petal.live__speck--3 { left: 98%; top: 52%; animation-duration: 20s; animation-delay: -6s; }
+.live__speck--petal.live__speck--4 { left: 66%; top: 76%; animation-duration: 16s; animation-delay: -13s; }
+.live__speck--petal.live__speck--5 { left: 86%; top: 80%; animation-duration: 24s; animation-delay: -19s; }
+.live__speck--petal.live__speck--6 { left: 58%; top: 58%; animation-duration: 19s; animation-delay: -4s; }
+.live__speck--petal.live__speck--7 { left: 102%; top: 66%; animation-duration: 21s; animation-delay: -15s; }
+.live__speck--petal.live__speck--8 { left: 80%; top: 48%; animation-duration: 17s; animation-delay: -9s; }
+.live__speck--bubble.live__speck--1 { left: 47%; top: 62%; animation-delay: -1s; }
+.live__speck--bubble.live__speck--2 { left: 53%; top: 66%; animation-duration: 11s; animation-delay: -5s; }
+.live__speck--bubble.live__speck--3 { left: 22%; top: 80%; animation-duration: 12s; animation-delay: -3s; }
+.live__speck--bubble.live__speck--4 { left: 78%; top: 82%; animation-duration: 10s; animation-delay: -7s; }
+.live__speck--bubble.live__speck--5 { left: 50%; top: 60%; animation-duration: 13s; animation-delay: -9s; }
+.live__speck--bubble.live__speck--6 { left: 34%; top: 84%; animation-duration: 9.5s; animation-delay: -2s; }
+.live__speck--bubble.live__speck--7 { left: 66%; top: 78%; animation-duration: 14s; animation-delay: -11s; }
+.live__speck--bubble.live__speck--8 { left: 12%; top: 76%; animation-duration: 11.5s; animation-delay: -6s; }
+
+/* Off screen nothing moves; under reduced motion the scene is a still. */
+.live--paused,
+.live--paused * {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live,
+  .live * {
+    animation: none !important;
+  }
+  .live__speck {
+    display: none;
+  }
+}

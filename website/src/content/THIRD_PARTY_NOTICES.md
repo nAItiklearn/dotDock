@@ -6,6 +6,7 @@ Every dependency, font, sound, image and data source is listed here with its lic
 | Doto | The Doto Project Authors (github.com/oliverlalan/Doto) | SIL Open Font License 1.1 (`assets/web/fonts/Doto-OFL.txt`) |
 | Geist | The Geist Project Authors (github.com/vercel/geist-font) | SIL Open Font License 1.1 (`assets/web/fonts/Geist-OFL.txt`) |
 | Geist Mono | The Geist Project Authors (github.com/vercel/geist-font) | SIL Open Font License 1.1 (`assets/web/fonts/GeistMono-OFL.txt`) |
+| Inter and Inter Display (website only) | The Inter Project Authors (github.com/rsms/inter, release 4.1) | SIL Open Font License 1.1 (`website/public/licenses/Inter-OFL.txt`) |
 
 ## Data
 - **Weather data by [Open-Meteo.com](https://open-meteo.com/)**, licensed CC BY 4.0. Forecast and geocoding APIs, used only after the user picks a place.
@@ -100,6 +101,18 @@ Not reused from Agent Island: its cat and orb artwork, its sounds (UI SFX, CC0) 
 
 `serde`, `serde_json`, `thiserror` and `windows` are already used by the shell crate and are unchanged. `serde_json` is built with its `preserve_order` feature so Connect keeps the key order of the user's `settings.json`.
 
+## Dock backend (`apps/desktop/src-tauri/dock/`)
+
+| Crate | Used for | Licence |
+| --- | --- | --- |
+| `png` 0.18 (and its `fdeflate`, `miniz_oxide`, `crc32fast`, `bitflags`) | encoding the 256 px icon cache and decoding the logo files of Store packages; already in the tree through `tauri` | MIT OR Apache-2.0 |
+| `notify` 8, `tempfile` (dev), `serde`, `serde_json`, `thiserror`, `windows` | as listed above | as listed above |
+
+No icon, art, code or table is taken from another dock, launcher or Start menu replacement. The bundled table of well-known apps
+(`dock/src/classify/known.rs`) lists app names, executable names and AppUserModelID prefixes, which are facts, written by hand for this
+project. The icons shown in the dock are extracted at run time from the user's own installed apps and stay on the user's machine
+(`%LOCALAPPDATA%\dev.dotdock.desktop\dock-icons`); none is shipped or committed.
+
 
 ## Website (`website/`)
 The showcase site is a static Astro project. These packages are build-time only; the published site is plain HTML, CSS and one small script bundle. It loads no third-party scripts, fonts, analytics or CDNs.
@@ -108,12 +121,21 @@ The showcase site is a static Astro project. These packages are build-time only;
 |---|---|
 | astro | MIT |
 | @astrojs/check | MIT |
+| @astrojs/vercel (the one on-demand route, the visit counter) | MIT |
+| @upstash/redis (REST client for the visit counter) | MIT |
+| @types/node (types only) | MIT |
 | typescript | Apache-2.0 |
 | sharp (used by hand in `website/tools/make-wallpapers.mjs`, not at build or runtime) | Apache-2.0 (prebuilt binaries include libvips, LGPL-3.0-or-later) |
 
 Transitive package licences are pinned by `website/pnpm-lock.yaml`.
 
-- Fonts: the same Doto, Geist and Geist Mono files as above, copied to `website/src/assets/fonts`, with their OFL texts in `website/public/licenses`.
+- Fonts: Doto and Geist Mono as above, plus Inter 4.1 (Inter 400 and 500 for text, Inter Display 700 and 800 for headlines), subset to Latin by `tools/site-art/subset_fonts.py` (fontTools, MIT, and brotli, MIT; build-time only). The files are in `website/src/assets/fonts`, their OFL texts in `website/public/licenses`. The website no longer uses Geist (sans); that face stays only in the outlined brand artwork above.
+- Site art: the dot landscapes, pixel flowers and grass on the website are generated from code and fixed seeds by `tools/site-art` (GPL-3.0-or-later, part of this project; numpy, Pillow and opencv as in `tools/wallpaper-gen`). They are original; the owner's mood images were only looked at, never used as input.
+- Photo widget: the picture in the website's photo widget is this project's generated halftone ridge (`website/src/assets/wallpapers/halftone-ridge-light-640.webp`). The website carries no photograph of a person or of anyone's property.
+- Dock captures: `website/public/media/dock/` holds screenshots of this project's own dock UI running in its test harness (sample apps named in the harness are fictional, the wallpaper is this project's generated art). The icons on the website's dock illustration are original dot-matrix drawings.
+- Visit counter: stores one number in Upstash Redis (through the Vercel Marketplace). No personal data; see the privacy page.
+- Navigation icon: the GitHub mark (Invertocat) in the header is the unmodified mark published by GitHub at https://github.com/logos, used under GitHub's logo and usage guidelines to link to this project's repository on GitHub. It is a trademark of GitHub, Inc.; the project is not affiliated with or endorsed by GitHub.
+- Button icon: the GitHub mark on the download page's buttons (`website/src/components/download/GithubMark.astro`) is the path of the "mark-github" icon from GitHub's Octicons, https://github.com/primer/octicons, MIT License, Copyright (c) GitHub Inc. It is a trademark of GitHub, Inc.; the project is not affiliated with or endorsed by GitHub.
 - Wallpapers: downscaled WebP copies of three of the original wallpapers in `assets/wallpapers`, made by `website/tools/make-wallpapers.mjs`. Original, GPL-3.0-or-later like the rest of the project.
 - Theme tokens and dot-matrix glyph geometry are copied from `apps/desktop/src/design-system` (this project's own code).
 

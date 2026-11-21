@@ -1,15 +1,36 @@
 /*
- * Self-hosted fonts (all SIL OFL 1.1, see THIRD_PARTY_NOTICES.md). Copied from assets/fonts.
- * font-display: swap, preloaded in the layout, plus metric-matched fallbacks (size-adjust and the
- * ascent/descent overrides below) so the swap does not move any text. Overrides were computed
- * from each font's hhea/OS-2 tables against Arial (Geist) and Courier New (Geist Mono, Doto):
- *   Geist     avg advance 0.528 em vs Arial 0.488 em -> size-adjust 108.2 %
+ * Self-hosted fonts (all SIL OFL 1.1, see THIRD_PARTY_NOTICES.md). Inter and Inter Display are Latin
+ * subsets of rsms/inter 4.1 (tools/site-art/subset_fonts.py): Inter Display for headlines (800 and 700),
+ * Inter for text (400 and 500). Geist Mono sets the small field notes, Doto the wordmark and the live
+ * numerals of the desktop shot. font-display: swap, the faces used above the fold are preloaded in the
+ * layout, and metric-matched fallbacks (size-adjust and the ascent/descent overrides below) keep the swap
+ * from moving any text. Overrides were computed from each font's hhea/OS-2 tables against Arial (Inter)
+ * and Courier New (Geist Mono, Doto):
+ *   Inter     avg advance 0.525 em vs Arial 0.488 em -> size-adjust 107.6 %
  *   Geist Mono / Doto  0.600 em, same as Courier New  -> size-adjust 100 %
  */
 @font-face {
-  font-family: "Geist";
-  src: url("../assets/fonts/Geist.woff2") format("woff2");
-  font-weight: 100 900;
+  font-family: "Inter Display";
+  src: url("../assets/fonts/InterDisplay-800.woff2") format("woff2");
+  font-weight: 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter Display";
+  src: url("../assets/fonts/InterDisplay-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../assets/fonts/Inter-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../assets/fonts/Inter-500.woff2") format("woff2");
+  font-weight: 500;
   font-display: swap;
 }
 @font-face {
@@ -26,11 +47,11 @@
 }
 
 @font-face {
-  font-family: "Geist Fallback";
+  font-family: "Inter Fallback";
   src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans");
-  size-adjust: 108.2%;
-  ascent-override: 92.9%;
-  descent-override: 27.3%;
+  size-adjust: 107.6%;
+  ascent-override: 90.2%;
+  descent-override: 22.5%;
   line-gap-override: 0%;
 }
 @font-face {

@@ -1,0 +1,53 @@
+/*
+ * The flower colours of the pixel scenes (the download meadow, components/download/Vista.astro, and the living
+ * scenes, components/LiveScene.astro): the art tokens of the theme, plus the cosmos pink, cornflower violet, lily
+ * apricot and daisy cream the scenes add, for each theme.
+ */
+.vista,
+.live {
+  --vista-pink: #e0709a;
+  --vista-violet: #6b63c8;
+  --vista-apricot: #ee8a3a;
+  --vista-cream: #fffaf0;
+}
+html[data-theme="obsidian"] :is(.vista, .live) {
+  --vista-pink: #ec80a6;
+  --vista-violet: #958be6;
+  --vista-apricot: #f29a50;
+  --vista-cream: #f2ede2;
+}
+html[data-theme="aurum"] :is(.vista, .live) {
+  --vista-pink: #d9b98a;
+  --vista-violet: #9c8a62;
+  --vista-apricot: #e8cf98;
+  --vista-cream: #f4efe4;
+}
+:is(.vista, .live) .art__glow {
+  background: var(--art-gold);
+}
+:is(.vista, .live) .art__pink,
+.vista__petal--pink {
+  background: var(--vista-pink);
+}
+:is(.vista, .live) .art__violet,
+.vista__petal--violet {
+  background: var(--vista-violet);
+}
+:is(.vista, .live) .art__apricot,
+.vista__petal--apricot {
+  background: var(--vista-apricot);
+}
+:is(.vista, .live) .art__cream,
+.vista__petal--cream {
+  background: var(--vista-cream);
+}
+.vista__petal--petal {
+  background: var(--art-petal);
+}
+.vista__petal--gold {
+  background: var(--art-gold);
+}
+html:not([data-theme="paper"]) :is(.vista, .live) .art__far,
+html:not([data-theme="paper"]) :is(.vista, .live) .art__mid {
+  opacity: 0.85;
+}

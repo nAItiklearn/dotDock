@@ -1,0 +1,317 @@
+/* The Features page: a bento of cards with real captures of each feature, the island carousel, the theme trio and the videos. */
+.features-top {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+}
+.features-bloom {
+  position: absolute;
+  z-index: -1;
+  top: calc(var(--nav-h) + 24px);
+  width: 420px;
+  /* The stems fade out into the page instead of ending on an edge. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 62%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 62%, transparent 100%);
+}
+.features-bloom--l {
+  left: min(-60px, calc(50vw - 780px));
+}
+.features-bloom--r {
+  right: min(-60px, calc(50vw - 780px));
+}
+@media (max-width: 899px) {
+  .features-bloom {
+    display: none;
+  }
+}
+.features-head {
+  padding-top: calc(var(--nav-h) + clamp(48px, 7vw, 104px));
+  text-align: center;
+}
+.features-head .h1 {
+  max-width: 14ch;
+  margin-inline: auto;
+}
+.features-head .lede {
+  margin-inline: auto;
+}
+.feature__status {
+  margin-left: var(--space-3);
+  padding-left: var(--space-3);
+  border-left: var(--hairline) solid var(--line-strong);
+  color: var(--text-dim);
+}
+/* Three screens in the three themes. */
+.trio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 1080px;
+  justify-self: stretch;
+}
+@media (min-width: 900px) {
+  .trio {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.trio__item {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+}
+.trio__name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 6px 12px;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+}
+
+/* A screen scaled down as a whole (components/Scaled.astro). */
+.scaled {
+  width: 100%;
+  min-width: 0;
+}
+.scaled__inner {
+  transform-origin: 0 0;
+}
+
+/* ---------- The bento: cards on a 6-column grid ---------- */
+.feat__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  margin-top: clamp(var(--space-8), 4vw, var(--space-12));
+}
+@media (min-width: 700px) {
+  .feat__grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .shot-card--full {
+    grid-column: span 6;
+  }
+  .shot-card--half {
+    grid-column: span 3;
+  }
+  .shot-card--third {
+    grid-column: span 6;
+  }
+}
+@media (min-width: 1000px) {
+  .shot-card--third {
+    grid-column: span 2;
+  }
+}
+.shot-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-art);
+  background: var(--surface-2);
+}
+.shot-card__head {
+  padding: clamp(var(--space-5), 2.6vw, var(--space-8)) clamp(var(--space-5), 2.6vw, var(--space-8)) var(--space-5);
+}
+.shot-card__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-caps);
+  font-weight: 500;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+.shot-card__title {
+  margin-top: var(--space-2);
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.shot-card__text {
+  margin-top: var(--space-2);
+  max-width: 62ch;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.shot-card__media {
+  margin-top: auto;
+  min-width: 0;
+}
+.shot-card__img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* A live widget standing in a card. */
+.feat__live {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  padding: var(--space-5) var(--space-5) clamp(var(--space-5), 3vw, var(--space-8));
+}
+
+/* Rows of the same dock: one per tile set or theme, cropped to the dock and a strip of wallpaper. */
+.strips {
+  display: grid;
+  gap: var(--space-4);
+  padding: 0 clamp(var(--space-3), 2vw, var(--space-6)) clamp(var(--space-3), 2vw, var(--space-6));
+}
+.strip {
+  min-width: 0;
+}
+.strip__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1338 / 120;
+  object-fit: cover;
+  object-position: 50% 100%;
+  border-radius: var(--radius-md);
+}
+.strip__label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-top: var(--space-2);
+  font-size: 14px;
+}
+.strip__name {
+  font-weight: 500;
+}
+.strip__note {
+  color: var(--text-dim);
+}
+/* ---------- The island carousel ---------- */
+.carousel {
+  margin-top: clamp(var(--space-8), 4vw, var(--space-12));
+}
+.carousel__track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(88%, 760px);
+  gap: var(--space-4);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: var(--space-2);
+}
+.carousel__track::-webkit-scrollbar {
+  display: none;
+}
+.carousel__slide {
+  scroll-snap-align: start;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(var(--space-5), 2.6vw, var(--space-8)) 0 0;
+  overflow: clip;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-art);
+  background: var(--surface-2);
+}
+.carousel__slide > .shot-card__eyebrow,
+.carousel__slide > .shot-card__title {
+  padding-inline: clamp(var(--space-5), 2.6vw, var(--space-8));
+}
+.carousel__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: var(--space-5);
+}
+.carousel__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+.carousel__dots {
+  display: flex;
+  gap: var(--space-2);
+}
+.carousel__dot {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.carousel__dot::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--line-strong);
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.carousel__dot[aria-current="true"]::before {
+  background: var(--accent);
+  transform: scale(1.3);
+}
+.carousel__play {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+/* Play is a triangle; while playing it shows the two bars of pause. */
+.carousel__play-icon {
+  width: 10px;
+  height: 12px;
+  background: var(--text);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+.carousel__play[aria-pressed="true"] .carousel__play-icon {
+  width: 3px;
+  clip-path: none;
+  transform: translateX(-3px);
+  box-shadow: 6px 0 0 var(--text);
+}
+.carousel__dot:focus-visible,
+.carousel__play:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Videos: each grows to full size as it scrolls into view ---------- */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .feat--videos .video-slot {
+      animation: video-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+  }
+}
+@keyframes video-in {
+  from {
+    transform: scale(0.86);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

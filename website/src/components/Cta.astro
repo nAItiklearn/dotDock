@@ -1,5 +1,9 @@
 ---
-import { LATEST_RELEASE, PRODUCT_NAME, REPO_URL, ROUTES } from "../brand";
+import { LICENSE_SPDX, PRODUCT_NAME, REPO_URL, ROUTES, NEXT_RELEASE } from "../brand";
+import { releaseView, type ReleaseData } from "../lib/release";
+import releaseData from "../data/release.json";
+
+const release = releaseView(releaseData as ReleaseData | null, NEXT_RELEASE);
 ---
 
 <section class="section" id="get" aria-labelledby="get-title">
@@ -11,8 +15,8 @@ import { LATEST_RELEASE, PRODUCT_NAME, REPO_URL, ROUTES } from "../brand";
         <a class="btn btn--lg btn--quiet" href={REPO_URL} rel="noopener">View on GitHub</a>
       </div>
       <p class="caps caps-row cta__status">
-        <span class={LATEST_RELEASE ? "dot" : "dot dot--hollow"} aria-hidden="true"></span>
-        {LATEST_RELEASE ? `${PRODUCT_NAME} ${LATEST_RELEASE.tag}` : "In development. Free and open source."}
+        <span class="dot" aria-hidden="true"></span>
+        {`${PRODUCT_NAME} ${release.version}. Free and open source, ${LICENSE_SPDX}.`}
       </p>
     </div>
   </div>

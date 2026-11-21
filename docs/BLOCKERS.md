@@ -35,3 +35,15 @@ freeing space (finished worktrees' `target-gnu`, ~8 GB each), then build with th
 - **Home side done:** every home screen colour is a theme token (guarded by `widgets/themeTokens.test.ts`); a theme change repaints the widgets in one frame (live check in `docs/QA/home-live/features.md`).
 - **Owner (lead, 20:30):** reassigned to the theme track.
 - **Needed at merge:** after the theme track lands, the core emits a wallpaper-changed event and the theme track's `applyWallpaperTheme` runs on it. Then rerun the wallpaper rows of `docs/QA/home-live/features.md`.
+## Website: owner-supplied public-figure photos (2026-11-21, updated)
+The owner asked for their Drake (`b016523e…jpg`) and Travis Scott (`dc5808b0…jpg`) photos in the photo widget.
+They are wired in behind one build flag, **`DOTDOCK_OWNER_PHOTOS=1`**, which is **off by default**. With the flag
+off the photo widget shows the project's own halftone ridge picture and no photo file enters the build (the
+`owner-photos` alias in `website/astro.config.mjs` points at an empty module). The files are kept in
+`website/private-photos/` (git-ignored, never committed), so the public repository never contains them.
+**Publishing needs the owner to confirm they hold the rights to both pictures.** Until then nobody builds the
+public site with the flag on. Once confirmed: commit the files (or keep them local), build with the flag, and add
+an "owner-supplied images, rights confirmed by the owner" line to THIRD_PARTY_NOTICES.md.
+
+## 2026-11-21 13:40 download-page track: frame-time run on battery saver
+The last full scene QA run (docs/QA/website-art-live/report-all.txt) was taken with the laptop on battery at 11 %, where Windows caps the display at 30 Hz: every frame there is 33 ms, including idle pages, so it is not a measure of the scenes. The run on mains (report-perf.txt) is the evidence. Rerun `node tools/scene-qa.mjs http://127.0.0.1:4361 ../docs/QA/website-art-live perf` on mains before release.

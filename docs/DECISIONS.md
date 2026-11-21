@@ -360,3 +360,79 @@ Setting the dock by hand also marks the first layout as done, so it never replac
 - **Context:** the owner's V1 rule is that widget colours adapt to the current wallpaper and update cleanly when it changes. The palette from a wallpaper is built on the theme track (`aa4d6d0`, `palette.ts`, `wallpaperTheme.ts`) and saved as the custom theme `custom-from-wallpaper`; the core on this branch has no wallpaper-change event.
 - **Decision:** the home screen takes every colour from the theme's CSS tokens (a test now fails on any literal colour in a home screen stylesheet) and repaints in one frame when they change (the photo caption ink is flushed in the same frame). A theme switch is instant, not cross-faded: a fade would run the stylesheet and the measured caption ink out of step. Deriving the palette again when Windows reports a new wallpaper belongs with the theme track's palette code and is logged as a blocker for the merge.
 - **Rejected:** copying the theme track's palette code into this branch (two copies, merge conflicts).
+## D-021 Website redesign: art engine, hero, Features page, counter (website track)
+Numbered D-021 because D-020 exists on this branch; renumber on merge if another track took it.
+- **Art is generated from code, in one family.** `tools/site-art` makes every picture on the site from maths and fixed seeds: a mosaic of square cells in four tones (the hero's flowers, scenes, bands), halftone dots (hills, water), fine concentric and dotted lines (peony, lily), and sparse sparkle cells. The owner's Pinterest images were looked at and never used as input. Masks are WebP files painted with theme tokens (`--art-*`), so the art follows the theme switch without a second download. Lossless for flat pixel layers, lossy for halftone.
+- **Art never sits behind text.** Pictures stand beside the content (the hero's bouquets flank the headline, scenes are backdrops of product shots whose text sits on solid cards) or between sections as full-width bands. The earlier "sky behind the heading" and "band behind a section" were removed after review. A structural check runs in the browser (docs/QA/website-live/overlap-check.md).
+- **Lazy art.** Bands, scenes and the footer meadow fetch their masks only when they come within about a screen of the viewport (`art--on`, `scripts/chrome.ts`). The hero's pieces load at once.
+- **The stones are gone.** The halftone rocks at the screen's corners did not belong to the soft, dotted, paper look. Tufts of pixel flowers and grass stand there now.
+- **Hero.** One title (`Windows, in dots.`), one line, one button. No licence, telemetry, open-source or status chips in the hero; they live in the footer, FAQ and privacy page.
+- **The dock in the previews.** `components/Dock.astro` redraws the product's dock (apps/desktop/src/dock/dock.css and cells.css) in markup with dot-matrix icons of our own. The real captures of the dock UI harness (stills, in `public/media/dock/`) are used where a screenshot fits; clips follow when the dock host runs on the desktop.
+- **Photos.** The site's photo widget shows our own halftone ridge picture, edge to edge, borderless, with the widget's normal corner radius, in one place (the Features page). The owner's cake photo was tried in a ring and a polaroid frame and then taken out on the owner's instruction. **The two other photos the owner supplied (`dc5808b0...jpg`, `b016523e...jpg`) are not used**: both show recognisable real people, and the site cannot show someone's likeness without that person's consent; the owner is deciding on the rights. Reverse: drop a WebP into `src/assets/photos` and point `picture` in `Widget.astro` at it.
+- **Visit counter.** `/api/visits` is the site's only on-demand route (Vercel adapter, static pages otherwise). One Redis number (Upstash through the Vercel Marketplace), `KV_REST_API_*` or `UPSTASH_REDIS_REST_*`. A browser counts once per day (the day is kept in localStorage); nothing else is stored, no IP, no cookie. Without credentials the route answers 503 and the footer line stays hidden. Local preview is `tools/preview.mjs` because Astro's preview does not support the Vercel adapter. Reverse: delete `src/pages/api`, `src/lib/visits.ts`, `src/scripts/visits.ts`, the adapter lines in `astro.config.mjs`.
+- **No per-part toggles on the site.** dotDock is presented as one environment; the "modular, switch off what you do not want" section was removed on the owner's instruction.
+- **Videos.** `VideoSlot.astro` renders only when `public/video/<name>.mp4` and `<name>-poster.webp` exist, so nothing empty or faked ships. See docs/design/LAUNCH_VIDEO.md for the cuts.
+
+## D-036 Website shows only the widgets V1 offers (2026-11-21, website track)
+- The app's widget catalogue (`apps/desktop/src/overlay/catalog.ts`, identical on every branch) does not offer the
+  weather, calendar, notes, to-do or quote widgets in V1 (below the 4.5 bar). The site showed calendar, to-do,
+  weather and a five-day forecast as home-screen widgets, so they are gone from the widget bento, the wall, the
+  showcase desktops and the Features widgets row, together with their markup, styles and the calendar script
+  (no dead code). In their place: the clock in dots and stripes, memory, disk and the battery pill, all offered.
+- Open-Meteo is still used by V1, through the dock's weather tiles; the privacy and licence pages now say so
+  (same text on the download-page branch).
+## D-026 Download page meadow and living scenes (download-page track)
+Numbered D-026 because main has D-025; renumber on merge if another track took it.
+- **The download page has its own scenery,** a golden-hour meadow in layers (siteart/vista.py) that each move on their own: clouds drift, sparkles twinkle, two sets of grass and big flowers lean out of step, butterflies and a profile dragonfly fly paths, petals blow loose. It is a full-width band between the release head and the facts, never under text.
+- **Living scenes are one reusable module** (components/LiveScene.astro, lib/live-scenes.ts, styles/live.css, scripts/scene-motion.ts) fed by siteart/live.py. Each page gets its own subject: a grazing horse on the home page (in the slot of the static horse band), a pond with lily pads and dragonflies on the Features page (in the slot of the static pond band), an octopus among weed on the Privacy page (in place of its bottom band, through `sceneBottom` on layouts/Page.astro).
+- **Geometry comes from the drawing code.** The pivots the horse's head and tail and the octopus turn about, the stage sizes and the dragonfly's wing root are exported to src/data/live-scenes.json (tools/site-art/live_export.py), so the CSS holds no hand-copied coordinates.
+- **A scene is a band with a fixed aspect ratio.** On a phone the stage keeps a minimum width (560 px narrow, 1200 px wide) and is cropped at the sides, so the subject in the middle keeps its size, the band stays short, and nothing scrolls sideways. Sprites marked wide-only are not shown on a phone.
+- **Motion is transform and opacity only**, paused off screen by an IntersectionObserver (no timers), and none at all under reduced motion.
+- **A render that lacks a colour hides that layer** (lib/art.ts): without a mask a layer paints its whole box, which showed as a solid pink or cream block on a phone. Roles are now listed from every render.
+- **QA browsers stay off the owner's screen** (owner, 12:15): tools/cdp.mjs opens Chrome off screen with occlusion tracking off, so frame times stay real.
+
+## D-034 Website: phone nav, notices wrap, the download page's links (2026-11-21, website track)
+- **Below 480 px the nav shows the mark without the wordmark text.** With the text, the menu button sat 13 to 53 px
+  past the right edge of the pill at 390 and 414 px and was clipped, so a phone had no way to the other pages. The
+  link keeps its accessible name. The layout check (tools/layout-check.js) now reports any control off the page.
+- **Licence notices wrap long paths and URLs** (`overflow-wrap: anywhere` in `.prose`), which pushed /license to
+  416 px wide on a 390 px phone.
+- **The download page links only to things that exist today:** the repository (watch for releases), its Releases
+  page and the source. The download button, size and SHA-256 appear only when `tools/release-data.mjs` finds a
+  published release with an installer asset, and then point at that asset's own GitHub Releases URL; nothing is typed by hand.
+- **The visit counter's 503 when it has no database stays** (lead's decision in HANDOFF): Lighthouse counts it as a
+  console error only on a local preview without credentials; with them (fake Upstash, tools/try-visits.sh) the
+  download page scores 100/100/100.
+- **This branch's Features page is the older one.** The main-site branch rebuilt Features without the pixel scenes;
+  its text-over-art finding on the dock scene at 390/414 belongs to the page that is being replaced, so it is left
+  for the merge, where the main-site version wins.
+
+## D-035 Website: a Changelog page, and the privacy page says what V1 really sends (2026-11-21, website track)
+- **/changelog, linked from the footer (Resources).** Built on this branch because the living pixel scenes live
+  here: the meadow band on top, the pond scene (dragonfly over lilies) under the content, never under text.
+- **Content is what V1 ships, no dates typed.** Version 1 lists the dock (six themes including Glass, more than
+  twenty tiles), the developer tiles, the island, the home screen and the themes with the two Settings switches.
+  Version 2 lists only the wishlist dock tiles not built yet (docs/OWNER_REQUESTS.md: unread mail, progress dots,
+  week strip, stocks, sales counters, follower counts, contribution heat map, file search). A version's state
+  (released with its date and notes link, being tested, planned) comes from src/data/release.json via
+  lib/changelog.ts, tested in tests/changelog.test.ts.
+- **Privacy: no update check in V1.** The core registers no updater command and Settings removed the row, so the
+  "Update check" row was false. It now lists the developer tiles instead (only with a token you add, sent to that
+  service's own API). The same edit is made byte for byte on the main-site branch so the merge is clean.
+
+## D-037 Developer tiles move to V2; downloads through the latest-release links (2026-11-21, website track)
+- Lead decision: the developer tiles (GitHub, Linear, Vercel, AI tokens) are not wired into the V1 app, so the
+  changelog lists them under "Next: Version 2" and the privacy page lists only the Open-Meteo forecast.
+- The download page offers v1.0.0 (NEXT_RELEASE in brand.ts) through
+  `releases/latest/download/dotDock_1.0.0_x64-setup.exe` and `..._x64-portable.exe`, which work the moment the
+  release is published. After publishing, run `node tools/release-data.mjs` and redeploy to add the date, size
+  and SHA-256.
+- The footer is a living scene (LiveScene "meadow"); the old static meadow piece and scene.py are removed.
+
+## D-038 Visit counter without a database answers 200; scroll work trimmed (2026-11-21, website track)
+- `/api/visits` without `KV_REST_API_*` / `UPSTASH_REDIS_REST_*` answers 200 `{"available":false}` (was 503), so a
+  deployment without the database logs no console error; the footer line stays hidden. A configured database that
+  fails still answers 502 (a real outage). Supersedes the 503 in D-021 and D-034.
+- Scroll: the nav's stuck state is watched with an IntersectionObserver instead of reading `scrollY` per scroll
+  event (a trace showed it forcing layout); parallax reads every position before writing any transform; art masks
+  are fetched and decoded asynchronously (`Image.decode()`) two screens ahead instead of 900 px.

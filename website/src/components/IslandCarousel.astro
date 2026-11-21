@@ -1,0 +1,45 @@
+---
+/**
+ * The island's states as a row of large cards, one real capture each (tools/capture-island.mjs). The row scrolls
+ * sideways with snapping; dots show where you are and jump to a card; the button plays or pauses the slow
+ * advance. It only advances while on screen, not hovered or focused, and never for people who ask for reduced
+ * motion (scripts/carousel.ts). Without JavaScript it is a plain scrolling row.
+ */
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+export interface IslandSlide {
+  readonly img: ImageMetadata;
+  readonly eyebrow: string;
+  readonly title: string;
+  readonly alt: string;
+}
+interface Props {
+  slides: readonly IslandSlide[];
+  label: string;
+}
+const { slides, label } = Astro.props;
+---
+
+<div class="carousel reveal" data-carousel role="region" aria-roledescription="carousel" aria-label={label}>
+  <ul class="carousel__track" data-carousel-track>
+    {
+      slides.map((s, i) => (
+        <li class="carousel__slide" aria-roledescription="slide" aria-label={`${i + 1} of ${slides.length}: ${s.title}`}>
+          <p class="shot-card__eyebrow">{s.eyebrow}</p>
+          <h3 class="shot-card__title">{s.title}</h3>
+          <Image src={s.img} alt={s.alt} widths={[520, 1040]} sizes="(min-width: 900px) 760px, 88vw" loading="lazy" decoding="async" class="carousel__img" />
+        </li>
+      ))
+    }
+  </ul>
+  <div class="carousel__controls">
+    <button class="carousel__play" type="button" data-carousel-play aria-pressed="false" hidden>
+      <span class="carousel__play-icon" aria-hidden="true"></span>
+      <span class="sr-only" data-carousel-play-label>Play</span>
+    </button>
+    <div class="carousel__dots" role="group" aria-label="Choose a state">
+      {slides.map((s, i) => <button class="carousel__dot" type="button" data-carousel-dot={i} aria-label={`Show ${s.title}`} aria-current={i === 0 ? "true" : undefined} />)}
+    </div>
+  </div>
+</div>

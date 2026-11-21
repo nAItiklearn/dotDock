@@ -1,18 +1,17 @@
 /**
- * Live widgets. Everything here reads this device only: the clock, the date, the calendar, a
+ * Live widgets. Everything here reads this device only: the clock, the date, a
  * working timer and, where the browser exposes it, the battery. Nothing is sent anywhere. The
- * sample widgets (RAM, disk, weather, to-do) are static markup and are labelled as samples.
+ * sample widgets (RAM, disk, music) are static markup and are labelled as samples.
  *
  * The visuals follow apps/desktop/src/widgets, rebuilt for the web with the same dot-matrix
  * geometry. Every widget can appear several times on the page, so each update loops over all of them.
  */
 import { buildMatrix, type MatrixStyle } from "../lib/matrixGeometry";
 import { everySecond, pad2 } from "../lib/dom";
+import { TIMER_SECONDS, minutesLit } from "../lib/timer";
 
-const DAYS_PER_WEEK = 7;
 const RING_R = 44;
 const RING_LEN = 2 * Math.PI * RING_R;
-const TIMER_SECONDS = 25 * 60;
 
 const all = <T extends Element>(selector: string, root: ParentNode = document): T[] => [
   ...root.querySelectorAll<T>(selector),
@@ -57,63 +56,6 @@ function renderDate(now: Date): void {
     if (month) month.textContent = now.toLocaleDateString(undefined, { month: "short" });
     if (weekday) weekday.textContent = now.toLocaleDateString(undefined, { weekday: "long" });
     root.setAttribute("aria-label", now.toLocaleDateString(undefined, { dateStyle: "full" }));
-  }
-}
-
-// ---------- calendar ----------
-
-/** First day of the week for the visitor's locale: 0 = Sunday ... 6 = Saturday. */
-function localeWeekStart(): number {
-  try {
-    const locale = new Intl.Locale(navigator.language) as Intl.Locale & {
-      getWeekInfo?: () => { firstDay: number };
-      weekInfo?: { firstDay: number };
-    };
-    const info = locale.getWeekInfo?.() ?? locale.weekInfo;
-    // Intl numbers days 1 = Monday ... 7 = Sunday.
-    if (info) return info.firstDay % DAYS_PER_WEEK;
-  } catch {
-    // Unknown locale tag: fall through to Monday.
-  }
-  return 1;
-}
-
-let renderedDay = "";
-
-function renderCalendars(now: Date): void {
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const today = now.getDate();
-  const key = `${year}-${month}-${today}`;
-  if (key === renderedDay) return;
-  renderedDay = key;
-
-  const first = new Date(year, month, 1);
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const lead = (first.getDay() - localeWeekStart() + DAYS_PER_WEEK) % DAYS_PER_WEEK;
-
-  for (const root of all<HTMLElement>("[data-calendar]")) {
-    const grid = one<HTMLOListElement>(root, "[data-cal-grid]");
-    if (!grid) continue;
-    const cells: HTMLElement[] = [];
-    for (let i = 0; i < lead; i++) {
-      const pad = document.createElement("li");
-      pad.setAttribute("aria-hidden", "true");
-      cells.push(pad);
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      const cell = document.createElement("li");
-      cell.className = day === today ? "w-cal__day w-cal__day--today tabular" : "w-cal__day tabular";
-      if (day === today) cell.setAttribute("aria-current", "date");
-      cell.textContent = String(day);
-      cells.push(cell);
-    }
-    grid.replaceChildren(...cells);
-    const todayEl = one<HTMLElement>(root, "[data-cal-today]");
-    const monthEl = one<HTMLElement>(root, "[data-cal-month]");
-    if (todayEl) todayEl.textContent = String(today);
-    if (monthEl) monthEl.textContent = first.toLocaleDateString(undefined, { month: "long" });
-    root.setAttribute("aria-label", now.toLocaleDateString(undefined, { month: "long", year: "numeric" }));
   }
 }
 
@@ -194,6 +136,7 @@ function initTimers(): void {
     const toggle = one<HTMLButtonElement>(root, "[data-timer-toggle]");
     const reset = one<HTMLButtonElement>(root, "[data-timer-reset]");
     const body = one<HTMLElement>(root, ".w-timer");
+    const minutes = [...root.querySelectorAll<SVGCircleElement>("[data-timer-dots] circle")];
     if (!display || !toggle || !reset || !body) continue;
 
     let remaining = TIMER_SECONDS;
@@ -202,6 +145,8 @@ function initTimers(): void {
 
     const show = (): void => {
       display.textContent = `${pad2(Math.floor(remaining / 60))}:${pad2(remaining % 60)}`;
+      const lit = minutesLit(remaining);
+      minutes.forEach((dot, i) => dot.classList.toggle("is-off", i >= lit));
     };
     const stop = (): void => {
       window.clearInterval(handle);
@@ -251,5 +196,4 @@ everySecond((now) => {
   lastMinute = minute;
   renderClocks(now);
   renderDate(now);
-  renderCalendars(now);
 });

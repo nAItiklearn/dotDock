@@ -11,7 +11,6 @@
 node_modules/
 dist/
 target/
-target-gnu/
 *.log
 .DS_Store
 
@@ -25,3 +24,5 @@ target-gnu/
 apps/desktop/src/lib/theme/fixtures-local/
 apps/desktop/.vitest/
 target-rel/
+
+__pycache__/

@@ -36,7 +36,7 @@
   margin: 0;
   padding: clamp(20px, 3vw, 40px);
   border: var(--hairline) solid var(--line-strong);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   background: var(--fill-faint);
 }
 .boot__caption {
@@ -362,6 +362,13 @@
   white-space: nowrap;
   padding-block: var(--space-2);
   scrollbar-width: none;
+}
+/* On a phone the command wraps at any character instead of hiding half of the address off screen. */
+@media (max-width: 479px) {
+  .code__text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 .code__prompt {
   color: var(--accent-text);

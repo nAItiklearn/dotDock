@@ -1,0 +1,23 @@
+---
+/**
+ * One piece of site art: a stack of masks, each painted in a theme colour by styles/art.css.
+ * Purely decorative (aria-hidden); a figure that carries meaning is labelled by its caption.
+ * `parallax` is the share of the page scroll the piece lags behind (negative: runs ahead), see
+ * scripts/parallax.ts.
+ */
+import { artRoles, isLazyArt, type ArtName } from "../lib/art";
+
+interface Props {
+  piece: ArtName;
+  class?: string;
+  parallax?: number;
+  /** Measure the drift from the top of the page instead of from the viewport centre. */
+  fromPage?: boolean;
+}
+const { piece, class: className = "", parallax, fromPage = false } = Astro.props;
+const roles = artRoles(piece);
+---
+
+<div class={`art art--${piece} ${className}`.trim()} aria-hidden="true" data-parallax={parallax} data-parallax-origin={fromPage ? "page" : undefined} data-art-lazy={isLazyArt(piece) ? "" : undefined}>
+  {roles.map((role) => <i class={`art__layer art__${role}`} />)}
+</div>
