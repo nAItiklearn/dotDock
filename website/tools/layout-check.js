@@ -21,11 +21,26 @@ async () => {
       });
       await sleep(500);
       const d = frame.contentDocument;
+      const where = `${path} @${w}`;
+      const add = (kind, detail) => problems.push(`${where}: ${kind}: ${detail}`);
+
+      // Read the page as a visitor does, half a screen at a time: every section that fades in must have come in by
+      // the time it has been scrolled through, however tall it is.
+      const win = frame.contentWindow;
+      for (let y = 0; y < d.documentElement.scrollHeight; y += win.innerHeight / 2) {
+        win.scrollTo({ top: y, behavior: "instant" });
+        await sleep(60);
+      }
+      await sleep(300);
+      for (const el of d.querySelectorAll(".reveal:not(.is-in)")) {
+        if (d.defaultView.getComputedStyle(el).display === "none") continue;
+        add("never revealed", (el.querySelector("h1,h2,h3")?.textContent || el.className).trim().slice(0, 40));
+      }
+      win.scrollTo({ top: 0, behavior: "instant" });
+
       d.querySelectorAll(".reveal").forEach((e) => e.classList.add("is-in"));
       d.querySelectorAll("[data-art-lazy]").forEach((e) => e.classList.add("art--on"));
       await sleep(300);
-      const where = `${path} @${w}`;
-      const add = (kind, detail) => problems.push(`${where}: ${kind}: ${detail}`);
 
       if (d.documentElement.scrollWidth > w + 1) add("sideways overflow", `${d.documentElement.scrollWidth}px wide`);
 

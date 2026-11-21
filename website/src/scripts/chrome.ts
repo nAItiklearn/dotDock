@@ -125,7 +125,10 @@ function initReveal(): void {
         io.unobserve(entry.target);
       }
     },
-    { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+    // Threshold 0 with the bottom tenth of the screen cut off: a section reveals as soon as its top rises into the
+    // screen, however tall it is. A share of a tall section (the licence notices run to several screens) is more
+    // than a phone shows at once, so a share-based threshold left it invisible.
+    { threshold: 0, rootMargin: "0px 0px -10% 0px" },
   );
   for (const el of items) io.observe(el);
 }
