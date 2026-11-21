@@ -15,6 +15,14 @@ function environment(): EnvironmentStore {
   return shared;
 }
 
+/** What the theme switch does in this build: widgets, notch and wallpaper; the dock is not part of it yet. */
+export const THEME_DESCRIPTION =
+  "Your widgets, the notch and dotDock's wallpaper, as one. Off gives Windows its desktop back: its taskbar, its startup list and your own wallpaper, the one you had before dotDock or the one you picked while it was off. On brings dotDock back as you left it. Your settings and layouts are kept either way.";
+
+/** Why the taskbar switch cannot move yet: nothing in this build replaces the Windows taskbar. */
+export const TASKBAR_WITHOUT_DOCK =
+  "The Windows taskbar stays in this version, because the dock that can take its place is not part of it yet. This switch works once the dock is.";
+
 const WAITING_CHIP = { loading: "Reading…", unavailable: "Needs the desktop app", error: "Couldn't read" } as const;
 
 /**
@@ -38,8 +46,7 @@ export function EnvironmentSwitches() {
         label="dotDock theme"
         description={
           <>
-            Widgets, dock, notch and wallpaper, as one. Off puts Windows back as it was before dotDock: its wallpaper, its taskbar
-            and its startup list. On brings dotDock back as you left it. Your settings and layouts are kept either way.
+            {THEME_DESCRIPTION}
             {shown?.problems.map((problem) => (
               <span key={problem} className="row__warn">
                 {" "}
@@ -66,9 +73,9 @@ export function EnvironmentSwitches() {
         id="windows-taskbar"
         label="Use the Windows taskbar"
         description={
-          shown && !shown.taskbarReplacement
-            ? "Shows the Windows taskbar. The dock's own taskbar is not in this build yet, so Windows' stays."
-            : "Shows the Windows taskbar instead of the dock's replacement. The dock stays."
+          shown?.taskbarReplacement
+            ? "Shows the Windows taskbar instead of the dock's replacement. The dock stays."
+            : TASKBAR_WITHOUT_DOCK
         }
       >
         <Switch

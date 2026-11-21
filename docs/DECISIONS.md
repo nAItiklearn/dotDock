@@ -218,3 +218,20 @@ A wallpaper or custom theme drives colour and shadow strength only. Material, tr
 - Settings' `DOCK_THEMES` (`lib/native/dock.ts`) must equal `DOCK_THEMES` in the dock's `src/dock/theme.ts`. A test
   reads the dock's registry whenever that file is in the build and fails on any difference, so a theme the dock
   drops (glass may be deferred) disappears from Settings in the same merge, previews and all.
+
+## D-030 Theme hand-over: a record retires only on a verified take-over; "Use the Windows taskbar" explained, not faked (theme track, 2026-11-21 20:15)
+- **On verifies.** `take_over` reads the wallpapers back from Windows after setting them and compares the pictures
+  (bytes, not paths). Only then is the record removed. When Windows keeps another picture, the record stays and the
+  switch reports it, so the next off cannot record Windows' own picture as dotDock's desktop (checker issue 1).
+- **Off over a left-over record.** The record is kept only while every monitor shows one of Windows' own pictures
+  (the snapshot's original or the Windows-side record); otherwise the screen is dotDock's current desktop and
+  replaces the stale record (checker issue 2).
+- **Root cause of issue 1 not reproduced outside the app.** The same `hand_back`/`take_over` cycle run directly on
+  this machine (two full cycles, IDesktopWallpaper read back each step, Progman's 0x052C sent after a set) brought
+  dotDock's wallpaper back every time. What differs in the app run stays open; the verification above makes the
+  failure visible and loss-free instead of silent.
+- **"Use the Windows taskbar" stays disabled in this build** with copy that says why: no dock in this build can take
+  the taskbar's place. It enables itself once the dock's taskbar part registers (`taskbarReplacement`). The owner's
+  two switches stay the last section of Settings (Recovery page).
+- The Recovery page keeps the Settings track's "Restore Windows desktop" (the panic restore with its report);
+  the theme switch is the everyday way back (supersedes the "one way back" line of D-026).
