@@ -34,4 +34,4 @@ function Get-WindowAt([int]$X, [int]$Y) {
 
 function Set-Minimized([IntPtr]$Handle) { [void][DotDock.Win]::ShowWindow($Handle, 6) }
 
-Export-ModuleMember -Function Get-Foreground, Get-WindowAt, Set-Minimized
+Export-ModuleMember -Function Get-Foreground, Get-WindowAt, Get-WindowFacts, Set-Minimized

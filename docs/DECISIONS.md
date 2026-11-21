@@ -189,3 +189,9 @@ Setting the dock by hand also marks the first layout as done, so it never replac
 - The dock host already lays out an empty dock once from the machine's apps (D-027, `dock/src/starter.rs`), with a
   `laidOut` flag in `dock.json`. A second seeder in the UI, remembered in WebView local storage, would race it and
   forget itself whenever the WebView profile is reset, so the UI has none: one owner, one flag, in the core.
+
+## D-033 Live dock runs use a debug build with the UI embedded (2026-11-21)
+- A plain debug build loads the UI from `devUrl` (`localhost:1420`), and other tracks keep their own Vite servers on
+  that port, so a live run could show another branch's UI. Live runs use
+  `cargo build -p dotdock --features tauri/custom-protocol` after `vite build`: the exe serves `dist/` itself, as a
+  release build does, and runs exactly this branch's dock.

@@ -39,4 +39,21 @@ function Invoke-Click([int]$X, [int]$Y, [switch]$Right) {
   [DotDock.Input]::mouse_event($up, 0, 0, 0, [UIntPtr]::Zero)
 }
 
-Export-ModuleMember -Function Move-Mouse, Invoke-Click, Get-Cursor
+# Press at (X, Y), move to (ToX, ToY) at a human pace and release: a real drag, as a hand would make it.
+function Invoke-Drag([int]$X, [int]$Y, [int]$ToX, [int]$ToY, [int]$DurationMs = 900) {
+  Move-Mouse $X $Y
+  Start-Sleep -Milliseconds 150
+  [DotDock.Input]::mouse_event($LEFT_DOWN, 0, 0, 0, [UIntPtr]::Zero)
+  Start-Sleep -Milliseconds 200
+  Move-Mouse $ToX $ToY $DurationMs
+  Start-Sleep -Milliseconds 200
+  [DotDock.Input]::mouse_event($LEFT_UP, 0, 0, 0, [UIntPtr]::Zero)
+}
+
+# Turns the wheel by `Notches` (positive away from the user) at the cursor.
+function Invoke-Wheel([int]$Notches) {
+  $WHEEL = 0x0800; $NOTCH = 120
+  [DotDock.Input]::mouse_event($WHEEL, 0, 0, $Notches * $NOTCH, [UIntPtr]::Zero)
+}
+
+Export-ModuleMember -Function Move-Mouse, Invoke-Click, Invoke-Drag, Invoke-Wheel, Get-Cursor
