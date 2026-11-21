@@ -116,6 +116,12 @@ export class DirectPress {
   };
 
   private readonly onMove = (e: PointerEvent): void => {
+    // The release can land on another window (the overlay is click-through off the widget, and it has no
+    // focus to lose). A move with no button held means the press is over, whatever happened to its pointerup.
+    if ((e.buttons & 1) === 0) {
+      this.onUp(e);
+      return;
+    }
     const h = this.handoff;
     if (h && e.pointerId === h.pointerId) {
       // Edit mode is still loading: keep the widget under the pointer until the controller takes over.

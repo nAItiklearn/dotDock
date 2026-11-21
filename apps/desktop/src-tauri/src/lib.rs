@@ -159,6 +159,18 @@ fn show_overlay(app: &AppHandle) {
     }
 }
 
+const OVERLAY_BROWSER_ARGS: &str =
+    "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required";
+/// Live QA only: set to a port to inspect the real desktop overlay over the DevTools protocol.
+const QA_DEVTOOLS_PORT_VAR: &str = "DOTDOCK_QA_DEVTOOLS_PORT";
+
+fn overlay_browser_args(qa_port: Option<&str>) -> String {
+    match qa_port.and_then(|p| p.trim().parse::<u16>().ok()).filter(|p| *p >= 1024) {
+        Some(port) => format!("{OVERLAY_BROWSER_ARGS} --remote-debugging-port={port}"),
+        None => OVERLAY_BROWSER_ARGS.to_owned(),
+    }
+}
+
 fn create_overlay(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     // Size and position come from Win32 in desktop_host (and are re-fitted on display changes).
     let window = WebviewWindowBuilder::new(app, OVERLAY_LABEL, WebviewUrl::App("overlay.html".into()))
@@ -171,9 +183,7 @@ fn create_overlay(app: &AppHandle) -> tauri::Result<WebviewWindow> {
         .skip_taskbar(true)
         .focused(false)
         .focusable(false)
-        .additional_browser_args(
-            "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required",
-        )
+        .additional_browser_args(&overlay_browser_args(std::env::var(QA_DEVTOOLS_PORT_VAR).ok().as_deref()))
         .always_on_bottom(true)
         // Lets a photo dragged from Explorer reach the page (the photo widget's drop zone).
         .disable_drag_drop_handler()
@@ -327,5 +337,18 @@ pub fn run() {
         });
     if let Err(err) = result {
         boot::record(&format!("fatal {err}"));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn devtools_port_only_when_qa_asks_for_a_valid_one() {
+        assert_eq!(overlay_browser_args(None), OVERLAY_BROWSER_ARGS);
+        assert_eq!(overlay_browser_args(Some("80")), OVERLAY_BROWSER_ARGS);
+        assert_eq!(overlay_browser_args(Some("nope")), OVERLAY_BROWSER_ARGS);
+        assert!(overlay_browser_args(Some("9333")).ends_with(" --remote-debugging-port=9333"));
     }
 }

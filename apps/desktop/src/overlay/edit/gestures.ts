@@ -133,6 +133,9 @@ export class GestureController {
 
   private readonly onPointerDown = (e: PointerEvent): void => {
     const layout = this.env.layout.getState();
+    // A gesture whose release never reached us (it landed on another window) must not block every
+    // later press: a new press means the old one is over.
+    if (this.active && e.pointerId === this.active.pointerId) this.finish(this.active.started);
     if (e.button !== 0 || !layout.editing || this.active) return;
     const target = e.target as HTMLElement;
     if (target.closest("[data-no-drag]")) return;
@@ -173,6 +176,11 @@ export class GestureController {
   private readonly onPointerMove = (e: PointerEvent): void => {
     const a = this.active;
     if (!a || e.pointerId !== a.pointerId) return;
+    if ((e.buttons & 1) === 0) {
+      // Released somewhere we never heard about: end it where the pointer last was.
+      this.finish(true);
+      return;
+    }
     a.pointerX = e.clientX;
     a.pointerY = e.clientY;
     // Pointer events can outrun the display; one update per frame is all anyone can see.

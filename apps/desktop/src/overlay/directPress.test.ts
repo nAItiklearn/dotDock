@@ -92,7 +92,7 @@ afterEach(() => {
 });
 
 const down = (target: FakeEl, x = 100, y = 100): void => fire(root, "pointerdown", target, { clientX: x, clientY: y }, 0);
-const move = (x: number, y: number, t: number): void => fire(window, "pointermove", slot, { clientX: x, clientY: y }, t);
+const move = (x: number, y: number, t: number, buttons = 1): void => fire(window, "pointermove", slot, { clientX: x, clientY: y, buttons }, t);
 const up = (x: number, y: number, t: number): void => fire(window, "pointerup", slot, { clientX: x, clientY: y }, t);
 
 describe("pressing a widget on the plain desktop", () => {
@@ -128,6 +128,19 @@ describe("pressing a widget on the plain desktop", () => {
     expect(editUi.getState()).toMatchObject({ activeId: "system-1", gesture: "move" });
     move(150, 140, 60);
     expect(slot.style["translate"]).toBe("50px 40px");
+  });
+
+  it("a release that landed on another window ends the press: a later bare move never starts a drag", () => {
+    down(slot);
+    move(106, 100, 20);
+    // The pointerup went to the app under the click-through overlay; the next move has no button held.
+    move(160, 100, 400, 0);
+    move(200, 100, 420, 0);
+    vi.advanceTimersByTime(HOLD_MS * 2);
+    expect(app.layout.getState().editing).toBe(false);
+    down(slot);
+    vi.advanceTimersByTime(HOLD_MS);
+    expect(app.layout.getState().editing).toBe(true);
   });
 
   it("never starts from a control inside the widget", () => {
@@ -172,13 +185,25 @@ describe("edit mode carries the gesture on", () => {
     down(slot);
     move(100 + DIRECT_DRAG_PX + 36, 100, 30);
     const c = controller();
-    fire(slot, "pointermove", slot, { clientX: 100 + 44, clientY: 100 }, 60);
+    fire(slot, "pointermove", slot, { clientX: 100 + 44, clientY: 100, buttons: 1 }, 60);
     vi.advanceTimersByTime(20);
     fire(slot, "pointerup", slot, { clientX: 144, clientY: 100 }, 80);
     expect(editUi.getState().gesture).toBeNull();
     const moved = app.layout.getState().placements.find((p) => p.id === "system-1");
     // Half a pitch (44 px) is half a cell: no jump to a whole cell.
     expect(moved?.x).toBe(8.5);
+    c.detach();
+  });
+
+  it("a drag whose release never arrived does not block the next press in edit mode", () => {
+    down(slot);
+    move(140, 100, 30);
+    const c = controller();
+    // No pointerup reached the overlay. The user presses again: that press must be heard.
+    fire(root, "pointerdown", slot, { clientX: 300, clientY: 300 }, 500);
+    expect(editUi.getState().gesture).toBeNull();
+    fire(slot, "pointerup", slot, { clientX: 300, clientY: 300 }, 520);
+    expect(app.layout.getState().selectedId).toBe("system-1");
     c.detach();
   });
 

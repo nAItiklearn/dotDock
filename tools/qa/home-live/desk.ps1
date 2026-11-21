@@ -7,6 +7,7 @@
 #   drag <x1> <y1> <x2> <y2> <ms> press, move in 60 Hz steps over <ms>, release
 #   hold <x> <y> <ms>             press and hold still, then release
 #   find <name>                   UI Automation: bounding box of the element named <name> (physical px)
+#   style                         the overlay's click-through / no-activate bits and focus
 #   wait <ms> | minimize-all | restore-all
 #   run <scenario.txt>            run one step per line in a single process
 param([string]$cmd, [Parameter(ValueFromRemainingArguments=$true)][string[]]$rest)
@@ -24,6 +25,9 @@ public static class Desk {
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
   [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr FindWindow(string c, string t);
+  [DllImport("user32.dll")] public static extern IntPtr GetWindowLongPtr(IntPtr h, int i);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
 }
 "@
 [Desk]::SetProcessDPIAware() | Out-Null
@@ -74,6 +78,14 @@ switch ($cmd) {
     $cond = New-Object System.Windows.Automation.PropertyCondition ([System.Windows.Automation.AutomationElement]::NameProperty), $rest[0]
     $el = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $cond)
     if ($null -eq $el) { "none" } else { $r = $el.Current.BoundingRectangle; "$([int]$r.X) $([int]$r.Y) $([int]$r.Width) $([int]$r.Height)" }
+  }
+  'style' {
+    # The overlay's click-through (WS_EX_TRANSPARENT) and no-activate bits, and whether it has focus.
+    $h = [Desk]::FindWindow("Tauri Window", "Desktop")
+    if ($h -eq [IntPtr]::Zero) { "no overlay" } else {
+      $ex = [Desk]::GetWindowLongPtr($h, -20).ToInt64()
+      "transparent=$([int](($ex -band 0x20) -ne 0)) noactivate=$([int](($ex -band 0x08000000) -ne 0)) foreground=$([int]([Desk]::GetForegroundWindow() -eq $h))"
+    }
   }
   'wait' { Start-Sleep -Milliseconds ([int]$rest[0]) }
   'minimize-all' { (New-Object -ComObject Shell.Application).MinimizeAll() }
