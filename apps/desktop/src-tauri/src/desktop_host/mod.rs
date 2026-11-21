@@ -11,17 +11,17 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
-use windows::Win32::Foundation::{HWND, POINT, RECT};
+use windows::Win32::Foundation::{COLORREF, HWND, POINT, RECT};
 use windows::Win32::Graphics::Gdi::{
     GetMonitorInfoW, MonitorFromPoint, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
     MONITOR_DEFAULTTOPRIMARY,
 };
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetCursorPos, GetWindow, GetWindowLongPtrW, GetWindowRect, IsWindow, SetForegroundWindow, SetWindowLongPtrW,
-    SetWindowPos, ShowWindow, GWL_EXSTYLE, GW_HWNDNEXT, HWND_BOTTOM, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
+    GetCursorPos, GetWindow, GetWindowLongPtrW, GetWindowRect, IsWindow, SetForegroundWindow, SetLayeredWindowAttributes,
+    SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, GW_HWNDNEXT, HWND_BOTTOM, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
     SWP_NOZORDER, SW_SHOWNOACTIVATE, USER_DEFAULT_SCREEN_DPI, WS_EX_APPWINDOW, WS_EX_LAYERED, WS_EX_NOACTIVATE,
-    WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT,
+    WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT, LWA_ALPHA,
 };
 
 /// Cursor sampling period: one cheap syscall, below one 60 Hz frame.
@@ -119,6 +119,9 @@ fn enforce_styles(hwnd: HWND, click_through: bool) -> bool {
             return false;
         }
         SetWindowLongPtrW(hwnd, GWL_EXSTYLE, wanted);
+        // Layered without attributes is hit-tested against a stale bitmap (widgets stop taking clicks); full
+        // opacity leaves the WebView's transparency alone and lets WS_EX_TRANSPARENT alone decide click-through.
+        let _ = SetLayeredWindowAttributes(hwnd, COLORREF(0), u8::MAX, LWA_ALPHA);
         true
     }
 }

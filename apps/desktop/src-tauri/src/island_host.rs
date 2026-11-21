@@ -16,10 +16,10 @@ use dotdock_island::settings::IslandSettings;
 use dotdock_shell::modules::Lifecycle;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
-use windows::Win32::Foundation::{HWND, RECT};
+use windows::Win32::Foundation::{COLORREF, HWND, RECT};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetWindowLongPtrW, GetWindowRect, SetWindowLongPtrW, SetWindowPos, GWL_EXSTYLE, HWND_TOPMOST, SWP_NOACTIVATE,
+    GetWindowLongPtrW, GetWindowRect, SetLayeredWindowAttributes, SetWindowLongPtrW, LWA_ALPHA, SetWindowPos, GWL_EXSTYLE, HWND_TOPMOST, SWP_NOACTIVATE,
     SWP_NOSIZE, USER_DEFAULT_SCREEN_DPI, WS_EX_APPWINDOW, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
     WS_EX_TRANSPARENT,
 };
@@ -99,6 +99,9 @@ fn set_click_through(h: HWND, through: bool) {
         let ex = (GetWindowLongPtrW(h, GWL_EXSTYLE) | wanted) & !(WS_EX_APPWINDOW.0 as isize);
         let ex = if through { ex | WS_EX_TRANSPARENT.0 as isize } else { ex & !(WS_EX_TRANSPARENT.0 as isize) };
         SetWindowLongPtrW(h, GWL_EXSTYLE, ex);
+        // Layered without attributes is hit-tested against a stale bitmap; full opacity keeps the WebView's
+        // transparency and lets WS_EX_TRANSPARENT alone decide click-through.
+        let _ = SetLayeredWindowAttributes(h, COLORREF(0), u8::MAX, LWA_ALPHA);
     }
 }
 

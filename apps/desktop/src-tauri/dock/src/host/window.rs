@@ -8,11 +8,11 @@
 use super::pointer::Watched;
 use crate::placement::PxRect;
 use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
-use windows::Win32::Foundation::{HWND, RECT};
+use windows::Win32::Foundation::{COLORREF, HWND, RECT};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
 use windows::Win32::UI::WindowsAndMessaging::{
     GetClientRect, GetCursorPos, GetForegroundWindow, GetWindowLongPtrW, GetWindowRect, IsWindow, SetForegroundWindow,
-    SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, HWND_TOPMOST, SWP_NOACTIVATE, SW_HIDE, SW_SHOWNOACTIVATE,
+    SetLayeredWindowAttributes, SetWindowLongPtrW, SetWindowPos, ShowWindow, LWA_ALPHA, GWL_EXSTYLE, HWND_TOPMOST, SWP_NOACTIVATE, SW_HIDE, SW_SHOWNOACTIVATE,
     USER_DEFAULT_SCREEN_DPI, WS_EX_APPWINDOW, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT,
 };
 
@@ -72,6 +72,10 @@ impl Styles {
             );
             if wanted != current {
                 SetWindowLongPtrW(h, GWL_EXSTYLE, wanted);
+                // A layered window without its attributes is hit-tested against a stale bitmap and drawn clipped:
+                // clicks land beside the icons and the top of the plate is cut off. Full opacity keeps the WebView's
+                // own transparency and makes WS_EX_TRANSPARENT the only thing that decides click-through.
+                let _ = SetLayeredWindowAttributes(h, COLORREF(0), u8::MAX, LWA_ALPHA);
             }
         }
     }
