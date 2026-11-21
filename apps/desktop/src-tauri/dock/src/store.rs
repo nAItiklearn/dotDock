@@ -37,6 +37,9 @@ pub struct StoreData {
     pub first_seen: BTreeMap<String, u64>,
     /// True once the first scan has run, so later new apps get a real `first_seen`.
     pub scanned_once: bool,
+    /// True once the first layout was placed on an empty dock (`starter`), so it is never placed again.
+    #[serde(default)]
+    pub laid_out: bool,
 }
 
 impl Default for StoreData {
@@ -48,6 +51,7 @@ impl Default for StoreData {
             assignments: BTreeMap::new(),
             first_seen: BTreeMap::new(),
             scanned_once: false,
+            laid_out: false,
         }
     }
 }

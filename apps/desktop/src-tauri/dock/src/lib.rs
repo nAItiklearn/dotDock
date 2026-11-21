@@ -6,6 +6,7 @@
 //! - `running`: the windows that belong on a taskbar, pushed when they change; `frozen` says when to stop drawing.
 //! - `launch`, `thumbnail`, `appbar`: start an app, DWM thumbnails, and the app bar that reserves the dock's strip.
 //! - `placement`, `glass`: where the dock window and its reserved strip go, and the acrylic plate behind the bar.
+//! - `starter`: the first layout, made once from the apps the user has.
 //! - `store`, `watch`: what is remembered between runs (atomic, at most one write a second) and when the catalogue
 //!   is stale (change notifications, never a timer).
 //! - `service`: one object the host holds, speaking the types in `protocol` (a mirror of `protocol.ts`).
@@ -35,6 +36,7 @@ pub mod protocol;
 pub mod running;
 #[cfg(windows)]
 pub mod service;
+pub mod starter;
 pub mod store;
 #[cfg(windows)]
 pub mod thumbnail;
