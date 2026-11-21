@@ -27,6 +27,15 @@ if ($running.Count -gt 0) {
     Write-Output "dotdock.exe is already running (pid $($running.Id -join ', ')); stop it first."
     exit 2
 }
+# Only the files are isolated: --restore-windows also removes the real logon task and Run value. With
+# either present, this machine starts dotDock at sign-in, and the run would turn that off.
+$hasTask = [bool](Get-ScheduledTask -TaskName $AppName -ErrorAction SilentlyContinue)
+$hasRun = $null -ne (Get-ItemProperty -Path $RunKey -Name $AppName -ErrorAction SilentlyContinue)
+if ($hasTask -or $hasRun) {
+    Write-Output 'dotDock starts at sign-in on this machine (logon task or Run value); this test would remove that. Not run.'
+    exit 2
+}
+$autoHideBefore = Get-TaskbarAutoHide
 # A start picture that is not the meadow, so seeing the meadow afterwards proves the first start set it.
 $startPicture = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\assets\wallpapers\soft-mono-light.jpg')).Path
 $realLocal = $env:LOCALAPPDATA
@@ -71,10 +80,16 @@ $before = Get-ShownWallpaper
 $desktop = Get-ItemProperty -Path 'HKCU:\Control Panel\Desktop'
 $style = $desktop.WallpaperStyle
 $tile = $desktop.TileWallpaper
-$keep = Join-Path $root ('before' + [IO.Path]::GetExtension($before))
-if ($before -and (Test-Path -LiteralPath $before)) { Copy-Item -LiteralPath $before -Destination $keep }
+# Kept outside the fresh profile, which is deleted at the end: the original may be a file Windows
+# rewrites (TranscodedWallpaper), so the copy is what is put back.
+$keepDir = Join-Path $realLocal 'dockDock\first-run-e2e-keep'
+New-Item -ItemType Directory -Force -Path $keepDir | Out-Null
+$keep = Join-Path $keepDir ('before' + [IO.Path]::GetExtension($before))
+if ($before -and (Test-Path -LiteralPath $before)) { Copy-Item -LiteralPath $before -Destination $keep -Force }
+$picture = Join-Path $root 'picture.jpg'
+Copy-Item -LiteralPath $startPicture -Destination $picture
 Write-Output "Wallpaper before the run: $before"
-Set-Wallpaper -Path $startPicture -Style $style -Tile $tile
+Set-Wallpaper -Path $picture -Style $style -Tile $tile
 
 $process = $null
 try {
@@ -88,13 +103,18 @@ try {
     Stop-Fresh $process
 
     # A second start: the marker exists, so nothing is applied again.
-    Set-Wallpaper -Path $keep -Style $style -Tile $tile
+    Set-Wallpaper -Path $picture -Style $style -Tile $tile
+    $setups = @(Select-String -LiteralPath $bootLog -Pattern ' setup').Count
     $process = Start-Fresh
-    $started = Wait-BootLine 'setup'
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Get-Date) -lt $deadline -and @(Select-String -LiteralPath $bootLog -Pattern ' setup').Count -le $setups) {
+        Start-Sleep -Milliseconds 250
+    }
+    # The first start applies within a second of setup; this waits well past that.
     Start-Sleep -Seconds 5
     $lines = @(Select-String -LiteralPath $bootLog -Pattern 'first start wallpaper').Count
-    Check 'a second start does not apply it again' ($started -and $lines -eq 1) "lines=$lines"
-    Check 'the wallpaper stays as the user left it' ((Get-ShownWallpaper) -eq $keep) (Get-ShownWallpaper)
+    Check 'a second start does not apply it again' ($lines -eq 1) "lines=$lines"
+    Check 'the wallpaper stays as the user left it' ((Get-ShownWallpaper) -eq $picture) (Get-ShownWallpaper)
     Stop-Fresh $process
 
     # Restore from the fresh profile: its snapshot holds the wallpaper that was showing before the first start.
@@ -104,10 +124,17 @@ try {
     $restored = Get-ShownWallpaper
     # The fresh profile's snapshot was taken over the start picture, so that is what restore brings back
     # (from its private copy, original-wallpaper.jpg, or the picture itself).
-    Check 'restore brings back the wallpaper from before the first start' ((Split-Path $restored -Leaf) -in @('original-wallpaper.jpg', 'soft-mono-light.jpg')) $restored
+    Check 'restore brings back the wallpaper from before the first start' ((Split-Path $restored -Leaf) -in @('original-wallpaper.jpg', 'picture.jpg')) $restored
 } finally {
     Stop-Fresh $process
-    if ($before -and (Test-Path -LiteralPath $before)) { Set-Wallpaper -Path $before -Style $style -Tile $tile }
+    # A killed app had no chance to give the taskbar back.
+    Show-Taskbar
+    Set-TaskbarAutoHide $autoHideBefore
+    if (Test-Path -LiteralPath $keep) {
+        $original = $before -and (Test-Path -LiteralPath $before) -and
+            ((Get-FileHash -LiteralPath $before).Hash -eq (Get-FileHash -LiteralPath $keep).Hash)
+        Set-Wallpaper -Path $(if ($original) { $before } else { $keep }) -Style $style -Tile $tile
+    }
     Write-Output "Wallpaper after the run: $(Get-ShownWallpaper)"
     # WebView2 may hold its profile for a moment after the process exits.
     for ($i = 0; $i -lt 10 -and (Test-Path -LiteralPath $root); $i++) {
