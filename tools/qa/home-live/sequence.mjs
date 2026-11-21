@@ -1,6 +1,6 @@
 // The owner's sequence on the real desktop overlay, with a real cursor: enter edit from the widget menu,
 // click widget A, click widget B, drag B, + Widgets, add one, Done, then check the empty desktop is not
-// covered. After every step it records the overlay's state (DevTools protocol, DOTDOCK_QA_DEVTOOLS_PORT),
+// covered. After every step it records the overlay's state (DevTools protocol: start the app with WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=<port>),
 // the window under the click point and the overlay's click-through bits, and asserts the outcome.
 // Usage: node sequence.mjs <devtools-port> <out-dir>
 import { execFileSync } from "node:child_process";

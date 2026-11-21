@@ -8,6 +8,8 @@
 #   hold <x> <y> <ms>             press and hold still, then release
 #   find <name>                   UI Automation: bounding box of the element named <name> (physical px)
 #   style                         the overlay's click-through / no-activate bits and focus
+#   wallpaper <file>              set the Windows wallpaper (HKCU, as the Settings app does)
+#   cpu <process> <ms>            CPU use of a process over <ms>, percent of the whole machine
 #   wait <ms> | minimize-all | restore-all
 #   run <scenario.txt>            run one step per line in a single process
 param([string]$cmd, [Parameter(ValueFromRemainingArguments=$true)][string[]]$rest)
@@ -28,6 +30,7 @@ public static class Desk {
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr FindWindow(string c, string t);
   [DllImport("user32.dll")] public static extern IntPtr GetWindowLongPtr(IntPtr h, int i);
   [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern bool SystemParametersInfo(uint a, uint p, string v, uint f);
 }
 "@
 [Desk]::SetProcessDPIAware() | Out-Null
@@ -86,6 +89,16 @@ switch ($cmd) {
       $ex = [Desk]::GetWindowLongPtr($h, -20).ToInt64()
       "transparent=$([int](($ex -band 0x20) -ne 0)) noactivate=$([int](($ex -band 0x08000000) -ne 0)) foreground=$([int]([Desk]::GetForegroundWindow() -eq $h))"
     }
+  }
+  'wallpaper' {
+    # SPI_SETDESKWALLPAPER, saved to the profile and broadcast, like picking it in Windows Settings.
+    [Desk]::SystemParametersInfo(0x14, 0, $rest[0], 0x3) | Out-Null; "wallpaper $($rest[0])"
+  }
+  'cpu' {
+    $a = (@(Get-Process -Name $rest[0] -ErrorAction SilentlyContinue) | ForEach-Object { $_.TotalProcessorTime.TotalMilliseconds } | Measure-Object -Sum).Sum
+    Start-Sleep -Milliseconds ([int]$rest[1])
+    $b = (@(Get-Process -Name $rest[0] -ErrorAction SilentlyContinue) | ForEach-Object { $_.TotalProcessorTime.TotalMilliseconds } | Measure-Object -Sum).Sum
+    "{0:N3}" -f (100 * ($b - $a) / ([int]$rest[1] * [Environment]::ProcessorCount))
   }
   'wait' { Start-Sleep -Milliseconds ([int]$rest[0]) }
   'minimize-all' { (New-Object -ComObject Shell.Application).MinimizeAll() }
