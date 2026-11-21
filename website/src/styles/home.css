@@ -78,6 +78,7 @@
   container-type: inline-size;
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-flow: row dense;
   column-gap: var(--gap);
   row-gap: var(--space-6);
   margin-top: clamp(36px, 5vw, 64px);
@@ -102,6 +103,23 @@
   transition:
     transform var(--dur-med) var(--ease-out),
     box-shadow var(--dur-med) var(--ease-out);
+}
+/* In the bento the clock is a card like its neighbours: digits fitted to the card, nothing past its edge. */
+.bento .w--clock {
+  justify-content: center;
+  padding: calc(var(--k) * 26) calc(var(--k) * 32);
+  border: var(--hairline) solid var(--border);
+  border-radius: calc(var(--k) * 37);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.bento .w-clock__digits {
+  width: 100%;
+  height: auto;
+  filter: none;
+}
+.bento .w-todo__list {
+  gap: calc(var(--k) * 13);
 }
 .bento .w--circle {
   justify-self: center;

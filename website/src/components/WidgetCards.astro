@@ -2,7 +2,8 @@
 /**
  * The widget bento: every widget at its real size on one cell grid, each with a caption under it. Rows are
  * built from widgets of the same height, so every row ends flush and no tile is half empty. Spans are in
- * grid cells for each width class (12 columns wide, 6 on tablets, 4 on phones); see styles/home.css.
+ * grid cells for each width class (12 columns wide, 6 on tablets, 4 on phones), packed densely so every row of one height ends flush; see
+ * styles/home.css.
  */
 import SectionHead from "./SectionHead.astro";
 import Widget from "./Widget.astro";
@@ -22,16 +23,17 @@ interface Tile {
 }
 
 const tiles: Tile[] = [
-  { kind: "clock", name: "Clock", note: "Blocks, dots or stripes; this is Blocks", h: 2, span: [5, 4, 4], style: "blocks" },
-  { kind: "date", name: "Date", note: "Today, in the dot font", h: 2, span: [2, 2, 2] },
-  { kind: "calendar", name: "Month", note: "The month, today ringed", h: 2, span: [3, 4, 4] },
+  { kind: "clock", name: "Clock", note: "Blocks, dots or stripes", h: 2, span: [5, 4, 4], style: "blocks" },
+  { kind: "date", name: "Date", note: "Today, in dots", h: 2, span: [2, 2, 2] },
+  { kind: "calendar", name: "Month", note: "Today ringed in red", h: 2, span: [3, 4, 4] },
   { kind: "ring", name: "Battery", note: "Charge as a ring", h: 2, span: [2, 2, 2] },
-  { kind: "todo", name: "To-do", note: "Tick a line, it stays ticked", h: 2, span: [4, 4, 4] },
-  { kind: "ram", name: "Memory", note: "RAM in use, one dot per slice", h: 2, span: [2, 2, 2] },
-  { kind: "disk", name: "Disk", note: "Space used on your drive", h: 2, span: [2, 2, 2] },
-  { kind: "forecast", name: "Forecast", note: "Five days, from Open-Meteo", h: 2, span: [4, 4, 4] },
-  { kind: "music", name: "Now playing", note: "Any player on your PC, with controls", h: 1, span: [5, 6, 4], playing: true },
-  { kind: "timer", name: "Focus timer", note: "Counts down, even with the tab hidden", h: 1, span: [4, 3, 4] },
+  { kind: "photo", name: "Photo", note: "Your own picture", h: 2, span: [2, 2, 4] },
+  { kind: "todo", name: "To-do", note: "Tick it and it stays ticked", h: 2, span: [3, 4, 4] },
+  { kind: "ram", name: "Memory", note: "RAM, a dot per slice", h: 2, span: [2, 3, 2] },
+  { kind: "disk", name: "Disk", note: "Your drive as a ring", h: 2, span: [2, 3, 2] },
+  { kind: "forecast", name: "Forecast", note: "Five days, from Open-Meteo", h: 2, span: [3, 6, 4] },
+  { kind: "music", name: "Now playing", note: "Any player on your PC", h: 1, span: [5, 6, 4], playing: true },
+  { kind: "timer", name: "Focus timer", note: "A dot for every minute left", h: 1, span: [4, 3, 4] },
   { kind: "weather", name: "Weather", note: "The sky where you choose", h: 1, span: [3, 3, 4] },
 ];
 ---

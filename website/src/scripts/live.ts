@@ -8,11 +8,11 @@
  */
 import { buildMatrix, type MatrixStyle } from "../lib/matrixGeometry";
 import { everySecond, pad2 } from "../lib/dom";
+import { TIMER_SECONDS, minutesLit } from "../lib/timer";
 
 const DAYS_PER_WEEK = 7;
 const RING_R = 44;
 const RING_LEN = 2 * Math.PI * RING_R;
-const TIMER_SECONDS = 25 * 60;
 
 const all = <T extends Element>(selector: string, root: ParentNode = document): T[] => [
   ...root.querySelectorAll<T>(selector),
@@ -194,6 +194,7 @@ function initTimers(): void {
     const toggle = one<HTMLButtonElement>(root, "[data-timer-toggle]");
     const reset = one<HTMLButtonElement>(root, "[data-timer-reset]");
     const body = one<HTMLElement>(root, ".w-timer");
+    const minutes = [...root.querySelectorAll<SVGCircleElement>("[data-timer-dots] circle")];
     if (!display || !toggle || !reset || !body) continue;
 
     let remaining = TIMER_SECONDS;
@@ -202,6 +203,8 @@ function initTimers(): void {
 
     const show = (): void => {
       display.textContent = `${pad2(Math.floor(remaining / 60))}:${pad2(remaining % 60)}`;
+      const lit = minutesLit(remaining);
+      minutes.forEach((dot, i) => dot.classList.toggle("is-off", i >= lit));
     };
     const stop = (): void => {
       window.clearInterval(handle);

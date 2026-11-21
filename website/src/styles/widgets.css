@@ -478,6 +478,19 @@ html[data-theme="paper"] .w-clock__digits {
   font-weight: 500;
   line-height: 1;
 }
+/* One dot per minute of the countdown; a dot goes dark as its minute passes. */
+.w-timer__dots {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: calc(var(--k) * 12);
+  fill: var(--accent);
+}
+.w-timer__dots circle {
+  transition: fill var(--dur-med) var(--ease-out);
+}
+.w-timer__dots .is-off {
+  fill: var(--dot-off);
+}
 .w-timer__buttons {
   display: flex;
   align-items: center;
@@ -603,6 +616,13 @@ html[data-theme="paper"] .w-clock__digits {
   font-family: var(--font-mono);
   font-size: max(13px, calc(var(--k) * 22));
   font-weight: 500;
+}
+/* The day's range among the week's, as a short column of dots. */
+.w-fc__range {
+  display: block;
+  width: calc(var(--k) * 8);
+  height: calc(var(--k) * 52);
+  min-width: 6px;
 }
 .w-fc__lo {
   font-family: var(--font-mono);
@@ -737,8 +757,10 @@ html[data-theme="paper"] .w-clock__digits {
 }
 
 /* ---------- Photo: the picture fills the widget edge to edge (widgets/photo/PhotoWidget.css, no mat) ---------- */
+/* Borderless: the picture runs to the rounded edge, with no frame or ring around it. */
 .w--photo {
   border-color: transparent;
+  border-radius: calc(var(--k) * 37);
 }
 .w--photo img {
   position: absolute;

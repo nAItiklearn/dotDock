@@ -9,6 +9,7 @@ import ridge from "../assets/wallpapers/halftone-ridge-light-640.webp";
 import cover from "../assets/photos/cover-poppy.webp";
 
 import type { WidgetKind } from "../lib/widgets";
+import { TIMER_MINUTES } from "../lib/timer";
 
 interface Props {
   kind: WidgetKind;
@@ -60,7 +61,7 @@ const SAMPLE = {
     { day: "Thu", high: 18, low: 10 },
     { day: "Fri", high: 21, low: 12 },
   ],
-  todos: ["Pick a wallpaper", "Set up the dock", "Try the dark theme"],
+  todos: ["Pick a wallpaper", "Pin apps to the dock", "Try the Obsidian theme", "Connect Claude Code"],
   track: { title: "Wind Meadow", artist: "Sample track", seconds: 214, at: 0.38 },
 };
 
@@ -80,6 +81,18 @@ function dotGrid(cols: number, rows: number, fraction: number): { on: string; of
 }
 const ram = dotGrid(6, 4, SAMPLE.ramPercent / 100);
 const art = dotGrid(3, 3, 0.55);
+
+/* The forecast's range column: one dot per step of the week's span, lit from the day's low to its high. */
+const FC_DOTS = 7;
+const weekLow = Math.min(...SAMPLE.days.map((d) => d.low));
+const weekHigh = Math.max(...SAMPLE.days.map((d) => d.high));
+function rangeDots(low: number, high: number): { cy: number; on: boolean }[] {
+  const step = (weekHigh - weekLow) / (FC_DOTS - 1);
+  return Array.from({ length: FC_DOTS }, (_, i) => {
+    const t = weekHigh - i * step;
+    return { cy: i + 0.5, on: t <= high + step / 2 && t >= low - step / 2 };
+  });
+}
 
 const RING_R = 44;
 const RING_LEN = 2 * Math.PI * RING_R;
@@ -214,6 +227,11 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
               <li class="w-fc__day">
                 <span class="caps">{d.day}</span>
                 <span class="w-fc__hi tabular">{d.high}&deg;</span>
+                <svg class="w-fc__range" viewBox={`0 0 1 ${FC_DOTS}`} aria-hidden="true">
+                  {rangeDots(d.low, d.high).map((dot) => (
+                    <circle cx="0.5" cy={dot.cy} r="0.3" fill={dot.on ? "var(--accent)" : "var(--dot-off)"} />
+                  ))}
+                </svg>
                 <span class="w-fc__lo tabular">{d.low}&deg;</span>
               </li>
             ))
@@ -283,8 +301,11 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
       <div class="w-timer">
         <div class="w-timer__text">
           <span class="caps">Focus</span>
-          <span class="w-timer__time tabular" data-timer-display>25:00</span>
+          <span class="w-timer__time tabular" data-timer-display>{TIMER_MINUTES}:00</span>
         </div>
+        <svg class="w-timer__dots" viewBox={`0 0 ${TIMER_MINUTES} 1`} preserveAspectRatio="xMidYMid meet" aria-hidden="true" data-timer-dots>
+          {Array.from({ length: TIMER_MINUTES }, (_, i) => <circle cx={i + 0.5} cy="0.5" r="0.28" />)}
+        </svg>
         <div class="w-timer__buttons needs-js">
           <button type="button" class="w-timer__reset caps" data-timer-reset aria-label="Reset the timer">Reset</button>
           <button type="button" class="w-timer__go" data-timer-toggle aria-label="Start the timer" />

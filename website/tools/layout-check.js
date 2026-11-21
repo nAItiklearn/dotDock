@@ -64,6 +64,30 @@ async () => {
         }
       }
 
+      // Cards, captions and headings must sit inside the page and inside the content column that holds them
+      // (a card cut off at the viewport edge, or a grid wider than its gutter, fails here).
+      const BOXES = ".bento__tile, .bento__cap, .w, figure, figcaption, h1, h2, h3, p, li, img, .btn, .card";
+      for (const el of d.querySelectorAll(BOXES)) {
+        if (el.closest(`${BY_DESIGN},noscript,[hidden],.sr-only,.art,pre,.table-wrap,.marquee,[data-marquee]`)) continue;
+        const cs = d.defaultView.getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        if (cs.display === "none" || cs.visibility === "hidden" || r.width < 2 || r.height < 2) continue;
+        const name = (el.getAttribute("aria-label") || el.textContent || el.className || el.tagName).trim().slice(0, 40);
+        if (r.left < -1 || r.right > w + 1) add("box leaves the page", `${el.tagName.toLowerCase()} "${name}" ${Math.round(r.left)}..${Math.round(r.right)}`);
+        const column = el.closest(".wrap");
+        if (column) {
+          const c = column.getBoundingClientRect();
+          if (r.left < c.left - 1 || r.right > c.right + 1) add("box leaves its column", `${el.tagName.toLowerCase()} "${name}"`);
+        }
+      }
+
+      // Jumping to a section from the nav must never scroll the page sideways.
+      for (const section of d.querySelectorAll("main [id]")) {
+        frame.contentWindow.location.hash = section.id;
+        if (frame.contentWindow.scrollX !== 0) add("anchor scrolls sideways", `#${section.id} scrollX ${frame.contentWindow.scrollX}`);
+      }
+      frame.contentWindow.scrollTo(0, 0);
+
       for (const stage of d.querySelectorAll(".stage")) {
         const sr = stage.getBoundingClientRect();
         if (sr.width < 1) continue;
