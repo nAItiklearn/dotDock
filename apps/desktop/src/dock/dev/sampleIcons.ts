@@ -60,8 +60,7 @@ export function sampleIcon(seed: string): string {
   const ink = paletteIndex === DARK_GLYPH_ON_LIGHT ? "#2b2b2e" : "#fff";
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">` +
-    `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${palette[0]}"/><stop offset="1" stop-color="${palette[1]}"/></linearGradient></defs>` +
-    `<rect x="16" y="16" width="224" height="224" rx="56" fill="url(#g)"/>` +
+    `<rect x="16" y="16" width="224" height="224" rx="56" fill="${palette[0]}"/>` +
     `<g color="${palette[1]}">${glyph.replaceAll("#fff", ink)}</g></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }

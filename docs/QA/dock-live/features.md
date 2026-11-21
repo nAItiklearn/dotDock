@@ -11,3 +11,12 @@ wallpaper in the Glass look, with a screenshot. Script: `tools/dock-tests/hard-t
 | 2 | Run stopped | FAIL | the start guard failed, so no input is sent to the dock | [02.png](features/02.png) |
 
 2 of 2 rows failed.
+
+## Run 2026-11-21T20:11:35
+
+| # | Feature | Result | Evidence | Screen |
+|---|---|---|---|---|
+| 1 | Start guard: transparent outside the bar, click-through, no focus taken | FAIL | The dock draws its bar | FAIL | drawn within 43,014 ms of the process start | [01.png](features/01.png) |
+| 2 | Run stopped | FAIL | the start guard failed, so no input is sent to the dock | [02.png](features/02.png) |
+
+2 of 2 rows failed.
