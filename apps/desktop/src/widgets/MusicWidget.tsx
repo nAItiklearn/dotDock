@@ -9,6 +9,7 @@ import type { ConfigSchema } from "./configSchema";
 import { defineWidget, type WidgetProps } from "./definition";
 import { formatDuration } from "./format";
 import { sendMediaCommand } from "./mediaControls";
+import { activeSession } from "./mediaSession";
 import { sizeSpec, type SizeId, type SizeSpec } from "./sizes";
 import { Freshness, WidgetNotice } from "./WidgetNotice";
 import "./MusicWidget.css";
@@ -45,8 +46,7 @@ const MS_PER_SECOND = 1000;
 /** What the widget shows: a live session, or the designed "nothing playing" state. */
 function useSession(): { media: MediaData | null; state: ProviderState<MediaData> } {
   const state = useProvider("media");
-  // Remembered media from a previous run is never shown as if it were playing now.
-  return { media: state.stale ? null : state.data, state };
+  return { media: activeSession(state), state };
 }
 
 /** Position now, extrapolated from the last payload while playing. */
