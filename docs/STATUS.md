@@ -1,17 +1,17 @@
 # Live status (rewritten every 30 min)
 
-**Last check:** 2026-11-21 15:13. **Disk D:** 17 GB free (limit 12 GB). **Screen:** free (the owner is using the PC). Session restarted at 14:15; all agents resumed.
-Owner priorities (11:35): dock works absolutely fine, then the notch with no bugs, then the home screen tested thoroughly, then the website, then videos. Bar: above 4.8 on design, performance, accuracy and functionality. Auto-update before release.
+**Last check:** 2026-11-21 15:25. **Disk D:** 17 GB free (limit 12 GB). **Screen:** free.
+**Owner deadline (15:25): everything done in 4-6 hours.** Plan: notch, Settings, download page ready by 18:00; home screen 18:30; dock 19:30; whole-launcher run for the owner, then videos; website complete by 20:00, videos in at about 20:30; then auto-update, installer and deploy.
 
 | Track | Working on now | Last commit | Flags |
 |---|---|---|---|
-| Dock host (real dock on the desktop) | Bottom only (app bar, placement and plan simplified); DWM glass, taskbar parity, guarded hard test | 48 min ago | |
-| Dock UI | Pre-made categories, quality bar (35 files uncommitted) | 2 h ago | Pushed (1 of 2) |
-| Notch | Live run 3: every state over Wind Meadow, website capture set | 7 min ago | |
-| Theme + two switches | Final report | 2 h ago | Pushed |
-| Settings | Bug: Settings closes after opening it several times | 60 min ago | Owner bug |
-| GitHub/dev tiles | QA doc (checks, idle CPU, frame gaps) committed | 50 min ago | Finishing |
-| Website | Features captures cut to their cards | 14 min ago | |
-| Download page | Horse redraw (the owner says its neck and face read as a rectangle); final report | 52 min ago | Owner fix |
-| Home screen direct editing | Owner's live report: selection sticks, + Widgets unclickable; fix with a real-desktop test | 29 min ago | Owner bug |
+| Dock host (real dock on the desktop) | Bottom-only done; DWM glass, taskbar parity, guarded hard test | 61 min ago | Due 19:30 |
+| Dock UI | Categories, quality bar (39 files uncommitted) | 2 h ago | Pushed (2 of 2), due 19:30 |
+| Notch | Live run 3 committed; hard test, reviewer B | 21 min ago | Due 18:00 |
+| Theme + two switches | Reported 4.75: fresh reviewer B running now; real-app timings once the screen is free | a07f5f4 | Reviewing |
+| Settings | Reopen-closes bug; startup_get/set wiring | 73 min ago | Due 18:00 |
+| GitHub/dev tiles | Final report | 63 min ago | Merge first |
+| Website | Bento features, carousel, audit (15 files uncommitted) | 26 min ago | Due 20:00 |
+| Download page | Horse redraw, overlap check (16 files uncommitted) | 64 min ago | Due 18:00 |
+| Home screen direct editing | Stuck selection, + Widgets, free move on the real desktop | 42 min ago | Due 18:30 |
 | Photo widget | Merged into main (1b135f3), 4.83 | merged | Done |
