@@ -7,13 +7,14 @@
  * Purely decorative.
  */
 import Art from "../Art.astro";
+import { STAGE } from "../../lib/live-scenes";
 
 /** The flyers: piece, the path they fly (styles/download.css) and where on the stage they start. */
 const FLYERS = [
   { piece: "vista-butterfly-red", path: "loop" },
   { piece: "vista-butterfly-gold", path: "drift" },
   { piece: "vista-butterfly-violet", path: "rise" },
-  { piece: "vista-dragonfly", path: "dart" },
+  { piece: "live-dragonfly", path: "dart" },
 ] as const;
 
 /** Loose petals carried on the wind, each with its own colour role; styles/download.css gives each its path. */
@@ -21,7 +22,7 @@ const PETALS = ["petal", "pink", "gold", "apricot", "petal", "violet", "pink", "
 ---
 
 <div class="vista" aria-hidden="true" data-vista>
-  <div class="vista__stage">
+  <div class="vista__stage" style={`--vista-wing-root:${STAGE.wingRoot}`}>
     <Art piece="vista-land" class="vista__layer vista__land" />
     <Art piece="vista-clouds" class="vista__layer vista__clouds" />
     <Art piece="vista-glint-a" class="vista__layer vista__glint vista__glint--a" />

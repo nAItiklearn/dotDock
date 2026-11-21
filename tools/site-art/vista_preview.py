@@ -67,7 +67,7 @@ def main() -> None:
     s, n = args.scale, args.narrow
     stack = [render_land(w, h, s, n), render_clouds(w, h, s, n), render_glint(w, h, s, n, 0), render_glint(w, h, s, n, 1),
              render_sway(w, h, s, n, 1), render_sway(w, h, s, n, 0)]
-    flyers = [("red", 0.22, 0.52), ("gold", 0.47, 0.60), ("violet", 0.80, 0.56), ("dragonfly", 0.36, 0.40)]
+    flyers = [("red", 0.22, 0.52), ("gold", 0.47, 0.60), ("violet", 0.80, 0.56)]
     OUT.mkdir(parents=True, exist_ok=True)
     for theme in COLOURS:
         img = np.broadcast_to(rgb(COLOURS[theme]["bg"]), (int(h * s), int(w * s), 3)).copy()

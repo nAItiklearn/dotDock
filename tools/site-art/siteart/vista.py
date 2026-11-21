@@ -9,7 +9,7 @@ The picture is split into pieces that the page stacks and animates on their own:
 - ``vista-glint-a`` / ``-b``: sparkles round the sun and over the field, twinkling in turn.
 - ``vista-sway-a`` / ``-b``: the near grass and the big flowers in front, in two sets that lean in the wind
   out of step with each other.
-- ``vista-butterfly-*``, ``vista-dragonfly``: single sprites that fly paths over the meadow.
+- ``vista-butterfly-*``: single sprites that fly paths over the meadow (its dragonfly is ``live-dragonfly``, live.py).
 
 Every piece has a wide (1920 x 640) and a narrow (720 x 480) render at the same aspect as the page box, and
 uses the hero's craft: halftone ridges, flowers reduced to square cells in four tones. Colour layers are
@@ -26,7 +26,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from .dots import F32, halftone
-from .pixel import LIT, MID, SHADE, SS, Canvas, _shade, butterfly, cell_stem, dragonfly, grass, lily, poppy, sparkle, stem_with_leaves, sunflower, cosmos
+from .pixel import LIT, MID, SHADE, SS, Canvas, _shade, butterfly, cell_stem, grass, lily, poppy, sparkle, stem_with_leaves, sunflower, cosmos
 from .scape import _layer, _rolling
 
 Layers = dict[str, np.ndarray]
@@ -388,16 +388,14 @@ def render_sway(width: int, height: int, scale: float, narrow: bool, half: int) 
     return {k: v.astype(F32) for k, v in out.items()}
 
 
-_SPRITE_CELLS = {"butterfly": (9, 6), "dragonfly": (9, 9)}
+_BUTTERFLY_CELLS = (9, 6)
 
 
 def render_flyer(kind: str, narrow: bool, scale: float) -> Layers:
-    cols, rows = _SPRITE_CELLS["dragonfly" if kind == "dragonfly" else "butterfly"]
+    cols, rows = _BUTTERFLY_CELLS
     g = _cell(narrow)
     cv = _canvas(int(cols * g), int(rows * g), scale, narrow, SEED_LAND + 20)
-    if kind == "dragonfly":
-        dragonfly(cv, 0, 0)
-    elif kind == "violet":
+    if kind == "violet":
         butterfly(Tint(cv, {"petal": "violet"}), 0, 0)
     else:
         butterfly(cv, 0, 0, gold_wings=kind == "gold")
@@ -406,7 +404,7 @@ def render_flyer(kind: str, narrow: bool, scale: float) -> Layers:
 
 
 def flyer_size(kind: str, narrow: bool) -> tuple[int, int]:
-    cols, rows = _SPRITE_CELLS["dragonfly" if kind == "dragonfly" else "butterfly"]
+    cols, rows = _BUTTERFLY_CELLS
     g = _cell(narrow)
     return int(cols * g), int(rows * g)
 
@@ -437,10 +435,10 @@ VISTA: dict[str, tuple[int, dict[str, tuple[int, int]], Callable, dict[str, tupl
     "vista-sway-a": (SEED_LAND + 10, VARIANTS, _scene(lambda w, h, s, n: render_sway(w, h, s, n, 0)), _HALFTONE_Q | _CELLS_Q),
     "vista-sway-b": (SEED_LAND + 11, VARIANTS, _scene(lambda w, h, s, n: render_sway(w, h, s, n, 1)), _HALFTONE_Q | _CELLS_Q),
     **{
-        f"vista-{'dragonfly' if kind == 'dragonfly' else 'butterfly-' + kind}": (
+        f"vista-butterfly-{kind}": (
             SEED_LAND + 20, {"wide": flyer_size(kind, False), "narrow": flyer_size(kind, True)}, _flyer(kind),
             {k: (100, 100) for k in ("petal", "gold", "violet", "heart", "cloud")},
         )
-        for kind in ("red", "gold", "violet", "dragonfly")
+        for kind in ("red", "gold", "violet")
     },
 }

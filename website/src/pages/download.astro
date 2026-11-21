@@ -7,6 +7,7 @@ import GithubMark from "../components/download/GithubMark.astro";
 import { PRODUCT_NAME, RELEASES_URL, REPO_URL, ROUTES, WEBVIEW2_URL } from "../brand";
 import { releaseView, type ReleaseData } from "../lib/release";
 import releaseData from "../data/release.json";
+import "../styles/meadow-colours.css";
 import "../styles/download.css";
 
 const release = releaseView(releaseData as ReleaseData | null);

@@ -10,6 +10,7 @@ import VideoSlot from "../components/VideoSlot.astro";
 import Cta from "../components/Cta.astro";
 import Art from "../components/Art.astro";
 import Band from "../components/Band.astro";
+import LiveScene from "../components/LiveScene.astro";
 import { PRODUCT_NAME, ROUTES } from "../brand";
 import { THEMES } from "../lib/themes";
 
@@ -88,7 +89,7 @@ const themes: Bullet[] = [
       <VideoSlot slot="after" name="notch" label="The island following a real coding session from thinking to done" caption="The island, recorded from the app." />
     </FeatureSection>
 
-    <Band piece="band-pond" />
+    <LiveScene scene="pond" />
 
     <FeatureSection id="widgets" label="The home screen" status="In development" scene="scene-home" bullets={widgets} shotLabel="A board of home-screen widgets">
       <Fragment slot="title">Widgets that <span class="dim">live on your desktop.</span></Fragment>

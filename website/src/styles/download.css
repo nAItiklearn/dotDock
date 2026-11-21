@@ -4,13 +4,8 @@
  * page background to itself above and below the picture.
  */
 
-/* ---------- Meadow colours: the art tokens of the theme, plus the meadow's own flowers ---------- */
+/* ---------- Meadow motion: the slow, out-of-step periods of the scene's parts ---------- */
 .vista {
-  --vista-pink: #e0709a;
-  --vista-violet: #6b63c8;
-  --vista-apricot: #ee8a3a;
-  --vista-cream: #fffaf0;
-  /* Motion: the slow, out-of-step periods of the scene's parts. */
   --vista-sway-a: 6.4s;
   --vista-sway-b: 7.9s;
   --vista-sway-lean: 1.4deg;
@@ -19,47 +14,6 @@
   --vista-glint: 7s;
   --vista-flap: 0.34s;
   --vista-flap-dragonfly: 0.12s;
-}
-html[data-theme="obsidian"] .vista {
-  --vista-pink: #ec80a6;
-  --vista-violet: #958be6;
-  --vista-apricot: #f29a50;
-  --vista-cream: #f2ede2;
-}
-html[data-theme="aurum"] .vista {
-  --vista-pink: #d9b98a;
-  --vista-violet: #9c8a62;
-  --vista-apricot: #e8cf98;
-  --vista-cream: #f4efe4;
-}
-.vista .art__glow {
-  background: var(--art-gold);
-}
-.vista .art__pink,
-.vista__petal--pink {
-  background: var(--vista-pink);
-}
-.vista .art__violet,
-.vista__petal--violet {
-  background: var(--vista-violet);
-}
-.vista .art__apricot,
-.vista__petal--apricot {
-  background: var(--vista-apricot);
-}
-.vista .art__cream,
-.vista__petal--cream {
-  background: var(--vista-cream);
-}
-.vista__petal--petal {
-  background: var(--art-petal);
-}
-.vista__petal--gold {
-  background: var(--art-gold);
-}
-html:not([data-theme="paper"]) .vista .art__far,
-html:not([data-theme="paper"]) .vista .art__mid {
-  opacity: 0.85;
 }
 
 /* The section labels here are field notes (base.css), not the boxed callout that pages.css also calls .note. */
@@ -257,21 +211,21 @@ html:not([data-theme="paper"]) .vista .art__mid {
   top: 50%;
   animation-delay: -0.09s;
 }
-/* A dragonfly's wings blur rather than fold: a fast, shallow beat. */
-/*
- * The sprite is drawn head up, seen from above; turned a quarter it flies head first along its path, so it reads
- * as a dragonfly over the grass and not as a cross. The wing beat (transform) stays in the sprite's own frame.
- */
+/* A dragonfly's wings blur about their root on its back while the body holds still (siteart/live.py draws it in
+   profile, flying right, and exports where the wings meet the body). */
 .vista__flyer--4 {
   left: 33%;
   top: 36%;
-  rotate: 90deg;
-  animation-name: vista-dragonfly-flap;
-  animation-duration: var(--vista-flap-dragonfly);
+  animation: none;
+}
+.vista__flyer--4 .art__cloud {
+  transform-origin: 50% var(--vista-wing-root);
+  will-change: transform;
+  animation: vista-dragonfly-flap var(--vista-flap-dragonfly) linear infinite alternate;
 }
 @keyframes vista-dragonfly-flap {
   to {
-    transform: scaleX(0.88);
+    transform: scaleY(0.35);
   }
 }
 .vista__flight--loop {

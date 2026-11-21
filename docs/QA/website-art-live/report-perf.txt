@@ -1,0 +1,6 @@
+paddock @1440 cpu x1: in view {"frames":201,"mean":29.9,"p95":33.3,"max":1328.8,"dropped":12,"animations":18}; scrolling past {"frames":180,"mean":16.75,"p95":16.8,"max":33.3,"dropped":2,"animations":18}; paused off screen true
+paddock @390 cpu x4: in view {"frames":331,"mean":18.15,"p95":20.1,"max":183.1,"dropped":16,"animations":16}; scrolling past {"frames":165,"mean":18.2,"p95":33.3,"max":116.5,"dropped":10,"animations":16}; paused off screen true
+pond @1440 cpu x1: in view {"frames":357,"mean":16.84,"p95":16.8,"max":83.3,"dropped":1,"animations":21}; scrolling past {"frames":181,"mean":16.62,"p95":16.8,"max":16.8,"dropped":0,"animations":21}; paused off screen true
+pond @390 cpu x4: in view {"frames":356,"mean":16.88,"p95":16.8,"max":100,"dropped":1,"animations":19}; scrolling past {"frames":181,"mean":16.63,"p95":16.8,"max":33.3,"dropped":1,"animations":19}; paused off screen true
+reef @1440 cpu x1: in view {"frames":359,"mean":16.71,"p95":16.8,"max":49.9,"dropped":1,"animations":18}; scrolling past {"frames":180,"mean":16.72,"p95":16.7,"max":49.9,"dropped":1,"animations":18}; paused off screen true
+reef @390 cpu x4: in view {"frames":362,"mean":16.61,"p95":16.8,"max":17.5,"dropped":0,"animations":16}; scrolling past {"frames":173,"mean":17.36,"p95":16.8,"max":150,"dropped":1,"animations":16}; paused off screen true

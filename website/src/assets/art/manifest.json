@@ -1378,6 +1378,2203 @@
    }
   }
  },
+ "live-dragonfly": {
+  "seed": 31,
+  "variants": {
+   "wide": {
+    "w": 160,
+    "h": 48,
+    "layers": {
+     "cloud": {
+      "1": {
+       "file": "live-dragonfly-wide-cloud-1x.webp",
+       "w": 160,
+       "h": 48,
+       "bytes": 76
+      },
+      "2": {
+       "file": "live-dragonfly-wide-cloud-2x.webp",
+       "w": 320,
+       "h": 96,
+       "bytes": 88
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-dragonfly-wide-violet-1x.webp",
+       "w": 160,
+       "h": 48,
+       "bytes": 76
+      },
+      "2": {
+       "file": "live-dragonfly-wide-violet-2x.webp",
+       "w": 320,
+       "h": 96,
+       "bytes": 90
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-dragonfly-wide-heart-1x.webp",
+       "w": 160,
+       "h": 48,
+       "bytes": 48
+      },
+      "2": {
+       "file": "live-dragonfly-wide-heart-2x.webp",
+       "w": 320,
+       "h": 96,
+       "bytes": 54
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 120,
+    "h": 36,
+    "layers": {
+     "cloud": {
+      "1": {
+       "file": "live-dragonfly-narrow-cloud-1x.webp",
+       "w": 120,
+       "h": 36,
+       "bytes": 78
+      },
+      "2": {
+       "file": "live-dragonfly-narrow-cloud-2x.webp",
+       "w": 240,
+       "h": 72,
+       "bytes": 84
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-dragonfly-narrow-violet-1x.webp",
+       "w": 120,
+       "h": 36,
+       "bytes": 78
+      },
+      "2": {
+       "file": "live-dragonfly-narrow-violet-2x.webp",
+       "w": 240,
+       "h": 72,
+       "bytes": 82
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-dragonfly-narrow-heart-1x.webp",
+       "w": 120,
+       "h": 36,
+       "bytes": 48
+      },
+      "2": {
+       "file": "live-dragonfly-narrow-heart-2x.webp",
+       "w": 240,
+       "h": 72,
+       "bytes": 52
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-fish-apricot": {
+  "seed": 41,
+  "variants": {
+   "wide": {
+    "w": 72,
+    "h": 40,
+    "layers": {
+     "apricot": {
+      "1": {
+       "file": "live-fish-apricot-wide-apricot-1x.webp",
+       "w": 72,
+       "h": 40,
+       "bytes": 70
+      },
+      "2": {
+       "file": "live-fish-apricot-wide-apricot-2x.webp",
+       "w": 144,
+       "h": 80,
+       "bytes": 74
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-fish-apricot-wide-heart-1x.webp",
+       "w": 72,
+       "h": 40,
+       "bytes": 44
+      },
+      "2": {
+       "file": "live-fish-apricot-wide-heart-2x.webp",
+       "w": 144,
+       "h": 80,
+       "bytes": 52
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 54,
+    "h": 30,
+    "layers": {
+     "apricot": {
+      "1": {
+       "file": "live-fish-apricot-narrow-apricot-1x.webp",
+       "w": 54,
+       "h": 30,
+       "bytes": 72
+      },
+      "2": {
+       "file": "live-fish-apricot-narrow-apricot-2x.webp",
+       "w": 108,
+       "h": 60,
+       "bytes": 72
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-fish-apricot-narrow-heart-1x.webp",
+       "w": 54,
+       "h": 30,
+       "bytes": 48
+      },
+      "2": {
+       "file": "live-fish-apricot-narrow-heart-2x.webp",
+       "w": 108,
+       "h": 60,
+       "bytes": 44
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-fish-gold": {
+  "seed": 41,
+  "variants": {
+   "wide": {
+    "w": 72,
+    "h": 40,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "live-fish-gold-wide-gold-1x.webp",
+       "w": 72,
+       "h": 40,
+       "bytes": 70
+      },
+      "2": {
+       "file": "live-fish-gold-wide-gold-2x.webp",
+       "w": 144,
+       "h": 80,
+       "bytes": 74
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-fish-gold-wide-heart-1x.webp",
+       "w": 72,
+       "h": 40,
+       "bytes": 44
+      },
+      "2": {
+       "file": "live-fish-gold-wide-heart-2x.webp",
+       "w": 144,
+       "h": 80,
+       "bytes": 52
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 54,
+    "h": 30,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "live-fish-gold-narrow-gold-1x.webp",
+       "w": 54,
+       "h": 30,
+       "bytes": 72
+      },
+      "2": {
+       "file": "live-fish-gold-narrow-gold-2x.webp",
+       "w": 108,
+       "h": 60,
+       "bytes": 72
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-fish-gold-narrow-heart-1x.webp",
+       "w": 54,
+       "h": 30,
+       "bytes": 48
+      },
+      "2": {
+       "file": "live-fish-gold-narrow-heart-2x.webp",
+       "w": 108,
+       "h": 60,
+       "bytes": 44
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-fish-violet": {
+  "seed": 41,
+  "variants": {
+   "wide": {
+    "w": 72,
+    "h": 40,
+    "layers": {
+     "violet": {
+      "1": {
+       "file": "live-fish-violet-wide-violet-1x.webp",
+       "w": 72,
+       "h": 40,
+       "bytes": 70
+      },
+      "2": {
+       "file": "live-fish-violet-wide-violet-2x.webp",
+       "w": 144,
+       "h": 80,
+       "bytes": 74
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-fish-violet-wide-heart-1x.webp",
+       "w": 72,
+       "h": 40,
+       "bytes": 44
+      },
+      "2": {
+       "file": "live-fish-violet-wide-heart-2x.webp",
+       "w": 144,
+       "h": 80,
+       "bytes": 52
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 54,
+    "h": 30,
+    "layers": {
+     "violet": {
+      "1": {
+       "file": "live-fish-violet-narrow-violet-1x.webp",
+       "w": 54,
+       "h": 30,
+       "bytes": 72
+      },
+      "2": {
+       "file": "live-fish-violet-narrow-violet-2x.webp",
+       "w": 108,
+       "h": 60,
+       "bytes": 72
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-fish-violet-narrow-heart-1x.webp",
+       "w": 54,
+       "h": 30,
+       "bytes": 48
+      },
+      "2": {
+       "file": "live-fish-violet-narrow-heart-2x.webp",
+       "w": 108,
+       "h": 60,
+       "bytes": 44
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-paddock-head": {
+  "seed": 1103,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "heart": {
+      "1": {
+       "file": "live-paddock-head-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 388
+      },
+      "2": {
+       "file": "live-paddock-head-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 934
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-paddock-head-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 166
+      },
+      "2": {
+       "file": "live-paddock-head-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 486
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "heart": {
+      "1": {
+       "file": "live-paddock-head-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 240
+      },
+      "2": {
+       "file": "live-paddock-head-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 438
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-paddock-head-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 102
+      },
+      "2": {
+       "file": "live-paddock-head-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 192
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-paddock-horse": {
+  "seed": 1103,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "heart": {
+      "1": {
+       "file": "live-paddock-horse-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 592
+      },
+      "2": {
+       "file": "live-paddock-horse-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1174
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "heart": {
+      "1": {
+       "file": "live-paddock-horse-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 396
+      },
+      "2": {
+       "file": "live-paddock-horse-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 604
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-paddock-land": {
+  "seed": 1101,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "live-paddock-land-wide-far-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 32886
+      },
+      "2": {
+       "file": "live-paddock-land-wide-far-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 87780
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "live-paddock-land-wide-mid-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 30344
+      },
+      "2": {
+       "file": "live-paddock-land-wide-mid-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 79914
+      }
+     },
+     "near": {
+      "1": {
+       "file": "live-paddock-land-wide-near-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 70116
+      },
+      "2": {
+       "file": "live-paddock-land-wide-near-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 176936
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "live-paddock-land-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 230
+      },
+      "2": {
+       "file": "live-paddock-land-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 430
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-paddock-land-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 252
+      },
+      "2": {
+       "file": "live-paddock-land-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 566
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-paddock-land-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 298
+      },
+      "2": {
+       "file": "live-paddock-land-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 670
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-paddock-land-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 248
+      },
+      "2": {
+       "file": "live-paddock-land-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 556
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-paddock-land-wide-violet-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 240
+      },
+      "2": {
+       "file": "live-paddock-land-wide-violet-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 584
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-paddock-land-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 258
+      },
+      "2": {
+       "file": "live-paddock-land-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 568
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "live-paddock-land-narrow-far-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 11100
+      },
+      "2": {
+       "file": "live-paddock-land-narrow-far-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 27070
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "live-paddock-land-narrow-mid-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 10728
+      },
+      "2": {
+       "file": "live-paddock-land-narrow-mid-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 25676
+      }
+     },
+     "near": {
+      "1": {
+       "file": "live-paddock-land-narrow-near-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 25060
+      },
+      "2": {
+       "file": "live-paddock-land-narrow-near-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 61572
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "live-paddock-land-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 174
+      },
+      "2": {
+       "file": "live-paddock-land-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 262
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-paddock-land-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 132
+      },
+      "2": {
+       "file": "live-paddock-land-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 218
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-paddock-land-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 186
+      },
+      "2": {
+       "file": "live-paddock-land-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 258
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-paddock-land-narrow-pink-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 148
+      },
+      "2": {
+       "file": "live-paddock-land-narrow-pink-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 230
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-paddock-land-narrow-violet-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 156
+      },
+      "2": {
+       "file": "live-paddock-land-narrow-violet-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 236
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-paddock-land-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 150
+      },
+      "2": {
+       "file": "live-paddock-land-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 232
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-paddock-sway-a": {
+  "seed": 1111,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-paddock-sway-a-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 1084
+      },
+      "2": {
+       "file": "live-paddock-sway-a-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1694
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-paddock-sway-a-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 324
+      },
+      "2": {
+       "file": "live-paddock-sway-a-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 854
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-paddock-sway-a-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 300
+      },
+      "2": {
+       "file": "live-paddock-sway-a-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 840
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-paddock-sway-a-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 320
+      },
+      "2": {
+       "file": "live-paddock-sway-a-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 858
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-paddock-sway-a-wide-violet-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 432
+      },
+      "2": {
+       "file": "live-paddock-sway-a-wide-violet-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 958
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-paddock-sway-a-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 384
+      },
+      "2": {
+       "file": "live-paddock-sway-a-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 912
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-paddock-sway-a-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 494
+      },
+      "2": {
+       "file": "live-paddock-sway-a-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 644
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-paddock-sway-a-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 104
+      },
+      "2": {
+       "file": "live-paddock-sway-a-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 194
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-paddock-sway-a-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 148
+      },
+      "2": {
+       "file": "live-paddock-sway-a-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 338
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-paddock-sway-a-narrow-pink-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 188
+      },
+      "2": {
+       "file": "live-paddock-sway-a-narrow-pink-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 372
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-paddock-sway-a-narrow-violet-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 226
+      },
+      "2": {
+       "file": "live-paddock-sway-a-narrow-violet-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 418
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-paddock-sway-b": {
+  "seed": 1112,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-paddock-sway-b-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 1062
+      },
+      "2": {
+       "file": "live-paddock-sway-b-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1708
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-paddock-sway-b-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 418
+      },
+      "2": {
+       "file": "live-paddock-sway-b-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 942
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-paddock-sway-b-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 296
+      },
+      "2": {
+       "file": "live-paddock-sway-b-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 830
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-paddock-sway-b-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 172
+      },
+      "2": {
+       "file": "live-paddock-sway-b-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 830
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-paddock-sway-b-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 322
+      },
+      "2": {
+       "file": "live-paddock-sway-b-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 854
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-paddock-sway-b-wide-violet-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 306
+      },
+      "2": {
+       "file": "live-paddock-sway-b-wide-violet-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 840
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-paddock-sway-b-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 318
+      },
+      "2": {
+       "file": "live-paddock-sway-b-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 848
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-paddock-sway-b-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 478
+      },
+      "2": {
+       "file": "live-paddock-sway-b-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 622
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-paddock-sway-b-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 188
+      },
+      "2": {
+       "file": "live-paddock-sway-b-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 372
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-paddock-sway-b-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 138
+      },
+      "2": {
+       "file": "live-paddock-sway-b-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 192
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-paddock-sway-b-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 90
+      },
+      "2": {
+       "file": "live-paddock-sway-b-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 190
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-paddock-sway-b-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 180
+      },
+      "2": {
+       "file": "live-paddock-sway-b-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 366
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-paddock-tail": {
+  "seed": 1103,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "heart": {
+      "1": {
+       "file": "live-paddock-tail-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 336
+      },
+      "2": {
+       "file": "live-paddock-tail-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 886
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "heart": {
+      "1": {
+       "file": "live-paddock-tail-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 190
+      },
+      "2": {
+       "file": "live-paddock-tail-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 374
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-pond-glint": {
+  "seed": 1209,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "live-pond-glint-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 212
+      },
+      "2": {
+       "file": "live-pond-glint-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 556
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "gold": {
+      "1": {
+       "file": "live-pond-glint-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 92
+      },
+      "2": {
+       "file": "live-pond-glint-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 138
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-pond-land": {
+  "seed": 1201,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "live-pond-land-wide-far-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 28004
+      },
+      "2": {
+       "file": "live-pond-land-wide-far-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 75364
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "live-pond-land-wide-mid-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 21034
+      },
+      "2": {
+       "file": "live-pond-land-wide-mid-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 54772
+      }
+     },
+     "sea": {
+      "1": {
+       "file": "live-pond-land-wide-sea-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 27850
+      },
+      "2": {
+       "file": "live-pond-land-wide-sea-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 75066
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "live-pond-land-narrow-far-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 9516
+      },
+      "2": {
+       "file": "live-pond-land-narrow-far-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 23114
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "live-pond-land-narrow-mid-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 7406
+      },
+      "2": {
+       "file": "live-pond-land-narrow-mid-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 18166
+      }
+     },
+     "sea": {
+      "1": {
+       "file": "live-pond-land-narrow-sea-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 12962
+      },
+      "2": {
+       "file": "live-pond-land-narrow-sea-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 38852
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-pond-pads-a": {
+  "seed": 1203,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-pond-pads-a-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 526
+      },
+      "2": {
+       "file": "live-pond-pads-a-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1056
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-pond-pads-a-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 166
+      },
+      "2": {
+       "file": "live-pond-pads-a-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 484
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-pond-pads-a-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 310
+      },
+      "2": {
+       "file": "live-pond-pads-a-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 846
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-pond-pads-a-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 230
+      },
+      "2": {
+       "file": "live-pond-pads-a-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 420
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-pond-pads-a-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 148
+      },
+      "2": {
+       "file": "live-pond-pads-a-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 338
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-pond-pads-a-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 104
+      },
+      "2": {
+       "file": "live-pond-pads-a-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 196
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-pond-pads-a-narrow-pink-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 126
+      },
+      "2": {
+       "file": "live-pond-pads-a-narrow-pink-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 342
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-pond-pads-b": {
+  "seed": 1204,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-pond-pads-b-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 466
+      },
+      "2": {
+       "file": "live-pond-pads-b-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 990
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-pond-pads-b-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 302
+      },
+      "2": {
+       "file": "live-pond-pads-b-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 838
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-pond-pads-b-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 178
+      },
+      "2": {
+       "file": "live-pond-pads-b-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 482
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-pond-pads-b-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 310
+      },
+      "2": {
+       "file": "live-pond-pads-b-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 840
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-pond-pads-b-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 280
+      },
+      "2": {
+       "file": "live-pond-pads-b-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 466
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-pond-pads-b-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 162
+      },
+      "2": {
+       "file": "live-pond-pads-b-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 348
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-pond-pads-b-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 98
+      },
+      "2": {
+       "file": "live-pond-pads-b-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 190
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-pond-reeds-a": {
+  "seed": 1207,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-pond-reeds-a-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 566
+      },
+      "2": {
+       "file": "live-pond-reeds-a-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1016
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-pond-reeds-a-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 406
+      },
+      "2": {
+       "file": "live-pond-reeds-a-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 960
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-pond-reeds-a-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 362
+      },
+      "2": {
+       "file": "live-pond-reeds-a-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 418
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-pond-reeds-a-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 182
+      },
+      "2": {
+       "file": "live-pond-reeds-a-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 364
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-pond-reeds-b": {
+  "seed": 1208,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-pond-reeds-b-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 832
+      },
+      "2": {
+       "file": "live-pond-reeds-b-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1024
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-pond-reeds-b-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 334
+      },
+      "2": {
+       "file": "live-pond-reeds-b-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 890
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-pond-reeds-b-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 302
+      },
+      "2": {
+       "file": "live-pond-reeds-b-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 370
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-pond-reeds-b-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 106
+      },
+      "2": {
+       "file": "live-pond-reeds-b-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 200
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-pond-ripples-a": {
+  "seed": 1205,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "cloud": {
+      "1": {
+       "file": "live-pond-ripples-a-wide-cloud-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 2290
+      },
+      "2": {
+       "file": "live-pond-ripples-a-wide-cloud-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 5464
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "cloud": {
+      "1": {
+       "file": "live-pond-ripples-a-narrow-cloud-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 1528
+      },
+      "2": {
+       "file": "live-pond-ripples-a-narrow-cloud-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 3410
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-pond-ripples-b": {
+  "seed": 1205,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "cloud": {
+      "1": {
+       "file": "live-pond-ripples-b-wide-cloud-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 2168
+      },
+      "2": {
+       "file": "live-pond-ripples-b-wide-cloud-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 5186
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "cloud": {
+      "1": {
+       "file": "live-pond-ripples-b-narrow-cloud-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 1828
+      },
+      "2": {
+       "file": "live-pond-ripples-b-narrow-cloud-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 4082
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-reef-arms": {
+  "seed": 1307,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "live-reef-arms-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 482
+      },
+      "2": {
+       "file": "live-reef-arms-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1012
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-reef-arms-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 196
+      },
+      "2": {
+       "file": "live-reef-arms-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 526
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "live-reef-arms-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 304
+      },
+      "2": {
+       "file": "live-reef-arms-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 502
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-reef-arms-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 140
+      },
+      "2": {
+       "file": "live-reef-arms-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 162
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-reef-head": {
+  "seed": 1307,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "live-reef-head-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 408
+      },
+      "2": {
+       "file": "live-reef-head-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 940
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-reef-head-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 312
+      },
+      "2": {
+       "file": "live-reef-head-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 834
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-reef-head-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 106
+      },
+      "2": {
+       "file": "live-reef-head-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 264
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "petal": {
+      "1": {
+       "file": "live-reef-head-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 262
+      },
+      "2": {
+       "file": "live-reef-head-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 450
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-reef-head-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 104
+      },
+      "2": {
+       "file": "live-reef-head-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 202
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-reef-head-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 100
+      },
+      "2": {
+       "file": "live-reef-head-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 192
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-reef-land": {
+  "seed": 1301,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "sea": {
+      "1": {
+       "file": "live-reef-land-wide-sea-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 43202
+      },
+      "2": {
+       "file": "live-reef-land-wide-sea-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 111986
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-reef-land-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 57270
+      },
+      "2": {
+       "file": "live-reef-land-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 134444
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-reef-land-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 204
+      },
+      "2": {
+       "file": "live-reef-land-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 542
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-reef-land-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 210
+      },
+      "2": {
+       "file": "live-reef-land-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 550
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-reef-land-wide-apricot-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 238
+      },
+      "2": {
+       "file": "live-reef-land-wide-apricot-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 540
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "sea": {
+      "1": {
+       "file": "live-reef-land-narrow-sea-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 20686
+      },
+      "2": {
+       "file": "live-reef-land-narrow-sea-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 62472
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-reef-land-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 23472
+      },
+      "2": {
+       "file": "live-reef-land-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 51674
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-reef-land-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 118
+      },
+      "2": {
+       "file": "live-reef-land-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 204
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-reef-land-narrow-pink-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 132
+      },
+      "2": {
+       "file": "live-reef-land-narrow-pink-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 216
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-reef-land-narrow-apricot-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 132
+      },
+      "2": {
+       "file": "live-reef-land-narrow-apricot-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 216
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-reef-weed-a": {
+  "seed": 1304,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-reef-weed-a-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 1220
+      },
+      "2": {
+       "file": "live-reef-weed-a-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1824
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-reef-weed-a-wide-apricot-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 604
+      },
+      "2": {
+       "file": "live-reef-weed-a-wide-apricot-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1210
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-reef-weed-a-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 598
+      },
+      "2": {
+       "file": "live-reef-weed-a-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 750
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-reef-weed-a-narrow-apricot-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 246
+      },
+      "2": {
+       "file": "live-reef-weed-a-narrow-apricot-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 428
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-reef-weed-b": {
+  "seed": 1305,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-reef-weed-b-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 1358
+      },
+      "2": {
+       "file": "live-reef-weed-b-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1932
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-reef-weed-b-wide-apricot-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 462
+      },
+      "2": {
+       "file": "live-reef-weed-b-wide-apricot-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1058
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-reef-weed-b-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 642
+      },
+      "2": {
+       "file": "live-reef-weed-b-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 806
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-reef-weed-b-narrow-apricot-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 266
+      },
+      "2": {
+       "file": "live-reef-weed-b-narrow-apricot-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 454
+      }
+     }
+    }
+   }
+  }
+ },
  "meadow": {
   "seed": 71,
   "variants": {
@@ -3368,107 +5565,6 @@
        "w": 1440,
        "h": 960,
        "bytes": 9450
-      }
-     }
-    }
-   }
-  }
- },
- "vista-dragonfly": {
-  "seed": 721,
-  "variants": {
-   "wide": {
-    "w": 72,
-    "h": 72,
-    "layers": {
-     "petal": {
-      "1": {
-       "file": "vista-dragonfly-wide-petal-1x.webp",
-       "w": 72,
-       "h": 72,
-       "bytes": 50
-      },
-      "2": {
-       "file": "vista-dragonfly-wide-petal-2x.webp",
-       "w": 144,
-       "h": 144,
-       "bytes": 54
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "vista-dragonfly-wide-heart-1x.webp",
-       "w": 72,
-       "h": 72,
-       "bytes": 48
-      },
-      "2": {
-       "file": "vista-dragonfly-wide-heart-2x.webp",
-       "w": 144,
-       "h": 144,
-       "bytes": 50
-      }
-     },
-     "cloud": {
-      "1": {
-       "file": "vista-dragonfly-wide-cloud-1x.webp",
-       "w": 72,
-       "h": 72,
-       "bytes": 82
-      },
-      "2": {
-       "file": "vista-dragonfly-wide-cloud-2x.webp",
-       "w": 144,
-       "h": 144,
-       "bytes": 90
-      }
-     }
-    }
-   },
-   "narrow": {
-    "w": 54,
-    "h": 54,
-    "layers": {
-     "petal": {
-      "1": {
-       "file": "vista-dragonfly-narrow-petal-1x.webp",
-       "w": 54,
-       "h": 54,
-       "bytes": 50
-      },
-      "2": {
-       "file": "vista-dragonfly-narrow-petal-2x.webp",
-       "w": 108,
-       "h": 108,
-       "bytes": 52
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "vista-dragonfly-narrow-heart-1x.webp",
-       "w": 54,
-       "h": 54,
-       "bytes": 46
-      },
-      "2": {
-       "file": "vista-dragonfly-narrow-heart-2x.webp",
-       "w": 108,
-       "h": 108,
-       "bytes": 48
-      }
-     },
-     "cloud": {
-      "1": {
-       "file": "vista-dragonfly-narrow-cloud-1x.webp",
-       "w": 54,
-       "h": 54,
-       "bytes": 88
-      },
-      "2": {
-       "file": "vista-dragonfly-narrow-cloud-2x.webp",
-       "w": 108,
-       "h": 108,
-       "bytes": 84
       }
      }
     }
