@@ -31,6 +31,10 @@
   --lattice-ink: color-mix(in srgb, var(--dot-off) 42%, transparent);
   --lattice-step: 6px;
   --row-h: 34px;
+  /* The bar's corners and what it does to the desktop behind it; themes that change the plate's shape or material set these. */
+  /* Corner radius as a share of the bar's thickness (0.5 is a pill), resolved on the plate where the bar size is known. */
+  --plate-round: 0.5;
+  --plate-filter: none;
   /* How far the longest shadow reaches; the bar's pieces clip their shadows to this so a piece never shades its neighbour. */
   --shadow-reach: 64px;
 }
@@ -67,12 +71,22 @@
   --bar-fill: color-mix(in srgb, var(--solid) 78%, transparent);
   --disc: color-mix(in srgb, var(--surface-2) 70%, transparent);
 }
+/*
+ * Glass is frosted like the macOS dock: a rounded-rectangle plate (not a pill) that blurs and lifts the colour of
+ * what is behind it, a light hairline edge, a soft drop shadow and no sheen. The blur is CSS over whatever the
+ * webview draws behind the bar; on the real desktop the host adds the native acrylic behind the window, and when it
+ * cannot, resolveTheme steps down to glass-lite so the bar is never a clear, unreadable film.
+ */
 .dock-root[data-dock-theme="glass"] {
-  --bar-fill: color-mix(in srgb, var(--solid) 30%, transparent);
-  --disc: color-mix(in srgb, var(--surface-2) 52%, transparent);
-  --disc-edge: color-mix(in srgb, var(--text) 16%, transparent);
-  --border: color-mix(in srgb, var(--text) 18%, transparent);
-  --bar-shadow: var(--top-light), 0 10px 30px rgb(0 0 0 / 0.22);
+  --plate-round: 0.3;
+  --plate-filter: blur(var(--glass-blur)) saturate(1.8);
+  --bar-fill: light-dark(rgb(255 255 255 / 0.32), rgb(28 28 30 / 0.34));
+  --border: light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.2));
+  --bar-shadow: 0 1px 2px rgb(0 0 0 / 0.1), 0 12px 32px rgb(0 0 0 / 0.24);
+  --disc: light-dark(rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.1));
+  --disc-edge: light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.14));
+  --lift-shadow: 0 1px 2px rgb(0 0 0 / 0.16);
+  --glass-blur: 28px;
 }
 .dock-root[data-dock-theme="minimal"] {
   --bar-fill: transparent;
@@ -214,10 +228,12 @@ body {
 }
 .plate__cap,
 .plate__mid {
+  --plate-radius: calc(var(--d-bar) * var(--plate-round));
   position: absolute;
   background: var(--bar-fill);
   border: var(--hairline) solid var(--border);
   box-shadow: var(--bar-shadow);
+  backdrop-filter: var(--plate-filter);
   pointer-events: auto;
   will-change: transform;
 }
@@ -233,13 +249,13 @@ body {
   clip-path: inset(calc(-1 * var(--shadow-reach)) 0 calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)));
   left: 0;
   border-right: 0;
-  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+  border-radius: var(--plate-radius) 0 0 var(--plate-radius);
 }
 .dock-anchor[data-axis="x"] .plate__cap--end {
   clip-path: inset(calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) 0);
   right: 0;
   border-left: 0;
-  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  border-radius: 0 var(--plate-radius) var(--plate-radius) 0;
 }
 .dock-anchor[data-axis="x"] .plate__mid {
   clip-path: inset(calc(-1 * var(--shadow-reach)) 0);
@@ -260,13 +276,13 @@ body {
   clip-path: inset(calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) 0 calc(-1 * var(--shadow-reach)));
   top: 0;
   border-bottom: 0;
-  border-radius: var(--radius-pill) var(--radius-pill) 0 0;
+  border-radius: var(--plate-radius) var(--plate-radius) 0 0;
 }
 .dock-anchor[data-axis="y"] .plate__cap--end {
   clip-path: inset(0 calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)));
   bottom: 0;
   border-top: 0;
-  border-radius: 0 0 var(--radius-pill) var(--radius-pill);
+  border-radius: 0 0 var(--plate-radius) var(--plate-radius);
 }
 .dock-anchor[data-axis="y"] .plate__mid {
   clip-path: inset(0 calc(-1 * var(--shadow-reach)));
