@@ -5,7 +5,8 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": ["astro/client", "node"],
     "allowJs": false,
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": false,
+    "paths": { "owner-photos": ["./src/lib/owner-photos.off.ts"] }
   },
   "include": [".astro/types.d.ts", "src/**/*", "astro.config.mjs"],
   "exclude": ["dist"]

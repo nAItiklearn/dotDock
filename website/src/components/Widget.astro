@@ -8,7 +8,9 @@ import DotMatrix from "./DotMatrix.astro";
 import ridge from "../assets/wallpapers/halftone-ridge-light-640.webp";
 import cover from "../assets/photos/cover-poppy.webp";
 
+import ownerPhotos from "owner-photos";
 import type { WidgetKind } from "../lib/widgets";
+import { ownerPhotosOn, pickPhoto } from "../lib/photos";
 import { TIMER_MINUTES } from "../lib/timer";
 
 interface Props {
@@ -19,11 +21,15 @@ interface Props {
   clockStyle?: "dots" | "blocks" | "stripes";
   /** Music only: show a track playing (a sample, with our own cover art) instead of "Nothing playing". */
   playing?: boolean;
+  /** Photo only: which of the owner's photos this widget shows when they are turned on (lib/photos.ts). */
+  photo?: number;
 }
-const { kind, place = "", clockStyle = "blocks", playing = false } = Astro.props;
+const { kind, place = "", clockStyle = "blocks", playing = false, photo = 0 } = Astro.props;
 
-// The photo widget shows one of this project's own pictures, edge to edge, with the widget's usual corner radius.
-const picture = { image: ridge, alt: "Misty ridges drawn in halftone dots" };
+// The photo widget shows one of this project's own pictures, edge to edge, with the widget's usual corner radius,
+// or the owner's photo when the build turns them on (lib/photos.ts; off by default).
+const owner = pickPhoto(ownerPhotosOn(process.env), ownerPhotos, photo);
+const picture = owner ? { image: owner, alt: "A portrait" } : { image: ridge, alt: "Misty ridges drawn in halftone dots" };
 
 const SIZE: Record<WidgetKind, [number, number]> = {
   clock: [6, 2],
