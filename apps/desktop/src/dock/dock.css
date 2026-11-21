@@ -74,8 +74,8 @@
 /*
  * Glass is frosted like the macOS dock: a rounded-rectangle plate (not a pill) that blurs and lifts the colour of
  * what is behind it, a light hairline edge, a soft drop shadow and no sheen. The blur is CSS over whatever the
- * webview draws behind the bar; on the real desktop the host adds the native acrylic behind the window, and when it
- * cannot, resolveTheme steps down to glass-lite so the bar is never a clear, unreadable film.
+ * webview draws behind the bar (the desktop itself is not drawn there, D-034); when transparency is off or battery
+ * saver is on, resolveTheme steps down to glass-lite so the bar is never a clear, unreadable film.
  */
 .dock-root[data-dock-theme="glass"] {
   --plate-round: 0.3;

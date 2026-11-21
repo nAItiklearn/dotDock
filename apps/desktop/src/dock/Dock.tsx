@@ -8,7 +8,7 @@ import { loadContextMenu, loadGallery, loadLibrary, loadPrefs, loadPreview, load
 import { pointerMode } from "./regions";
 import { useDockStore } from "./store";
 import { isTranslucent, resolveTheme } from "./theme";
-import { useAutoHide, useCloseOnBlur, useKeyboardFocus, useNativeGlass, useNoticeTimeout, useOpenPanelRects, useRegions, type PanelRects } from "./useDockShell";
+import { useAutoHide, useCloseOnBlur, useKeyboardFocus, useNoticeTimeout, useOpenPanelRects, useRegions, type PanelRects } from "./useDockShell";
 import { useDockPalette } from "./useDockTheme";
 import { useViewport } from "./useViewport";
 import "./dock.css";
@@ -78,7 +78,6 @@ export function Dock() {
   const hitPanels = useMemo(() => ({ ...panels, ...openRects }), [panels, openRects]);
   useRegions(layout, hidden, hitPanels, viewport, fullscreen);
   useCloseOnBlur(modal);
-  useNativeGlass(layout, theme, hidden, mode === "dark");
   useKeyboardFocus(keyboard);
   useNoticeTimeout();
 

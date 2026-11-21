@@ -4,8 +4,8 @@ import type { DockBackdrop } from "./protocol";
 
 /**
  * How the dock bar is drawn. The first two let what is behind the dock show through; the rest are solid.
- * - glass: the native acrylic backdrop blurs the desktop behind a tinted bar (DOCK_SPEC 4b). The blur is the
- *   host's, applied to the dock window, because CSS cannot blur the desktop behind a transparent window.
+ * - glass: a frosted, tinted plate (DOCK_SPEC 4b) drawn by CSS. A native backdrop behind the window was tried and
+ *   removed: DWM drew it over the whole monitor-sized window (D-034).
  * - glass-lite: the same bar, semi-opaque and unblurred. Chosen automatically when glass cannot be done.
  * - obsidian, paper, aurum: solid, in the home screen's own palettes whatever the app theme is.
  * - minimal: icons only, no bar.

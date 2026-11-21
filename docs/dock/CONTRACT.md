@@ -23,3 +23,4 @@ with serde `rename_all = "camelCase"` in crate `dotdock-dock`. Change both toget
 - Icons reach the window as `http://dock-icon.localhost/<hash>.png` (WebView2 cannot load custom schemes); the backend still names them `dock-icon://<hash>.png`, and the host maps them in `dock_ready` and in the `dock://apps` and `dock://windows` events.
 - The dock window is a transparent sheet over the primary monitor. The strip the dock reserves (app bar, `reserveSpace`) is only the bar plus its edge gaps: `iconSize * (1 + 2 * 0.17 + 2 * 0.2)` CSS px, mirroring `RATIO.pad` and `RATIO.edge` in `geometry.ts` (`dock/src/placement.rs`). Change both together.
 - `dock_ready` is also the signal that the UI can draw: the window is shown, the strip reserved and the taskbar hidden only after the first call.
+- 2026-11-21 (dock host): `dock_set_glass` is removed with the native glass plate (D-034); glass is the CSS plate only.

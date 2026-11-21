@@ -127,28 +127,13 @@ export interface DockCommands {
    * for the foreground with `active: true` and hands it back with `false` (same idea as the overlay's `overlay_set_typing`).
    */
   dock_set_focus(args: { active: boolean }): void;
-  /**
-   * Where the native glass goes (theme `glass`). The window is transparent and CSS `backdrop-filter` cannot blur the desktop
-   * behind it, so the core draws Windows' own acrylic behind these rounded rectangles (CSS px, window-relative) just below the
-   * window: the pill, and any popover that wants it. `dark` picks the dark or the light tint. An empty list takes the glass away.
-   */
-  dock_set_glass(args: { shapes: readonly GlassShape[]; dark: boolean }): void;
-}
-
-export interface GlassShape {
-  readonly x: number;
-  readonly y: number;
-  readonly w: number;
-  readonly h: number;
-  /** Corner radius; half the shorter side makes a pill. */
-  readonly radius: number;
 }
 
 export type CommandResult = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 
-/** What the core knows about the area behind the dock: whether the native blur can be applied and how light it is. */
+/** What the core knows about the area behind the dock: whether glass can be drawn and how light it is. */
 export interface DockBackdrop {
-  /** The native blur can be applied: Windows 11 22H2 or later, or the Windows 10 acrylic fallback. */
+  /** Windows transparency effects are on, so the translucent glass plate is drawn. */
   readonly available: boolean;
   /** Whether the desktop behind the dock is light or dark; null while the core has not measured it. */
   readonly tone: "light" | "dark" | null;

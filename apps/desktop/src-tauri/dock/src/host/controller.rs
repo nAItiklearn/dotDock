@@ -15,7 +15,6 @@ use super::{window, Hooks, Styles};
 use crate::appbar::{primary_monitor, work_area, AppBar};
 use crate::com::{pcwstr, wide};
 use crate::frozen::FrozenState;
-use crate::glass::{Glass, Shape};
 use crate::placement::{reserve_depth_px, window_rect, PxRect};
 use crate::protocol::{DockSettings, EVENT_LIBRARY};
 use std::cell::{Cell, RefCell};
@@ -49,13 +48,6 @@ const HOTKEY_ID: i32 = 1;
 const QUIT_HOTKEY_ID: i32 = 2;
 const LIBRARY_ACTION: &str = "toggle";
 
-/// One request for glass: the shapes (CSS px relative to the dock window) and whether the UI is dark.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct GlassRequest {
-    pub shapes: Vec<Shape>,
-    pub dark: bool,
-}
-
 /// What other threads can ask of the controller.
 pub enum Command {
     Settings(DockSettings),
@@ -64,7 +56,6 @@ pub enum Command {
     Window(Option<isize>),
     /// The UI has asked for its first snapshot and can draw.
     UiReady,
-    Glass(GlassRequest),
     /// The taskbar worker changed or refused to change the taskbar.
     Taskbar(Outcome),
     Shutdown,
@@ -95,8 +86,6 @@ struct Controller {
     inputs: Inputs,
     window: Option<isize>,
     bar: Option<Bar>,
-    glass: Option<Glass>,
-    glass_request: GlassRequest,
     taskbar: Replacement,
     shown: bool,
     /// Where the dock window was last put, for the glass plate to follow.
@@ -138,7 +127,6 @@ impl Controller {
                 }
             }
             Command::UiReady => self.inputs.ui_ready = true,
-            Command::Glass(request) => self.glass_request = request,
             Command::Taskbar(Outcome::Applied(_)) => {
                 // The work area changed with the taskbar: take the strip again where the system now has room.
                 self.apply(true);
@@ -213,7 +201,6 @@ impl Controller {
             }
             self.rect = Some(target);
         }
-        self.sync_glass();
     }
 
     fn sync_visibility(&mut self, visible: bool) {
@@ -228,38 +215,6 @@ impl Controller {
             }
         }
         self.pause.set(!self.shown);
-        self.sync_glass();
-    }
-
-    /// Draws the plate behind the reported shapes while the dock is on screen, and hides it otherwise.
-    fn sync_glass(&mut self) {
-        let wanted = self.shown && !self.glass_request.shapes.is_empty();
-        let (Some(window), Some(rect)) = (self.window, self.rect) else { return };
-        if !wanted {
-            if let Some(glass) = &self.glass {
-                glass.hide();
-            }
-            return;
-        }
-        if self.glass.is_none() {
-            match Glass::new() {
-                Ok(glass) => {
-                    self.hooks.log(&format!("glass: {:?}", glass.material()));
-                    self.glass = Some(glass);
-                }
-                Err(error) => {
-                    self.hooks.log(&format!("glass not available: {error}"));
-                    return;
-                }
-            }
-        }
-        if let Some(glass) = &mut self.glass {
-            glass.follow(rect, window);
-            let request = &self.glass_request;
-            if let Err(error) = glass.show(&request.shapes, window::scale(window), request.dark) {
-                self.hooks.log(&format!("glass shape refused: {error}"));
-            }
-        }
     }
 
     fn on_taskbar_created(&mut self) {
@@ -468,8 +423,6 @@ fn run(parts: Parts, published: &AtomicIsize, ready: &std::sync::mpsc::SyncSende
             inputs: Inputs::default(),
             window: None,
             bar: None,
-            glass: None,
-            glass_request: GlassRequest::default(),
             taskbar,
             shown: false,
             rect: None,

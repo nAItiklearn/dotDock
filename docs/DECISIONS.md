@@ -195,3 +195,26 @@ Setting the dock by hand also marks the first layout as done, so it never replac
   that port, so a live run could show another branch's UI. Live runs use
   `cargo build -p dotdock --features tauri/custom-protocol` after `vite build`: the exe serves `dist/` itself, as a
   release build does, and runs exactly this branch's dock.
+
+## D-034 No native glass plate; glass is the CSS frosted plate (2026-11-21)
+- Live runs showed a sheet over the whole monitor while the dock ran. Hiding windows one at a time showed it was the
+  native glass plate (`DotDockGlassPlate`): DWM drew its backdrop over the plate's whole monitor-sized window
+  although its window region was the pill (checked with `GetWindowRgnBox`), as flat grey (211,211,211) with the
+  system backdrop (the plate is never active, so DWM draws the inactive fallback colour) and as flat light
+  (242,243,244) with the accent-policy acrylic. Neither blurred the desktop.
+- The plate, its `dock_set_glass` command and the UI's `nativeGlass` are removed. The Glass look is the CSS
+  frosted plate the owner approved; it steps down to glass-lite when transparency is off or battery saver is on.
+  The start guard (`tools/dock-tests/guard.ps1`) fails on any change of the screen outside the bar, so a sheet
+  cannot come back unnoticed.
+
+## D-035 Full screen is judged from the foreground window, not the shell's "busy" (2026-11-21)
+- `SHQueryUserNotificationState` answered `QUNS_BUSY` all the time while dotDock ran, because dotDock's own dock
+  and desktop windows cover the monitor. The dock took that as "a full-screen app is in front" and hid itself on
+  the first change of foreground, so it vanished when the last window was minimised.
+- Now full screen is the shell's screen-saver, Direct3D and presentation states, or a foreground window of
+  another process (not the shell's desktop or taskbar) that covers its whole monitor and is not maximised
+  (`frozen::fills_monitor`, unit-tested).
+
+## D-036 The dock window is created before the desktop overlay (2026-11-21)
+- The first WebView2 window of the process pays for starting the browser (about 2.3 s cold on this machine). The
+  dock is created first so it, not the overlay, gets the head start.

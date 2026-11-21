@@ -5,7 +5,7 @@
 //! - `icons`: 256 px PNG icons, cached on disk, extracted off the caller's thread.
 //! - `running`: the windows that belong on a taskbar, pushed when they change; `frozen` says when to stop drawing.
 //! - `launch`, `thumbnail`, `appbar`: start an app, DWM thumbnails, and the app bar that reserves the dock's strip.
-//! - `placement`, `glass`: where the dock window and its reserved strip go, and the acrylic plate behind the bar.
+//! - `placement`: where the dock window and its reserved strip go.
 //! - `starter`: the first layout, made once from the apps the user has.
 //! - `store`, `watch`: what is remembered between runs (atomic, at most one write a second) and when the catalogue
 //!   is stale (change notifications, never a timer).
@@ -23,7 +23,6 @@ pub mod classify;
 pub mod com;
 pub mod frozen;
 #[cfg(windows)]
-pub mod glass;
 #[cfg(windows)]
 pub mod host;
 #[cfg(windows)]

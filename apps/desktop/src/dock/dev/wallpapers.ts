@@ -67,8 +67,8 @@ export function installBackdrop(initial: WallpaperState): void {
   backdrop = document.createElement("div");
   backdrop.className = "dev-backdrop";
   document.body.prepend(backdrop);
-  // The wallpaper is painted inside the page here, so the bar's CSS blur really frosts it: glass is available, as it
-  // is on the desktop when the host has put the native acrylic behind the window.
+  // The wallpaper is painted inside the page here, so the bar's CSS blur really frosts it; glass is available, as it
+  // is on the desktop whenever transparency effects are on and battery saver is off.
   dev.backdrop({ ...useDockStore.getState().backdrop, available: true });
   setWallpaper(initial);
 }

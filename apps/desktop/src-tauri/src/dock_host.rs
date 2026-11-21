@@ -6,8 +6,7 @@
 //! snapshot, click-through except where the UI says it draws something (`dock_set_regions`).
 
 use dotdock_dock::backdrop;
-use dotdock_dock::glass::Shape;
-use dotdock_dock::host::{DockHost, GlassRequest, Hooks};
+use dotdock_dock::host::{DockHost, Hooks};
 use dotdock_dock::icons::{self, webview_url};
 use dotdock_dock::protocol::{
     Category, CategoryId, CommandResult, DockApp, DockEvent, DockSettings, DockSnapshot, DockWindow, PreviewArgs, Rect,
@@ -101,6 +100,7 @@ pub fn start(app: &AppHandle) -> tauri::Result<()> {
             return Ok(());
         }
     };
+    boot_log::mark("dock-service");
     let settings = service.snapshot().settings;
     let host = match DockHost::start(Arc::new(AppHooks(app.clone())), settings.clone()) {
         Ok(host) => host,
@@ -236,6 +236,7 @@ fn icon_response(app: &AppHandle, url: &str) -> Response<Vec<u8>> {
 /// The first call of the dock window: everything it needs for its first frame. The window is shown after it.
 #[tauri::command(async)]
 pub fn dock_ready(app: AppHandle, state: State<'_, DockState>) -> DockSnapshot {
+    boot_log::mark("dock-ui-ready");
     let mut snapshot = state.service.snapshot();
     snapshot.apps.iter_mut().for_each(for_window);
     snapshot.windows.iter_mut().for_each(window_for_window);
@@ -291,9 +292,4 @@ pub fn dock_preview(hwnds: Vec<String>, anchor: Option<Rect>, state: State<'_, D
 #[tauri::command(async)]
 pub fn dock_set_focus(active: bool, state: State<'_, DockState>) {
     state.host.set_focus(active);
-}
-
-#[tauri::command]
-pub fn dock_set_glass(shapes: Vec<Shape>, dark: bool, state: State<'_, DockState>) {
-    state.host.set_glass(GlassRequest { shapes, dark });
 }

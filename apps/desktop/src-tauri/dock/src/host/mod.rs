@@ -2,7 +2,7 @@
 //!
 //! - `plan`: what should be true for a set of settings (show, reserve a strip, hide the taskbar).
 //! - `controller`: the thread that makes it true: a hidden window that hears the app bar, Explorer's restart, display
-//!   changes and the App Library shortcut, and owns the registered bar and the glass plate.
+//!   changes and the App Library shortcut, and owns the registered bar.
 //! - `replace`: hides and restores the Windows taskbar off the dock's way.
 //! - `pointer`, `window`: click-through with a cursor that is read, never hooked, and the window's Win32 styles.
 //!
@@ -23,7 +23,6 @@ use std::io;
 use std::sync::{Arc, Mutex, PoisonError};
 use window::{DockCursor, Focus};
 
-pub use controller::GlassRequest;
 pub use window::Styles;
 
 /// What only the application can do for the host.
@@ -57,7 +56,7 @@ struct Attached {
 }
 
 /// Held by the application for as long as the dock exists. `shutdown` (or dropping it) removes the app bar and the
-/// glass plate and stops every thread; it does not restore the taskbar, which the application's exit path does
+/// and stops every thread; it does not restore the taskbar, which the application's exit path does
 /// through its guard.
 pub struct DockHost {
     hooks: Arc<dyn Hooks>,
@@ -98,7 +97,7 @@ impl DockHost {
         }
     }
 
-    /// Removes the app bar and the glass plate and stops the host's threads, waiting for each. Safe to call twice.
+    /// Removes the app bar and stops the host's threads, waiting for each. Safe to call twice.
     pub fn shutdown(&self) {
         *self.attached() = None;
         // Taken out of the lock first: stopping the thread can take a moment and must not block `send`.
@@ -155,11 +154,6 @@ impl DockHost {
         } else {
             self.focus.give_back(window, &self.styles);
         }
-    }
-
-    /// Where the glass goes, as the UI last drew it. No shapes takes the glass away.
-    pub fn set_glass(&self, request: GlassRequest) {
-        self.send(Command::Glass(request));
     }
 
     /// The window's handle, scale and width, for DWM thumbnails.

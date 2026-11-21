@@ -71,7 +71,7 @@
   padding: 0 var(--space-1);
 }
 
-/* Stands in for the native acrylic backdrop the host applies in the app, so glass can be judged in a browser. */
+/* Frosts the wallpaper the harness paints inside the page, so glass can be judged in a browser. */
 .dock-root[data-dock-theme="glass"] .plate__cap,
 .dock-root[data-dock-theme="glass"] .plate__mid {
   backdrop-filter: blur(24px) saturate(1.5);

@@ -62,6 +62,9 @@ function Check([string]$Caption, [bool]$Ok, [string]$Detail = '') {
 try {
   Save-Screen $before
   $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$CdpPort"
+  # Live runs quit the dock by force between steps; those are not crashes, so they must not add up to the crash-loop
+  # guard's three unstable starts (which would restore Windows and start the dock in safe mode).
+  Set-Content -Path (Join-Path $env:LOCALAPPDATA 'dev.dotdock.desktop\crash-guard.json') -Value '{"unstableStarts":[],"trippedAt":null}' -Encoding ASCII
   $startedAt = Get-Date
   Start-Process -FilePath $Exe -WorkingDirectory (Split-Path -Parent $Exe) -WindowStyle Hidden
   $deadline = (Get-Date).AddSeconds(40)

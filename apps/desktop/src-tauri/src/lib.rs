@@ -290,7 +290,6 @@ pub fn run() {
             dock_host::dock_set_regions,
             dock_host::dock_preview,
             dock_host::dock_set_focus,
-            dock_host::dock_set_glass,
             tiles_host::dock_tiles_watch,
             tiles_host::dock_tiles_unwatch,
             tiles_host::dock_mic_watch,
@@ -315,11 +314,14 @@ pub fn run() {
         .setup(move |app| {
             boot::mark("setup");
             let handle = app.handle().clone();
+            // The dock first: it is what the user reaches for, so its window gets the first WebView2 start-up.
+            dock_host::start(&handle)?;
+            boot::mark("dock-started");
             let window = create_overlay(&handle)?;
             boot::mark("window-created");
             tray::install(&handle)?;
             island_host::start(&handle)?;
-            dock_host::start(&handle)?;
+            boot::mark("island-started");
             tiles_host::start(&handle);
             let wake = providers::spawn(handle.clone(), ready)?;
             app.manage(wake);
