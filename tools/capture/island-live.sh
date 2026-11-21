@@ -26,6 +26,10 @@ DEBUG_PORT=47913
 # another track's vite on 1420 this app would show that track's code. The notch build is compiled with this port
 # instead (see build_app), and live_begin checks the island page really comes from it.
 DEV_PORT=1424
+# What serves the pages on DEV_PORT: "preview" (default) is the production build, so frame timings measure the
+# React and motion code that ships; "dev" is vite's dev server (development React in StrictMode, several times
+# slower per render), for debugging only.
+FRONTEND=${FRONTEND:-preview}
 
 # Builds the debug app and hook for the live run, with the island's pages served from DEV_PORT.
 build_app() {
@@ -56,7 +60,12 @@ live_begin() {
   if [ -n "$others" ]; then echo "another dotdock.exe runs (pid $others); not starting"; return 1; fi
   if curl -s -o /dev/null "http://localhost:$DEV_PORT/"; then echo "port $DEV_PORT already serves something; not starting"; return 1; fi
   echo "$TRACK $(date -Iseconds)" > "$LOCK"
-  (cd "$WT/apps/desktop" && nohup npx vite --port "$DEV_PORT" --strictPort > "$LIVE/vite.log" 2>&1 &)
+  if [ "$FRONTEND" = preview ]; then
+    (cd "$WT/apps/desktop" && npx vite build > "$LIVE/vite-build.log" 2>&1) || { echo "vite build failed"; rm -f "$LOCK"; return 1; }
+    (cd "$WT/apps/desktop" && nohup npx vite preview --port "$DEV_PORT" --strictPort > "$LIVE/vite.log" 2>&1 &)
+  else
+    (cd "$WT/apps/desktop" && nohup npx vite --port "$DEV_PORT" --strictPort > "$LIVE/vite.log" 2>&1 &)
+  fi
   nohup powershell -NoProfile -ExecutionPolicy Bypass -File "$WT/tools/capture/backdrop.ps1" \
     -Image "$WTW/assets/wallpapers/meadow-dots-dark.jpg" -Seconds "$LOCK_STALE_S" > "$LIVE/backdrop.log" 2>&1 &
   (cd "$LIVE" && CODEX_HOME=$(cygpath -w "$LIVE/codex-home") \
@@ -72,3 +81,7 @@ live_end() {
   ps_ -Command "Get-CimInstance Win32_Process | ? { \$_.CommandLine -like '*$(basename "$WT")*' -and (\$_.Name -eq 'dotdock.exe' -or \$_.Name -eq 'node.exe' -or (\$_.Name -eq 'powershell.exe' -and \$_.CommandLine -like '*backdrop.ps1*')) } | % { Stop-Process -Id \$_.ProcessId -Force; \$_.ProcessId }"
   if [ -f "$LOCK" ] && grep -q "^$TRACK " "$LOCK"; then rm -f "$LOCK"; fi
 }
+
+# Random agent events and real mouse input at once for <seconds> (tools/capture/island-soak.mjs); fails on errors,
+# dropped frames or a stuck island.
+soak() { node "$WT/tools/capture/island-soak.mjs" "$DEBUG_PORT" "${1:-180}" "${2:-1}"; }
