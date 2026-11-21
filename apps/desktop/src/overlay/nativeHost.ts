@@ -33,6 +33,34 @@ export function reportEditMode(on: boolean): void {
   holdKeyboard("editing", on);
 }
 
+/** How far the taskbar and any docked bar reach into the overlay, per side, in CSS pixels. */
+export interface WorkAreaInsets {
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly left: number;
+}
+
+const SAFE_SIDES = ["top", "right", "bottom", "left"] as const;
+
+/** Publishes the insets as `--safe-<side>` on the overlay, where edit-mode panels read them. */
+export function applyWorkArea(root: HTMLElement, insets: WorkAreaInsets): void {
+  for (const side of SAFE_SIDES) root.style.setProperty(`--safe-${side}`, `${Math.max(0, insets[side])}px`);
+}
+
+/**
+ * Asks the core where the work area is (read once per edit session: the taskbar or a docked bar can
+ * sit over the bottom of this full-screen window, and edit controls under it could not be clicked).
+ */
+export function syncWorkArea(root: HTMLElement): void {
+  if (!isTauri()) return;
+  invoke<WorkAreaInsets | null>("overlay_work_area")
+    .then((insets) => {
+      if (insets) applyWorkArea(root, insets);
+    })
+    .catch((err: unknown) => console.error("overlay_work_area failed", err));
+}
+
 /**
  * Where an element will be once its transition settles. Positioned elements publish their final spot as
  * `data-tx` / `data-ty` (attributes never transition); everything else is static, so its measured box is final.

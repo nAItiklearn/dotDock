@@ -12,7 +12,7 @@ import { widgetMenuItems } from "./directActions";
 import { DirectPress } from "./directPress";
 import { NoticeToasts } from "./NoticeToasts";
 import { editUi, resetEditUi, useEditUi } from "./editUi";
-import { invalidateHitRegions, reportEditMode, reportFirstFrame, syncHitRegions } from "./nativeHost";
+import { invalidateHitRegions, reportEditMode, reportFirstFrame, syncHitRegions, syncWorkArea } from "./nativeHost";
 import { widgetCatalog } from "./catalog";
 import { WidgetMenu } from "./WidgetMenu";
 import { markBootSettled, WidgetSlot } from "./WidgetSlot";
@@ -106,6 +106,7 @@ export function Overlay({ forceThemeId }: { readonly forceThemeId?: string | nul
   useEffect(() => {
     if (!editing) return undefined;
     reportEditMode(true);
+    if (root.current) syncWorkArea(root.current);
     root.current?.focus({ preventScroll: true });
     return () => {
       reportEditMode(false);

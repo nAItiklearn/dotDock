@@ -1,0 +1,18 @@
+# Diagnose "+ Widgets": who owns the pixel under the button, and does a real click open the gallery.
+minimize-all
+wait 1200
+move 160 200
+wait 400
+at 160 200
+click 160 200 right
+wait 600
+shot D:\dotDock\.claude\worktrees\agent-a7c256b77a6ea94e5\docs\QA\home-live\02-right-click-menu.png
+click 235 230
+wait 1200
+shot D:\dotDock\.claude\worktrees\agent-a7c256b77a6ea94e5\docs\QA\home-live\03-edit-mode.png
+move 1001 847
+wait 400
+at 1001 847
+click 1001 847
+wait 1200
+shot D:\dotDock\.claude\worktrees\agent-a7c256b77a6ea94e5\docs\QA\home-live\04-after-widgets-click.png

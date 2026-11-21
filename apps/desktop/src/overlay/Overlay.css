@@ -1,4 +1,9 @@
 .overlay {
+  /* Work-area insets (taskbar, docked bars), set by the core while editing; edit panels stay inside them. */
+  --safe-top: 0px;
+  --safe-right: 0px;
+  --safe-bottom: 0px;
+  --safe-left: 0px;
   position: fixed;
   inset: 0;
   outline: none;

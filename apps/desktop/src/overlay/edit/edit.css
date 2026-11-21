@@ -117,7 +117,7 @@
 /* ---- undo toast, just above the toolbar */
 .undo-toast {
   position: absolute;
-  bottom: calc(var(--edge) + var(--toolbar-h) + var(--undo-toast-gap));
+  bottom: calc(var(--edge) + var(--safe-bottom) + var(--toolbar-h) + var(--undo-toast-gap));
   left: 50%;
   z-index: 10;
   display: flex;
@@ -165,7 +165,7 @@
 /* ---- toolbar */
 .toolbar {
   position: absolute;
-  bottom: var(--edge);
+  bottom: calc(var(--edge) + var(--safe-bottom));
   left: 50%;
   z-index: 10;
   transform: translateX(-50%);
@@ -209,9 +209,9 @@
 /* ---- drawer */
 .drawer {
   position: absolute;
-  top: var(--edge);
-  right: var(--edge);
-  bottom: calc(var(--edge) + var(--toolbar-h) + var(--space-3));
+  top: calc(var(--edge) + var(--safe-top));
+  right: calc(var(--edge) + var(--safe-right));
+  bottom: calc(var(--edge) + var(--safe-bottom) + var(--toolbar-h) + var(--space-3));
   z-index: 9;
   width: var(--drawer-w);
 }
