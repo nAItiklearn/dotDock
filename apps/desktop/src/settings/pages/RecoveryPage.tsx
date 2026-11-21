@@ -78,13 +78,26 @@ function RestoreRow() {
   );
 }
 
+/** The stage the widgets appear at (`boot_log::mark("shown")` in the core). */
+const SHOWN_STAGE = "shown";
+
+/**
+ * How the last start reads in words. Each stage's time is counted from the start of the process, so the
+ * start took as long as its last stage, never the sum of them.
+ */
+export function bootSummary(stages: readonly { readonly name: string; readonly ms: number }[]): string {
+  const shown = stages.find((s) => s.name === SHOWN_STAGE);
+  if (shown) return `${shown.ms.toLocaleString()} ms from launch to widgets on screen.`;
+  const last = Math.max(0, ...stages.map((s) => s.ms));
+  return `${last.toLocaleString()} ms to the last stage recorded.`;
+}
+
 function BootTiming({ boot }: { readonly boot: NonNullable<StartupState["lastBoot"]> }) {
-  const total = boot.stages.reduce((sum, s) => sum + s.ms, 0);
   const longest = Math.max(1, ...boot.stages.map((s) => s.ms));
   return (
     <div className="row row--block" data-setting-id="boot-timing">
       <p className="row__desc">
-        Last start, {new Date(boot.startedAt).toLocaleString()}. {total.toLocaleString()} ms from launch to widgets on screen.
+        Last start, {new Date(boot.startedAt).toLocaleString()}. {bootSummary(boot.stages)}
       </p>
       <ul className="bars" aria-label="Start-up stages">
         {boot.stages.map((stage) => (

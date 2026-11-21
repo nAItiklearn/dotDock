@@ -4,7 +4,7 @@ import { setNativeApi } from "../../lib/native/api";
 import { createMockNativeApi } from "../../lib/native/mock";
 import { SEARCH_ENTRIES } from "../searchIndex";
 import { PAGES } from "../sections";
-import { RecoveryPage } from "./RecoveryPage";
+import { bootSummary, RecoveryPage } from "./RecoveryPage";
 
 afterEach(() => setNativeApi(null));
 
@@ -27,5 +27,15 @@ describe("Recovery page", () => {
     const html = renderToStaticMarkup(<RecoveryPage />);
     expect(html).not.toContain("Use this desktop");
     expect(SEARCH_ENTRIES.some((entry) => entry.id === "use-desktop")).toBe(false);
+  });
+
+  it("times the start by its widgets-shown stage, never by adding up stages counted from the same start", () => {
+    const stages = [
+      { name: "setup", ms: 612 },
+      { name: "window-created", ms: 900 },
+      { name: "shown", ms: 1025 },
+    ];
+    expect(bootSummary(stages)).toBe(`${(1025).toLocaleString()} ms from launch to widgets on screen.`);
+    expect(bootSummary(stages.slice(0, 2))).toBe("900 ms to the last stage recorded.");
   });
 });

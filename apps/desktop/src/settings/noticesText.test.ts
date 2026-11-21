@@ -20,6 +20,20 @@ describe("parseNotices", () => {
     expect(parseNotices("")).toEqual({ intro: [], sections: [], footer: [] });
   });
 
+  it("joins a bullet that wraps, and reads tables one row per item without the header", () => {
+    const md = ["## Crates", "| Crate | Licence |", "|---|---|", "| serde | MIT OR Apache-2.0 |", "", "- a bullet that", "  wraps onto two lines", "- next"].join("\n");
+    expect(parseNotices(md).sections).toEqual([{ title: "Crates", items: ["serde: MIT OR Apache-2.0", "a bullet that wraps onto two lines", "next"] }]);
+  });
+
+  it("starts a section at a third-level heading", () => {
+    expect(parseNotices("## A\n- x\n### B\n- y").sections.map((s) => s.title)).toEqual(["A", "B"]);
+  });
+
+  it("leaves no table syntax in the real notices", () => {
+    const items = parseNotices(notices).sections.flatMap((s) => s.items);
+    expect(items.some((item) => item.startsWith("|") || /^-{3}/.test(item))).toBe(false);
+  });
+
   it("reads the real notices file, including the not-affiliated disclaimer", () => {
     const parsed = parseNotices(notices);
     expect(parsed.sections.length).toBeGreaterThan(0);

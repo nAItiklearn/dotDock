@@ -1260,6 +1260,7 @@ input,
 .dock-theme {
   display: grid;
   gap: var(--space-1);
+  align-content: start;
   justify-items: start;
   padding: var(--space-2) var(--space-2) var(--space-3);
   border: var(--hairline) solid var(--border);
