@@ -17,7 +17,7 @@
 - **Meanwhile:** every other workspace crate is tested locally (shell 126, dock 102, island 38, others); the app
   crate is covered by clippy `--all-targets` locally and by `cargo test --workspace` on MSVC in CI (`ci.yml`).
 
-## B-theme-disk (theme track, 2026-11-21 20:23)
+## B-theme-disk (theme track, 2026-11-21 20:23; listener resolved by the V1 integration, D-042)
 D: fell to 11 GB free after the last workspace test build (rule: stop cargo builds under 12 GB). Not done on this
 branch because each needs a new cargo build: (1) the wallpaper-changed listener (WM_SETTINGCHANGE /
 SPI_SETDESKWALLPAPER in the core, event to the theme, palette re-derived and applied, debounced, ignoring dotDock's
@@ -30,7 +30,7 @@ freeing space (finished worktrees' `target-gnu`, ~8 GB each), then build with th
   (2) a `rates` feed (`{ base, publishedAt, rates }`, ECB daily XML, cached on disk); (3) `dock_open_url { url }`
   that opens http(s) only, in the default browser.
 - **Meanwhile:** each tile shows its designed "Not available" state in the real app and works in the harness.
-## B-home-1 Widget colours do not yet re-derive by themselves when the wallpaper changes (2026-11-21, home track)
+## B-home-1 Widget colours do not yet re-derive by themselves when the wallpaper changes (2026-11-21, home track; resolved by the V1 integration, D-042)
 - **What:** the owner's V1 rule needs the theme to be rebuilt from the new wallpaper whenever it changes. The palette code is on the theme track (`worktree-agent-aa4d6d019cc73921a`), which applies it only when the user presses Apply; no branch listens for a wallpaper change (`WM_SETTINGCHANGE` / `SPI_SETDESKWALLPAPER`).
 - **Home side done:** every home screen colour is a theme token (guarded by `widgets/themeTokens.test.ts`); a theme change repaints the widgets in one frame (live check in `docs/QA/home-live/features.md`).
 - **Owner (lead, 20:30):** reassigned to the theme track.

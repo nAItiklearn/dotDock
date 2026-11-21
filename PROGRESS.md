@@ -3,6 +3,16 @@
 **Version:** v1 (home screen, Agent Island, Settings, website). Tagged `v1.0.0` locally, not released.
 **Next:** v2, the dock and launcher. The owner's rule: no public release until the dock ships.
 
+## V1 integration (2026-11-21, branch worktree-agent-ada7f4cb99f8b50da)
+- One branch with the theme + Settings, notch, dock host + dock UI, release (1.0.0, signed updates), home screen and
+  website tracks. One line ending for the repository (D-040).
+- The dock is a part of the environment (`DockPart`, `TaskbarPart`): it replaces the taskbar through the D0 guard while
+  the dotDock theme is on. One switch at the end of Settings; no taskbar switch in V1 (D-041).
+- The theme follows the Windows wallpaper (`WM_SETTINGCHANGE` / `SPI_SETDESKWALLPAPER`, event-driven), and no code path
+  hands Windows a wallpaper path that is not an absolute path to a file (D-042).
+- No gradients anywhere in the app (tested over CSS, TS, TSX, SVG); no developer or account cards in the dock gallery.
+- Waiting for the lead's live test before v1.0.0 is released.
+
 ## v1: what is done
 ### Core (Rust, Tauri 2)
 - Desktop overlay at desktop level: hidden until the UI is ready, cursor-driven click-through, one guard thread owns its Win32 styles (D-010), re-fits on display and DPI changes.
