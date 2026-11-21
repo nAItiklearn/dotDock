@@ -156,8 +156,7 @@ Numbered D-019 because D-017 and D-018 exist on `main`; the backend track's bran
 - The core's `DockSettings.edge` stays on the wire for now (the Rust struct requires it); the UI types it as
   `"bottom"` and normalises anything else on the way in, so a `dock.json` from an older build still draws at the bottom.
 
-## D-032 The first-run dock is laid out from the machine's own apps (2026-11-21)
-- When the dock has nothing pinned and no tiles and has never been laid out on this profile, the UI pins up to nine
-  installed apps (one or two per kind of work, apps the core recognised by name first), adds a stack for every
-  category that has apps (not "other"), and puts five tiles on the right: clock, weather, now playing, battery and the
-  day ahead. Seeding is remembered in local storage so a user who empties the dock on purpose is not reseeded.
+## D-032 The first-run dock is laid out by the core, not the UI (2026-11-21)
+- The dock host already lays out an empty dock once from the machine's apps (D-027, `dock/src/starter.rs`), with a
+  `laidOut` flag in `dock.json`. A second seeder in the UI, remembered in WebView local storage, would race it and
+  forget itself whenever the WebView profile is reset, so the UI has none: one owner, one flag, in the core.
