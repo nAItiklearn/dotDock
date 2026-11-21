@@ -118,9 +118,9 @@ describe("themeFromPalette: text is readable whatever the picture", () => {
 
 describe("themeFromPalette: the picture shows through", () => {
   it("uses the picture's vivid colour as the accent when it already reads well", () => {
-    const palette = paletteOf(picture(16, [{ color: [60, 62, 64], count: 192 }, { color: [250, 110, 130], count: 64 }]));
+    const palette = paletteOf(picture(16, [{ color: [60, 62, 64], count: 192 }, { color: [255, 170, 180], count: 64 }]));
     const theme = themeFromPalette(palette, "dark");
-    expect(theme.colors.accent).toBe("#fa6e82");
+    expect(theme.colors.accent).toBe("#ffaab4");
     expect(theme.colors.dotOn).toBe(theme.colors.accent);
     expect(theme.accentFromPicture).toBe(true);
     expect(theme.adjusted).not.toContain("accent");
@@ -159,11 +159,11 @@ describe("themeFromPalette: the picture shows through", () => {
   it("keeps the surfaces nearly neutral under a grey picture, and uses the theme's own accent", () => {
     const dark = themeFromPalette(flat([100, 100, 100]), "dark");
     expect(dark.accentFromPicture).toBe(false);
-    // Obsidian's red reads at 4.5:1 as text only a touch lighter; it keeps its hue.
+    // Obsidian's red must read at 4.5:1 even on a card over a white picture, so it is lighter; it keeps its hue.
     const obsidian = rgbToOklch(parseColor(OBSIDIAN.colors.accent) ?? { r: 0, g: 0, b: 0, a: 1 });
     const darkAccent = rgbToOklch(parseColor(dark.colors.accent) ?? { r: 0, g: 0, b: 0, a: 1 });
     expect(hueDistance(darkAccent.h, obsidian.h)).toBeLessThan(10);
-    expect(darkAccent.l - obsidian.l).toBeLessThan(0.05);
+    expect(darkAccent.l - obsidian.l).toBeLessThan(0.12);
     expect(rgbToOklch(parseColor(dark.colors.bg) ?? { r: 0, g: 0, b: 0, a: 1 }).c).toBeLessThan(0.01);
     // Paper's red cannot carry a label at 4.5:1 as it is, so it is deepened slightly and keeps its hue.
     const light = themeFromPalette(flat([200, 200, 200]), "light");
@@ -227,6 +227,18 @@ describe("auditAa", () => {
     expect(checks.find((c) => c.label === "Accent on background")?.target).toBe(4.5);
     expect(checks.find((c) => c.label === "Accent on raised cards")?.target).toBe(4.5);
     expect(new Set(checks.map((c) => c.label)).size).toBe(checks.length);
+  });
+
+  it("checks the cards where they really sit on the desktop: over the darkest and the lightest picture", () => {
+    for (const mode of MODES) {
+      const checks = auditAa(themeFromPalette(flat([128, 128, 128]), mode).colors);
+      for (const ground of ["cards over a dark picture", "cards over a light picture"]) {
+        for (const role of ["Text", "Secondary text", "Accent"]) {
+          const check = checks.find((c) => c.label === `${role} on ${ground}`);
+          expect(check?.pass, `${mode} ${role} on ${ground}`).toBe(true);
+        }
+      }
+    }
   });
 
   it("is the same gate as the theme editor's for the pairs both check", () => {

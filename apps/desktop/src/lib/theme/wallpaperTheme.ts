@@ -91,9 +91,10 @@ export function themeFromPalette(
   const bg = neutral(ramp.bg);
   const surface = neutral(ramp.surface);
   const surface2 = neutral(ramp.surface2);
-  // Cards are translucent: what is read against is the card over the background.
+  // Cards are translucent. In Settings they sit on the background; on the desktop, on the wallpaper, whose
+  // pixels can be anything from black to white, so both extremes count.
   const card = composite(surface, bg);
-  const grounds = [bg, card, surface2];
+  const grounds = [bg, card, ...overWallpaper(surface), surface2];
   const readable = (color: Rgba): boolean => grounds.every((ground) => contrastRatio(color, ground) >= AA_TEXT);
   const ink = (color: Rgba): number => Math.max(contrastRatio(WHITE, color), contrastRatio(INK, color));
 
@@ -132,6 +133,13 @@ export function themeFromPalette(
   return { colors, accentFromPicture: accent !== undefined, adjusted };
 }
 
+const BLACK: Rgba = { r: 0, g: 0, b: 0, a: 1 };
+
+/** A translucent card on the desktop, over the darkest and the lightest picture it can sit on. */
+function overWallpaper(surface: Rgba): readonly [Rgba, Rgba] {
+  return [composite(surface, BLACK), composite(surface, WHITE)];
+}
+
 /** Every pair the generated theme guarantees, measured on the stored colours. */
 export function auditAa(colors: Readonly<Record<ThemeRole, string>>): readonly ContrastCheck[] {
   const get = (role: ThemeRole): Rgba => parseColor(colors[role]) ?? INK;
@@ -139,6 +147,8 @@ export function auditAa(colors: Readonly<Record<ThemeRole, string>>): readonly C
   const grounds: readonly (readonly [string, Rgba])[] = [
     ["background", bg],
     ["cards", composite(get("surface"), bg)],
+    ["cards over a dark picture", overWallpaper(get("surface"))[0]],
+    ["cards over a light picture", overWallpaper(get("surface"))[1]],
     ["raised cards", get("surface2")],
   ];
   const text: readonly (readonly [string, ThemeRole])[] = [

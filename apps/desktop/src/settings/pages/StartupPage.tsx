@@ -2,7 +2,7 @@ import { useState } from "react";
 import { getApp } from "../../lib/state/app";
 import type { RestoreReport, StartupState, StartupToggle } from "../../lib/native/api";
 import { getNativeApi } from "../../lib/native/api";
-import { Button, Segmented, Switch } from "../../lib/ui/controls";
+import { Button, Switch } from "../../lib/ui/controls";
 import { Icon } from "../../lib/ui/Icon";
 import { EnvironmentSwitches } from "../ui/EnvironmentSwitches";
 import { NativeGate, useNativeResource, type NativeResource } from "../ui/native";
@@ -120,21 +120,6 @@ function StartupBody({ resource, state }: { readonly resource: NativeResource<St
         </div>
       ) : null}
       <Section title="Desktop">
-        <Row
-          id="use-desktop"
-          label="Use this desktop"
-          description="Switching to the Windows desktop restores your wallpaper and icons and closes the overlay. Nothing is deleted."
-        >
-          <Segmented
-            label="Which desktop"
-            value={state.useOurDesktop ? "ours" : "windows"}
-            options={[
-              { value: "ours", label: "This one" },
-              { value: "windows", label: "Windows" },
-            ]}
-            onChange={(next) => change("useOurDesktop", next === "ours")}
-          />
-        </Row>
         <Row id="launch" label="Launch at sign-in" description="Starts with no delay, so the desktop is ready when Windows is.">
           <Switch checked={state.launchAtSignIn} label="Launch at sign-in" onChange={(v) => change("launchAtSignIn", v)} />
         </Row>
@@ -148,9 +133,6 @@ function StartupBody({ resource, state }: { readonly resource: NativeResource<St
           </div>
           <span className="chip">{state.startupDelayRemoved ? "Removed" : "Windows default"}</span>
         </div>
-      </Section>
-      <Section title="Way back">
-        <RestoreRow />
       </Section>
       <Section title="Boot timing" description="How long the last start took, stage by stage.">
         {state.lastBoot ? (
@@ -178,7 +160,6 @@ export function StartupPage() {
         resource={resource}
         icon="power"
         offers={[
-          "Choose between this desktop and the stock Windows one, and switch back in one click.",
           "Start with Windows, with no startup delay.",
           "Hide the stock desktop icons behind your widgets.",
           "Restore the original wallpaper and icons if anything ever looks wrong.",
@@ -186,6 +167,12 @@ export function StartupPage() {
       >
         {(state) => <StartupBody resource={resource} state={state} />}
       </NativeGate>
+      {/* Outside the gate: restoring needs only the restore command, so it stays reachable when the startup state cannot be read. */}
+      {getNativeApi().available ? (
+        <Section title="Way back">
+          <RestoreRow />
+        </Section>
+      ) : null}
       <EnvironmentSwitches />
     </>
   );

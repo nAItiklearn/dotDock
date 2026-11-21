@@ -37,7 +37,6 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
 
   e("widgets", "gallery", "Add a widget", "gallery preview clock date calendar weather battery memory disk"),
 
-  e("startup", "use-desktop", "Use this desktop", "windows stock switch back replace"),
   e("startup", "launch", "Launch at sign-in", "startup autostart boot login"),
   e("startup", "desktop-icons", "Hide desktop icons", "shortcuts files clutter"),
   e("startup", "environment-on", "dotDock theme", "turn off disable enable whole environment theme widgets dock notch wallpaper plain windows stock switch restore"),

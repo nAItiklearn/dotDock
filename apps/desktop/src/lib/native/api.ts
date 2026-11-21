@@ -27,7 +27,6 @@ export interface BootStage {
 
 export interface StartupState {
   /** False means the stock Windows desktop is in charge and the overlay is closed. */
-  readonly useOurDesktop: boolean;
   readonly launchAtSignIn: boolean;
   readonly hideDesktopIcons: boolean;
   /** Informational: the Windows startup delay has been removed for this user. */
@@ -38,7 +37,7 @@ export interface StartupState {
   readonly lastBoot: { readonly startedAt: string; readonly stages: readonly BootStage[] } | null;
 }
 
-export type StartupToggle = "useOurDesktop" | "launchAtSignIn" | "hideDesktopIcons";
+export type StartupToggle = "launchAtSignIn" | "hideDesktopIcons";
 
 export interface RestoreReport {
   readonly wallpaperRestored: boolean;

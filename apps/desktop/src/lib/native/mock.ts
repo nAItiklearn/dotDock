@@ -58,7 +58,6 @@ export function createMockNativeApi(): NativeApi {
     return environment;
   };
   let startup: StartupState = {
-    useOurDesktop: true,
     launchAtSignIn: true,
     hideDesktopIcons: false,
     startupDelayRemoved: true,
@@ -126,7 +125,7 @@ export function createMockNativeApi(): NativeApi {
         return later(startup);
       },
       restoreWindows: (): Promise<RestoreReport> => {
-        startup = { ...startup, useOurDesktop: false, launchAtSignIn: false, hideDesktopIcons: false };
+        startup = { ...startup, launchAtSignIn: false, hideDesktopIcons: false };
         return later({ wallpaperRestored: true, desktopIconsShown: false, autostartRemoved: true, startupDelayRestored: true });
       },
     },
