@@ -19,3 +19,6 @@ off the photo widget shows the project's own halftone ridge picture and no photo
 **Publishing needs the owner to confirm they hold the rights to both pictures.** Until then nobody builds the
 public site with the flag on. Once confirmed: commit the files (or keep them local), build with the flag, and add
 an "owner-supplied images, rights confirmed by the owner" line to THIRD_PARTY_NOTICES.md.
+
+## 2026-11-21 13:40 download-page track: frame-time run on battery saver
+The last full scene QA run (docs/QA/website-art-live/report-all.txt) was taken with the laptop on battery at 11 %, where Windows caps the display at 30 Hz: every frame there is 33 ms, including idle pages, so it is not a measure of the scenes. The run on mains (report-perf.txt) is the evidence. Rerun `node tools/scene-qa.mjs http://127.0.0.1:4361 ../docs/QA/website-art-live perf` on mains before release.

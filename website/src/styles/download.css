@@ -1,0 +1,471 @@
+/*
+ * The download page: a calm head with the release state, the meadow at full width, then what the app needs,
+ * what setup does and how to undo it, in three columns. The art never sits under text: the copy has the
+ * page background to itself above and below the picture.
+ */
+
+/* ---------- Meadow motion: the slow, out-of-step periods of the scene's parts ---------- */
+.vista {
+  --vista-sway-a: 6.4s;
+  --vista-sway-b: 7.9s;
+  --vista-sway-lean: 1.4deg;
+  --vista-cloud-drift: 84s;
+  --vista-cloud-reach: -2.4cqw;
+  --vista-glint: 7s;
+  --vista-flap: 0.34s;
+  --vista-flap-dragonfly: 0.12s;
+}
+
+/* The section labels here are field notes (base.css), not the boxed callout that pages.css also calls .note. */
+.dl .note {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+/* ---------- Head ---------- */
+.dl-head {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+  padding-top: calc(var(--nav-h) + clamp(48px, 7vw, 104px));
+  padding-bottom: clamp(36px, 5vw, 64px);
+  text-align: center;
+}
+.dl-head .h1 {
+  max-width: 14ch;
+}
+.dl-head .lede {
+  margin-inline: auto;
+}
+.dl-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.dl-head__hint {
+  max-width: 46ch;
+}
+.btn__mark {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+/* The file of a published release: name, size and checksum, read from src/data/release.json. */
+.dl-file {
+  display: grid;
+  gap: var(--space-3);
+  width: min(100%, 640px);
+  margin-top: var(--space-4);
+  padding: var(--space-5);
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  text-align: left;
+}
+.dl-file__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  font-size: 14px;
+}
+.dl-file__row dt {
+  color: var(--text-dim);
+}
+.dl-file__row dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.dl-file__sha {
+  display: grid;
+  gap: var(--space-2);
+  font-size: 14px;
+}
+.dl-file__sha dt {
+  color: var(--text-dim);
+}
+.dl-file .code {
+  border-radius: var(--radius-md);
+}
+.dl-file .code__text {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- The meadow ---------- */
+.vista {
+  position: relative;
+  overflow: clip;
+  pointer-events: none;
+}
+/*
+ * The stage keeps the picture's aspect and its dot size: the narrow render at no less than 720 px, the wide one
+ * at no less than 1440 px, cropped at the sides on smaller screens. Children size and move in cqw, a
+ * hundredth of the stage width.
+ */
+.vista__stage {
+  --vista-min: 720px;
+  --vista-stage: 720;
+  /* One art cell in CSS pixels of the render (siteart/vista.py): a petal is one cell. */
+  --vista-cell: 6;
+  --vista-ratio: 720 / 480;
+  position: relative;
+  container-type: inline-size;
+  width: max(100%, var(--vista-min));
+  margin-left: calc(50% - max(100%, var(--vista-min)) / 2);
+  aspect-ratio: var(--vista-ratio);
+}
+@media (min-width: 900px) {
+  .vista__stage {
+    --vista-min: 1440px;
+    --vista-stage: 1920;
+    --vista-cell: 8;
+    --vista-ratio: 1920 / 640;
+  }
+}
+.vista__layer {
+  position: absolute;
+  inset: 0;
+}
+
+.vista__clouds {
+  will-change: transform;
+  animation: vista-drift var(--vista-cloud-drift) var(--ease-in-out) infinite alternate;
+}
+@keyframes vista-drift {
+  to {
+    transform: translateX(var(--vista-cloud-reach));
+  }
+}
+
+.vista__glint {
+  will-change: opacity;
+  animation: vista-glint var(--vista-glint) var(--ease-in-out) infinite;
+}
+.vista__glint--b {
+  animation-delay: calc(var(--vista-glint) / -2);
+}
+@keyframes vista-glint {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* The near grass leans in the wind from its roots: a skew about the foot of the picture, two sets out of step. */
+.vista__sway {
+  transform-origin: 50% 100%;
+  will-change: transform;
+  animation: vista-sway var(--vista-sway-a) var(--ease-in-out) infinite;
+}
+.vista__sway--b {
+  animation-duration: var(--vista-sway-b);
+  animation-delay: calc(var(--vista-sway-b) / -3);
+}
+@keyframes vista-sway {
+  0%,
+  100% {
+    transform: skewX(0deg);
+  }
+  50% {
+    transform: skewX(var(--vista-sway-lean));
+  }
+}
+
+/* ---------- Flyers: a stage-sized box carries the path, the sprite inside beats its wings ---------- */
+.vista__flight {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.vista__flyer {
+  position: absolute;
+  width: calc(var(--art-w) / var(--vista-stage) * 100%);
+  will-change: transform;
+  animation: vista-flap var(--vista-flap) var(--ease-in-out) infinite alternate;
+}
+@keyframes vista-flap {
+  to {
+    transform: scaleX(0.4);
+  }
+}
+.vista__flyer--1 {
+  left: 18%;
+  top: 46%;
+}
+.vista__flyer--2 {
+  left: 47%;
+  top: 56%;
+  animation-delay: -0.17s;
+}
+.vista__flyer--3 {
+  left: 76%;
+  top: 50%;
+  animation-delay: -0.09s;
+}
+/* A dragonfly's wings blur about their root on its back while the body holds still (siteart/live.py draws it in
+   profile, flying right, and exports where the wings meet the body). */
+.vista__flyer--4 {
+  left: 33%;
+  top: 36%;
+  animation: none;
+}
+.vista__flyer--4 .art__cloud {
+  transform-origin: 50% var(--vista-wing-root);
+  will-change: transform;
+  animation: vista-dragonfly-flap var(--vista-flap-dragonfly) linear infinite alternate;
+}
+@keyframes vista-dragonfly-flap {
+  to {
+    transform: scaleY(0.35);
+  }
+}
+.vista__flight--loop {
+  animation: vista-loop 26s var(--ease-in-out) infinite;
+}
+@keyframes vista-loop {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(6cqw, -4cqw);
+  }
+  50% {
+    transform: translate(12cqw, 0.5cqw);
+  }
+  75% {
+    transform: translate(5cqw, 2.5cqw);
+  }
+}
+.vista__flight--drift {
+  animation: vista-drift-path 31s var(--ease-in-out) infinite;
+}
+@keyframes vista-drift-path {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(-8cqw, -3cqw);
+  }
+  60% {
+    transform: translate(-3cqw, -6cqw);
+  }
+  80% {
+    transform: translate(4cqw, -2cqw);
+  }
+}
+.vista__flight--rise {
+  animation: vista-rise 23s var(--ease-in-out) infinite;
+}
+@keyframes vista-rise {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(-5cqw, -7cqw);
+  }
+  70% {
+    transform: translate(-10cqw, -2cqw);
+  }
+}
+/* A dragonfly hovers, darts, and hovers again. */
+.vista__flight--dart {
+  animation: vista-dart 17s var(--ease-out) infinite;
+}
+@keyframes vista-dart {
+  0%,
+  22% {
+    transform: translate(0, 0);
+  }
+  28%,
+  52% {
+    transform: translate(14cqw, -2cqw);
+  }
+  58%,
+  78% {
+    transform: translate(26cqw, 1.5cqw);
+  }
+  86%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* ---------- Petals blown loose: one cell each, drifting with the wind from the right ---------- */
+.vista__petal {
+  position: absolute;
+  width: calc(var(--vista-cell) / var(--vista-stage) * 100%);
+  aspect-ratio: 1;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: vista-petal 18s linear infinite;
+}
+@keyframes vista-petal {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scaleY(1);
+  }
+  8% {
+    opacity: 1;
+  }
+  25% {
+    transform: translate(-12cqw, 2cqw) scaleY(0.3);
+  }
+  50% {
+    transform: translate(-24cqw, 0.5cqw) scaleY(1);
+  }
+  75% {
+    transform: translate(-36cqw, 3cqw) scaleY(0.3);
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-48cqw, 4.5cqw) scaleY(1);
+  }
+}
+.vista__petal--1 { left: 92%; top: 58%; animation-delay: -2s; }
+.vista__petal--2 { left: 74%; top: 64%; animation-duration: 22s; animation-delay: -11s; }
+.vista__petal--3 { left: 98%; top: 48%; animation-duration: 20s; animation-delay: -6s; }
+.vista__petal--4 { left: 66%; top: 70%; animation-duration: 16s; animation-delay: -13s; }
+.vista__petal--5 { left: 86%; top: 74%; animation-duration: 24s; animation-delay: -19s; }
+.vista__petal--6 { left: 58%; top: 54%; animation-duration: 19s; animation-delay: -4s; }
+.vista__petal--7 { left: 102%; top: 62%; animation-duration: 21s; animation-delay: -15s; }
+.vista__petal--8 { left: 80%; top: 44%; animation-duration: 17s; animation-delay: -9s; }
+
+/* Off screen nothing moves; under reduced motion the meadow is a still and the loose petals are not shown. */
+.vista--paused *,
+.vista--paused {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vista *,
+  .vista {
+    animation: none !important;
+  }
+  .vista__petal {
+    display: none;
+  }
+}
+
+/* ---------- Before you install ---------- */
+.dl-facts {
+  display: grid;
+  gap: clamp(36px, 5vw, 56px);
+  padding-top: clamp(44px, 6vw, 86px);
+  padding-bottom: clamp(44px, 6vw, 86px);
+}
+.dl-facts__head {
+  display: grid;
+  gap: var(--space-4);
+}
+.dl-cols {
+  display: grid;
+  gap: clamp(36px, 5vw, 48px);
+}
+@media (min-width: 900px) {
+  .dl-cols {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-12);
+  }
+}
+.dl-col {
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: var(--hairline) solid var(--line-strong);
+}
+.dl-col__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.dl-col p,
+.dl-col li,
+.dl-col dd {
+  color: var(--text-dim);
+  text-wrap: pretty;
+}
+.dl-col strong {
+  color: var(--text);
+  font-weight: 500;
+}
+.dl-col code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.dl-needs {
+  display: grid;
+  gap: var(--space-4);
+}
+.dl-needs div {
+  display: grid;
+  gap: var(--space-1);
+}
+.dl-needs dt {
+  font-weight: 500;
+}
+.dl-steps {
+  display: grid;
+  gap: var(--space-4);
+  counter-reset: dl-step;
+}
+.dl-steps li {
+  display: grid;
+  grid-template-columns: 2.2em minmax(0, 1fr);
+  counter-increment: dl-step;
+}
+.dl-steps li::before {
+  content: counter(dl-step, decimal-leading-zero);
+  padding-top: 0.3em;
+  font-family: var(--font-mono);
+  font-size: var(--text-caps);
+  letter-spacing: var(--tracking-caps);
+  color: var(--accent-text);
+}
+.dl-undo {
+  display: grid;
+  gap: var(--space-4);
+}
+.dl-aside {
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--fill-faint);
+  font-size: 14px;
+}
+
+/* ---------- Build it yourself ---------- */
+.dl-source {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-5);
+  padding-bottom: clamp(56px, 8vw, 120px);
+  text-align: center;
+}
+/* As wide as the whole command, so the address is never cut; on a phone it wraps (sections.css). */
+.dl-source .code {
+  width: max-content;
+  max-width: 100%;
+}
+@media (max-width: 479px) {
+  .dl-source .code {
+    width: 100%;
+  }
+}

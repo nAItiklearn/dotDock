@@ -4,7 +4,9 @@ import Base from "./Base.astro";
 import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
 import Band from "../components/Band.astro";
+import LiveScene from "../components/LiveScene.astro";
 import type { ArtName } from "../lib/art";
+import type { SceneName } from "../lib/live-scenes";
 
 interface Props {
   title: string;
@@ -14,9 +16,11 @@ interface Props {
   heading: string;
   /** The pictures above the heading and under the content; each page has its own. */
   artTop: Extract<ArtName, `band-${string}`>;
-  artBottom: Extract<ArtName, `band-${string}`>;
+  artBottom?: Extract<ArtName, `band-${string}`>;
+  /** A living scene under the content (components/LiveScene.astro), in place of the bottom picture. */
+  sceneBottom?: SceneName;
 }
-const { title, description, label, heading, artTop, artBottom } = Astro.props;
+const { title, description, label, heading, artTop, artBottom, sceneBottom } = Astro.props;
 ---
 
 <Base title={title} description={description}>
@@ -33,7 +37,7 @@ const { title, description, label, heading, artTop, artBottom } = Astro.props;
         <slot />
       </div>
     </div>
-    <Band piece={artBottom} />
+    {sceneBottom ? <LiveScene scene={sceneBottom} /> : artBottom && <Band piece={artBottom} />}
   </main>
   <Footer />
 

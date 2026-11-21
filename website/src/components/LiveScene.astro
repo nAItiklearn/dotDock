@@ -1,0 +1,50 @@
+---
+/**
+ * A living pixel scene in its own band between two sections: a stack of site-art pieces (tools/site-art,
+ * siteart/live.py) that each move on their own, sprites that fly or swim over them, and a few loose petals or
+ * bubbles. The band has a fixed aspect ratio and holds nothing but the picture, so it can never sit under or over
+ * text. Motion is transform and opacity only (styles/live.css); scripts/scene-motion.ts pauses it off screen, and
+ * under reduced motion it is a still. Purely decorative.
+ */
+import Art from "./Art.astro";
+import { SCENES, SPECKS, STAGE, pivotOf, type SceneName } from "../lib/live-scenes";
+import "../styles/meadow-colours.css";
+import "../styles/live.css";
+
+interface Props {
+  scene: SceneName;
+}
+const { scene } = Astro.props;
+const { layers, sprites, specks } = SCENES[scene];
+const stage = `--live-ratio-wide:${STAGE.wide};--live-ratio-narrow:${STAGE.narrow};--live-stage-wide:${STAGE.wideWidth};--live-stage-narrow:${STAGE.narrowWidth};--live-cell-wide:${STAGE.wideCell};--live-cell-narrow:${STAGE.narrowCell};--live-wing-root:${STAGE.wingRoot}`;
+const pivot = (key: (typeof layers)[number]["pivot"]) => {
+  const p = pivotOf(key);
+  return p ? `--live-pivot-wide:${p.wide};--live-pivot-narrow:${p.narrow}` : undefined;
+};
+---
+
+<div class={`live live--${scene}`} aria-hidden="true" data-live>
+  <div class="live__stage" style={stage}>
+    {
+      layers.map((l) => (
+        <div class={`live__layer live__m-${l.motion}`} style={pivot(l.pivot)}>
+          <Art piece={l.piece} />
+        </div>
+      ))
+    }
+    {
+      sprites.map((s, i) => (
+        <div class={`live__flight live__path-${s.path} live__flight--${i + 1}${s.wideOnly ? " live__flight--wide" : ""}`}>
+          <div class={`live__sprite live__beat-${s.beat}`} style={`--x:${s.x * 100}%;--y:${s.y * 100}%`}>
+            <Art piece={s.piece} />
+          </div>
+        </div>
+      ))
+    }
+    {Array.from({ length: SPECKS }, (_, i) => <i class={`live__speck live__speck--${specks.kind} live__speck--${i + 1} live__c-${specks.colours[i % specks.colours.length]}`} />)}
+  </div>
+</div>
+
+<script>
+  import "../scripts/scene-motion";
+</script>

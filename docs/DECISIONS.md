@@ -154,3 +154,41 @@ Numbered D-021 because D-020 exists on this branch; renumber on merge if another
   (no dead code). In their place: the clock in dots and stripes, memory, disk and the battery pill, all offered.
 - Open-Meteo is still used by V1, through the dock's weather tiles; the privacy and licence pages now say so
   (same text on the download-page branch).
+## D-026 Download page meadow and living scenes (download-page track)
+Numbered D-026 because main has D-025; renumber on merge if another track took it.
+- **The download page has its own scenery,** a golden-hour meadow in layers (siteart/vista.py) that each move on their own: clouds drift, sparkles twinkle, two sets of grass and big flowers lean out of step, butterflies and a profile dragonfly fly paths, petals blow loose. It is a full-width band between the release head and the facts, never under text.
+- **Living scenes are one reusable module** (components/LiveScene.astro, lib/live-scenes.ts, styles/live.css, scripts/scene-motion.ts) fed by siteart/live.py. Each page gets its own subject: a grazing horse on the home page (in the slot of the static horse band), a pond with lily pads and dragonflies on the Features page (in the slot of the static pond band), an octopus among weed on the Privacy page (in place of its bottom band, through `sceneBottom` on layouts/Page.astro).
+- **Geometry comes from the drawing code.** The pivots the horse's head and tail and the octopus turn about, the stage sizes and the dragonfly's wing root are exported to src/data/live-scenes.json (tools/site-art/live_export.py), so the CSS holds no hand-copied coordinates.
+- **A scene is a band with a fixed aspect ratio.** On a phone the stage keeps a minimum width (560 px narrow, 1200 px wide) and is cropped at the sides, so the subject in the middle keeps its size, the band stays short, and nothing scrolls sideways. Sprites marked wide-only are not shown on a phone.
+- **Motion is transform and opacity only**, paused off screen by an IntersectionObserver (no timers), and none at all under reduced motion.
+- **A render that lacks a colour hides that layer** (lib/art.ts): without a mask a layer paints its whole box, which showed as a solid pink or cream block on a phone. Roles are now listed from every render.
+- **QA browsers stay off the owner's screen** (owner, 12:15): tools/cdp.mjs opens Chrome off screen with occlusion tracking off, so frame times stay real.
+
+## D-034 Website: phone nav, notices wrap, the download page's links (2026-11-21, website track)
+- **Below 480 px the nav shows the mark without the wordmark text.** With the text, the menu button sat 13 to 53 px
+  past the right edge of the pill at 390 and 414 px and was clipped, so a phone had no way to the other pages. The
+  link keeps its accessible name. The layout check (tools/layout-check.js) now reports any control off the page.
+- **Licence notices wrap long paths and URLs** (`overflow-wrap: anywhere` in `.prose`), which pushed /license to
+  416 px wide on a 390 px phone.
+- **The download page links only to things that exist today:** the repository (watch for releases), its Releases
+  page and the source. The download button, size and SHA-256 appear only when `tools/release-data.mjs` finds a
+  published release with an installer asset, and then point at that asset's own GitHub Releases URL; nothing is typed by hand.
+- **The visit counter's 503 when it has no database stays** (lead's decision in HANDOFF): Lighthouse counts it as a
+  console error only on a local preview without credentials; with them (fake Upstash, tools/try-visits.sh) the
+  download page scores 100/100/100.
+- **This branch's Features page is the older one.** The main-site branch rebuilt Features without the pixel scenes;
+  its text-over-art finding on the dock scene at 390/414 belongs to the page that is being replaced, so it is left
+  for the merge, where the main-site version wins.
+
+## D-035 Website: a Changelog page, and the privacy page says what V1 really sends (2026-11-21, website track)
+- **/changelog, linked from the footer (Resources).** Built on this branch because the living pixel scenes live
+  here: the meadow band on top, the pond scene (dragonfly over lilies) under the content, never under text.
+- **Content is what V1 ships, no dates typed.** Version 1 lists the dock (six themes including Glass, more than
+  twenty tiles), the developer tiles, the island, the home screen and the themes with the two Settings switches.
+  Version 2 lists only the wishlist dock tiles not built yet (docs/OWNER_REQUESTS.md: unread mail, progress dots,
+  week strip, stocks, sales counters, follower counts, contribution heat map, file search). A version's state
+  (released with its date and notes link, being tested, planned) comes from src/data/release.json via
+  lib/changelog.ts, tested in tests/changelog.test.ts.
+- **Privacy: no update check in V1.** The core registers no updater command and Settings removed the row, so the
+  "Update check" row was false. It now lists the developer tiles instead (only with a token you add, sent to that
+  service's own API). The same edit is made byte for byte on the main-site branch so the merge is clean.

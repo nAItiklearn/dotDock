@@ -1,0 +1,98 @@
+---
+import Page from "../layouts/Page.astro";
+import { PRODUCT_NAME, RELEASES_URL } from "../brand";
+import { FIRST_VERSION, VERSIONS } from "../data/changelog";
+import { versionStatus } from "../lib/changelog";
+import { releaseView, type ReleaseData } from "../lib/release";
+import releaseData from "../data/release.json";
+
+const release = releaseView(releaseData as ReleaseData | null);
+const versions = VERSIONS.map((v) => ({ ...v, status: versionStatus(v, release, FIRST_VERSION) }));
+const id = (major: number) => `v${major}`;
+---
+
+<Page
+  artTop="band-meadow"
+  sceneBottom="pond"
+  title={`Changelog: what is in each version of ${PRODUCT_NAME}`}
+  description={`What each version of ${PRODUCT_NAME} contains, and the dock tiles planned for the next one. Releases are published on GitHub.`}
+  label="Changelog"
+  heading="What is in each version."
+>
+  <Fragment slot="lede">
+    What every version of {PRODUCT_NAME} contains, newest first, and what is planned next. Each release, with its installer and
+    notes, is published on <a href={RELEASES_URL} rel="noopener">GitHub Releases</a>.
+  </Fragment>
+
+  {
+    versions.map((v) => (
+      <section class="block reveal changelog" aria-labelledby={id(v.major)}>
+        <div class="changelog__head">
+          <h2 class="block__title" id={id(v.major)}>{v.name}</h2>
+          <p class="caps caps-row caps--text changelog__status">
+            <span class={v.status.state === "released" || v.status.state === "earlier" ? "dot" : "dot dot--hollow"} aria-hidden="true" />
+            {v.status.state === "released" && (
+              <>
+                Released <time datetime={v.status.dateTime}>{v.status.date}</time>
+              </>
+            )}
+            {v.status.state === "earlier" && "Released"}
+            {v.status.state === "in-testing" && "Being tested, not released yet"}
+            {v.status.state === "planned" && "Planned, no date"}
+          </p>
+        </div>
+        <div class="block__content">
+          <p>{v.summary}</p>
+          {v.groups.map((g) => (
+            <div class="changelog__group">
+              <h3 class="changelog__title">{g.title}</h3>
+              <ul class="ticks">
+                {g.items.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          {v.status.state === "released" && (
+            <p>
+              <a href={v.status.pageUrl} rel="noopener">Release notes for {v.status.tag}</a>
+            </p>
+          )}
+        </div>
+      </section>
+    ))
+  }
+</Page>
+
+<style>
+  .changelog__head {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+  .changelog__status {
+    color: var(--text-dim);
+  }
+  .changelog__group {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .changelog__group + .changelog__group {
+    margin-top: var(--space-4);
+  }
+  .changelog__title {
+    color: var(--text);
+    font-size: 1.125rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  @media (min-width: 900px) {
+    .changelog__head {
+      position: sticky;
+      top: calc(var(--nav-h) + 24px);
+    }
+    .changelog__head .block__title {
+      position: static;
+    }
+  }
+</style>

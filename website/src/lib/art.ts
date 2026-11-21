@@ -32,7 +32,7 @@ export type ArtName = keyof typeof manifest;
  * scripts/chrome.ts has put `art--on` on the piece. The hero's pieces are not lazy.
  */
 export function isLazyArt(name: string): boolean {
-  return name.startsWith("scene-") || name.startsWith("band-") || name === "meadow";
+  return name.startsWith("scene-") || name.startsWith("band-") || name.startsWith("live-") || name === "meadow";
 }
 
 function url(file: string): string {
@@ -41,12 +41,12 @@ function url(file: string): string {
   return found;
 }
 
-/** The layer roles of a piece (`ink-paper` and `ink-dark` both play the `ink` role). */
+/** The layer roles of a piece, over all its renders (`ink-paper` and `ink-dark` both play the `ink` role). */
 export function artRoles(name: string): string[] {
   const piece = PIECES[name];
-  const variant = piece && Object.values(piece.variants)[0];
-  if (!variant) throw new Error(`Unknown site art: ${name}`);
-  return [...new Set(Object.keys(variant.layers).map((l) => l.split("-")[0] ?? l))];
+  if (!piece) throw new Error(`Unknown site art: ${name}`);
+  // Every role either render uses: a narrow render can hold a flower colour the wide one does not, and back.
+  return [...new Set(Object.values(piece.variants).flatMap((v) => Object.keys(v.layers).map((l) => l.split("-")[0] ?? l)))];
 }
 
 /** Pixel size of the variant an element shows at a given width class, for layout rules. */
@@ -81,10 +81,21 @@ export function artCss(): string {
     const base = piece.variants["narrow"] ?? Object.values(piece.variants)[0];
     const wide = names.includes("narrow") ? piece.variants["wide"] : undefined;
     if (!base) continue;
-    const emit = (v: Variant): string =>
-      Object.entries(v.layers)
-        .map(([layer, scales]) => `${selector(name, layer)}{${maskRule(scales)}}`)
-        .join("") + `.art--${name}{--art-w:${v.w};--art-h:${v.h}}`;
+    // A role one render has and the other lacks (no flower of that colour in it) has no mask there; without
+    // one its layer would paint the whole box, so that render hides it and the other shows it again.
+    const roles = (v: Variant) => new Set(Object.keys(v.layers).map((l) => l.split("-")[0] ?? l));
+    const all = new Set(Object.values(piece.variants).flatMap((v) => [...roles(v)]));
+    const emit = (v: Variant): string => {
+      const has = roles(v);
+      const uneven = [...all].filter((r) => !Object.values(piece.variants).every((o) => roles(o).has(r)));
+      return (
+        Object.entries(v.layers)
+          .map(([layer, scales]) => `${selector(name, layer)}{${maskRule(scales)}}`)
+          .join("") +
+        uneven.map((r) => `.art--${name} .art__${r}{display:${has.has(r) ? "block" : "none"}}`).join("") +
+        `.art--${name}{--art-w:${v.w};--art-h:${v.h}}`
+      );
+    };
     out.push(emit(base));
     if (wide) out.push(`@media (min-width:${WIDE_FROM_PX}px){${emit(wide)}}`);
   }

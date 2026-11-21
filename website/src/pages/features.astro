@@ -11,6 +11,7 @@ import VideoSlot from "../components/VideoSlot.astro";
 import Cta from "../components/Cta.astro";
 import Art from "../components/Art.astro";
 import Band from "../components/Band.astro";
+import LiveScene from "../components/LiveScene.astro";
 import { PRODUCT_NAME, ROUTES } from "../brand";
 import { THEMES } from "../lib/themes";
 import { Image } from "astro:assets";
@@ -169,7 +170,7 @@ const islandSlides: IslandSlide[] = [
       </div>
     </section>
 
-    <Band piece="band-pond" />
+    <LiveScene scene="pond" />
 
     <section class="section feat" id="widgets" aria-labelledby="widgets-title">
       <div class="wrap">
