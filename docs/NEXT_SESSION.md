@@ -17,7 +17,8 @@ Every track's own work is finished. Everything V1 is merged on ONE integration b
 - `.gitattributes` (LF) was added on purpose (the theme branch had converted about 60 files to CRLF); merges use
   `git merge --no-ff -X renormalize`.
 - **The integration agent was mid-work when the session ended** (it stops with the session). Its remaining jobs:
-  1. Re-merge the website at its final hash **`4657c8d`** (branch `worktree-agent-a81d99eac949307ec`; includes
+  1. Re-merge the website at its final hash **`9b8ceca`** (branch `worktree-agent-a81d99eac949307ec`; includes the
+     changelog fixes (bottom-only dock, one switch),
      `0aa94d1`, the /license blank-gap fix, and the flattened scenes).
   2. Wallpaper follow: the core listens for `WM_SETTINGCHANGE` + `SPI_SETDESKWALLPAPER` (event-driven, no polling)
      and emits one debounced wallpaper-changed event; the theme re-derives the palette (`palette.ts`,
@@ -32,6 +33,8 @@ Every track's own work is finished. Everything V1 is merged on ONE integration b
   5. Cleanups: no gradients left (two were in `Island.css`; `noGradients.test.ts` must scan CSS + TS/TSX/SVG); no
      developer-tile or opt-in cards anywhere in the V1 dock gallery or Settings.
   6. Explain or remove the one skipped vitest test.
+  6b. CSP: add `media-src 'self' blob:` to `tauri.conf.json` (the voice-memo tile plays recordings from a blob URL,
+     blocked without it) plus a vitest that checks the CSP.
   7. Gate: `tsc --noEmit`, full `vitest run`, `vite build`, `cargo fmt --check`,
      `cargo clippy --all-targets -D warnings`, `cargo test` (the `dotdock_lib` test binary failing with
      `STATUS_ENTRYPOINT_NOT_FOUND` is a known GNU environment issue; that crate has no tests), website `pnpm build`
@@ -68,14 +71,17 @@ wallpaper first; `tools/restore-windows.ps1` (has `-DryRun`) restores everything
    `dotDock_1.0.0_x64-setup.exe`, its `.sig`, `dotDock_1.0.0_x64-portable.exe` and `latest.json` (about 15 to 20
    min). Secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (empty) are already set.
    Watch with `gh run watch`.
-3. In `website/` run `node tools/release-data.mjs` (adds date, size, SHA-256), commit, push.
-4. Vercel: no project exists yet. Team `naitiklearns-projects` (`team_kMhof5qb7z3Fnd4K92551OeJ`). Create it from
+3. Replace the auto-generated release notes (hundreds of commit titles) with the written ones:
+   `gh release edit v1.0.0 --notes-file docs/release-notes/v1.0.0.md`. Check its claims still match what shipped
+   (wallpaper follow must really work).
+4. In `website/` run `node tools/release-data.mjs` (adds date, size, SHA-256), commit, push.
+5. Vercel: no project exists yet. Team `naitiklearns-projects` (`team_kMhof5qb7z3Fnd4K92551OeJ`). Create it from
    GitHub `nAItiklearn/dotDock` with **root directory `website`** (Vercel MCP `create_git_project`), Astro,
    `pnpm install` / `pnpm build`. `KV_REST_API_URL` / `KV_REST_API_TOKEN` are optional (visit counter; the site runs
    cleanly without them). Leave `DOTDOCK_OWNER_PHOTOS` unset.
-5. Verify on the live URL: every page loads, the download buttons download the real installer and portable exe,
+6. Verify on the live URL: every page loads, the download buttons download the real installer and portable exe,
    no console errors.
-6. Update `PROGRESS.md` and `docs/STATUS.md`. Tell the owner the live URL.
+7. Update `PROGRESS.md` and `docs/STATUS.md`. Tell the owner the live URL.
 
 ## Owner must know
 
