@@ -2,7 +2,7 @@
  * The anonymous visit counter. One number in Redis (Upstash, from the Vercel Marketplace): a browser that has not
  * counted today asks to add one (POST), every other page view only reads it (GET). Nothing else is stored or sent:
  * no IP address, no cookie, no identifier; the browser remembers only the day it last counted (localStorage).
- * Without Redis credentials the endpoint answers 503 and the page keeps the counter hidden: no number is ever invented.
+ * Without Redis credentials the endpoint answers 200 with `available: false` and the page keeps the counter hidden: no number is ever invented.
  *
  * This file has no imports on purpose, so the tests can run it directly and a mocked client can stand in for Redis.
  */
@@ -45,13 +45,17 @@ export function redisCredentials(env: RedisEnv): RedisCredentials | null {
 
 export interface VisitsReply {
   readonly status: number;
-  readonly body: { readonly visits: number } | { readonly error: string };
+  readonly body: { readonly visits: number } | { readonly available: false } | { readonly error: string };
 }
 
-/** Handles one request: POST counts a visit and returns the total, GET returns the total. */
+/**
+ * Handles one request: POST counts a visit and returns the total, GET returns the total. A site deployed without
+ * a database answers 200 with `available: false`, so the page hides the counter without a failed request in the
+ * console; a database that is set up but fails is a real outage and answers 502.
+ */
 export async function handleVisits(method: string, client: RedisLike | null): Promise<VisitsReply> {
   if (method !== "GET" && method !== "POST") return { status: 405, body: { error: "method not allowed" } };
-  if (!client) return { status: 503, body: { error: "counter not configured" } };
+  if (!client) return { status: 200, body: { available: false } };
   try {
     if (method === "POST") return { status: 200, body: { visits: await client.incr(VISITS_KEY) } };
     const stored = Number(await client.get(VISITS_KEY));

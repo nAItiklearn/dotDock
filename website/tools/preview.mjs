@@ -1,6 +1,6 @@
 // Serves the built site (.vercel/output/static) and the visit counter route, the way Vercel will. Astro's own
 // `preview` does not support the Vercel adapter. The counter uses the same code as the deployed route
-// (src/lib/visits.ts) and reads the same environment variables; without them /api/visits answers 503.
+// (src/lib/visits.ts) and reads the same environment variables; without them /api/visits answers 200 with `available: false`.
 // Usage: node tools/preview.mjs [port]   (default 4330)
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";

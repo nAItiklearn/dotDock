@@ -28,13 +28,16 @@ function paint(): void {
     return;
   }
   const mid = window.innerHeight / 2;
-  for (const item of items) {
-    if (!item.visible) continue;
-    // Zero until the piece reaches the middle of the screen, so it never starts displaced and an art
-    // card's edge never shows past its picture; after that it drifts by the factor.
-    const dy = item.fromPage ? window.scrollY : Math.max(0, mid - (item.parent.getBoundingClientRect().top + item.parent.offsetHeight / 2));
-    item.el.style.transform = `translate3d(0, ${(dy * item.factor).toFixed(1)}px, 0)`;
-  }
+  const shown = items.filter((item) => item.visible);
+  // Every position is read before any transform is written, so the frame lays out once instead of once per piece.
+  // Zero until the piece reaches the middle of the screen, so it never starts displaced and an art card's edge
+  // never shows past its picture; after that it drifts by the factor.
+  const offsets = shown.map((item) =>
+    item.fromPage ? window.scrollY : Math.max(0, mid - (item.parent.getBoundingClientRect().top + item.parent.offsetHeight / 2)),
+  );
+  shown.forEach((item, i) => {
+    item.el.style.transform = `translate3d(0, ${((offsets[i] ?? 0) * item.factor).toFixed(1)}px, 0)`;
+  });
 }
 
 function request(): void {

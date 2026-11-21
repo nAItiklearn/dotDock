@@ -5,13 +5,20 @@ import "./visits";
 const STUCK_AFTER_PX = 8;
 const COPIED_MS = 1600;
 
+/**
+ * The nav firms up once the page has scrolled. A marker at the top of the page is watched instead of reading
+ * `scrollY` on every scroll event: that read forces a layout in the middle of a frame, which showed in traces
+ * as a stall while flicking down the page.
+ */
 function initNav(): void {
   const nav = requireEl<HTMLElement>(document, "[data-nav]");
-  const update = (): void => {
-    nav.classList.toggle("is-stuck", window.scrollY > STUCK_AFTER_PX);
-  };
-  window.addEventListener("scroll", update, { passive: true });
-  update();
+  const marker = document.createElement("div");
+  marker.setAttribute("aria-hidden", "true");
+  marker.style.cssText = `position:absolute;top:0;left:0;width:1px;height:${STUCK_AFTER_PX}px;pointer-events:none`;
+  document.body.prepend(marker);
+  new IntersectionObserver(([entry]) => {
+    if (entry) nav.classList.toggle("is-stuck", !entry.isIntersecting);
+  }).observe(marker);
 }
 
 /** The screen is laid out at this width on wide pages (see styles/desk.css); a smaller preview scales it down. */
@@ -44,7 +51,34 @@ function initScaled(): void {
   wide.addEventListener("change", () => boxes.forEach(fit));
 }
 
-/** Scenes and the footer meadow fetch their masks when they come within a screen or so of the viewport. */
+/** How far ahead of the viewport a piece of art starts to load and decode: a couple of screens, so a fast flick
+ * down the page finds every mask decoded before it arrives. */
+const ART_AHEAD = "2000px 0px";
+const MASK_URL = /url\("?([^")]+)"?\)/g;
+
+/**
+ * The masks a piece paints with, as its current rules resolve them (the narrow or wide render, at this screen's
+ * pixel ratio). The browser would decode a mask on the main thread the first time it paints it, which shows as a
+ * stall while scrolling; decoding them here first, asynchronously, takes that work off the scroll.
+ */
+function decodeMasks(piece: Element): void {
+  const urls = new Set<string>();
+  for (const layer of piece.querySelectorAll(".art__layer")) {
+    const cs = getComputedStyle(layer);
+    const image = cs.getPropertyValue("mask-image") || cs.getPropertyValue("-webkit-mask-image");
+    for (const m of image.matchAll(MASK_URL)) if (m[1]) urls.add(m[1]);
+  }
+  for (const src of urls) {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+    img.decode().catch(() => {
+      // A mask that fails to load leaves its layer empty; nothing to recover.
+    });
+  }
+}
+
+/** Scenes and the footer meadow fetch and decode their masks when they come within a couple of screens. */
 function initArt(): void {
   const pieces = [...document.querySelectorAll<HTMLElement>("[data-art-lazy]")];
   if (!("IntersectionObserver" in window)) {
@@ -56,10 +90,11 @@ function initArt(): void {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         entry.target.classList.add("art--on");
+        decodeMasks(entry.target);
         io.unobserve(entry.target);
       }
     },
-    { rootMargin: "900px 0px" },
+    { rootMargin: ART_AHEAD },
   );
   for (const el of pieces) io.observe(el);
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Tries the visit counter end to end on this machine: a fake Upstash REST server, the preview server with the
-# credentials set (increment, read, wrong method) and a second one without them (503). Run after `pnpm build`.
+# credentials set (increment, read, wrong method) and a second one without them (200, available: false). Run after `pnpm build`.
 set -u
 cd "$(dirname "$0")/.."
 node tools/fake-upstash.mjs 8799 &

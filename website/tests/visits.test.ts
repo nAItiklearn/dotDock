@@ -60,9 +60,10 @@ describe("handleVisits", () => {
   it("GET on an empty database is zero, not an error", async () => {
     assert.deepEqual(await handleVisits("GET", mockRedis()), { status: 200, body: { visits: 0 } });
   });
-  it("answers 503 without a client, so the page keeps the counter hidden", async () => {
-    assert.equal((await handleVisits("GET", null)).status, 503);
-    assert.equal((await handleVisits("POST", null)).status, 503);
+  it("answers 200 with no number without a client, so the page hides the counter and logs no error", async () => {
+    for (const method of ["GET", "POST"]) {
+      assert.deepEqual(await handleVisits(method, null), { status: 200, body: { available: false } });
+    }
   });
   it("refuses other methods", async () => {
     const redis = mockRedis(1);
@@ -94,13 +95,14 @@ describe("respond", () => {
     assert.equal(res.headers.get("cache-control"), "no-store");
     assert.deepEqual(await res.json(), { visits: 8 });
   });
-  it("is 503 without credentials and never connects", async () => {
+  it("says the counter is not available without credentials, and never connects", async () => {
     let connected = false;
     const res = await respond("GET", {}, () => {
       connected = true;
       return mockRedis();
     });
-    assert.equal(res.status, 503);
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { available: false });
     assert.equal(connected, false);
   });
   it("hands the credentials to the connector", async () => {

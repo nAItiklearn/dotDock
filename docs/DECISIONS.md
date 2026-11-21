@@ -201,3 +201,11 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
   release is published. After publishing, run `node tools/release-data.mjs` and redeploy to add the date, size
   and SHA-256.
 - The footer is a living scene (LiveScene "meadow"); the old static meadow piece and scene.py are removed.
+
+## D-038 Visit counter without a database answers 200; scroll work trimmed (2026-11-21, website track)
+- `/api/visits` without `KV_REST_API_*` / `UPSTASH_REDIS_REST_*` answers 200 `{"available":false}` (was 503), so a
+  deployment without the database logs no console error; the footer line stays hidden. A configured database that
+  fails still answers 502 (a real outage). Supersedes the 503 in D-021 and D-034.
+- Scroll: the nav's stuck state is watched with an IntersectionObserver instead of reading `scrollY` per scroll
+  event (a trace showed it forcing layout); parallax reads every position before writing any transform; art masks
+  are fetched and decoded asynchronously (`Image.decode()`) two screens ahead instead of 900 px.
