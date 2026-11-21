@@ -195,3 +195,6 @@ Replaces the first switch of D-021, which stopped the parts but left the wallpap
 - **Home screen gate set before the window exists**, so a warm webview that reports ready early always opens the providers.
 - D-022's 3:1 accent target is superseded by the 4.5:1 rule above.
 
+
+## D-027 Dock material tokens stay with the dock themes (theme track, lead 2026-11-21)
+A wallpaper or custom theme drives colour and shadow strength only. Material, translucency, radius, border and shadow of the dock are carried by the dock UI's own themes (glass, glass-lite, Obsidian, Paper, Aurum, minimal) on the dock branch. Adding them to the theme document here would add settings with no consumer on this branch. Revisit once the dock UI is merged, if a theme should switch the dock's material.
