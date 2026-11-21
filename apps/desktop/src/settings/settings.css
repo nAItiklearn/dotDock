@@ -1359,6 +1359,7 @@ input,
 .dock-preview__bar[data-dock-theme="minimal"] .dock-preview__icon,
 .dock-preview__bar[data-dock-theme="minimal"] .dock-preview__tile {
   box-shadow: var(--shadow);
+}
 
 /* ---- theme from a wallpaper */
 .wptheme,
