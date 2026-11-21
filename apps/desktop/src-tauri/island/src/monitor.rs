@@ -12,7 +12,8 @@ use crate::process::is_alive;
 use crate::state::{self, SessionState};
 use crate::transcript::{read_tail, tail_event, TailEvent, TurnCounter, TAIL_BYTES};
 use crate::util::now_ms;
-use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::event::ModifyKind;
+use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
@@ -184,6 +185,9 @@ struct Dirty {
     transcripts: HashSet<String>,
     codex_logs: HashSet<PathBuf>,
     feed_logs: HashSet<PathBuf>,
+    /// Feed files deleted or renamed away in this pass. One written again under the same name before the pass
+    /// runs is a new file and is read from its start, not from where the old one ended.
+    feed_replaced: HashSet<PathBuf>,
 }
 
 impl Worker {
@@ -237,6 +241,9 @@ impl Worker {
             } else if self.codex_root.as_deref().is_some_and(|root| path.starts_with(root)) && codex::is_rollout(path) {
                 dirty.codex_logs.insert(path.clone());
             } else if path.starts_with(&self.feed_dir) && feed::is_feed_file(path) {
+                if matches!(event.kind, EventKind::Remove(_) | EventKind::Modify(ModifyKind::Name(_))) {
+                    dirty.feed_replaced.insert(path.clone());
+                }
                 dirty.feed_logs.insert(path.clone());
             }
         }
@@ -327,6 +334,9 @@ impl Worker {
                     lock(&self.engine).apply_state(update.state);
                 }
             }
+        }
+        for path in &dirty.feed_replaced {
+            self.feed.forget(path);
         }
         for path in dirty.feed_logs {
             if !path.exists() {
@@ -681,5 +691,151 @@ mod tests {
         std::thread::sleep(Duration::from_millis(300));
         assert!(lock(&handle.engine).state_of("codex-01a04e65-47c8-70c1-b898-8d5452cb24b0").is_none());
         drop((handle, out_rx));
+    }
+
+    // Hard tests: what a misbehaving or very busy agent does to the watcher thread. Each one ends with the island
+    // on the right state, which also proves the thread is still alive and not stuck.
+
+    fn feed_event(session: &str, phase: Phase, tokens: u64, pid: u32) -> crate::feed::FeedEvent {
+        crate::feed::FeedEvent {
+            agent: "burst".into(),
+            session: session.into(),
+            at: Some(now_ms()),
+            phase: Some(phase),
+            tool: Some("shell".into()),
+            detail: Some(format!("step {tokens}")),
+            tokens_out: Some(tokens),
+            pid: Some(pid),
+            ..crate::feed::FeedEvent::default()
+        }
+    }
+
+    fn raw_append(path: &Path, bytes: &[u8]) {
+        use std::io::Write as _;
+        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(path).expect("open");
+        file.write_all(bytes).expect("write");
+    }
+
+    #[test]
+    fn a_burst_of_a_thousand_events_ends_on_each_sessions_last_one() {
+        const SESSIONS: u64 = 10;
+        const PER_SESSION: u64 = 100;
+        let dir = tempfile::tempdir().expect("tempdir");
+        let (handle, rx, _dirs) = start(dir.path());
+        let feed_dir = dir.path().join("agents");
+        let me = std::process::id();
+        let phases = [Phase::Thinking, Phase::Reading, Phase::Editing, Phase::Running, Phase::Searching];
+        for step in 1..=PER_SESSION {
+            for s in 0..SESSIONS {
+                let last = step == PER_SESSION;
+                let phase = if last { Phase::Done } else { phases[(step % 5) as usize] };
+                let event = feed_event(&format!("s{s}"), phase, step * (s + 1), me);
+                // Five writers share one file, five have their own, as real agents do.
+                let file = if s < 5 { "shared".to_owned() } else { format!("own-{s}") };
+                feed::append(&feed_dir, &file, &event).expect("append");
+            }
+        }
+        let settled = next_snapshot_where(&rx, |snap| {
+            snap.sessions.len() == SESSIONS as usize && snap.sessions.iter().all(|v| v.phase == Phase::Done)
+        });
+        for s in 0..SESSIONS {
+            let view = settled.sessions.iter().find(|v| v.id == format!("feed-burst-s{s}")).expect("session");
+            assert_eq!(view.tokens_out, PER_SESSION * (s + 1), "s{s} shows its last count");
+        }
+        let mut snapshots = 1;
+        while let Ok(o) = rx.recv_timeout(Duration::from_millis(300)) {
+            snapshots += usize::from(matches!(o, Output::Snapshot(_)));
+        }
+        assert!(snapshots < 100, "a burst is coalesced, not replayed event by event ({snapshots} snapshots)");
+        drop(handle);
+    }
+
+    #[test]
+    fn garbage_half_lines_and_odd_clocks_never_stop_the_watcher() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let (handle, rx, _dirs) = start(dir.path());
+        let feed_dir = dir.path().join("agents");
+        std::fs::create_dir_all(&feed_dir).expect("feed dir");
+        let path = feed_dir.join("odd.jsonl");
+        let me = std::process::id();
+        feed::append(&feed_dir, "odd", &feed_event("s1", Phase::Thinking, 1, me)).expect("append");
+        next_snapshot_where(&rx, |s| s.sessions.first().is_some_and(|v| v.phase == Phase::Thinking));
+
+        raw_append(&path, &[0xff, 0xfe, 0x00, b'\n']);
+        raw_append(&path, b"{\"agent\":\"burst\",\"session\":\"s1\",\"phase\":\"teleporting\"}\n");
+        raw_append(&path, b"{\"agent\":\"burst\",\"session\":\"s1\",\"phase\":\"running\",\"tokens_out\":\"many\"}\n");
+        raw_append(
+            &path,
+            format!("{{\"agent\":\"burst\",\"session\":\"s1\",\"detail\":\"{}\"}}\n", "x".repeat(40_000)).as_bytes(),
+        );
+        raw_append(&path, b"[1,2,3]\nnull\n{\"agent\":\"burst\"}\n");
+        // A clock far in the future, then one from long ago: both count as now, in the order they were written.
+        raw_append(
+            &path,
+            format!(
+                "{{\"agent\":\"burst\",\"session\":\"s1\",\"phase\":\"editing\",\"at\":{},\"pid\":{me}}}\n",
+                now_ms() + 86_400_000
+            )
+            .as_bytes(),
+        );
+        raw_append(
+            &path,
+            format!("{{\"agent\":\"burst\",\"session\":\"s1\",\"phase\":\"reading\",\"at\":1,\"pid\":{me}}}\n")
+                .as_bytes(),
+        );
+        let reading = next_snapshot_where(&rx, |s| s.sessions.first().is_some_and(|v| v.phase == Phase::Reading));
+        assert_eq!(reading.sessions.len(), 1, "nothing invented a session");
+        assert_eq!(reading.sessions[0].tokens_out, 1, "a wrongly typed count is ignored");
+
+        // A line written in two parts shows only once it is complete.
+        let line = feed_event("s1", Phase::Done, 9, me).to_line();
+        let (head, tail) = line.split_at(line.len() / 2);
+        raw_append(&path, head.as_bytes());
+        std::thread::sleep(Duration::from_millis(300));
+        assert_eq!(lock(&handle.engine).state_of("feed-burst-s1").map(|s| s.phase), Some(Phase::Reading));
+        raw_append(&path, format!("{tail}\n").as_bytes());
+        let done = next_snapshot_where(&rx, |s| s.sessions.first().is_some_and(|v| v.phase == Phase::Done));
+        assert_eq!(done.sessions[0].tokens_out, 9);
+        drop(handle);
+    }
+
+    #[test]
+    fn an_agent_that_crashes_mid_turn_shows_stopped_and_comes_back_when_it_reconnects() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let (handle, rx, _dirs) = start(dir.path());
+        let feed_dir = dir.path().join("agents");
+        let mut agent = std::process::Command::new("cmd").args(["/C", "exit"]).spawn().expect("spawn");
+        let gone = agent.id();
+        agent.wait().expect("exit");
+        feed::append(&feed_dir, "crashy", &feed_event("s1", Phase::Running, 5, gone)).expect("append");
+        let stopped = next_snapshot_where(&rx, |s| s.sessions.first().is_some_and(|v| v.phase == Phase::Stopped));
+        assert_eq!(stopped.sessions.len(), 1);
+
+        // The agent restarts and reports the same session from its new process.
+        feed::append(&feed_dir, "crashy", &feed_event("s1", Phase::Thinking, 6, std::process::id())).expect("append");
+        let back = next_snapshot_where(&rx, |s| s.sessions.first().is_some_and(|v| v.phase == Phase::Thinking));
+        assert_eq!(back.sessions[0].tokens_out, 6);
+        std::thread::sleep(Duration::from_millis(4_500));
+        assert_eq!(
+            lock(&handle.engine).state_of("feed-burst-s1").map(|s| s.phase),
+            Some(Phase::Thinking),
+            "a live process is not marked stopped again"
+        );
+        drop(handle);
+    }
+
+    #[test]
+    fn a_feed_file_deleted_and_written_again_is_followed_from_its_start() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let (handle, rx, _dirs) = start(dir.path());
+        let feed_dir = dir.path().join("agents");
+        let me = std::process::id();
+        feed::append(&feed_dir, "again", &feed_event("s1", Phase::Editing, 3, me)).expect("append");
+        next_snapshot_where(&rx, |s| s.sessions.first().is_some_and(|v| v.phase == Phase::Editing));
+        std::fs::remove_file(feed_dir.join("again.jsonl")).expect("remove");
+        feed::append(&feed_dir, "again", &feed_event("s1", Phase::Waiting, 4, me)).expect("append");
+        let waiting = next_snapshot_where(&rx, |s| s.sessions.first().is_some_and(|v| v.phase == Phase::Waiting));
+        assert_eq!(waiting.sessions[0].tokens_out, 4);
+        drop(handle);
     }
 }

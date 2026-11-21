@@ -171,8 +171,10 @@ pub fn session_id(agent: &str, session: &str) -> String {
 /// - Everything else (title, folder, tokens, process id) only ever updates what it names.
 pub fn reduce(prev: Option<&SessionState>, event: &FeedEvent, now_ms: u64) -> SessionState {
     let id = session_id(&event.agent, &event.session);
-    // An event cannot be from the future; a wrong clock must not freeze the session behind a huge stamp.
-    let at = event.at.map_or(now_ms, |t| t.min(now_ms));
+    // An event cannot be from the future; a wrong clock must not freeze the session behind a huge stamp. Nor can
+    // it be older than the session's last event: lines count in the order they were written, and a clock running
+    // behind must not make a working session look quiet for hours and drop it.
+    let at = event.at.map_or(now_ms, |t| t.min(now_ms)).max(prev.map_or(0, |p| p.updated_at));
     let mut next = prev.cloned().unwrap_or_else(|| SessionState::new(AgentKind::from_feed_id(&event.agent), &id));
     if next.agent == AgentKind::Other {
         next.agent_name = event.name.clone().or_else(|| next.agent_name.take()).or_else(|| Some(event.agent.clone()));
@@ -467,6 +469,15 @@ mod tests {
             reduce(Some(&s), &event(r#"{"agent":"a","session":"s","at":1795062650000,"phase":"reading"}"#), NOW + 1);
         assert_eq!(later.phase, Phase::Reading);
         assert!(later.seq >= s.seq, "stamps never go backwards");
+    }
+
+    #[test]
+    fn a_clock_running_behind_never_makes_a_working_session_look_old() {
+        let working = reduce(None, &event(r#"{"agent":"a","session":"s","at":5000,"phase":"running"}"#), NOW);
+        let behind = reduce(Some(&working), &event(r#"{"agent":"a","session":"s","at":1,"phase":"reading"}"#), NOW);
+        assert_eq!((behind.phase, behind.updated_at), (Phase::Reading, 5_000), "written later, so it counts later");
+        let fresh = reduce(None, &event(r#"{"agent":"a","session":"t","at":1,"phase":"reading"}"#), NOW);
+        assert_eq!(fresh.updated_at, 1, "a session's first line keeps its own time, so old history stays old");
     }
 
     #[test]

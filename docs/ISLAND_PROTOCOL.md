@@ -31,7 +31,7 @@ Each line is a JSON object on a single line, UTF-8, ending in `\n`, at most 32 K
 | `agent` | string | **yes** | Who you are, as an id: lower case, up to 16 characters of `a-z 0-9 - _` (anything else becomes `-`). `copilot` and `opencode` are the built-in adapters' ids; use your own for anything else. |
 | `name` | string | no | Display name for toasts and labels (up to 24 characters). Without it the island shows `agent`. |
 | `session` | string | **yes** | Your id for this session (up to 36 characters of `a-z A-Z 0-9 - _`; other characters are dropped). Each session is shown separately and can be paged to. |
-| `at` | number | no | When it happened, Unix time in **milliseconds**. Without it the time the island read the line is used. A time in the future is treated as now. |
+| `at` | number | no | When it happened, Unix time in **milliseconds**. Without it the time the island read the line is used. A time in the future is treated as now, and a time before the session's previous line as that line's time: lines count in the order they were written. |
 | `phase` | string | no | What the agent is doing now. See section 3. A line without `phase` only updates the fields below. |
 | `tool` | string | no | The tool in use (`Read`, `Bash`, `edit`...). Belongs to `phase`. |
 | `detail` | string | no | The one short thing the tool works on: a file name, a search pattern, a command. At most 80 characters are shown. Obvious secrets in commands (`--token x`, `API_KEY=x`, `sk-...`) are masked. Belongs to `phase`. |
