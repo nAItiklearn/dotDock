@@ -14,18 +14,22 @@
 //   node tools/island-replay.mjs --agent <codex|copilot|opencode|generic|states> --hook <dotdock-island-hook.exe>
 //        [--codex-home <dir>] [--pace <ms>] [--hold <ms>] [--shots <dir> --prefix <nn> [--crop x,y,w,h]]
 //
-// With --shots, the screen is captured (tools/capture/screenshot.ps1) after every line the island can read.
+// With --shots, the screen is captured after every line the island can read, by one capture process started up
+// front (tools/capture/shot-server.ps1), so a state that is on screen for a few seconds is caught in time.
 // The process stays alive for --hold ms after the last line; feed sessions carry this process's id, so when it
 // exits the island shows them as Stopped, which is how a crashed agent looks.
 
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { createInterface } from 'node:readline';
 import { appendFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURES = join(ROOT, 'apps', 'desktop', 'src-tauri', 'island', 'tests', 'fixtures');
-const SCREENSHOT = join(ROOT, 'tools', 'capture', 'screenshot.ps1');
+const SHOT_SERVER = join(ROOT, 'tools', 'capture', 'shot-server.ps1');
+/// Title of the Wind Meadow window of tools/capture/backdrop.ps1, raised before every capture.
+const BACKDROP_TITLE = 'dotDock test backdrop';
 const FEED_DIR = join(process.env.LOCALAPPDATA ?? '', 'dev.dotdock.desktop', 'agents');
 const CODEX_ID = '01a04e65-47c8-70c1-b898-8d5452cb24b0';
 /// Time for the island's animation to settle before a capture.
@@ -118,11 +122,26 @@ function deliver(agent, opts, item) {
   appendFileSync(opts.target, `${item.raw}\n`);
 }
 
-function capture(opts, index, label) {
+/// Starts the capture process and resolves with a function that captures one file and waits until it is saved.
+function startShots() {
+  const child = spawn('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', SHOT_SERVER, '-Front', BACKDROP_TITLE], { windowsHide: true, stdio: ['pipe', 'pipe', 'inherit'] });
+  const lines = createInterface({ input: child.stdout });
+  const waiting = [];
+  lines.on('line', (line) => waiting.shift()?.(line));
+  const next = () => new Promise((r) => waiting.push(r));
+  return next().then(() => ({
+    shoot: async (file, crop) => {
+      const answer = next();
+      child.stdin.write(`${file}${crop ? `|${crop}` : ''}\n`);
+      return answer;
+    },
+    close: () => child.stdin.end(),
+  }));
+}
+
+async function capture(opts, index, label) {
   const file = join(opts.shots, `${opts.prefix}-${String(index).padStart(2, '0')}-${opts.agent}-${label}.png`);
-  const crop = opts.crop ? ['-Crop', opts.crop] : [];
-  spawnSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', SCREENSHOT, '-Out', file, ...crop], { windowsHide: true });
-  console.log(`  captured ${file}`);
+  console.log(`  ${await opts.camera.shoot(file, opts.crop)}`);
 }
 
 async function main() {
@@ -138,7 +157,10 @@ async function main() {
     opts.target = join(FEED_DIR, `${agent}-replay.jsonl`);
   }
   if (opts.target) rmSync(opts.target, { force: true });
-  if (opts.shots) mkdirSync(opts.shots, { recursive: true });
+  if (opts.shots) {
+    mkdirSync(opts.shots, { recursive: true });
+    opts.camera = await startShots();
+  }
 
   const lines = readFileSync(join(FIXTURES, FIXTURE[agent]), 'utf8').split('\n').filter(Boolean);
   let shot = 0;
@@ -148,12 +170,13 @@ async function main() {
     console.log(`${new Date().toISOString()} ${agent} ${item.label ?? '(unreadable line, the island must skip it)'}`);
     if (opts.shots && item.label) {
       await sleep(SETTLE_MS);
-      capture(opts, ++shot, item.label);
+      await capture(opts, ++shot, item.label);
     }
     await sleep(opts.pace);
   }
   console.log(`holding for ${opts.hold} ms, then exiting (feed sessions show Stopped)`);
   await sleep(opts.hold);
+  opts.camera?.close();
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
