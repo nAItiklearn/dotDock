@@ -153,6 +153,38 @@ pub fn monitors() -> Result<Vec<String>, WallpaperError> {
     }
 }
 
+/// A monitor as the shell's wallpaper object knows it: its device path and desktop rectangle in
+/// physical pixels (left, top, right, bottom).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MonitorRect {
+    pub device_path: String,
+    pub rect: (i32, i32, i32, i32),
+}
+
+/// Every attached monitor with its rectangle, so a display found by position can be given its own wallpaper.
+pub fn monitor_rects() -> Result<Vec<MonitorRect>, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply(); each returned PWSTR is freed by take_pwstr, and the device path outlives the RECT query.
+    unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        let count = wp.GetMonitorDevicePathCount()?;
+        (0..count)
+            .map(|i| {
+                let device_path = take_pwstr(wp.GetMonitorDevicePathAt(i)?);
+                let r = wp.GetMonitorRECT(&HSTRING::from(device_path.as_str()))?;
+                Ok(MonitorRect { device_path, rect: (r.left, r.top, r.right, r.bottom) })
+            })
+            .collect()
+    }
+}
+
+/// The picture the user had before dotDock changed anything, from the snapshot: the private copy when it
+/// still exists, else the original path.
+pub fn original() -> Result<Option<PathBuf>, WallpaperError> {
+    let Some(snap) = snapshot::load()? else { return Ok(None) };
+    Ok([snap.wallpaper_copy, snap.wallpaper].into_iter().flatten().map(PathBuf::from).find(|p| p.is_file()))
+}
+
 /// The wallpaper file of every monitor, by device path. Monitors showing a solid colour are left out.
 pub fn assignments() -> Result<Vec<(String, PathBuf)>, WallpaperError> {
     let _com = ComGuard::new()?;

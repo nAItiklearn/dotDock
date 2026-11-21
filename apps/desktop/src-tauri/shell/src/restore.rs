@@ -1,7 +1,7 @@
 //! Returns the desktop to the user's original Windows state from the snapshot. Same effect as
 //! `tools/restore-windows.ps1`, but shipped inside the app so the uninstaller can always run it.
 
-use crate::{autostart, dock_guard, registry, snapshot, taskbar};
+use crate::{autostart, desktop_icons, dock_guard, registry, snapshot, taskbar};
 use windows::core::HSTRING;
 use windows::Win32::UI::WindowsAndMessaging::{
     SystemParametersInfoW, SPIF_SENDCHANGE, SPIF_UPDATEINIFILE, SPI_SETDESKWALLPAPER,
@@ -27,6 +27,8 @@ pub struct Report {
     pub autostart_removed: bool,
     pub wallpaper_restored: Option<String>,
     pub had_snapshot: bool,
+    /// The desktop icons are back the way the snapshot found them.
+    pub desktop_icons_restored: bool,
 }
 
 pub fn restore_windows() -> Result<Report, RestoreError> {
@@ -43,6 +45,9 @@ pub fn restore_windows() -> Result<Report, RestoreError> {
     if let Some(on) = snap.taskbar_auto_hide {
         taskbar::set_auto_hide(on);
     }
+    // Best effort: with no Explorer desktop there are no icons to bring back.
+    let icons = desktop_icons::original(snap.desktop_icons_visible, snap.hide_icons_registry);
+    report.desktop_icons_restored = desktop_icons::set_visible(icons).is_ok();
 
     // Prefer the private copy: the original path may be a file Windows has since overwritten
     // (Spotlight and slideshow write to `TranscodedWallpaper`).

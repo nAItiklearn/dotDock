@@ -24,12 +24,21 @@ const SETTINGS_MIN: (f64, f64) = (720.0, 520.0);
 /// Opens Settings, or focuses it if already open. Created on demand and destroyed on close,
 /// so it costs nothing while you are not using it.
 pub fn open_settings(app: &AppHandle) {
+    open_settings_at(app, None);
+}
+
+/// Opens Settings on a route such as `#/themes/wallpapers`, or moves the open window there.
+pub fn open_settings_at(app: &AppHandle, route: Option<&str>) {
     if let Some(window) = app.get_webview_window(SETTINGS_LABEL) {
         let _ = window.unminimize();
         let _ = window.set_focus();
+        if let Some(route) = route {
+            crate::core_commands::navigate_settings(&window, route);
+        }
         return;
     }
-    let built = WebviewWindowBuilder::new(app, SETTINGS_LABEL, WebviewUrl::App("settings.html".into()))
+    let url = format!("settings.html{}", route.unwrap_or_default());
+    let built = WebviewWindowBuilder::new(app, SETTINGS_LABEL, WebviewUrl::App(url.into()))
         .title("dotDock Settings")
         .inner_size(SETTINGS_SIZE.0, SETTINGS_SIZE.1)
         .min_inner_size(SETTINGS_MIN.0, SETTINGS_MIN.1)

@@ -10,7 +10,6 @@ import { WidgetPreview } from "../../overlay/WidgetPreview";
 import { addWidgetToProfile, removeWidgetFromProfile } from "../layoutActions";
 import { PageHeader, Section } from "../ui/layout";
 import { offerUndo } from "../ui/undo";
-import { pageById } from "../pageMeta";
 import { useDisplayChoices, useProfileDoc, type DisplayChoice } from "../useProfileDoc";
 
 const PREVIEW_MAX_WIDTH = 300;
@@ -85,11 +84,10 @@ export function WidgetsPage() {
   const choices = useDisplayChoices(doc);
   const [chosen, setChosen] = useState<MonitorId | null>(null);
   const display = choices.find((c) => c.id === chosen) ?? choices.find((c) => c.isPrimary) ?? choices[0];
-  const page = pageById("widgets");
 
   return (
     <>
-      <PageHeader title={page.title} description={page.description} />
+      <PageHeader page="widgets" />
       <Section
         title="Add a widget"
         description={`Adds to the ${profileName} profile. Arrange it afterwards with Edit layout.`}

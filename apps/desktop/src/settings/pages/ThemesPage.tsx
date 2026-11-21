@@ -13,7 +13,6 @@ import { PageHeader, Row, Section } from "../ui/layout";
 import { ThemeEditor } from "../ui/ThemeEditor";
 import { WallpaperThemeSection } from "../ui/WallpaperTheme";
 import { offerUndo } from "../ui/undo";
-import { pageById } from "../pageMeta";
 
 const MODE_OPTIONS: readonly { value: ThemeMode; label: string }[] = [
   { value: "fixed", label: "One theme" },
@@ -254,7 +253,7 @@ function ShapeAndMotion() {
             value={appearance.motionSpeed}
             {...LIMITS.motionSpeed}
             disabled={appearance.motion === "reduced"}
-            valueText={`${appearance.motionSpeed} times`}
+            valueText={`${appearance.motionSpeed}× speed`}
             onChange={(motionSpeed) => set({ motionSpeed })}
           />
           <span className="control-value tabular">{appearance.motionSpeed}×</span>
@@ -281,11 +280,10 @@ function ShapeAndMotion() {
   );
 }
 
-export function AppearancePage() {
-  const page = pageById("appearance");
+export function ThemesPage() {
   return (
     <>
-      <PageHeader title={page.title} description={page.description} />
+      <PageHeader page="themes" />
       <ThemeChoice />
       <WallpaperThemeSection />
       <CustomThemes />

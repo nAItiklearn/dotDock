@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { isTauri } from "../../providers/bridge";
 import type { ShortcutAction } from "../model/types";
+import type { DockAppName, DockSettings } from "./dock";
 
 /**
  * The typed surface between the UI and the Rust core. Every method maps to one Tauri command
@@ -31,13 +32,18 @@ export interface StartupState {
   readonly hideDesktopIcons: boolean;
   /** Informational: the Windows startup delay has been removed for this user. */
   readonly startupDelayRemoved: boolean;
-  /** Informational: this session was started in safe mode (Shift held, or after a crash loop). */
-  readonly safeMode: boolean;
-  /** Stage timings of the last start, from process launch to the overlay being shown. */
-  readonly lastBoot: { readonly startedAt: string; readonly stages: readonly BootStage[] } | null;
+  /** Stage timings of the last start. `startedAt` is Unix ms; each stage's `ms` counts from process launch. */
+  readonly lastBoot: { readonly startedAt: number; readonly stages: readonly BootStage[] } | null;
 }
 
 export type StartupToggle = "launchAtSignIn" | "hideDesktopIcons";
+
+export interface RestoreReport {
+  readonly wallpaperRestored: boolean;
+  readonly desktopIconsShown: boolean;
+  readonly autostartRemoved: boolean;
+  readonly startupDelayRestored: boolean;
+}
 
 export interface PixelRect {
   readonly x: number;
@@ -62,10 +68,15 @@ export interface DisplayInfo {
 export type WallpaperFit = "fill" | "fit" | "stretch" | "tile" | "center" | "span";
 
 export interface WallpaperItem {
+  /** Unique: `<name>-dark` / `<name>-light` for the bundled set, `imported-<n>` for your own pictures. */
   readonly id: string;
   readonly name: string;
   readonly source: "bundled" | "imported";
-  /** A URL the webview can load (asset protocol or data URL). */
+  /** Which variant a bundled wallpaper is; null for your own pictures. */
+  readonly mode: "dark" | "light" | null;
+  /** The wallpaper's accent colour (bundled only). */
+  readonly accent: string | null;
+  /** A URL the webview can load: a bundled thumbnail, or your picture through the core's wallpaper scheme. */
   readonly thumbnailUrl: string;
 }
 
@@ -74,21 +85,6 @@ export interface WallpaperAssignment {
   /** Null means the user's original wallpaper, as snapshotted at onboarding. */
   readonly wallpaperId: string | null;
   readonly fit: WallpaperFit;
-}
-
-export interface PerformanceSettings {
-  readonly pauseOnFullscreen: boolean;
-  readonly pauseOnBatterySaver: boolean;
-  readonly pauseWhenLocked: boolean;
-  /** How often system providers (memory, disk, CPU) push, in Hz. */
-  readonly systemRefreshHz: number;
-}
-
-export interface PerformanceStats {
-  readonly overlayFps: number | null;
-  readonly frameP95Ms: number | null;
-  readonly cpuPercent: number;
-  readonly workingSetMb: number;
 }
 
 export type ShortcutStatus = "ok" | "conflict" | "invalid";
@@ -100,12 +96,6 @@ export interface AppInfo {
   readonly webview: string;
   /** Folder holding settings, layouts and themes. */
   readonly dataDir: string;
-}
-
-export interface UpdateStatus {
-  readonly enabled: boolean;
-  readonly checkedAt: string | null;
-  readonly available: { readonly version: string; readonly notes: string | null } | null;
 }
 
 /**
@@ -142,6 +132,8 @@ export interface NativeApi {
     get(): Promise<StartupState>;
     /** `startup_set` { setting: StartupToggle, value: boolean } → StartupState */
     set(setting: StartupToggle, value: boolean): Promise<StartupState>;
+    /** `restore_windows` () → RestoreReport. Runs the full panic routine. */
+    restoreWindows(): Promise<RestoreReport>;
   };
 
   displays: {
@@ -150,7 +142,7 @@ export interface NativeApi {
   };
 
   wallpapers: {
-    /** `wallpapers_list` () → [{ id, name, style, mode, accent, path, thumb }]; `thumb` becomes `thumbnailUrl`. */
+    /** `wallpapers_list` () → WallpaperItem[], the bundled set then your own pictures. */
     list(): Promise<readonly WallpaperItem[]>;
     /** `wallpapers_assignments` () → WallpaperAssignment[] */
     assignments(): Promise<readonly WallpaperAssignment[]>;
@@ -164,15 +156,6 @@ export interface NativeApi {
     currentImage(): Promise<Blob>;
   };
 
-  performance: {
-    /** `performance_get` () → PerformanceSettings */
-    get(): Promise<PerformanceSettings>;
-    /** `performance_set` { patch: Partial<PerformanceSettings> } → PerformanceSettings */
-    set(patch: Partial<PerformanceSettings>): Promise<PerformanceSettings>;
-    /** `performance_stats` () → PerformanceStats */
-    stats(): Promise<PerformanceStats>;
-  };
-
   shortcuts: {
     /**
      * `shortcuts_register` { bindings: Record<ShortcutAction, string> } → Record<ShortcutAction, ShortcutStatus>.
@@ -183,7 +166,7 @@ export interface NativeApi {
   };
 
   window: {
-    /** `settings_open` { page?: string } → void. Opens or focuses the Settings window on a page id. */
+    /** `settings_open` { page?: string } → void. Opens or focuses Settings, on a `#/<section>/<page>` route when given. */
     openSettings(page?: string): Promise<void>;
     /**
      * `overlay_edit_mode` { on: boolean } → void. The overlay reports entering or leaving edit mode so the
@@ -199,14 +182,15 @@ export interface NativeApi {
     openDataFolder(): Promise<void>;
   };
 
-  updater: {
-    /** `updater_status` () → UpdateStatus */
-    status(): Promise<UpdateStatus>;
-    /** `updater_set_enabled` { enabled: boolean } → UpdateStatus */
-    setEnabled(enabled: boolean): Promise<UpdateStatus>;
-    /** `updater_check` () → UpdateStatus */
-    check(): Promise<UpdateStatus>;
+  dock: {
+    /** `settings_dock_get` () → DockSettings, from the dock's own store. */
+    get(): Promise<DockSettings>;
+    /** `settings_dock_set` { settings: DockSettings } → DockSettings. A running dock applies it at once. */
+    set(settings: DockSettings): Promise<DockSettings>;
+    /** `settings_dock_apps` () → DockAppName[], the apps of the dock's last scan by name; empty before the first. */
+    apps(): Promise<readonly DockAppName[]>;
   };
+
 }
 
 // ------------------------------------------------------------- implementations
@@ -216,7 +200,7 @@ const unavailable = (): Promise<never> => Promise.reject(new NativeUnavailableEr
 export const unavailableNativeApi: NativeApi = {
   available: false,
   environment: { get: unavailable, setOn: unavailable, setWindowsTaskbar: unavailable, onChange: unavailable },
-  startup: { get: unavailable, set: unavailable },
+  startup: { get: unavailable, set: unavailable, restoreWindows: unavailable },
   displays: { list: unavailable },
   wallpapers: {
     list: unavailable,
@@ -226,30 +210,13 @@ export const unavailableNativeApi: NativeApi = {
     remove: unavailable,
     currentImage: unavailable,
   },
-  performance: { get: unavailable, set: unavailable, stats: unavailable },
   shortcuts: { register: unavailable },
   window: { openSettings: unavailable, setEditMode: unavailable },
   app: { info: unavailable, openDataFolder: unavailable },
-  updater: { status: unavailable, setEnabled: unavailable, check: unavailable },
+  dock: { get: unavailable, set: unavailable, apps: unavailable },
 };
 
 const call = <T>(command: string, args?: Record<string, unknown>): Promise<T> => invoke<T>(command, args);
-
-/** Shape of one `wallpapers_list` entry as the core returns it. */
-interface CoreWallpaper {
-  readonly id: string;
-  readonly name: string;
-  readonly style: string;
-  readonly mode: string;
-  readonly accent: string;
-  readonly path: string;
-  /** Web path such as `/wallpaper-thumbs/x.jpg`. */
-  readonly thumb: string;
-}
-
-function toWallpaperItem(w: CoreWallpaper): WallpaperItem {
-  return { id: w.id, name: w.name, source: "bundled", thumbnailUrl: w.thumb };
-}
 
 const ENVIRONMENT_CHANGED = "environment://changed";
 
@@ -264,20 +231,16 @@ export const tauriNativeApi: NativeApi = {
   startup: {
     get: () => call("startup_get"),
     set: (setting, value) => call("startup_set", { setting, value }),
+    restoreWindows: () => call("restore_windows"),
   },
   displays: { list: () => call("displays_list") },
   wallpapers: {
-    list: async () => (await call<readonly CoreWallpaper[]>("wallpapers_list")).map(toWallpaperItem),
+    list: () => call("wallpapers_list"),
     assignments: () => call("wallpapers_assignments"),
     assign: (monitorId, wallpaperId, fit) => call("wallpapers_assign", { monitorId, wallpaperId, fit }),
     importFile: () => call("wallpapers_import"),
     remove: (id) => call("wallpapers_remove", { id }),
     currentImage: async () => new Blob([await call<ArrayBuffer>("wallpaper_current_image")]),
-  },
-  performance: {
-    get: () => call("performance_get"),
-    set: (patch) => call("performance_set", { patch }),
-    stats: () => call("performance_stats"),
   },
   shortcuts: { register: (bindings) => call("shortcuts_register", { bindings }) },
   window: {
@@ -285,10 +248,10 @@ export const tauriNativeApi: NativeApi = {
     setEditMode: (on) => call("overlay_edit_mode", { on }),
   },
   app: { info: () => call("app_info"), openDataFolder: () => call("app_open_data_folder") },
-  updater: {
-    status: () => call("updater_status"),
-    setEnabled: (enabled) => call("updater_set_enabled", { enabled }),
-    check: () => call("updater_check"),
+  dock: {
+    get: () => call("settings_dock_get"),
+    set: (settings) => call("settings_dock_set", { settings }),
+    apps: () => call("settings_dock_apps"),
   },
 };
 

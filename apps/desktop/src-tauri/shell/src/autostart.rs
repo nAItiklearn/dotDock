@@ -117,6 +117,11 @@ fn restore_startup_delay(snapshot: &snapshot::Snapshot) -> Result<(), AutostartE
     Ok(())
 }
 
+/// Whether Explorer's startup delay is off for this user (the Run-key path turns it off).
+pub fn startup_delay_removed() -> bool {
+    matches!(registry::get_dword(SERIALIZE_KEY, STARTUP_DELAY_VALUE), Ok(Some(0)))
+}
+
 /// Turns launch-at-sign-in on. Idempotent, and re-registers the current exe path, so a moved
 /// or updated install is picked up. Snapshots the original state first.
 pub fn enable() -> Result<Method, AutostartError> {

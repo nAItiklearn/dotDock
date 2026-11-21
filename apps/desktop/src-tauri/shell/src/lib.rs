@@ -5,9 +5,14 @@
 pub mod autostart;
 pub mod boot_log;
 pub mod crash_guard;
+pub mod desktop_icons;
+pub mod displays;
 pub mod dock_guard;
+pub mod file_dialog;
 pub mod first_run;
 pub mod handover;
+pub mod hotkey;
+pub mod instance;
 pub mod modules;
 mod process;
 pub mod providers;
@@ -18,6 +23,7 @@ pub mod sentinel;
 pub mod snapshot;
 pub mod taskbar;
 pub mod wallpaper;
+pub mod wallpaper_library;
 
 use std::path::PathBuf;
 

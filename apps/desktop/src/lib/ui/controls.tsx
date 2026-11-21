@@ -90,21 +90,24 @@ interface SliderProps {
 
 export function Slider({ value, min, max, step, onChange, label, disabled = false, valueText }: SliderProps) {
   const fill = max > min ? ((value - min) / (max - min)) * 100 : 0;
+  // The filled part is its own element over a plain track: two flat colours, no gradient.
   return (
-    <input
-      type="range"
-      name={fieldName(label)}
-      className="ui-slider"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      disabled={disabled}
-      aria-label={label}
-      aria-valuetext={valueText}
-      style={{ "--fill": `${fill}%` } as CSSProperties}
-      onChange={(e) => onChange(Number(e.currentTarget.value))}
-    />
+    <span className="ui-slider" style={{ "--fill": `${fill}%` } as CSSProperties}>
+      <span className="ui-slider__fill" aria-hidden="true" />
+      <input
+        type="range"
+        name={fieldName(label)}
+        className="ui-slider__input"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={disabled}
+        aria-label={label}
+        aria-valuetext={valueText}
+        onChange={(e) => onChange(Number(e.currentTarget.value))}
+      />
+    </span>
   );
 }
 
@@ -198,11 +201,34 @@ interface TextFieldProps {
   readonly maxLength?: number;
   readonly type?: "text" | "time";
   readonly disabled?: boolean;
+  /** Enter, and by default leaving the field, commit what was typed. */
   readonly onCommit?: () => void;
+  /**
+   * False when committing does something new (creating a profile) rather than saving an edit:
+   * then only Enter commits, so moving on to the next control never acts too early.
+   */
+  readonly commitOnBlur?: boolean;
+  /** Escape: drop what was typed. */
+  readonly onCancel?: () => void;
+  /** For a field that appears because the person asked to type, such as Rename. */
+  readonly autoFocus?: boolean;
   readonly invalid?: boolean;
 }
 
-export function TextField({ value, onChange, label, placeholder, maxLength, type = "text", disabled = false, onCommit, invalid = false }: TextFieldProps) {
+export function TextField({
+  value,
+  onChange,
+  label,
+  placeholder,
+  maxLength,
+  type = "text",
+  disabled = false,
+  onCommit,
+  commitOnBlur = true,
+  onCancel,
+  autoFocus = false,
+  invalid = false,
+}: TextFieldProps) {
   const id = useId();
   return (
     <input
@@ -214,6 +240,7 @@ export function TextField({ value, onChange, label, placeholder, maxLength, type
       placeholder={placeholder}
       maxLength={maxLength}
       disabled={disabled}
+      autoFocus={autoFocus}
       aria-label={label}
       aria-invalid={invalid || undefined}
       spellCheck={false}
@@ -221,8 +248,13 @@ export function TextField({ value, onChange, label, placeholder, maxLength, type
       onChange={(e) => onChange(e.currentTarget.value)}
       onKeyDown={(e) => {
         if (e.key === "Enter") onCommit?.();
+        else if (e.key === "Escape" && onCancel) {
+          // The field's own Escape; it must not also close a panel or leave edit mode.
+          e.stopPropagation();
+          onCancel();
+        }
       }}
-      onBlur={onCommit}
+      onBlur={commitOnBlur ? onCommit : undefined}
     />
   );
 }

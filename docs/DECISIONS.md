@@ -198,3 +198,23 @@ Replaces the first switch of D-021, which stopped the parts but left the wallpap
 
 ## D-027 Dock material tokens stay with the dock themes (theme track, lead 2026-11-21)
 A wallpaper or custom theme drives colour and shadow strength only. Material, translucency, radius, border and shadow of the dock are carried by the dock UI's own themes (glass, glass-lite, Obsidian, Paper, Aurum, minimal) on the dock branch. Adding them to the theme document here would add settings with no consumer on this branch. Revisit once the dock UI is merged, if a theme should switch the dock's material.
+
+## D-028 Settings takes in the theme track, and its two switches end Settings (Settings track, 2026-11-21)
+- **Why merge here.** The two switches (D-021, D-024) need the module manager (`modules_host`, `home_host`, the
+  `environment_*` and `taskbar_set` commands), which only the theme branch has. Merging that branch into the Settings
+  branch is the only way to put real switches, not stand-ins, at the end of Settings.
+- **What was decided in the merge.** The overlay lives in `home_host` (theme track); the Settings commands stay in
+  `core_commands`. "Use this desktop" (the `useOurDesktop` startup toggle and `core_prefs`/`core.json`) is gone: the
+  dotDock theme switch replaces it, so there is one way to switch off, not two. The theme track's `wallpaper_apply`,
+  `wallpaper_monitors`, `autostart_set` and its own `wallpapers_list`/`restore_windows` are dropped for the Settings
+  versions (per-display assign, import, the restore report); `wallpaper_current_image` stays for theme-from-wallpaper.
+  The island's per-part "Show the notch" row is removed (D-024). `EnvironmentSwitches` is the last thing on the
+  Recovery page, outside its gate, so it stays usable when the startup state cannot be read.
+
+## D-029 The dock sits at the bottom only; Settings' theme list follows the dock's registry (owner, 2026-11-21 11:35)
+- Settings has no dock position control and no search entry for one. `edge` stays in the dock contract
+  (`dotdock-dock` protocol) and Settings passes it through unchanged; dropping the field itself is the dock tracks'
+  change, since the dock and its store own it.
+- Settings' `DOCK_THEMES` (`lib/native/dock.ts`) must equal `DOCK_THEMES` in the dock's `src/dock/theme.ts`. A test
+  reads the dock's registry whenever that file is in the build and fails on any difference, so a theme the dock
+  drops (glass may be deferred) disappears from Settings in the same merge, previews and all.

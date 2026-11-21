@@ -1,5 +1,6 @@
 //! dotDock core: owns the desktop overlay window, providers and boot timing.
 
+mod core_commands;
 mod desktop_host;
 mod home_host;
 mod island_host;
@@ -13,7 +14,7 @@ use dotdock_shell::crash_guard::{self, StartDecision};
 use dotdock_shell::first_run::{self, FirstStart};
 use dotdock_shell::providers::weather::{self, Place};
 use dotdock_shell::wallpaper;
-use dotdock_shell::{autostart, boot_log as boot, dock_guard, sentinel};
+use dotdock_shell::{autostart, boot_log as boot, dock_guard, instance, sentinel};
 use home_host::HomeState;
 use tauri::{AppHandle, Manager, State};
 
@@ -36,45 +37,9 @@ fn weather_set_place(place: Place, home: State<'_, HomeState>) -> Result<(), Str
     Ok(())
 }
 
-/// One bundled wallpaper for the Settings picker.
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WallpaperItem {
-    id: String,
-    name: String,
-    style: String,
-    mode: String,
-    accent: String,
-    path: String,
-    /// Web path of the small preview, e.g. `/wallpaper-thumbs/paper-ring-dark.jpg`.
-    thumb: Option<String>,
-}
-
-fn bundled_wallpapers_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
-    app.path().resource_dir().map(|d| d.join("wallpapers")).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn wallpapers_list(app: AppHandle) -> Result<Vec<WallpaperItem>, String> {
-    let dir = bundled_wallpapers_dir(&app)?;
-    let items = wallpaper::bundled(&dir).map_err(|e| e.to_string())?;
-    Ok(items
-        .into_iter()
-        .map(|(e, path)| WallpaperItem {
-            id: e.id,
-            name: e.name,
-            style: e.style,
-            mode: e.mode,
-            accent: e.accent,
-            thumb: e.thumb.map(|t| format!("/{t}")),
-            path: path.to_string_lossy().into_owned(),
-        })
-        .collect())
-}
-
 /// The default wallpaper of a first start. Applying waits on COM and the shell, so it runs off the setup thread.
 fn apply_first_run_wallpaper(app: &AppHandle, first: FirstStart) {
-    let outcome = match bundled_wallpapers_dir(app) {
+    let outcome = match core_commands::bundled_dir(app) {
         Ok(dir) => first.apply_default(&dir, |path| {
             wallpaper::apply(path, None, wallpaper::Fit::default()).map_err(|e| e.to_string())
         }),
@@ -83,43 +48,11 @@ fn apply_first_run_wallpaper(app: &AppHandle, first: FirstStart) {
     boot::record(&format!("first start wallpaper: {outcome:?}"));
 }
 
-/// Sets a bundled wallpaper as the real Windows wallpaper (all monitors when `monitor` is None).
-#[tauri::command]
-async fn wallpaper_apply(
-    app: AppHandle,
-    id: String,
-    mode: String,
-    fit: wallpaper::Fit,
-    monitor: Option<String>,
-) -> Result<(), String> {
-    let dir = bundled_wallpapers_dir(&app)?;
-    let items = wallpaper::bundled(&dir).map_err(|e| e.to_string())?;
-    let (_, path) = items
-        .into_iter()
-        .find(|(e, _)| e.id == id && e.mode == mode)
-        .ok_or_else(|| format!("no bundled wallpaper {id} ({mode})"))?;
-    wallpaper::apply(&path, monitor.as_deref(), fit).map_err(|e| e.to_string())
-}
-
 /// The picture Windows is showing as the wallpaper, as the raw bytes of its file, for Settings to
 /// read the colours of. The path is Windows' own answer; the caller cannot name a file.
 #[tauri::command]
 async fn wallpaper_current_image() -> Result<tauri::ipc::Response, String> {
     wallpaper::current_image().map(tauri::ipc::Response::new).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn wallpaper_monitors() -> Result<Vec<String>, String> {
-    wallpaper::monitors().map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn autostart_set(enabled: bool) -> Result<(), String> {
-    if enabled {
-        autostart::enable().map(|_| ()).map_err(|e| e.to_string())
-    } else {
-        autostart::disable().map_err(|e| e.to_string())
-    }
 }
 
 /// One-shot commands handled before any window exists. Exits the process if one ran.
@@ -179,6 +112,17 @@ pub fn run() {
     if run_cli_command() {
         return;
     }
+    // A later launch only hands over to the running app: the single-instance plugin forwards it and
+    // exits while the app is built. Nothing below may run for it (see `instance`).
+    let primary = instance::is_primary();
+    if primary && !prepare_primary_start() {
+        return;
+    }
+    build_and_run(primary);
+}
+
+/// The checks of the launch that runs the app. False when it must not start (safe mode, crash loop).
+fn prepare_primary_start() -> bool {
     boot::record_process_start();
     // Before anything else: if the last run left the taskbar hidden (power loss, or even the
     // sentinel was killed), it comes back now. Also in safe mode: showing it is always safe.
@@ -188,7 +132,7 @@ pub fn run() {
     if shift_held() {
         boot::mark("safe-mode");
         notice("Safe mode: dotDock started without changing your desktop.\n\nStart it again without holding Shift to bring your widgets back.");
-        return;
+        return false;
     }
     if let StartDecision::Tripped = crash_guard::on_start() {
         // At sign-in, stay quiet: the user is told on their next manual launch.
@@ -196,15 +140,23 @@ pub fn run() {
             notice("dotDock stopped unexpectedly several times, so it put your Windows desktop back the way it was and turned off starting with Windows.\n\nYou can start it again any time.");
             crash_guard::take_tripped_notice();
         }
-        return;
+        return false;
     }
     if !launched_at_sign_in && crash_guard::take_tripped_notice().is_some() {
         notice("Earlier, dotDock stopped unexpectedly several times at sign-in, so it put your Windows desktop back and turned off starting with Windows.\n\nIt is starting normally now.");
     }
+    true
+}
+
+fn build_and_run(primary: bool) {
+    let launched_at_sign_in = std::env::args().any(|a| a == autostart::AUTOSTART_ARG);
     let result = tauri::Builder::default()
         // A second launch opens Settings in the running instance (MASTER_SPEC 7.4).
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| tray::open_settings(app)))
         .manage(HitRegions::default())
+        .register_uri_scheme_protocol(core_commands::WALLPAPER_SCHEME, |_ctx, request| {
+            core_commands::serve_wallpaper(&request)
+        })
         .invoke_handler(tauri::generate_handler![
             home_host::providers_ready,
             home_host::overlay_ready,
@@ -225,16 +177,35 @@ pub fn run() {
             media_command,
             weather_search,
             weather_set_place,
-            wallpapers_list,
-            wallpaper_apply,
             wallpaper_current_image,
-            wallpaper_monitors,
-            autostart_set
+            core_commands::startup_get,
+            core_commands::startup_set,
+            core_commands::restore_windows,
+            core_commands::displays_list,
+            core_commands::wallpapers_list,
+            core_commands::wallpapers_assignments,
+            core_commands::wallpapers_assign,
+            core_commands::wallpapers_import,
+            core_commands::wallpapers_remove,
+            core_commands::shortcuts_register,
+            core_commands::settings_open,
+            core_commands::overlay_edit_mode,
+            core_commands::app_info,
+            core_commands::app_open_data_folder,
+            core_commands::settings_dock_get,
+            core_commands::settings_dock_set,
+            core_commands::settings_dock_apps
         ])
         .setup(move |app| {
+            // The plugin only lets a later launch through while the running app is still before its
+            // own build (a modal notice, a quick double click). It must not become a second app.
+            if !primary {
+                std::process::exit(0);
+            }
             boot::mark("setup");
             let handle = app.handle().clone();
             tray::install(&handle)?;
+            app.manage(core_commands::HotkeyState::start(&handle));
             // Decided before any window exists: the first window creates the traces of an earlier run.
             let first_start = dotdock_shell::app_data_dir().and_then(|dir| first_run::claim(&dir));
             modules_host::install(&handle);
