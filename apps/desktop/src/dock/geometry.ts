@@ -337,23 +337,44 @@ export interface PreviewLayout {
   readonly h: number;
   /** Where the core draws the thumbnails, relative to the panel's top-left. */
   readonly well: Rect;
+  /** Windows with a thumbnail. */
   readonly shown: number;
+  /** Windows listed by title. */
+  readonly titles: number;
+  /** Windows left out of the list, counted in a last "and N more" row. */
+  readonly more: number;
 }
 
-/** Layout of the preview panel for a number of windows: thumbnails for the first few, titles for all. */
-export function previewLayout(windowCount: number, vertical: boolean): PreviewLayout {
-  const shown = Math.min(windowCount, PREVIEW.maxSlots);
+function previewFor(windowCount: number, vertical: boolean, shown: number, titles: number): PreviewLayout {
   const cols = vertical ? 1 : shown;
   const rows = vertical ? shown : 1;
   const wellW = cols * PREVIEW.slotW + (cols - 1) * PREVIEW.slotGap;
   const wellH = rows * PREVIEW.slotH + (rows - 1) * PREVIEW.slotGap;
-  const titles = Math.min(windowCount, PREVIEW.maxRows);
+  const more = windowCount - titles;
+  const listed = titles + (more > 0 ? 1 : 0);
   return {
     w: wellW + 2 * PREVIEW.pad,
-    h: PREVIEW.pad + PREVIEW.header + wellH + PREVIEW.pad / 2 + titles * PREVIEW.row + PREVIEW.pad / 2,
+    h: PREVIEW.pad + PREVIEW.header + wellH + PREVIEW.pad / 2 + listed * PREVIEW.row + PREVIEW.pad / 2,
     well: { x: PREVIEW.pad, y: PREVIEW.pad + PREVIEW.header, w: wellW, h: wellH },
     shown,
+    titles,
+    more,
   };
+}
+
+/**
+ * Layout of the preview panel for a number of windows: thumbnails for the first few, titles for the rest. On a
+ * small screen it drops thumbnails, then title rows, until the panel fits `room` inside the screen margin.
+ */
+export function previewLayout(windowCount: number, vertical: boolean, room?: Size): PreviewLayout {
+  let shown = Math.min(windowCount, PREVIEW.maxSlots);
+  let titles = Math.min(windowCount, PREVIEW.maxRows);
+  let layout = previewFor(windowCount, vertical, shown, titles);
+  if (!room) return layout;
+  const fits = (l: PreviewLayout): boolean => l.w <= room.w - 2 * SCREEN_MARGIN && l.h <= room.h - 2 * SCREEN_MARGIN;
+  while (!fits(layout) && shown > 1) layout = previewFor(windowCount, vertical, --shown, titles);
+  while (!fits(layout) && titles > 1) layout = previewFor(windowCount, vertical, shown, --titles);
+  return layout;
 }
 
 /** Margin around a rect that still counts as being on it, so the edge never flickers. */

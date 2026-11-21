@@ -47,7 +47,7 @@ export function Preview({ onRect }: PreviewProps) {
     setAnchor(towardInside({ x: r.left, y: r.top, w: r.width, h: r.height }, edge, lift));
   }, [subjectKey, edge, magnification, iconSize]);
 
-  const layout = useMemo(() => previewLayout(subject?.windows.length ?? 0, vertical), [subject?.windows.length, vertical]);
+  const layout = useMemo(() => previewLayout(subject?.windows.length ?? 0, vertical, viewport), [subject?.windows.length, vertical, viewport]);
   const pos = anchor ? placeBesideDock(anchor, layout, edge, viewport, PREVIEW_GAP) : null;
   const x = pos?.x;
   const y = pos?.y;
@@ -80,8 +80,8 @@ export function Preview({ onRect }: PreviewProps) {
     "--prev-gap": `${PREVIEW.slotGap}px`,
   } as CSSProperties;
   const slots = subject.windows.slice(0, layout.shown);
-  const rows = subject.windows.slice(0, PREVIEW.maxRows);
-  const hidden = subject.windows.length - rows.length;
+  const rows = subject.windows.slice(0, layout.titles);
+  const hidden = layout.more;
 
   return (
     <div className="preview" data-edge={edge} role="group" aria-label={subject.name} style={style} onPointerEnter={() => enterPreview(subject.key)} onPointerLeave={leavePreview}>

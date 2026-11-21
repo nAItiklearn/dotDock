@@ -121,5 +121,20 @@ describe("previewLayout", () => {
     const many = previewLayout(9, false);
     expect(many.shown).toBe(PREVIEW.maxSlots);
     expect(many.h).toBeGreaterThan(previewLayout(1, false).h);
+    expect(many.titles).toBe(PREVIEW.maxRows);
+    expect(many.more).toBe(9 - PREVIEW.maxRows);
+  });
+  it("counts the last 'and N more' row in its height", () => {
+    expect(previewLayout(PREVIEW.maxRows + 1, false).h - previewLayout(PREVIEW.maxRows, false).h).toBe(PREVIEW.row);
+  });
+  it("drops thumbnails, then titles, until it fits a small screen", () => {
+    const room = { w: 1280, h: 720 };
+    const column = previewLayout(9, true, room);
+    expect(column.shown).toBeLessThan(PREVIEW.maxSlots);
+    expect(column.h).toBeLessThanOrEqual(room.h - 2 * SCREEN_MARGIN);
+    expect(previewLayout(9, true, { w: 1920, h: 1080 }).shown).toBe(PREVIEW.maxSlots);
+    const tiny = previewLayout(9, true, { w: 400, h: 300 });
+    expect(tiny.shown).toBe(1);
+    expect(tiny.titles + tiny.more).toBe(9);
   });
 });

@@ -102,3 +102,30 @@ export function measurePanels(elements: Iterable<Measurable>): Rect[] {
 
 /** What marks a shown panel in the dock window: popovers that are open, and context menus. */
 export const OPEN_PANEL_SELECTOR = '.popover[data-open="true"], .menu';
+
+/** What is open on the dock, as far as the pointer and the keyboard are concerned. */
+export interface OpenState {
+  readonly libraryOpen: boolean;
+  readonly stack: unknown;
+  readonly tile: unknown;
+  readonly gallery: unknown;
+  readonly prefs: unknown;
+  readonly menu: unknown;
+  readonly editing: boolean;
+}
+
+export interface PointerMode {
+  /** A popover or menu is open: its drawn box is measured into the hit regions, and it closes on blur. */
+  readonly panelOpen: boolean;
+  /** The whole window takes the pointer. True only for the App Library. */
+  readonly fullscreen: boolean;
+  /** The dock asks for the keyboard. Only ever after the user opened something on the dock itself. */
+  readonly keyboard: boolean;
+}
+
+/** How the dock window treats the pointer and the keyboard for what is open right now. */
+export function pointerMode(open: OpenState): PointerMode {
+  const panelOpen =
+    open.libraryOpen || open.stack !== null || open.tile !== null || open.gallery !== null || open.prefs !== null || open.menu !== null;
+  return { panelOpen, fullscreen: open.libraryOpen, keyboard: open.editing || panelOpen };
+}

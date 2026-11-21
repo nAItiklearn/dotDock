@@ -5,6 +5,7 @@ import { EditBanner } from "./EditBanner";
 import { chooseEffects, readCapabilities } from "./effects";
 import type { Rect } from "./geometry";
 import { loadContextMenu, loadGallery, loadLibrary, loadPrefs, loadPreview, loadStackPopover, loadTilePopover, usePanel, whenIdle } from "./prefetch";
+import { pointerMode } from "./regions";
 import { useDockStore } from "./store";
 import { isTranslucent, resolveTheme } from "./theme";
 import { useAutoHide, useCloseOnBlur, useKeyboardFocus, useNativeGlass, useNoticeTimeout, useOpenPanelRects, useRegions, type PanelRects } from "./useDockShell";
@@ -70,15 +71,15 @@ export function Dock() {
   const [layout, setLayout] = useState<BarLayout | null>(null);
   const [panels, setPanels] = useState<PanelRects>({});
 
-  const modal = libraryOpen || stack !== null || tile !== null || gallery !== null || prefs !== null || menu !== null;
+  const { panelOpen: modal, fullscreen, keyboard } = pointerMode({ libraryOpen, stack, tile, gallery, prefs, menu, editing });
   const busy = pointerInside || editing || modal;
   const hidden = useAutoHide(autoHide && !frozen, busy);
   const openRects = useOpenPanelRects(rootRef, modal);
   const hitPanels = useMemo(() => ({ ...panels, ...openRects }), [panels, openRects]);
-  useRegions(layout, hidden, hitPanels, viewport, libraryOpen);
+  useRegions(layout, hidden, hitPanels, viewport, fullscreen);
   useCloseOnBlur(modal);
   useNativeGlass(layout, theme, hidden, mode === "dark");
-  useKeyboardFocus(editing || modal);
+  useKeyboardFocus(keyboard);
   useNoticeTimeout();
 
   // The panels are code-split but never loaded on demand: they load when the browser is first idle after the first
