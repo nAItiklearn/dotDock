@@ -67,6 +67,13 @@ compositor or GPU work (the plate's shadow layer, the canvases' first raster), n
 right-click frame of run 1 did not come back in 23 right-clicks and had no script attribution either; no change
 was made for it.
 
+## Fix 5, not yet measured live
+`e642179` / `cd74d62`: the warm-up now puts a copy of the expanded island on the page itself (real classes and
+layers: plate shadow, dot texture, canvases, fonts loaded first) at opacity 0.001 with no pointer input for two
+frames, then removes it, so first-time layer building and raster happen at idle too. Unit suite green (676). The
+soak re-run could not happen before the 20:00 deadline: another track held the screen lock from 19:31. Until it
+runs, run 2 (2 drops) is the measured state.
+
 ## Rubric (self-score, side by side with `1747058098-...-ss7-thumb.webp` status pill and `00-nthing-002-10.jpg`)
 Visual rubric (12.3): fidelity 4.7, typography and dot-matrix craft 4.8, spacing 4.8, colour and contrast 4.7,
 motion 4.6 (smooth springs, but the drops above), state completeness 4.9, consistency 4.7, originality 4.9.
