@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { formatElapsed, formatTokens, tokensTick } from "./format";
+import { describe, expect, it, vi } from "vitest";
+import { formatElapsed, formatTokens, tokensTick, warmTokenFormats } from "./format";
 
 describe("formatTokens", () => {
   it("shows small counts in full with the locale's grouping", () => {
@@ -21,6 +21,22 @@ describe("formatTokens", () => {
     for (const n of [0, 9, 99, 999, 9999, 10_000, 99_949, 100_000, 999_999, 1_000_000, 12_345_678]) {
       expect(formatTokens(n, "en-US").length).toBeLessThanOrEqual(5);
     }
+  });
+
+  // The soak test traced a 55 ms first expansion to a new number formatter per call; counts reuse them now.
+  it("builds each formatter once, so animated counts and the first expansion stay cheap", () => {
+    warmTokenFormats();
+    formatTokens(1, "fr-FR");
+    formatTokens(12_000, "fr-FR");
+    const spy = vi.spyOn(Intl, "NumberFormat");
+    const perCall = vi.spyOn(Number.prototype, "toLocaleString");
+    for (let n = 0; n < 200_000; n += 997) formatTokens(n);
+    formatTokens(5, "fr-FR");
+    formatTokens(15_000, "fr-FR");
+    expect(spy).not.toHaveBeenCalled();
+    expect(perCall).not.toHaveBeenCalled();
+    spy.mockRestore();
+    perCall.mockRestore();
   });
 
   it("clamps negative and fractional input", () => {
