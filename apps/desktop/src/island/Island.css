@@ -279,3 +279,15 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* The warm copy of the expanded island primeActiveIsland puts on the page for two frames: present for the
+   compositor, invisible and untouchable for the user. */
+.island-prime {
+  position: fixed;
+  inset: 0;
+  opacity: 0.001;
+  pointer-events: none;
+}
+.island-prime * {
+  pointer-events: none !important;
+}

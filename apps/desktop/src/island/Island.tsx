@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, type CSSProperties, type KeyboardEv
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { actions } from "./bridge";
 import { Content, SUBTITLE_HOLD_MS, useHeldLine } from "./Content";
-import { BASE, SCENE_HEIGHT, layoutFor, modeFor, plateSize } from "./geometry";
+import { BASE, SCENE_HEIGHT, layoutFor, modeFor, plateSize, type Layout } from "./geometry";
 import { Pager } from "./Pager";
 import { Plate, usePlateMotion } from "./Plate";
 import type { SessionView } from "./protocol";
@@ -21,8 +21,24 @@ const SWIPE_DISTANCE = 40;
 const SWIPE_PAUSE_MS = 250;
 const FLASH_MS = 2200;
 
-function tokenRadius(): number {
+export function tokenRadius(): number {
   return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--radius-md")) || 0;
+}
+
+/** The custom properties the stylesheet sizes every row from (see Island.css). */
+export function islandVars(scale: number, layout: Layout): CSSProperties {
+  return {
+    "--k": scale,
+    "--pad": `${BASE.padding * scale}px`,
+    "--sub-h": `${BASE.subtitleRow * scale}px`,
+    "--state-h": `${BASE.stateRow * scale}px`,
+    "--orb": `${BASE.orb * scale}px`,
+    "--scene-w": `${BASE.islandWidth * scale - 2 * BASE.padding * scale}px`,
+    "--scene-h": `${SCENE_HEIGHT * scale}px`,
+    "--active-w": `${layout.w}px`,
+    "--active-h": `${layout.h}px`,
+    "--tiny-dot": `${3 * scale}px`,
+  } as CSSProperties;
 }
 
 /** The floating status island. Everything it shows comes from the store; nothing here knows where data came from. */
@@ -105,18 +121,7 @@ export function Island() {
     swipe.current = { travel: 0, at: now };
   };
 
-  const vars = {
-    "--k": scale,
-    "--pad": `${BASE.padding * scale}px`,
-    "--sub-h": `${BASE.subtitleRow * scale}px`,
-    "--state-h": `${BASE.stateRow * scale}px`,
-    "--orb": `${BASE.orb * scale}px`,
-    "--scene-w": `${BASE.islandWidth * scale - 2 * BASE.padding * scale}px`,
-    "--scene-h": `${SCENE_HEIGHT * scale}px`,
-    "--active-w": `${layout.w}px`,
-    "--active-h": `${layout.h}px`,
-    "--tiny-dot": `${3 * scale}px`,
-  } as CSSProperties;
+  const vars = islandVars(scale, layout);
   const pagerTop = settings.showScene ? layout.sceneTop + 4 * scale : layout.rowTop;
 
   return (
