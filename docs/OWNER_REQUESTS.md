@@ -24,18 +24,27 @@ A row is checked only when it is merged on main with evidence (test, screenshot 
 - [ ] Live test run by the agent itself on the macOS-style glass theme: add, remove, open apps, every feature,
       timed and graded, then every other theme screenshotted over the grass wallpaper.
 - [ ] Live runs show the real user path (visible cursor, real clicks), captioned, not scripted state.
+- [ ] Themes restyle the whole dock, not just the colour (material, translucency, blur, radius, border, shadow,
+      indicators); glass is a real macOS-like frosted, transparent dock (2026-11-21 10:25).
+- [ ] The dock shows its features at first glance (⋯, default tiles, stacks, App Library, full right-click menu).
+- [ ] App categories come pre-made on first install from the user's real apps (2026-11-21 11:05).
+- [ ] Live tests never block the owner's PC: no opaque or full-screen windows; the owner saw a white full-screen
+      dock with 2 apps (2026-11-21 11:08).
 - [ ] All CoolDock-gap tiles and the developer tiles, with real data.
 
 ## Notch
 - [ ] Works with every agent, absolutely nicely, with many cute, calm animations per state.
 
 ## Home screen
+- [ ] "+ Widgets" clickable, fast, no red or dashed grid lines, freely movable (2026-11-21 10:35).
 - [ ] Move, resize, delete and add widgets directly on the home screen; tested; fast to add, smooth to move.
 
 ## Whole environment
 - [ ] Smooth like Linux, no bloat: no needless polling, low idle CPU, quick start.
 
 ## Website
+- [ ] Features in a bento grid of cards with real screenshots, a notch carousel, zoom-on-scroll videos at the end; every page proofread and current (2026-11-21 10:45).
+- [ ] Animated pixel scenes on home, Privacy and Features, never overlapping text, mobile-friendly (2026-11-21 11:00).
 - [ ] Widgets section is a dense, alive grid (not dead, not half-empty); nav never covers titles.
 - [ ] Pixel scenes that read instantly and match the flower theme (meadow, octopus, horse, dragonfly over lilies,
       butterflies), in place of the abstract bands, including the one before the FAQ.
