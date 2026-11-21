@@ -1,7 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { isTauri } from "../providers/bridge";
-import { firstRunLayout, markSeeded, wasSeeded } from "./firstRun";
 import type { Rect } from "./geometry";
 import { activationTarget } from "./model";
 import type { GlassRequest } from "./nativeGlass";
@@ -125,22 +124,8 @@ async function start(): Promise<() => void> {
     backdrop: store.setBackdrop,
   });
   const snapshot = await backend.ready();
-  if (snapshot) {
-    store.applySnapshot(snapshot);
-    await layOutFirstRun(snapshot);
-  }
+  if (snapshot) store.applySnapshot(snapshot);
   return off;
-}
-
-/** A dock nobody has laid out yet gets the first-run layout (D-032), once per profile. */
-async function layOutFirstRun(snapshot: DockSnapshot): Promise<void> {
-  const layout = firstRunLayout(useDockStore.getState().settings, snapshot.apps, snapshot.categories, wasSeeded());
-  if (layout === null) {
-    if (snapshot.apps.length > 0) markSeeded();
-    return;
-  }
-  await actions.updateSettings(layout);
-  if (useDockStore.getState().settings.pinned.length > 0) markSeeded();
 }
 
 const fail = (text: string): void => useDockStore.getState().setNotice(text);
