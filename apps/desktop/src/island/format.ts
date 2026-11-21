@@ -29,3 +29,8 @@ export function formatElapsed(ms: number | null): string | null {
   const s = total % 60;
   return h > 0 ? `${h}:${pad2(m)}:${pad2(s)}` : `${m}:${pad2(s)}`;
 }
+
+/** The token counter nudges its arrow only when real output grows; a reset to a new turn or a repeat stays still. */
+export function tokensTick(previous: number, next: number): boolean {
+  return next > previous && next > 0;
+}

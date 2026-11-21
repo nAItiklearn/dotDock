@@ -227,19 +227,12 @@
   height: calc(8px * var(--k));
 }
 
-/* The strip along the bottom edge. The glow is a plain gradient: static, so it costs no frames. */
+/* The strip along the bottom edge: dots only, on the plate itself, with no glow behind them. */
 .scene {
   position: absolute;
   left: var(--pad);
   width: var(--scene-w);
   height: var(--scene-h);
-}
-.scene::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 60% 100% at 50% 100%, color-mix(in srgb, var(--text) 9%, transparent), transparent 72%);
-  mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
 }
 .scene canvas {
   position: relative;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatElapsed, formatTokens } from "./format";
+import { formatElapsed, formatTokens, tokensTick } from "./format";
 
 describe("formatTokens", () => {
   it("shows small counts in full with the locale's grouping", () => {
@@ -46,5 +46,15 @@ describe("formatElapsed", () => {
     expect(formatElapsed(null)).toBeNull();
     expect(formatElapsed(Number.NaN)).toBeNull();
     expect(formatElapsed(-4_000)).toBe("0:00");
+  });
+});
+
+describe("tokensTick", () => {
+  it("ticks when the count grows, never when it repeats or a new turn starts again at 0", () => {
+    expect(tokensTick(0, 412)).toBe(true);
+    expect(tokensTick(412, 1310)).toBe(true);
+    expect(tokensTick(1310, 1310)).toBe(false);
+    expect(tokensTick(1310, 0)).toBe(false);
+    expect(tokensTick(1310, 200)).toBe(false);
   });
 });

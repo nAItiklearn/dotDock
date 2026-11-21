@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Tone } from "../icons/frames";
 import type { Phase } from "../protocol";
-import { DONE_SETTLE, STATIC_POSE, creatureCells } from "./creature";
+import { BURST_SECONDS, DONE_SETTLE, STATIC_POSE, burst, creatureCells } from "./creature";
 import { SPRITE_FEET } from "./layout";
 
 interface Cell {
@@ -87,7 +87,10 @@ describe("beetle poses", () => {
     expect(top(0.18)).toBeLessThan(sitting);
     expect(top(0.5 + 0.18)).toBeLessThan(sitting);
     expect(cells("done", DONE_SETTLE + 0.2, 0).some((c) => c.tone === "success")).toBe(true);
-    expect(cells("done", 0.1, 0).some((c) => c.tone === "success")).toBe(false);
+    const hopping = cells("done", 0.1, 0).filter((c) => c.tone === "success");
+    const flying: Cell[] = [];
+    burst((c, r, v, tone) => tone === "success" && flying.push({ c, r, v, tone }), 0.1);
+    expect(hopping).toEqual(flying);
   });
 
   it("blurs its legs and speeds along while running, and lifts alternate legs while walking", () => {
@@ -108,5 +111,24 @@ describe("beetle poses", () => {
     const early = cells("stopped", 1, 0.2).filter((c) => c.r < 3).length;
     const later = cells("stopped", 1, 1.4).filter((c) => c.r < 3).length;
     expect(early + later).toBeGreaterThan(0);
+  });
+
+  it("celebrates a finished turn with a short burst of sparks that flies out, fades and is gone", () => {
+    const sparks = (tp: number): Cell[] => {
+      const out: Cell[] = [];
+      burst((c, r, v, tone) => out.push({ c, r, v, tone }), tp);
+      return out;
+    };
+    const early = sparks(0.1);
+    const late = sparks(0.6);
+    expect(early.filter((c) => c.v > 0.03)).toHaveLength(6);
+    expect(late.filter((c) => c.tone === "accent")).toHaveLength(1);
+    const spread = (list: Cell[]): number => Math.max(...list.map((c) => c.c)) - Math.min(...list.map((c) => c.c));
+    expect(spread(late)).toBeGreaterThan(spread(early));
+    expect(sparks(BURST_SECONDS + 0.01)).toHaveLength(0);
+    expect(sparks(STATIC_POSE.done.tp)).toHaveLength(0);
+    for (const tp of [0.05, 0.3, 0.6, 0.85]) {
+      expect(cells("done", tp, 0)).toEqual(expect.arrayContaining(sparks(tp)));
+    }
   });
 });
