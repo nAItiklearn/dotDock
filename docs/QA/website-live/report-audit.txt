@@ -1,0 +1,7 @@
+Main site audit, 2026-11-21 (preview build, tools/preview.mjs with the fake Upstash counter)
+layout check (tools/check-layout.mjs, headless): 0 findings on /, /features, /download, /privacy, /license, /faq at 390, 414, 768, 1024, 1280, 1440
+  before the nav fix: 12 findings, "control off the page: Menu" on every page at 390 and 414
+Lighthouse (accessibility / best practices / SEO): / 100/100/100 mobile; /features 100/100/100 mobile; /license 100/100/100 mobile;
+  /faq 100/100/100 mobile; /privacy 100/100/100 desktop. Best practices 100 means no console errors.
+reduced motion: 0 running animations on / after scrolling the whole page
+captures: {home,features,download,privacy,license,faq}-{390,768,1024,1440}.jpg (tools/shoot-pages.mjs)
