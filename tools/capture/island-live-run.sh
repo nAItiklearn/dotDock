@@ -20,9 +20,13 @@ log() { echo "$(date +%T) $*"; }
 live_begin || exit 1
 trap live_end EXIT
 for _ in $(seq "$READY_S"); do
-  curl -s "http://127.0.0.1:$DEBUG_PORT/json" | grep -q island.html && break
+  curl -s "http://127.0.0.1:$DEBUG_PORT/json" | grep -q "localhost:$DEV_PORT/island.html" && break
   sleep 1
 done
+if ! curl -s "http://127.0.0.1:$DEBUG_PORT/json" | grep -q "localhost:$DEV_PORT/island.html"; then
+  log "the island page is not this worktree's (build with build_app first); stopping"
+  exit 1
+fi
 log "island up"
 ps_ -Command "(New-Object -ComObject WScript.Shell).AppActivate('dotDock test backdrop')" > /dev/null
 APP=$(ps_ -Command "(Get-CimInstance Win32_Process -Filter \"Name='dotdock.exe'\" | ? { \$_.ExecutablePath -like '$WTW/*'.Replace('/', '\\') }).ProcessId")

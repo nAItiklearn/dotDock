@@ -22,6 +22,17 @@ TRACK=notch
 CROP=${CROP:-635,0,650,300}
 # A private DevTools port, so another track's capture tool never attaches to this app.
 DEBUG_PORT=47913
+# A private dev-server port. Every track's debug build loads its pages from localhost:1420 by default, so with
+# another track's vite on 1420 this app would show that track's code. The notch build is compiled with this port
+# instead (see build_app), and live_begin checks the island page really comes from it.
+DEV_PORT=1424
+
+# Builds the debug app and hook for the live run, with the island's pages served from DEV_PORT.
+build_app() {
+  (cd "$WT/apps/desktop/src-tauri" && source "$WT/tools/env-gnu.sh" && CARGO_TARGET_DIR="$WT/.cache/target" \
+    TAURI_CONFIG="{\"build\":{\"devUrl\":\"http://localhost:$DEV_PORT\"}}" \
+    cargo +stable-x86_64-pc-windows-gnu build -p dotdock -p dotdock-island-hook)
+}
 # Another track's lock older than this is abandoned (docs/AGENT_RULES.md: a run holds the screen 20 min at most).
 LOCK_STALE_S=1200
 
@@ -43,8 +54,9 @@ live_begin() {
   fi
   local others; others=$(other_dotdock)
   if [ -n "$others" ]; then echo "another dotdock.exe runs (pid $others); not starting"; return 1; fi
+  if curl -s -o /dev/null "http://localhost:$DEV_PORT/"; then echo "port $DEV_PORT already serves something; not starting"; return 1; fi
   echo "$TRACK $(date -Iseconds)" > "$LOCK"
-  (cd "$WT/apps/desktop" && nohup npx vite --port 1420 --strictPort > "$LIVE/vite.log" 2>&1 &)
+  (cd "$WT/apps/desktop" && nohup npx vite --port "$DEV_PORT" --strictPort > "$LIVE/vite.log" 2>&1 &)
   nohup powershell -NoProfile -ExecutionPolicy Bypass -File "$WT/tools/capture/backdrop.ps1" \
     -Image "$WTW/assets/wallpapers/meadow-dots-dark.jpg" -Seconds "$LOCK_STALE_S" > "$LIVE/backdrop.log" 2>&1 &
   (cd "$LIVE" && CODEX_HOME=$(cygpath -w "$LIVE/codex-home") \
