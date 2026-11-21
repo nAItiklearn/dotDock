@@ -20,6 +20,7 @@ import math
 from typing import Callable
 
 import numpy as np
+from PIL import Image, ImageDraw
 
 from .dots import F32, halftone
 from .pixel import LIT, MID, SHADE, grass, sparkle, stem_with_leaves
@@ -117,68 +118,114 @@ def _front(cv, width: int, height: int, narrow: bool, half: int, seed: int, kind
 
 
 # --- the horse ----------------------------------------------------------------------------------------
-# A horse in profile facing left, its head lowered to graze. (x, y) is the top-left of its box and ``size``
-# its length; the parts are drawn on their own so the page can move the head and the tail.
+# A horse in profile facing left, grazing: an arched neck sloping down from the withers to a long head whose muzzle
+# reaches the grass. It is drawn straight on the cell grid (no averaging), so the silhouette stays crisp: every
+# shape is a polygon in cell units, a cell belongs to it when its centre is inside, and the tone follows the form
+# (a lighter band along the top line, the far legs a shade lighter, mane, tail and hooves at full strength).
+# The parts are separate pieces so the page can move them: the head and neck, the mane on the crest, an ear, the
+# tail. Coordinates are cells from the top-left of the horse's box; the hooves stand on row HORSE_GROUND.
 
-def _horse_at(x: float, y: float, size: float) -> Callable[[float, float], tuple[float, float]]:
-    return lambda u, v: (x + u * size, y + v * size)
+HORSE_GROUND = 28
+HORSE_COLS = 44
+_CELL_SS = 4                      # samples per cell when testing which cells a polygon covers
 
-
-HORSE_NECK = (0.30, 0.36)        # where the neck meets the withers: the head nods about it
-HORSE_TAIL = (0.90, 0.32)        # the root of the tail: it swishes about it
-_HORSE_BODY_TONE = 0.66
-
-
-def horse_body(cv, x: float, y: float, size: float) -> None:
-    p = _horse_at(x, y, size)
-
-    def stroke(points, w0, w1, tone):
-        a, b, c = (p(*q) for q in points)
-        cv.curve("heart", a, b, c, w0 * size, w1 * size, tone)
-
-    for top, knee, hoof, tone in (((0.33, 0.50), (0.31, 0.70), (0.30, 0.92), 0.50),
-                                  ((0.78, 0.48), (0.85, 0.68), (0.80, 0.92), 0.50),
-                                  ((0.26, 0.50), (0.25, 0.72), (0.24, 0.94), _HORSE_BODY_TONE),
-                                  ((0.72, 0.50), (0.76, 0.70), (0.72, 0.94), _HORSE_BODY_TONE)):
-        stroke([top, knee, hoof], 0.062, 0.034, tone)
-        hx, hy = p(*hoof)
-        cv.polygon("heart", [(hx - 0.028 * size, hy - 0.02 * size), (hx + 0.028 * size, hy - 0.02 * size),
-                             (hx + 0.032 * size, hy + 0.025 * size), (hx - 0.032 * size, hy + 0.025 * size)], 1.0)
-    cx, cy = p(0.52, 0.40)
-    cv.polygon("heart", [(cx + 0.30 * size * math.cos(a), cy + 0.135 * size * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 64)],
-               _HORSE_BODY_TONE)
-    cv.disc("heart", *p(0.27, 0.40), 0.125 * size, _HORSE_BODY_TONE)
-    cv.disc("heart", *p(0.77, 0.38), 0.13 * size, _HORSE_BODY_TONE)
-    cv.disc("heart", *p(0.74, 0.34), 0.08 * size, 0.82)
-    bx, by = p(0.52, 0.34)
-    cv.polygon("heart", [(bx + 0.22 * size * math.cos(a), by + 0.055 * size * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 48)], 0.82)
-    # The root of the neck stays with the body, so the head turns without a gap at the shoulder.
-    cv.disc("heart", *p(*HORSE_NECK), 0.10 * size, _HORSE_BODY_TONE)
+Poly = list[tuple[float, float]]
 
 
-def horse_head(cv, x: float, y: float, size: float) -> None:
-    """Neck reaching forward and down, the head low over the grass; a mane along the top of the neck."""
-    p = _horse_at(x, y, size)
-    cv.polygon("heart", [p(0.36, 0.30), p(0.38, 0.44), p(0.22, 0.52), p(0.12, 0.50), p(0.16, 0.36)], _HORSE_BODY_TONE)
-    cv.polygon("heart", [p(0.17, 0.36), p(0.12, 0.48), p(0.06, 0.66), p(0.02, 0.70), p(-0.03, 0.66), p(0.00, 0.56),
-                         p(0.08, 0.38)], _HORSE_BODY_TONE)
-    cv.disc("heart", *p(-0.005, 0.675), 0.035 * size, _HORSE_BODY_TONE)                                    # muzzle
-    cv.lens("heart", *p(0.12, 0.37), math.radians(-120.0), 0.0, 0.05 * size, 0.03 * size, 1.0)          # ear
-    cv.disc("gold", *p(0.075, 0.47), 0.016 * size, 1.0)                                                    # eye
-    a, b, c = p(0.14, 0.35), p(0.24, 0.30), p(0.35, 0.29)
-    cv.curve("heart", a, b, c, 0.045 * size, 0.035 * size, 1.0)                                            # mane
+def _circle(cx: float, cy: float, r: float, n: int = 24) -> Poly:
+    return [(cx + r * math.cos(a), cy + r * math.sin(a)) for a in np.linspace(0, 2 * math.pi, n, endpoint=False)]
 
 
-def horse_tail(cv, x: float, y: float, size: float) -> None:
-    p = _horse_at(x, y, size)
-    a, b, c = p(*HORSE_TAIL), p(1.00, 0.46), p(0.96, 0.78)
-    cv.curve("heart", a, b, c, 0.06 * size, 0.02 * size, 1.0)
+def _ellipse(cx: float, cy: float, rx: float, ry: float, n: int = 48) -> Poly:
+    return [(cx + rx * math.cos(a), cy + ry * math.sin(a)) for a in np.linspace(0, 2 * math.pi, n, endpoint=False)]
 
 
-def _horse_box(width: int, height: int, narrow: bool) -> tuple[float, float, float]:
-    size = 250.0 if narrow else 330.0
+def _grid(polys: list[Poly]) -> np.ndarray:
+    """The cells (rows x cols of the horse's box) whose centres lie inside any of the polygons."""
+    img = Image.new("1", (HORSE_COLS * _CELL_SS, (HORSE_GROUND + 1) * _CELL_SS), 0)
+    draw = ImageDraw.Draw(img)
+    for poly in polys:
+        draw.polygon([(x * _CELL_SS, y * _CELL_SS) for x, y in poly], fill=1)
+    full = np.asarray(img, dtype=bool)
+    return full[_CELL_SS // 2::_CELL_SS, _CELL_SS // 2::_CELL_SS]
+
+
+_BODY = [_ellipse(26.0, 11.0, 11.0, 4.6), _circle(16.4, 11.2, 4.3), _circle(35.0, 10.2, 4.6), _circle(19.0, 8.0, 2.2)]
+_LEGS_NEAR = [
+    [(14.6, 13), (18.2, 13), (17.6, 19.4), (17.2, 20.6), (17.0, 26.0), (15.6, 26.0), (15.6, 20.6), (15.0, 19.4)],
+    _circle(16.4, 20.0, 1.15),                                                                   # the knee
+    [(31.6, 12.5), (38.0, 12.0), (38.4, 16.0), (38.2, 19.4), (37.6, 20.6), (37.4, 26.0), (36.0, 26.0), (36.0, 20.8),
+     (35.4, 19.0), (33.6, 16.0)],
+    _circle(37.0, 20.2, 1.15),                                                                   # the hock
+]
+_LEGS_FAR = [
+    [(18.0, 13), (20.6, 13), (19.8, 19.4), (19.2, 26.0), (17.9, 26.0), (18.3, 19.4)],
+    [(29.8, 13), (33.4, 13), (34.4, 16.4), (34.6, 19.4), (34.0, 20.6), (33.6, 26.0), (32.4, 26.0), (32.6, 20.6), (31.6, 18.0)],
+]
+_HOOVES_NEAR = [[(15.1, 26.0), (17.5, 26.0), (17.8, 28.0), (14.8, 28.0)], [(35.6, 26.0), (37.8, 26.0), (38.1, 28.0), (35.3, 28.0)]]
+_HOOVES_FAR = [[(17.6, 26.0), (19.6, 26.0), (19.9, 28.0), (17.3, 28.0)], [(32.0, 26.0), (34.0, 26.0), (34.3, 28.0), (31.7, 28.0)]]
+_NECK = [(20.0, 7.0), (16.0, 6.7), (12.6, 8.6), (9.6, 12.0), (7.8, 15.6), (10.6, 17.6), (13.0, 14.6), (16.0, 12.6), (18.6, 12.2)]
+_HEAD = [(7.9, 15.0), (5.3, 16.0), (3.9, 19.0), (2.7, 23.0), (1.7, 26.2), (3.6, 27.4), (5.6, 25.6), (7.8, 21.6), (10.6, 17.6)]
+_MUZZLE = _circle(2.8, 26.2, 1.45)
+_CHEEK = _circle(8.2, 18.2, 2.2)
+_MANE = [(20.6, 6.0), (16.0, 5.6), (12.0, 7.6), (8.8, 11.4), (7.0, 15.0), (8.6, 15.4), (10.2, 12.2), (13.2, 9.0), (16.2, 7.2), (20.0, 7.6)]
+_EAR = [(6.8, 15.8), (8.0, 12.6), (8.9, 15.2)]
+_TAIL = [(38.0, 7.4), (40.8, 7.9), (42.0, 11.0), (42.2, 15.0), (41.6, 20.0), (40.6, 23.2), (39.4, 22.6), (39.8, 18.0),
+         (39.8, 13.0), (38.6, 10.0)]
+_EYE = (5, 18)
+_NOSTRIL = (2, 26)
+
+HORSE_NECK = (17.0, 9.5)          # where the neck leaves the withers: the head dips and lifts about it
+HORSE_EAR = (7.6, 15.4)           # the root of the ear: it flicks about it
+HORSE_TAIL = (39.0, 8.0)          # the root of the tail: it sways about it
+
+
+def _paint(cv, gx: int, gy: int, mask: np.ndarray, layer: str, tone: float, rim: float | None = None) -> None:
+    """Fills the cells of ``mask``; with ``rim``, cells on the top line of the shape take that tone instead."""
+    rows, cols = mask.shape
+    for j in range(rows):
+        for i in range(cols):
+            if mask[j, i]:
+                top = j == 0 or not mask[j - 1, i]
+                cv.fill_cell(layer, gx + i, gy + j, rim if (rim is not None and top) else tone)
+
+
+def _horse_origin(width: int, height: int, cell: float) -> tuple[int, int]:
+    """The horse's box in cells: centred, its hooves on the meadow a little above the foot of the picture."""
     ground = height * 0.86
-    return width / 2 - size * 0.45, ground - size * 0.94, size
+    return int(width / 2 / cell) - HORSE_COLS // 2, int(ground / cell) - HORSE_GROUND
+
+
+def horse_part(cv, width: int, height: int, narrow: bool, part: str) -> None:
+    gx, gy = _horse_origin(width, height, cv.cell_css)
+    if part == "horse":
+        _paint(cv, gx, gy, _grid(_LEGS_FAR), "heart", SHADE)
+        _paint(cv, gx, gy, _grid(_HOOVES_FAR), "heart", MID)
+        _paint(cv, gx, gy, _grid(_BODY + _LEGS_NEAR) & ~_grid(_HOOVES_NEAR), "heart", MID, rim=SHADE)
+        _paint(cv, gx, gy, _grid(_HOOVES_NEAR), "heart", LIT)
+    elif part == "head":
+        _paint(cv, gx, gy, _grid([_NECK, _HEAD, _MUZZLE, _CHEEK]) & ~_grid([_MANE]), "heart", MID)
+        cv.fill_cell("gold", gx + _EYE[0], gy + _EYE[1], LIT)
+        cv.fill_cell("heart", gx + _NOSTRIL[0], gy + _NOSTRIL[1], LIT)
+    elif part == "mane":
+        _paint(cv, gx, gy, _grid([_MANE]), "heart", LIT)
+    elif part == "ear":
+        _paint(cv, gx, gy, _grid([_EAR]) & ~_grid([_MANE]), "heart", LIT)
+    else:
+        _paint(cv, gx, gy, _grid([_TAIL]), "heart", LIT)
+
+
+def horse_pivot(width: int, height: int, narrow: bool, at: tuple[float, float]) -> list[float]:
+    cell = _cell(narrow)
+    gx, gy = _horse_origin(width, height, cell)
+    return [(gx + at[0]) * cell / width, (gy + at[1]) * cell / height]
+
+
+def horse_span(width: int, height: int, narrow: bool) -> tuple[float, float]:
+    """Left and right edges of the horse, as shares of the width, so nothing tall stands in front of it."""
+    cell = _cell(narrow)
+    gx, _ = _horse_origin(width, height, cell)
+    return gx * cell / width, (gx + HORSE_COLS) * cell / width
 
 
 # --- the octopus ----------------------------------------------------------------------------------------
@@ -229,13 +276,13 @@ def _octopus_place(width: int, height: int, narrow: bool) -> tuple[float, float,
 
 # A dragonfly in profile, flying right: W wing (two pairs, raised), B body in two tones by segment, T thorax,
 # E the big eye. The wings are their own layer, so the page can beat them about their root.
-_DRAGONFLY_SIDE = (".......WWWW..WWWW...",
-                   "......WWWWWWWWWWWW..",
-                   ".......WWWWWWWWWW...",
-                   "BbBbBbBbBbBbTTTTTEE.",
-                   ".BbBbBbBbBb.TTTTTEE.",
-                   ".............T..T...")
-DRAGONFLY_WING_ROOT = 3 / len(_DRAGONFLY_SIDE)     # the wings meet the body at the top of the body rows
+_DRAGONFLY_SIDE = ("........WWW....WWW...",
+                   ".......WWWWW..WWWWW..",
+                   "........WWWWWWWWWW...",
+                   "BbBbBbBbBbBbbTTTTTEE.",
+                   "............TTTTTTEEE",
+                   "............T..T..T..")
+DRAGONFLY_WING_ROOT = 3 / len(_DRAGONFLY_SIDE)     # the wings meet the body at the top of the thorax
 
 # A small fish facing left: F body, f its shaded belly, T tail, E eye.
 _FISH = ("..FFFF...",
@@ -303,17 +350,19 @@ def paddock_land(width: int, height: int, scale: float, narrow: bool) -> Layers:
 def paddock_part(part: str):
     def render(width: int, height: int, scale: float, narrow: bool) -> Layers:
         cv = _canvas(width, height, scale, narrow, SEED_PADDOCK + 2)
-        x, y, size = _horse_box(width, height, narrow)
-        {"horse": horse_body, "head": horse_head, "tail": horse_tail}[part](cv, x, y, size)
-        return _only(_cells(cv, ("heart", "gold")))
+        horse_part(cv, width, height, narrow, part)
+        layers = {"heart": cv.mosaic("heart").astype(F32)}
+        if part == "head":
+            layers["gold"] = cv.mosaic("gold").astype(F32)
+        return layers
     return render
 
 
 def paddock_sway(half: int):
     def render(width: int, height: int, scale: float, narrow: bool) -> Layers:
         cv = _canvas(width, height, scale, narrow, SEED_PADDOCK + 10 + half)
-        x, _, size = _horse_box(width, height, narrow)
-        clear = ((x - 0.05 * size) / width, (x + 1.05 * size) / width)            # nothing tall in front of the horse
+        left, right = horse_span(width, height, narrow)
+        clear = (left - 0.02, right + 0.02)                                       # nothing tall in front of the horse
         _front(cv, width, height, narrow, half, SEED_PADDOCK + 9, ("poppy", "daisy", "tulip", "cosmos", "cornflower"),
                8 if narrow else 16, 120 if narrow else 300, clear)
         return _only(_cells(cv))
@@ -455,11 +504,11 @@ def pivots() -> dict:
     out: dict = {}
     for variant, (w, h) in VARIANTS.items():
         narrow = variant == "narrow"
-        x, y, size = _horse_box(w, h, narrow)
         cx, cy, r, floor = _octopus_place(w, h, narrow)
         out[variant] = {
-            "paddock-head": [(x + HORSE_NECK[0] * size) / w, (y + HORSE_NECK[1] * size) / h],
-            "paddock-tail": [(x + HORSE_TAIL[0] * size) / w, (y + HORSE_TAIL[1] * size) / h],
+            "paddock-head": horse_pivot(w, h, narrow, HORSE_NECK),
+            "paddock-ear": horse_pivot(w, h, narrow, HORSE_EAR),
+            "paddock-tail": horse_pivot(w, h, narrow, HORSE_TAIL),
             "reef-head": [cx / w, (cy + 1.08 * r) / h],
             "reef-arms": [cx / w, floor / h],
         }
@@ -499,6 +548,8 @@ _SCENES: dict[str, tuple[int, Callable]] = {
     "live-paddock-horse": (SEED_PADDOCK + 2, paddock_part("horse")),
     "live-paddock-head": (SEED_PADDOCK + 2, paddock_part("head")),
     "live-paddock-tail": (SEED_PADDOCK + 2, paddock_part("tail")),
+    "live-paddock-mane": (SEED_PADDOCK + 2, paddock_part("mane")),
+    "live-paddock-ear": (SEED_PADDOCK + 2, paddock_part("ear")),
     "live-paddock-sway-a": (SEED_PADDOCK + 10, paddock_sway(0)),
     "live-paddock-sway-b": (SEED_PADDOCK + 11, paddock_sway(1)),
     "live-pond-land": (SEED_POND, pond_land),

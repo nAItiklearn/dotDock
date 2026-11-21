@@ -1382,97 +1382,97 @@
   "seed": 31,
   "variants": {
    "wide": {
-    "w": 160,
+    "w": 168,
     "h": 48,
     "layers": {
      "cloud": {
       "1": {
        "file": "live-dragonfly-wide-cloud-1x.webp",
-       "w": 160,
+       "w": 168,
        "h": 48,
-       "bytes": 76
+       "bytes": 82
       },
       "2": {
        "file": "live-dragonfly-wide-cloud-2x.webp",
-       "w": 320,
+       "w": 336,
        "h": 96,
-       "bytes": 88
+       "bytes": 94
       }
      },
      "violet": {
       "1": {
        "file": "live-dragonfly-wide-violet-1x.webp",
-       "w": 160,
+       "w": 168,
        "h": 48,
-       "bytes": 76
+       "bytes": 72
       },
       "2": {
        "file": "live-dragonfly-wide-violet-2x.webp",
-       "w": 320,
+       "w": 336,
        "h": 96,
-       "bytes": 90
+       "bytes": 84
       }
      },
      "heart": {
       "1": {
        "file": "live-dragonfly-wide-heart-1x.webp",
-       "w": 160,
+       "w": 168,
        "h": 48,
-       "bytes": 48
+       "bytes": 52
       },
       "2": {
        "file": "live-dragonfly-wide-heart-2x.webp",
-       "w": 320,
+       "w": 336,
        "h": 96,
-       "bytes": 54
+       "bytes": 56
       }
      }
     }
    },
    "narrow": {
-    "w": 120,
+    "w": 126,
     "h": 36,
     "layers": {
      "cloud": {
       "1": {
        "file": "live-dragonfly-narrow-cloud-1x.webp",
-       "w": 120,
+       "w": 126,
        "h": 36,
-       "bytes": 78
+       "bytes": 90
       },
       "2": {
        "file": "live-dragonfly-narrow-cloud-2x.webp",
-       "w": 240,
+       "w": 252,
        "h": 72,
-       "bytes": 84
+       "bytes": 92
       }
      },
      "violet": {
       "1": {
        "file": "live-dragonfly-narrow-violet-1x.webp",
-       "w": 120,
+       "w": 126,
        "h": 36,
-       "bytes": 78
+       "bytes": 72
       },
       "2": {
        "file": "live-dragonfly-narrow-violet-2x.webp",
-       "w": 240,
+       "w": 252,
        "h": 72,
-       "bytes": 82
+       "bytes": 80
       }
      },
      "heart": {
       "1": {
        "file": "live-dragonfly-narrow-heart-1x.webp",
-       "w": 120,
+       "w": 126,
        "h": 36,
-       "bytes": 48
+       "bytes": 50
       },
       "2": {
        "file": "live-dragonfly-narrow-heart-2x.webp",
-       "w": 240,
+       "w": 252,
        "h": 72,
-       "bytes": 52
+       "bytes": 54
       }
      }
     }

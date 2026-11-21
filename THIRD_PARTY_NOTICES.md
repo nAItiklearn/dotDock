@@ -137,6 +137,7 @@ Transitive package licences are pinned by `website/pnpm-lock.yaml`.
 - Dock captures: `website/public/media/dock/` holds screenshots of this project's own dock UI running in its test harness (sample apps named in the harness are fictional, the wallpaper is this project's generated art). The icons on the website's dock illustration are original dot-matrix drawings.
 - Visit counter: stores one number in Upstash Redis (through the Vercel Marketplace). No personal data; see the privacy page.
 - Navigation icon: the GitHub mark (Invertocat) in the header is the unmodified mark published by GitHub at https://github.com/logos, used under GitHub's logo and usage guidelines to link to this project's repository on GitHub. It is a trademark of GitHub, Inc.; the project is not affiliated with or endorsed by GitHub.
+- Button icon: the GitHub mark on the download page's buttons (`website/src/components/download/GithubMark.astro`) is the path of the "mark-github" icon from GitHub's Octicons, https://github.com/primer/octicons, MIT License, Copyright (c) GitHub Inc. It is a trademark of GitHub, Inc.; the project is not affiliated with or endorsed by GitHub.
 - Wallpapers: downscaled WebP copies of three of the original wallpapers in `assets/wallpapers`, made by `website/tools/make-wallpapers.mjs`. Original, GPL-3.0-or-later like the rest of the project.
 - Theme tokens and dot-matrix glyph geometry are copied from `apps/desktop/src/design-system` (this project's own code).
 

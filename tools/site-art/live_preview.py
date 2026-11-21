@@ -29,7 +29,7 @@ vista_preview.ORDER = ("sea", *vista_preview.ORDER)
 
 SEA = {"paper": "#8fb0c9", "obsidian": "#3d5f78", "aurum": "#8c6d2a"}
 STACKS = {
-    "paddock": ["land", "tail", "horse", "head", "sway-b", "sway-a"],
+    "paddock": ["land", "tail", "horse", "head", "mane", "ear", "sway-b", "sway-a"],
     "pond": ["land", "ripples-a", "ripples-b", "glint", "reeds-b", "pads-a", "pads-b", "reeds-a"],
     "reef": ["land", "weed-b", "arms", "head", "weed-a"],
 }
