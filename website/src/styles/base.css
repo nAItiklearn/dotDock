@@ -359,6 +359,13 @@ button {
   padding: 0 var(--space-5);
   font-size: 14px;
 }
+/* Below 480px the wordmark text gives way to the mark alone, so the GitHub mark, the theme switch and the menu
+   all fit inside the pill; the link keeps its accessible name. */
+@media (max-width: 479.98px) {
+  .nav .wordmark__text {
+    display: none;
+  }
+}
 @media (min-width: 480px) {
   .nav__cta {
     display: inline-flex;
