@@ -170,13 +170,22 @@ impl Home {
 
 impl Lifecycle for Home {
     fn start(&mut self) -> Result<(), String> {
-        let window = create_overlay(&self.app).map_err(|e| format!("The desktop window could not be created: {e}"))?;
+        // The gate is in place before the page exists: a warm webview can report its listeners ready
+        // before the window builder returns, and that call must find the gate to open it.
         let mut run = Running { gate: RunGate::default(), threads: Vec::new() };
+        self.app.state::<HomeState>().set(Some(run.gate.clone()));
+        let window = match create_overlay(&self.app) {
+            Ok(window) => window,
+            Err(e) => {
+                self.app.state::<HomeState>().set(None);
+                return Err(format!("The desktop window could not be created: {e}"));
+            }
+        };
         if let Err(reason) = self.spawn_threads(&window, &mut run) {
+            self.app.state::<HomeState>().set(None);
             run.shut_down(&self.app);
             return Err(reason);
         }
-        self.app.state::<HomeState>().set(Some(run.gate.clone()));
         self.running = Some(run);
         Ok(())
     }

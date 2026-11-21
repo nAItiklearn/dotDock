@@ -4,7 +4,6 @@ import type {
   EnvironmentState,
   NativeApi,
   PerformanceSettings,
-  RestoreReport,
   StartupState,
   UpdateStatus,
   WallpaperAssignment,
@@ -123,10 +122,6 @@ export function createMockNativeApi(): NativeApi {
       set: (setting, value) => {
         startup = { ...startup, [setting]: value };
         return later(startup);
-      },
-      restoreWindows: (): Promise<RestoreReport> => {
-        startup = { ...startup, launchAtSignIn: false, hideDesktopIcons: false };
-        return later({ wallpaperRestored: true, desktopIconsShown: false, autostartRemoved: true, startupDelayRestored: true });
       },
     },
     displays: { list: () => later(displays) },

@@ -7,7 +7,6 @@ import { sampleImage } from "../../lib/theme/imageSample";
 import { extractPalette, type WallpaperPalette } from "../../lib/theme/palette";
 import { applyWallpaperTheme } from "../../lib/theme/wallpaperApply";
 import {
-  AA_TEXT,
   auditAa,
   buildThemeDoc,
   suggestMode,
@@ -69,7 +68,7 @@ function Result({ source, palette }: { readonly source: Source; readonly palette
     return { theme, doc: buildThemeDoc(theme, mode, themeNameFor(source.fileName)), checks: auditAa(theme.colors) };
   }, [palette, mode, accent, source.fileName]);
   // The weakest pair is what a reader would notice; every pair, the accent included, is held to 4.5:1.
-  const weakestText = Math.min(...built.checks.filter((c) => c.target === AA_TEXT).map((c) => c.ratio));
+  const weakestText = Math.min(...built.checks.map((c) => c.ratio));
   const allPass = built.checks.every((c) => c.pass);
 
   const apply = (): void => {

@@ -113,12 +113,6 @@ async fn wallpaper_monitors() -> Result<Vec<String>, String> {
     wallpaper::monitors().map_err(|e| e.to_string())
 }
 
-/// The in-app "Restore Windows desktop" action.
-#[tauri::command]
-async fn restore_windows() -> Result<(), String> {
-    dotdock_shell::restore::restore_windows().map(|_| ()).map_err(|e| e.to_string())
-}
-
 #[tauri::command]
 async fn autostart_set(enabled: bool) -> Result<(), String> {
     if enabled {
@@ -235,7 +229,6 @@ pub fn run() {
             wallpaper_apply,
             wallpaper_current_image,
             wallpaper_monitors,
-            restore_windows,
             autostart_set
         ])
         .setup(move |app| {
@@ -248,6 +241,7 @@ pub fn run() {
             // The parts start on their own thread: building a window waits for the main thread, which
             // is only free once setup returns.
             modules_host::start_enabled(&handle)?;
+            modules_host::open_settings_if_off(&handle, launched_at_sign_in);
             if let Some(first) = first_start {
                 let app = handle.clone();
                 std::thread::spawn(move || apply_first_run_wallpaper(&app, first));

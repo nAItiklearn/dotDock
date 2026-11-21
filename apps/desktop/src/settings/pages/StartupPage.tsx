@@ -1,20 +1,12 @@
-import { useState } from "react";
 import { getApp } from "../../lib/state/app";
-import type { RestoreReport, StartupState, StartupToggle } from "../../lib/native/api";
+import type { StartupState, StartupToggle } from "../../lib/native/api";
 import { getNativeApi } from "../../lib/native/api";
-import { Button, Switch } from "../../lib/ui/controls";
+import { Switch } from "../../lib/ui/controls";
 import { Icon } from "../../lib/ui/Icon";
 import { EnvironmentSwitches } from "../ui/EnvironmentSwitches";
 import { NativeGate, useNativeResource, type NativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
 import { pageById } from "../pageMeta";
-
-const RESTORE_STEPS: readonly { readonly key: keyof RestoreReport; readonly done: string; readonly skipped: string }[] = [
-  { key: "wallpaperRestored", done: "Original wallpaper put back", skipped: "Wallpaper was already the original" },
-  { key: "desktopIconsShown", done: "Desktop icons shown", skipped: "Desktop icons were already shown" },
-  { key: "autostartRemoved", done: "Launch at sign-in removed", skipped: "Launch at sign-in was already off" },
-  { key: "startupDelayRestored", done: "Windows startup delay restored", skipped: "Startup delay was already Windows' own" },
-];
 
 function BootTiming({ boot }: { readonly boot: NonNullable<StartupState["lastBoot"]> }) {
   const total = boot.stages.reduce((sum, s) => sum + s.ms, 0);
@@ -36,64 +28,6 @@ function BootTiming({ boot }: { readonly boot: NonNullable<StartupState["lastBoo
         ))}
       </ul>
     </div>
-  );
-}
-
-function RestoreRow() {
-  const [confirming, setConfirming] = useState(false);
-  const [report, setReport] = useState<RestoreReport | null>(null);
-  const [busy, setBusy] = useState(false);
-  const run = (): void => {
-    setBusy(true);
-    getNativeApi()
-      .startup.restoreWindows()
-      .then(setReport, (error: unknown) =>
-        getApp().notices.getState().push({
-          key: "native:restore",
-          level: "error",
-          message: `Couldn't restore the Windows desktop: ${error instanceof Error ? error.message : String(error)}`,
-        }),
-      )
-      .finally(() => {
-        setBusy(false);
-        setConfirming(false);
-      });
-  };
-  return (
-    <>
-      <Row
-        id="restore"
-        label="Restore Windows desktop"
-        description="Puts back your original wallpaper, shows desktop icons, removes launch at sign-in and closes the overlay. Your settings stay, so coming back takes one click."
-      >
-        {confirming ? (
-          <span className="row__confirm">
-            <Button variant="danger" icon="restore" disabled={busy} onClick={run}>
-              {busy ? "Restoring…" : "Yes, restore"}
-            </Button>
-            <Button variant="ghost" onClick={() => setConfirming(false)}>
-              Cancel
-            </Button>
-          </span>
-        ) : (
-          <Button variant="danger" icon="restore" onClick={() => setConfirming(true)}>
-            Restore…
-          </Button>
-        )}
-      </Row>
-      {report ? (
-        <div className="row row--block">
-          <ul className="steps" aria-label="What was restored">
-            {RESTORE_STEPS.map((step) => (
-              <li key={step.key} className="steps__row">
-                <Icon name="check" size={14} />
-                {report[step.key] ? step.done : step.skipped}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </>
   );
 }
 
@@ -162,17 +96,11 @@ export function StartupPage() {
         offers={[
           "Start with Windows, with no startup delay.",
           "Hide the stock desktop icons behind your widgets.",
-          "Restore the original wallpaper and icons if anything ever looks wrong.",
         ]}
       >
         {(state) => <StartupBody resource={resource} state={state} />}
       </NativeGate>
-      {/* Outside the gate: restoring needs only the restore command, so it stays reachable when the startup state cannot be read. */}
-      {getNativeApi().available ? (
-        <Section title="Way back">
-          <RestoreRow />
-        </Section>
-      ) : null}
+      {/* Outside the gate: the way back to Windows is the dotDock theme switch, reachable even when the startup state cannot be read. */}
       <EnvironmentSwitches />
     </>
   );

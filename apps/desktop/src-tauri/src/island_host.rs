@@ -132,6 +132,11 @@ impl Notch {
     pub fn new(app: AppHandle) -> Self {
         Self { app }
     }
+
+    /// Whether this user has Claude Code sessions for the notch to watch.
+    pub fn has_sessions_to_watch() -> bool {
+        ClaudeDirs::from_env().is_some()
+    }
 }
 
 impl Lifecycle for Notch {

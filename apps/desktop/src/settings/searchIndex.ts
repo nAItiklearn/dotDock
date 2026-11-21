@@ -39,9 +39,8 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
 
   e("startup", "launch", "Launch at sign-in", "startup autostart boot login"),
   e("startup", "desktop-icons", "Hide desktop icons", "shortcuts files clutter"),
-  e("startup", "environment-on", "dotDock theme", "turn off disable enable whole environment theme widgets dock notch wallpaper plain windows stock switch restore"),
+  e("startup", "environment-on", "dotDock theme", "turn off disable enable whole environment theme widgets dock notch wallpaper plain windows stock switch restore panic undo revert original"),
   e("startup", "windows-taskbar", "Use the Windows taskbar", "hide replace dock taskbar real native bar restore advanced"),
-  e("startup", "restore", "Restore Windows desktop", "panic undo revert original wallpaper icons"),
   e("startup", "boot-timing", "Boot timing", "speed startup seconds measure"),
 
   e("displays", "display-list", "Displays and safe margins", "monitor screen resolution scaling dpi refresh edge padding taskbar"),

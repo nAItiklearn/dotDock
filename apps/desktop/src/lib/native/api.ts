@@ -39,13 +39,6 @@ export interface StartupState {
 
 export type StartupToggle = "launchAtSignIn" | "hideDesktopIcons";
 
-export interface RestoreReport {
-  readonly wallpaperRestored: boolean;
-  readonly desktopIconsShown: boolean;
-  readonly autostartRemoved: boolean;
-  readonly startupDelayRestored: boolean;
-}
-
 export interface PixelRect {
   readonly x: number;
   readonly y: number;
@@ -149,8 +142,6 @@ export interface NativeApi {
     get(): Promise<StartupState>;
     /** `startup_set` { setting: StartupToggle, value: boolean } → StartupState */
     set(setting: StartupToggle, value: boolean): Promise<StartupState>;
-    /** `restore_windows` () → void | RestoreReport. Runs the full panic routine; the core's reply shape is read tolerantly. */
-    restoreWindows(): Promise<RestoreReport>;
   };
 
   displays: {
@@ -225,7 +216,7 @@ const unavailable = (): Promise<never> => Promise.reject(new NativeUnavailableEr
 export const unavailableNativeApi: NativeApi = {
   available: false,
   environment: { get: unavailable, setOn: unavailable, setWindowsTaskbar: unavailable, onChange: unavailable },
-  startup: { get: unavailable, set: unavailable, restoreWindows: unavailable },
+  startup: { get: unavailable, set: unavailable },
   displays: { list: unavailable },
   wallpapers: {
     list: unavailable,
@@ -260,20 +251,6 @@ function toWallpaperItem(w: CoreWallpaper): WallpaperItem {
   return { id: w.id, name: w.name, source: "bundled", thumbnailUrl: w.thumb };
 }
 
-/** `restore_windows` has no documented reply; whatever flags it returns are shown, and a bare success means every step ran. */
-function toRestoreReport(raw: unknown): RestoreReport {
-  const flag = (key: keyof RestoreReport): boolean => {
-    const value = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>)[key] : undefined;
-    return typeof value === "boolean" ? value : true;
-  };
-  return {
-    wallpaperRestored: flag("wallpaperRestored"),
-    desktopIconsShown: flag("desktopIconsShown"),
-    autostartRemoved: flag("autostartRemoved"),
-    startupDelayRestored: flag("startupDelayRestored"),
-  };
-}
-
 const ENVIRONMENT_CHANGED = "environment://changed";
 
 export const tauriNativeApi: NativeApi = {
@@ -287,7 +264,6 @@ export const tauriNativeApi: NativeApi = {
   startup: {
     get: () => call("startup_get"),
     set: (setting, value) => call("startup_set", { setting, value }),
-    restoreWindows: async () => toRestoreReport(await call<unknown>("restore_windows")),
   },
   displays: { list: () => call("displays_list") },
   wallpapers: {

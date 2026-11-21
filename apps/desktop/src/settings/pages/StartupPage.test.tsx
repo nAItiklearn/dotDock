@@ -8,25 +8,31 @@ import { StartupPage } from "./StartupPage";
 afterEach(() => setNativeApi(null));
 
 describe("Startup page", () => {
-  it("offers the way back while the startup state is still being read", () => {
+  it("offers the way back, the dotDock theme switch, while the startup state is still being read", () => {
     setNativeApi(createMockNativeApi());
     const html = renderToStaticMarkup(<StartupPage />);
-    // The gate is loading (no effects run on the server), yet the restore row is already there.
+    // The gate is loading (no effects run on the server), yet the switch is already there.
     expect(html).toContain("Reading from the app");
-    expect(html).toContain("Restore Windows desktop");
+    expect(html).toContain("dotDock theme");
   });
 
-  it("hides the restore button in a plain browser, where it could only fail", () => {
-    setNativeApi(unavailableNativeApi);
-    const html = renderToStaticMarkup(<StartupPage />);
-    expect(html).toContain("Available in the desktop app");
-    expect(html).not.toContain("Restore Windows desktop");
-  });
-
-  it("has no second desktop switch beside the dotDock theme switch", () => {
+  it("has one way back: no second desktop switch and no separate restore button", () => {
     setNativeApi(createMockNativeApi());
     const html = renderToStaticMarkup(<StartupPage />);
     expect(html).not.toContain("Use this desktop");
-    expect(SEARCH_ENTRIES.some((entry) => entry.id === "use-desktop")).toBe(false);
+    expect(html).not.toContain("Restore Windows desktop");
+    expect(SEARCH_ENTRIES.some((entry) => entry.id === "use-desktop" || entry.id === "restore")).toBe(false);
+  });
+
+  it("finds the theme switch when someone searches for a way to restore Windows", () => {
+    const hit = SEARCH_ENTRIES.find((entry) => entry.id === "environment-on");
+    expect(hit?.keywords).toContain("restore");
+    expect(hit?.keywords).toContain("panic");
+  });
+
+  it("explains what the page would do in a plain browser", () => {
+    setNativeApi(unavailableNativeApi);
+    const html = renderToStaticMarkup(<StartupPage />);
+    expect(html).toContain("Available in the desktop app");
   });
 });
