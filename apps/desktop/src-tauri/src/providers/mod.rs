@@ -2,10 +2,9 @@
 
 use dotdock_shell::providers::media::{self, MediaProvider};
 use dotdock_shell::providers::{battery, system, weather};
+use dotdock_shell::run_gate::{RunGate, Wait};
 use serde::Serialize;
-use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
-use std::sync::{Arc, Condvar, Mutex, PoisonError};
-use std::thread;
+use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 
@@ -37,64 +36,26 @@ struct IssueEvent {
     issue: &'static str,
 }
 
-/// Set once the overlay has registered its listeners. Events emitted earlier
-/// would be dropped, so the provider thread waits for this and then replays at once.
-#[derive(Clone, Default)]
-pub struct ProvidersReady(Arc<(Mutex<bool>, Condvar)>);
-
-impl ProvidersReady {
-    pub fn mark(&self) {
-        let (lock, cvar) = &*self.0;
-        *lock.lock().unwrap_or_else(PoisonError::into_inner) = true;
-        cvar.notify_all();
+/// Starts the provider threads, adding each to `threads` so the caller can join them. They wait for the
+/// gate to open (the overlay is listening), then push until the gate is stopped.
+pub fn spawn(app: &AppHandle, gate: &RunGate, threads: &mut Vec<JoinHandle<()>>) -> std::io::Result<()> {
+    for (name, run) in [
+        ("providers", run_loop as fn(&AppHandle, &RunGate)),
+        // Separate thread: a slow media app must never delay battery or RAM updates.
+        ("media", media_loop),
+        ("weather", weather_loop),
+    ] {
+        let (app, gate) = (app.clone(), gate.clone());
+        threads.push(thread::Builder::new().name(name.into()).spawn(move || {
+            if gate.wait_open() {
+                run(&app, &gate);
+            }
+        })?);
     }
-
-    fn wait(&self) {
-        let (lock, cvar) = &*self.0;
-        let mut ready = lock.lock().unwrap_or_else(PoisonError::into_inner);
-        while !*ready {
-            ready = cvar.wait(ready).unwrap_or_else(PoisonError::into_inner);
-        }
-    }
+    Ok(())
 }
 
-/// Wakes the weather thread immediately, e.g. after the user picks a new place.
-#[derive(Clone)]
-pub struct WeatherWake(Sender<()>);
-
-impl WeatherWake {
-    pub fn wake(&self) {
-        // The receiver only disappears at shutdown.
-        let _ = self.0.send(());
-    }
-}
-
-/// Starts the provider threads. They sleep until the overlay is listening.
-pub fn spawn(app: AppHandle, ready: ProvidersReady) -> std::io::Result<WeatherWake> {
-    let media_app = app.clone();
-    let media_ready = ready.clone();
-    let app_for_weather = app.clone();
-    let ready_for_weather = ready.clone();
-    thread::Builder::new().name("providers".into()).spawn(move || {
-        ready.wait();
-        run_loop(&app);
-    })?;
-    // Separate thread: a slow media app must never delay battery or RAM updates.
-    thread::Builder::new().name("media".into()).spawn(move || {
-        media_ready.wait();
-        media_loop(&media_app);
-    })?;
-    let (wake_tx, wake_rx) = std::sync::mpsc::channel();
-    let weather_app = app_for_weather;
-    let weather_ready = ready_for_weather;
-    thread::Builder::new().name("weather".into()).spawn(move || {
-        weather_ready.wait();
-        weather_loop(&weather_app, &wake_rx);
-    })?;
-    Ok(WeatherWake(wake_tx))
-}
-
-fn run_loop(app: &AppHandle) {
+fn run_loop(app: &AppHandle, gate: &RunGate) {
     let mut sys = match system::SystemProvider::new() {
         Ok(sys) => Some(sys),
         Err(_) => {
@@ -119,11 +80,13 @@ fn run_loop(app: &AppHandle) {
             battery::Reading::Unavailable => issue(app, "battery", "error"),
         }
 
-        thread::sleep(FAST_TICK.saturating_sub(started.elapsed()));
+        if !gate.pause(FAST_TICK.saturating_sub(started.elapsed())) {
+            return;
+        }
     }
 }
 
-fn media_loop(app: &AppHandle) {
+fn media_loop(app: &AppHandle, gate: &RunGate) {
     let mut provider = MediaProvider::new();
     let mut last_sent: Option<media::MediaData> = None;
     let mut idle_reported = false;
@@ -150,7 +113,9 @@ fn media_loop(app: &AppHandle) {
                 return;
             }
         }
-        thread::sleep(MEDIA_TICK.saturating_sub(started.elapsed()));
+        if !gate.pause(MEDIA_TICK.saturating_sub(started.elapsed())) {
+            return;
+        }
     }
 }
 
@@ -161,7 +126,7 @@ fn now_ms() -> u64 {
         .unwrap_or(0)
 }
 
-fn weather_loop(app: &AppHandle, wake: &Receiver<()>) {
+fn weather_loop(app: &AppHandle, gate: &RunGate) {
     loop {
         let wait = match weather::saved_place() {
             None => {
@@ -185,11 +150,7 @@ fn weather_loop(app: &AppHandle, wake: &Receiver<()>) {
                 }
             },
         };
-        let woke = match wait {
-            Some(d) => wake.recv_timeout(d),
-            None => wake.recv().map_err(|_| RecvTimeoutError::Disconnected),
-        };
-        if matches!(woke, Err(RecvTimeoutError::Disconnected)) {
+        if gate.wait_nudge(wait) == Wait::Stopped {
             return;
         }
     }

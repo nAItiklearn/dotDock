@@ -16,3 +16,10 @@ target/
 
 # Read-only study clones of third-party reference code (never committed)
 /references/
+
+# Local GNU-toolchain build output (D-005)
+target-gnu/
+
+# Palette samples of wallpapers that are not ours (Windows, owner references): local checks only
+apps/desktop/src/lib/theme/fixtures-local/
+apps/desktop/.vitest/

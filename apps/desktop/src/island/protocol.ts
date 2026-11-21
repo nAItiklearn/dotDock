@@ -74,7 +74,6 @@ export type IdleMode = "tiny" | "hidden";
 
 export interface IslandSettings {
   readonly schema: 1;
-  readonly enabled: boolean;
   /** What the island does when nothing is running. */
   readonly idle: IdleMode;
   /** 0.8 to 1.4 */
@@ -104,7 +103,6 @@ export interface IslandSettings {
 
 export const DEFAULT_SETTINGS: IslandSettings = {
   schema: 1,
-  enabled: true,
   idle: "tiny",
   scale: 1,
   topOffset: 10,

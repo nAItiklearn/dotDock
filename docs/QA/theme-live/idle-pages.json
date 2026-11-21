@@ -1,0 +1,20 @@
+[
+  {
+    "page": "settings.html?native=mock#/appearance",
+    "seconds": 60,
+    "busyMs": 140,
+    "busyPercentOfOneCore": 0.234,
+    "scriptMs": 15,
+    "layouts": 3,
+    "styleRecalcs": 67
+  },
+  {
+    "page": "overlay.html",
+    "seconds": 60,
+    "busyMs": 8,
+    "busyPercentOfOneCore": 0.013,
+    "scriptMs": 7,
+    "layouts": 0,
+    "styleRecalcs": 0
+  }
+]
