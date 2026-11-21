@@ -40,24 +40,32 @@ export function sanitizeEntries(raw: unknown): Readonly<Record<string, PhotoEntr
   return out;
 }
 
-export const usePhotoStore = create<PhotoStore>()(
-  persist(
-    (set) => ({
-      entries: {},
-      replaced: (id) =>
-        set((s) => ({ entries: { ...s.entries, [id]: { framing: CENTRED, rev: (s.entries[id]?.rev ?? 0) + 1 } } })),
-      frame: (id, framing) =>
-        set((s) => ({ entries: { ...s.entries, [id]: { framing: clampFraming(framing), rev: s.entries[id]?.rev ?? 0 } } })),
-    }),
-    {
-      ...persistOptions<PhotoStore, Persisted>({
-        name: NAME,
-        version: VERSION,
-        partialize: (s) => ({ entries: s.entries }),
+/**
+ * A store that reads and writes `localStorage` as it is when called. The app makes one; tests make a fresh
+ * one per case over their own storage, without reloading the module.
+ */
+export function createPhotoStore() {
+  return create<PhotoStore>()(
+    persist(
+      (set) => ({
+        entries: {},
+        replaced: (id) =>
+          set((s) => ({ entries: { ...s.entries, [id]: { framing: CENTRED, rev: (s.entries[id]?.rev ?? 0) + 1 } } })),
+        frame: (id, framing) =>
+          set((s) => ({ entries: { ...s.entries, [id]: { framing: clampFraming(framing), rev: s.entries[id]?.rev ?? 0 } } })),
       }),
-      merge: (stored, current) => ({ ...current, entries: sanitizeEntries((stored as Partial<Persisted> | undefined)?.entries) }),
-    },
-  ),
-);
+      {
+        ...persistOptions<PhotoStore, Persisted>({
+          name: NAME,
+          version: VERSION,
+          partialize: (s) => ({ entries: s.entries }),
+        }),
+        merge: (stored, current) => ({ ...current, entries: sanitizeEntries((stored as Partial<Persisted> | undefined)?.entries) }),
+      },
+    ),
+  );
+}
+
+export const usePhotoStore = createPhotoStore();
 
 syncAcrossWindows(NAME, usePhotoStore);
