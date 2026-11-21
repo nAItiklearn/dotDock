@@ -1,5 +1,5 @@
 /**
- * What each version of dotDock contains, newest first. Version 1 lists only what the first release ships; the
+ * What each version of dotDock contains, in order, the planned one last. Version 1 lists only what the first release ships; the
  * version 2 list is the dock tiles that are planned and not built yet (docs/OWNER_REQUESTS.md, "Dock tiles
  * wishlist"). Dates are never written here: lib/changelog.ts takes them from the published release.
  */
@@ -8,26 +8,6 @@ import type { Version } from "../lib/changelog";
 export const FIRST_VERSION = 1;
 
 export const VERSIONS: readonly Version[] = [
-  {
-    major: 2,
-    name: "Version 2",
-    summary: "More tiles for the dock, drawn in the same dots. These are planned, not built yet; each one ships when it is ready.",
-    groups: [
-      {
-        title: "Planned dock tiles",
-        items: [
-          "Unread mail, with the count and the newest sender.",
-          "The year, the month and the day as rows of progress dots.",
-          "A calendar week strip next to the next event.",
-          "Stocks, as a short list and a chart.",
-          "Sales and revenue counters, alongside the developer tiles.",
-          "Follower counts for the social accounts you choose.",
-          "A contribution heat map.",
-          "File search, next to the web search tile.",
-        ],
-      },
-    ],
-  },
   {
     major: 1,
     name: "Version 1",
@@ -42,13 +22,8 @@ export const VERSIONS: readonly Version[] = [
           "Six themes: Glass, a frosted glass that blurs the desktop behind it, Glass lite, Obsidian, Paper, Aurum and Minimal.",
           "Floats over maximised windows or reserves its space, on any edge of the screen.",
           "More than twenty live tiles: system load, battery, quick toggles, world and flip clocks, your day, focus timer, currency, web search, voice memo, audio devices and more.",
-        ],
-      },
-      {
-        title: "Developer tiles",
-        items: [
-          "GitHub, starred repositories, Linear and Vercel, read with a token you add in Settings and keep in Windows Credential Manager.",
-          "AI tokens, counted on your PC from the island's sessions.",
+          "Developer tiles for GitHub, starred repositories, Linear and Vercel, read with a token you add in Settings and keep in Windows Credential Manager.",
+          "An AI tokens tile, counted on your PC from the island's sessions.",
         ],
       },
       {
@@ -76,6 +51,26 @@ export const VERSIONS: readonly Version[] = [
           "The widgets, the dock and the island change colour together.",
           "Settings in a few clear sections, with two switches at the end: the dotDock theme on or off, and use the Windows taskbar.",
           "A snapshot of your desktop before anything changes, and a restore tool that puts it back.",
+        ],
+      },
+    ],
+  },
+  {
+    major: 2,
+    name: "Version 2",
+    summary: "More tiles for the dock, drawn in the same dots. These are planned, not built yet; each one ships when it is ready.",
+    groups: [
+      {
+        title: "Planned dock tiles",
+        items: [
+          "Unread mail, with the count and the newest sender.",
+          "The year, the month and the day as rows of progress dots.",
+          "A calendar week strip next to the next event.",
+          "Stocks, as a short list and a chart.",
+          "Sales and revenue counters, alongside the developer tiles.",
+          "Follower counts for the social accounts you choose.",
+          "A contribution heat map.",
+          "File search, next to the web search tile.",
         ],
       },
     ],

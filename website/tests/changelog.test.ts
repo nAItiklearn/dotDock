@@ -48,11 +48,11 @@ describe("versionStatus", () => {
 });
 
 describe("changelog content", () => {
-  it("lists every version once, newest first, down to the first", () => {
+  it("lists every version once, in order from the first", () => {
     const majors = VERSIONS.map((x) => x.major);
-    assert.deepEqual(majors, [...majors].sort((a, b) => b - a));
+    assert.deepEqual(majors, [...majors].sort((a, b) => a - b));
     assert.equal(new Set(majors).size, majors.length);
-    assert.equal(majors.at(-1), FIRST_VERSION);
+    assert.equal(majors[0], FIRST_VERSION);
   });
 
   it("has no empty version, group or line", () => {

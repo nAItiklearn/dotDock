@@ -9,6 +9,8 @@
 .page__head {
   display: grid;
   gap: var(--space-6);
+  /* Clear of the band of art above it, which ends flush with its own box. */
+  padding-top: clamp(24px, 4vw, 48px);
   padding-bottom: clamp(32px, 5vw, 64px);
   border-bottom: var(--hairline) solid var(--line-strong);
 }
