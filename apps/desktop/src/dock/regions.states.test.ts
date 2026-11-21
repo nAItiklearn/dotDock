@@ -7,7 +7,6 @@ import {
   HIT_MARGIN,
   ICON_LIMITS,
   inflate,
-  isVertical,
   MENU,
   metricsFor,
   placeBesideDock,
@@ -23,10 +22,10 @@ import {
   type Size,
 } from "./geometry";
 import { menuFor, menuSize, type MenuContext } from "./menu";
-import type { DockApp, DockEdge, DockSettings } from "./protocol";
+import type { DockApp, DockSettings } from "./protocol";
 import { computeRegions, coversWindow, dockZone, pointerMode, snapRect, type OpenState, type RegionInput } from "./regions";
 
-// Every state the dock can be in, placed with the same functions the panels use to draw themselves, at the CSS
+// Every state the dock can be in (it lives at the bottom only, D-029), placed with the same functions the panels use to draw themselves, at the CSS
 // viewports of a 1920 x 1080 monitor at 100, 125 and 150 % scale. The incident of 2026-11-21 was one of these
 // states (any open menu) taking the whole monitor; these tests fail if any state but the App Library ever does.
 
@@ -35,22 +34,15 @@ const VIEWPORTS: readonly Size[] = [
   { w: 1536, h: 864 },
   { w: 1280, h: 720 },
 ];
-const EDGES: readonly DockEdge[] = ["bottom", "top", "left", "right"];
 const ICON = ICON_LIMITS.fallback;
 const BAR_LENGTH = 720;
 const HEADROOM = 34;
 const GROWTH = 80;
 const PREVIEW_GAP = 10;
 
-function barFor(edge: DockEdge, viewport: Size): Rect {
+function barFor(viewport: Size): Rect {
   const m = metricsFor(ICON);
-  const across = m.bar;
-  if (isVertical(edge)) {
-    const y = (viewport.h - BAR_LENGTH) / 2;
-    return edge === "left" ? { x: m.edge, y, w: across, h: BAR_LENGTH } : { x: viewport.w - m.edge - across, y, w: across, h: BAR_LENGTH };
-  }
-  const x = (viewport.w - BAR_LENGTH) / 2;
-  return edge === "bottom" ? { x, y: viewport.h - m.edge - across, w: BAR_LENGTH, h: across } : { x, y: m.edge, w: BAR_LENGTH, h: across };
+  return { x: (viewport.w - BAR_LENGTH) / 2, y: viewport.h - m.edge - m.bar, w: BAR_LENGTH, h: m.bar };
 }
 
 /** The first cell on the bar, where a menu, a stack or a tile popover opens from. */
@@ -84,35 +76,34 @@ const ctx: MenuContext = {
 
 const at = (p: Point, size: Size): Rect => ({ x: p.x, y: p.y, w: size.w, h: size.h });
 
-/** Every popover, menu, preview and banner the dock can draw, by name, for one edge and viewport. */
-function panels(edge: DockEdge, viewport: Size): Map<string, Rect> {
-  const bar = barFor(edge, viewport);
+/** Every popover, menu, preview and banner the dock can draw, by name, for one viewport. */
+function panels(viewport: Size): Map<string, Rect> {
+  const bar = barFor(viewport);
   const cell = firstCell(bar);
   const out = new Map<string, Rect>();
   const m = metricsFor(ICON);
   const itemGap = m.pad + MENU.gap * 2;
-  out.set("menu: the bar", at(placeMenu({ x: bar.x + bar.w / 2, y: bar.y }, menuSize(menuFor(null, ctx)), edge, viewport, MENU.gap), menuSize(menuFor(null, ctx))));
-  out.set("menu: an app", at(placeMenu(anchorPoint(cell, edge), menuSize(menuFor("app:code", ctx)), edge, viewport, itemGap), menuSize(menuFor("app:code", ctx))));
-  out.set("menu: a stack", at(placeMenu(anchorPoint(cell, edge), menuSize(menuFor("stack:development", ctx)), edge, viewport, itemGap), menuSize(menuFor("stack:development", ctx))));
-  out.set("menu: a tile", at(placeMenu(anchorPoint(cell, edge), menuSize(menuFor("tile:clock", ctx)), edge, viewport, itemGap), menuSize(menuFor("tile:clock", ctx))));
+  out.set("menu: the bar", at(placeMenu({ x: bar.x + bar.w / 2, y: bar.y }, menuSize(menuFor(null, ctx)), viewport, MENU.gap), menuSize(menuFor(null, ctx))));
+  out.set("menu: an app", at(placeMenu(anchorPoint(cell), menuSize(menuFor("app:code", ctx)), viewport, itemGap), menuSize(menuFor("app:code", ctx))));
+  out.set("menu: a stack", at(placeMenu(anchorPoint(cell), menuSize(menuFor("stack:development", ctx)), viewport, itemGap), menuSize(menuFor("stack:development", ctx))));
+  out.set("menu: a tile", at(placeMenu(anchorPoint(cell), menuSize(menuFor("tile:clock", ctx)), viewport, itemGap), menuSize(menuFor("tile:clock", ctx))));
   for (const count of [1, 4, 9, 16, 20, 40]) {
     const size = popoverSize(count);
-    out.set(`stack of ${count}`, at(placeBesideDock(cell, size, edge, viewport, POPOVER.gap), size));
+    out.set(`stack of ${count}`, at(placeBesideDock(cell, size, viewport, POPOVER.gap), size));
   }
-  for (const [id, size] of Object.entries(TILE_POPOVER_SIZE)) out.set(`tile popover: ${id}`, at(placeBesideDock(cell, size, edge, viewport, TILE_POPOVER.gap), size));
-  out.set("widget gallery", at(placeBesideDock(bar, GALLERY, edge, viewport, GALLERY.gapToDock), GALLERY));
-  out.set("customise panel", at(placeBesideDock(bar, PREFS, edge, viewport, PREFS.gapToDock), PREFS));
+  for (const [id, size] of Object.entries(TILE_POPOVER_SIZE)) out.set(`tile popover: ${id}`, at(placeBesideDock(cell, size, viewport, TILE_POPOVER.gap), size));
+  out.set("widget gallery", at(placeBesideDock(bar, GALLERY, viewport, GALLERY.gapToDock), GALLERY));
+  out.set("customise panel", at(placeBesideDock(bar, PREFS, viewport, PREFS.gapToDock), PREFS));
   for (const windows of [1, 2, 4, 6, 9]) {
-    const layout = previewLayout(windows, isVertical(edge), viewport);
-    out.set(`preview of ${windows} windows`, at(placeBesideDock(cell, layout, edge, viewport, PREVIEW_GAP), layout));
+    const layout = previewLayout(windows, viewport);
+    out.set(`preview of ${windows} windows`, at(placeBesideDock(cell, layout, viewport, PREVIEW_GAP), layout));
   }
-  out.set("edit banner", at(placeBesideDock(bar, EDIT_BANNER, edge, viewport, HEADROOM + EDIT_BANNER.gap), EDIT_BANNER));
+  out.set("edit banner", at(placeBesideDock(bar, EDIT_BANNER, viewport, HEADROOM + EDIT_BANNER.gap), EDIT_BANNER));
   return out;
 }
 
-const input = (edge: DockEdge, viewport: Size, extra: Partial<RegionInput> = {}): RegionInput => ({
-  bar: barFor(edge, viewport),
-  edge,
+const input = (viewport: Size, extra: Partial<RegionInput> = {}): RegionInput => ({
+  bar: barFor(viewport),
   engaged: false,
   headroom: HEADROOM,
   growth: GROWTH,
@@ -134,49 +125,47 @@ function grid(viewport: Size): Point[] {
 
 describe("hit regions in every state of the dock", () => {
   for (const viewport of VIEWPORTS) {
-    for (const edge of EDGES) {
-      for (const [name, panel] of panels(edge, viewport)) {
-        for (const engaged of [false, true]) {
-          it(`${name}, dock on the ${edge}, ${viewport.w} x ${viewport.h}, pointer ${engaged ? "on" : "off"} the bar`, () => {
-            const regions = computeRegions(input(edge, viewport, { engaged, panels: [snapRect(panel)] })).map(snapRect);
-            // Nothing but the App Library may take the whole window.
-            for (const r of regions) expect(coversWindow(r, viewport)).toBe(false);
-            // The panel is on screen and every point of it takes the pointer, so it can be used.
-            expect(panel.x).toBeGreaterThanOrEqual(0);
-            expect(panel.y).toBeGreaterThanOrEqual(0);
-            expect(panel.x + panel.w).toBeLessThanOrEqual(viewport.w);
-            expect(panel.y + panel.h).toBeLessThanOrEqual(viewport.h);
-            for (const corner of [
-              { x: panel.x, y: panel.y },
-              { x: panel.x + panel.w, y: panel.y + panel.h },
-              { x: panel.x + panel.w / 2, y: panel.y + panel.h / 2 },
-            ])
-              expect(inAny(regions, corner)).toBe(true);
-            // Every point the pointer is taken at is drawn: the bar's zone or the panel, within the hit margin.
-            const drawn = [inflate(dockZone(input(edge, viewport, { engaged })), 1), inflate(panel, HIT_MARGIN + 1)];
-            const points = grid(viewport);
-            let through = 0;
-            for (const p of points) {
-              if (!inAny(regions, p)) through++;
-              else expect(inAny(drawn, p)).toBe(true);
-            }
-            // Most of the desktop always clicks through.
-            expect(through / points.length).toBeGreaterThan(0.5);
-          });
-        }
+    for (const [name, panel] of panels(viewport)) {
+      for (const engaged of [false, true]) {
+        it(`${name}, ${viewport.w} x ${viewport.h}, pointer ${engaged ? "on" : "off"} the bar`, () => {
+          const regions = computeRegions(input(viewport, { engaged, panels: [snapRect(panel)] })).map(snapRect);
+          // Nothing but the App Library may take the whole window.
+          for (const r of regions) expect(coversWindow(r, viewport)).toBe(false);
+          // The panel is on screen and every point of it takes the pointer, so it can be used.
+          expect(panel.x).toBeGreaterThanOrEqual(0);
+          expect(panel.y).toBeGreaterThanOrEqual(0);
+          expect(panel.x + panel.w).toBeLessThanOrEqual(viewport.w);
+          expect(panel.y + panel.h).toBeLessThanOrEqual(viewport.h);
+          for (const corner of [
+            { x: panel.x, y: panel.y },
+            { x: panel.x + panel.w, y: panel.y + panel.h },
+            { x: panel.x + panel.w / 2, y: panel.y + panel.h / 2 },
+          ])
+            expect(inAny(regions, corner)).toBe(true);
+          // Every point the pointer is taken at is drawn: the bar's zone or the panel, within the hit margin.
+          const drawn = [inflate(dockZone(input(viewport, { engaged })), 1), inflate(panel, HIT_MARGIN + 1)];
+          const points = grid(viewport);
+          let through = 0;
+          for (const p of points) {
+            if (!inAny(regions, p)) through++;
+            else expect(inAny(drawn, p)).toBe(true);
+          }
+          // Most of the desktop always clicks through.
+          expect(through / points.length).toBeGreaterThan(0.5);
+        });
       }
-
-      it(`auto-hidden on the ${edge}, ${viewport.w} x ${viewport.h}: only a thin strip on the screen edge`, () => {
-        const regions = computeRegions(input(edge, viewport, { hidden: true }));
-        expect(regions).toHaveLength(1);
-        const [strip] = regions as [Rect];
-        expect(Math.min(strip.w, strip.h)).toBeLessThanOrEqual(4);
-      });
-
-      it(`the App Library on the ${edge}, ${viewport.w} x ${viewport.h}: the whole window, because it is drawn over all of it`, () => {
-        expect(computeRegions(input(edge, viewport, { fullscreen: true }))).toEqual([{ x: 0, y: 0, w: viewport.w, h: viewport.h }]);
-      });
     }
+
+    it(`auto-hidden, ${viewport.w} x ${viewport.h}: only a thin strip on the screen edge`, () => {
+      const regions = computeRegions(input(viewport, { hidden: true }));
+      expect(regions).toHaveLength(1);
+      const [strip] = regions as [Rect];
+      expect(Math.min(strip.w, strip.h)).toBeLessThanOrEqual(4);
+    });
+
+    it(`the App Library, ${viewport.w} x ${viewport.h}: the whole window, because it is drawn over all of it`, () => {
+      expect(computeRegions(input(viewport, { fullscreen: true }))).toEqual([{ x: 0, y: 0, w: viewport.w, h: viewport.h }]);
+    });
   }
 });
 
