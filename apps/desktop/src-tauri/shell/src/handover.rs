@@ -12,9 +12,12 @@
 //!
 //! The record lives in `desktop-handover.json` beside the Windows snapshot; the copies go into a new
 //! numbered folder under `desktop-handover` each time, so the copies Windows is showing are never the
-//! ones being replaced. A second "off" while a record exists keeps it: the desktop on screen is then
-//! Windows' own, not dotDock's. A damaged record is never silently skipped: it is moved aside to
-//! `desktop-handover.damaged.json`, so nothing is lost, and the error is returned.
+//! ones being replaced. An "off" that finds a record left over (a take-over Windows did not show, a
+//! record that could not be removed) keeps it only while the screen shows Windows' own pictures (the
+//! one from before dotDock, or the one recorded on the Windows side); otherwise dotDock's desktop is on
+//! screen and replaces it. "On" removes the record only once Windows reads back dotDock's pictures. A
+//! damaged record is never silently skipped: it is moved aside to `desktop-handover.damaged.json`, so
+//! nothing is lost, and the error is returned.
 //!
 //! The Windows side is behind [`Desktop`], so the order and the failure cases are unit-tested.
 
@@ -43,6 +46,8 @@ pub trait Desktop {
     /// How wallpapers are fitted to the screen; one setting for every monitor.
     fn fit(&self) -> Result<Fit, String>;
     fn set_wallpaper(&self, monitor: &str, file: &Path, fit: Fit) -> Result<(), String>;
+    /// The user's picture from before dotDock (the snapshot's), when it still exists.
+    fn original(&self) -> Option<PathBuf>;
     fn autostart_enabled(&self) -> bool;
     fn enable_autostart(&self) -> Result<(), String>;
     /// The same effect as `tools/restore-windows.ps1`.
@@ -203,10 +208,12 @@ fn record_into(path: &Path, copies: &Path, desktop: &dyn Desktop) -> Result<(), 
 /// recording error is still returned so Settings can say what will not come back.
 pub fn hand_back(dir: &Path, desktop: &dyn Desktop) -> Result<(), HandoverError> {
     let recorded = match read_record(dir) {
-        // Already handed back: what is on screen is Windows' own desktop, so the record stays as it is.
-        Ok(Some(_)) => Ok(()),
-        // Nothing recorded: the desktop on screen is dotDock's.
-        Ok(None) => record(dir, desktop),
+        // A record from a take-over that never reached the screen: Windows' own pictures are still
+        // showing, so the record is still the only description of dotDock's desktop.
+        Ok(Some(_)) if shows_windows_own(dir, desktop) => Ok(()),
+        // A stale record (left by a failed removal or a reset choice) or none: the desktop on screen is
+        // dotDock's current one, and it replaces anything older.
+        Ok(_) => record(dir, desktop),
         // Damaged: what it described cannot come back, so it is kept aside and the screen recorded.
         Err(_) => {
             set_aside(dir);
@@ -216,6 +223,29 @@ pub fn hand_back(dir: &Path, desktop: &dyn Desktop) -> Result<(), HandoverError>
     desktop.restore_windows().map_err(HandoverError::Restore)?;
     put_back_windows_side(dir, desktop)?;
     recorded
+}
+
+/// Two files hold the same picture: same size and same bytes. Paths differ between copies.
+fn same_picture(a: &Path, b: &Path) -> bool {
+    let size = |p: &Path| std::fs::metadata(p).map(|m| m.len()).ok();
+    match (size(a), size(b)) {
+        (Some(x), Some(y)) if x == y => matches!((std::fs::read(a), std::fs::read(b)), (Ok(x), Ok(y)) if x == y),
+        _ => false,
+    }
+}
+
+/// Every monitor shows one of Windows' own pictures: the one from before dotDock or one recorded on the
+/// Windows side when dotDock last took over. A solid colour counts as Windows' own; so does a desktop
+/// that cannot be read, so an unreadable screen never replaces the record.
+fn shows_windows_own(dir: &Path, desktop: &dyn Desktop) -> bool {
+    let Ok(shown) = desktop.wallpapers() else { return true };
+    let windows_side = read_record_at(&dir.join(WINDOWS_FILE)).ok().flatten();
+    let own: Vec<PathBuf> = desktop
+        .original()
+        .into_iter()
+        .chain(windows_side.into_iter().flat_map(|r| r.wallpapers.into_iter().map(|w| w.file)))
+        .collect();
+    shown.iter().all(|(_, file)| own.iter().any(|o| same_picture(file, o)))
 }
 
 /// After Windows is restored: the wallpapers Windows was showing when dotDock last took over, if recorded.
@@ -239,19 +269,31 @@ fn put_back_windows_side(dir: &Path, desktop: &dyn Desktop) -> Result<(), Handov
 }
 
 /// Puts each recorded wallpaper on its monitor. A monitor that is no longer attached is skipped; one that
-/// was not attached then gets the first wallpaper, so no screen is left out. Returns how many were set.
-fn put_wallpapers(record: &Record, desktop: &dyn Desktop) -> Result<usize, String> {
+/// was not attached then gets the first wallpaper, so no screen is left out. Returns what was set where.
+fn put_wallpapers(record: &Record, desktop: &dyn Desktop) -> Result<Vec<(String, PathBuf)>, String> {
     let attached = desktop.monitors()?;
     let fallback = record.wallpapers.iter().find(|w| w.file.is_file());
-    let mut set = 0;
+    let mut set = Vec::new();
     for monitor in &attached {
         let own = record.wallpapers.iter().find(|w| &w.monitor == monitor && w.file.is_file());
         if let Some(wallpaper) = own.or(fallback) {
             desktop.set_wallpaper(monitor, &wallpaper.file, record.fit)?;
-            set += 1;
+            set.push((monitor.clone(), wallpaper.file.clone()));
         }
     }
     Ok(set)
+}
+
+/// Windows reads back the picture that was set on every one of those monitors.
+fn verify_shown(set: &[(String, PathBuf)], desktop: &dyn Desktop) -> Result<(), String> {
+    let shown = desktop.wallpapers()?;
+    for (monitor, file) in set {
+        let on_screen = shown.iter().find(|(m, _)| m == monitor).map(|(_, f)| f);
+        if !on_screen.is_some_and(|f| same_picture(f, file)) {
+            return Err(format!("Windows kept another wallpaper on {monitor}"));
+        }
+    }
+    Ok(())
 }
 
 /// Switching the theme on: puts dotDock's recorded desktop back. Call before the parts start.
@@ -275,13 +317,15 @@ pub fn take_over(dir: &Path, desktop: &dyn Desktop) -> Result<TakenOver, Handove
         let _ = std::fs::remove_file(&windows_path);
     }
     let set = put_wallpapers(&record, desktop).map_err(HandoverError::TakeOver)?;
+    // Only a desktop Windows really shows retires the record; otherwise the next off still has it.
+    verify_shown(&set, desktop).map_err(HandoverError::TakeOver)?;
     if record.autostart {
         desktop.enable_autostart().map_err(HandoverError::TakeOver)?;
     }
     // Used: the next "off" records afresh. The copies stay until then, because Windows may still
     // be reading them.
     std::fs::remove_file(record_path(dir)).map_err(|e| HandoverError::TakeOver(e.to_string()))?;
-    Ok(TakenOver { wallpapers: set, autostart: record.autostart, nothing_recorded: false, windows_kept })
+    Ok(TakenOver { wallpapers: set.len(), autostart: record.autostart, nothing_recorded: false, windows_kept })
 }
 
 /// The real Windows desktop.
@@ -302,6 +346,10 @@ impl Desktop for Windows {
 
     fn set_wallpaper(&self, monitor: &str, file: &Path, fit: Fit) -> Result<(), String> {
         crate::wallpaper::apply(file, Some(monitor), fit).map_err(|e| e.to_string())
+    }
+
+    fn original(&self) -> Option<PathBuf> {
+        crate::wallpaper::original().ok().flatten()
     }
 
     fn autostart_enabled(&self) -> bool {
@@ -332,6 +380,8 @@ mod tests {
         windows_wallpaper: PathBuf,
         fail_restore: bool,
         fail_read: bool,
+        /// Windows accepts a wallpaper and keeps showing the old one (seen live: issue 1 of the checker).
+        ignore_set: RefCell<bool>,
         log: RefCell<Vec<String>>,
     }
 
@@ -352,6 +402,7 @@ mod tests {
                 windows_wallpaper: windows,
                 fail_restore: false,
                 fail_read: false,
+                ignore_set: RefCell::new(false),
                 log: RefCell::new(Vec::new()),
             }
         }
@@ -376,9 +427,15 @@ mod tests {
         }
         fn set_wallpaper(&self, monitor: &str, file: &Path, fit: Fit) -> Result<(), String> {
             self.log.borrow_mut().push(format!("wallpaper {monitor}"));
+            if *self.ignore_set.borrow() {
+                return Ok(());
+            }
             *self.fit.borrow_mut() = fit;
             self.walls.borrow_mut().insert(monitor.to_owned(), file.to_owned());
             Ok(())
+        }
+        fn original(&self) -> Option<PathBuf> {
+            Some(self.windows_wallpaper.clone())
         }
         fn autostart_enabled(&self) -> bool {
             *self.autostart.borrow()
@@ -606,5 +663,59 @@ mod tests {
         };
         let json = serde_json::to_string(&record).expect("serialises");
         assert_eq!(json, r#"{"schema":1,"wallpapers":[{"monitor":"m","file":"w.jpg"}],"fit":"span","autostart":true}"#);
+    }
+
+    #[test]
+    fn on_that_windows_does_not_show_keeps_the_record_and_the_next_off_keeps_dotdocks_desktop() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let fake = Fake::new(dir.path());
+        hand_back(dir.path(), &fake).expect("off");
+        *fake.ignore_set.borrow_mut() = true;
+        assert!(matches!(take_over(dir.path(), &fake), Err(HandoverError::TakeOver(_))));
+        assert!(read_record(dir.path()).expect("readable").is_some(), "the record is not retired");
+        // The theme is on, but Windows still shows its own picture: this off must not record it as dotDock's.
+        hand_back(dir.path(), &fake).expect("off again");
+        *fake.ignore_set.borrow_mut() = false;
+        take_over(dir.path(), &fake).expect("on");
+        assert_eq!(fake.shown("left"), b"meadow");
+        assert_eq!(fake.shown("right"), b"dunes");
+    }
+
+    #[test]
+    fn a_stale_record_does_not_replace_dotdocks_current_desktop() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let fake = Fake::new(dir.path());
+        hand_back(dir.path(), &fake).expect("off");
+        let stale = std::fs::read(record_path(dir.path())).expect("record");
+        take_over(dir.path(), &fake).expect("on");
+        // The record comes back (a removal that failed, a reset choice), and the user picks another
+        // dotDock wallpaper while the theme is on.
+        std::fs::write(record_path(dir.path()), stale).expect("stale record");
+        let chosen = dir.path().join("chosen.jpg");
+        std::fs::write(&chosen, b"chosen").expect("write");
+        fake.walls.borrow_mut().insert("left".into(), chosen);
+        hand_back(dir.path(), &fake).expect("off over a stale record");
+        assert_eq!(fake.shown("left"), b"windows");
+        take_over(dir.path(), &fake).expect("on");
+        assert_eq!(fake.shown("left"), b"chosen", "dotDock's current desktop, not the stale one");
+        assert_eq!(fake.shown("right"), b"dunes");
+    }
+
+    #[test]
+    fn on_off_on_off_shows_dotdock_then_the_users_own_wallpaper_every_time() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let fake = Fake::new(dir.path());
+        hand_back(dir.path(), &fake).expect("first off");
+        let mine = dir.path().join("mine.jpg");
+        std::fs::write(&mine, b"mine").expect("write");
+        fake.walls.borrow_mut().values_mut().for_each(|w| *w = mine.clone());
+        for cycle in 0..3 {
+            take_over(dir.path(), &fake).unwrap_or_else(|e| panic!("on {cycle}: {e}"));
+            assert_eq!(fake.shown("left"), b"meadow", "on {cycle}");
+            assert_eq!(fake.shown("right"), b"dunes", "on {cycle}");
+            hand_back(dir.path(), &fake).unwrap_or_else(|e| panic!("off {cycle}: {e}"));
+            assert_eq!(fake.shown("left"), b"mine", "off {cycle}");
+            assert_eq!(fake.shown("right"), b"mine", "off {cycle}");
+        }
     }
 }
