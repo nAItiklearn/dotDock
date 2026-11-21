@@ -3,7 +3,7 @@
 Free, open-source, Nothing-OS-inspired desktop environment for Windows. Full plan: `MASTER_SPEC.md`. Live status: `PROGRESS.md`.
 
 ## Every session
-1. Read `PROGRESS.md`, then the relevant sections of `MASTER_SPEC.md`.
+1. Read `docs/NEXT_SESSION.md` (current handoff), then `PROGRESS.md`, then the relevant sections of `MASTER_SPEC.md`.
 2. Continue from the current milestone. Do not skip phases or gates.
 3. Update `PROGRESS.md` and commit after every feature.
 

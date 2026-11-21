@@ -1,3 +1,5 @@
+> **Superseded (2026-11-21 22:40):** read `docs/NEXT_SESSION.md` first; this file is the older 2026-11-20 handoff.
+
 # Session handoff (2026-11-20, 22:30)
 
 Read this first in the next session, then `PROGRESS.md` and `CLAUDE.md`. Every background agent from this
