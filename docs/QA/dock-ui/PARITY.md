@@ -57,4 +57,4 @@ Full suite at this commit: 80 files, 1 220+ tests, all green; `tsc --noEmit` cle
 | History | `recent.test.ts`; `more.test.tsx` "history"; launches recorded in `bridge.ts` | 05 | UI accepted |
 | Voice memo with waveform | `memo.test.ts`, `memoRecorder.test.ts` (support check, refusal is "no device"); `more.test.tsx` "voice memo" | 08 | UI accepted; recording a real memo needs a microphone permission prompt the owner answers |
 | Clipboard, screenshots, file shelf, downloads, photos | not dock UI tiles yet | none | open (native tiles track) |
-| Search (files, calculator, units) in the App Library | `librarySections.test.ts`, `nav.test.ts` | 19 | UI accepted for apps and calculator; files = host |
+| Search (files, calculator, units) in the App Library | `librarySections.test.ts`, `nav.test.ts` | 19 | UI accepted for apps (name, initials, publisher, category); calculator and units live in the Converter tile; files = host |
