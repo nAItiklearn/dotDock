@@ -7,6 +7,8 @@ import { DevPanel } from "./DevPanel";
 import { dev, devBackend } from "./devBackend";
 import { devTiles } from "./devTiles";
 import { perf } from "./perfHarness";
+import { auditDock } from "./layoutAudit";
+import { isVertical, metricsFor } from "../geometry";
 import { sampleIcon } from "./sampleIcons";
 import { DEFAULT_WALLPAPER, installBackdrop, parseWallpaper, setWallpaper } from "./wallpapers";
 import "./DevPanel.css";
@@ -56,7 +58,13 @@ export function mountDevPanel(): void {
   const asked = parseWallpaper(params.get("wall"));
   installBackdrop(asked ?? { id: DEFAULT_WALLPAPER, mode: dark ? "dark" : "light" });
   if (params.get("sample") !== "0") publishSampleProviders();
-  Object.assign(window, { dockDev: { dev, tiles: devTiles, store: useDockStore, actions, perf, setWallpaper } });
+  /** The pixel audit at the icon size the dock is drawing now (it may have shrunk the requested one to fit). */
+  const audit = () => {
+    const icon = Number.parseFloat(getComputedStyle(document.querySelector(".dock-root") ?? document.documentElement).getPropertyValue("--d-icon"));
+    const { edge } = useDockStore.getState().settings;
+    return auditDock(metricsFor(icon).gap, isVertical(edge));
+  };
+  Object.assign(window, { dockDev: { dev, tiles: devTiles, store: useDockStore, actions, perf, audit, setWallpaper } });
   if (params.get("panel") === "0") return;
   const host = document.createElement("div");
   host.id = "dev-panel";
