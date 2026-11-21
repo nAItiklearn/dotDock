@@ -8,7 +8,7 @@
             "type": "command",
             "command": "node \"D:/dotDock/tools/hackatime/heartbeat.mjs\"",
             "async": true,
-            "timeout": 30
+            "timeout": 60
           }
         ]
       }

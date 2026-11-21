@@ -16,8 +16,12 @@ const PROJECT = "dotDock";
 const PLUGIN = "claude-code/1 dotdock-heartbeat/1";
 const WRITE_TOOLS = new Set(["Edit", "Write", "MultiEdit", "NotebookEdit"]);
 const FILE_TOOLS = new Set([...WRITE_TOOLS, "Read"]);
-/** The CLI normally finishes in about a second; past this it is stuck and is stopped. */
-const CLI_TIMEOUT_MS = 20_000;
+/**
+ * The CLI normally finishes in about a second, but with several agents sending at once it waits on its own
+ * config and queue file locks; 20 s killed about 74 % of runs on 2026-11-21. Past this it is stuck and is
+ * stopped. Must stay below the hook's own `timeout` in .claude/settings.json (60 s).
+ */
+const CLI_TIMEOUT_MS = 50_000;
 
 function cliPath() {
   const dir = join(homedir(), ".wakatime");
@@ -67,6 +71,7 @@ async function main() {
   // Wait for the CLI instead of firing and forgetting: the hook's process tree is torn down when
   // the hook exits, which killed an unref'd child before it could send. The hook is registered as
   // async, so Claude Code never waits for it. Not detached, so no console window flashes.
+  const started = Date.now();
   const code = await new Promise((done) => {
     const child = spawn(cli, args, { stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
     let stderr = "";
@@ -81,7 +86,7 @@ async function main() {
       done(stderr.trim() ? `${exit} ${stderr.trim().slice(0, 200)}` : String(exit));
     });
   });
-  trace(`${event.tool_name} exit=${code}`);
+  trace(`${event.tool_name} exit=${code} ms=${Date.now() - started}`);
 }
 
 /** One line per heartbeat attempt in the app data folder, so a silent failure can be seen. Never the key. */
