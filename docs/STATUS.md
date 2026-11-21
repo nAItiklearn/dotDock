@@ -1,5 +1,11 @@
 # Live status (rewritten every 30 min)
 
+**Owner deadline (19:15): site deployed with downloads by about 22:00, 22:15 at the latest. Videos later.**
+Plan: notch final 20:00; website final 20:15; dock, home, settings+theme and release prep final 20:30; checker on
+dev tiles by 20:15. 20:30 to 21:00: lead merges into main (settings, theme, notch, dock, home, dev tiles, release),
+full checks on main. 21:00 to 21:20: lead runs the combined live test. 21:20: tag v1.0.0, CI builds the installer
+(about 15 to 20 min). 21:45: Vercel project from the repo (root `website/`), deploy, verify downloads.
+
 **2026-11-21 (new session): sequential mode, owner request.** One feature at a time: fresh Opus builder finishes it, a separate fresh Opus reviewer scores it, merge only at 4.8 or more (nothing under 4.5) with every check green, then the next feature. Order: Notch, Theme, Settings, Download page, Home screen, Dock (host + UI), Developer tiles, Website. Now running (owner asked for these in parallel, same rules): **Notch** builder; **Dock** builder (host + UI worktrees); **Website** builder (download page, then main site); **Checker** (independent reviewer B, starting with Theme). **Owner (18:50): the lead runs the final combined live check (home screen + notch + dock + theme, wallpaper changes, colours following) after each track's own work passes; agents do not run it.** Shared screen: `D:\dotDock\.claude\screen.lock` must be held for any on-screen test (20 min max). Disk: reuse existing target dirs, stop under 12 GB.
 
 **Last check:** 2026-11-21 15:25. **Disk D:** 17 GB free (limit 12 GB). **Screen:** free.
