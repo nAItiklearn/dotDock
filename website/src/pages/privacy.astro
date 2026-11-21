@@ -7,7 +7,7 @@ import { ISSUES_URL, OPEN_METEO_URL, PRODUCT_NAME } from "../brand";
   artTop="band-horse"
   artBottom="band-butterflies"
   title={`Privacy: ${PRODUCT_NAME} keeps everything on your PC`}
-  description={`${PRODUCT_NAME} is local-first: no account, no telemetry. The only network calls are the weather forecast and an update check you can turn off.`}
+  description={`${PRODUCT_NAME} is local-first: no account, no telemetry. The only network calls are the weather forecast and, if you give them a token, the developer tiles.`}
   label="Privacy"
   heading="Local first. Nothing phones home."
 >
@@ -29,9 +29,9 @@ import { ISSUES_URL, OPEN_METEO_URL, PRODUCT_NAME } from "../brand";
             <td>The place you searched for, then its coordinates. You can search by name instead of sharing your location.</td>
           </tr>
           <tr>
-            <th scope="row">Update check</th>
-            <td>Periodically, in the background. You can turn it off in Settings.</td>
-            <td>A request for the latest version information. As with any web request, the server sees your IP address.</td>
+            <th scope="row">Developer tiles (GitHub, Linear, Vercel)</th>
+            <td>Only for a tile you add to the dock and give a token. The token is kept in Windows Credential Manager.</td>
+            <td>Your token, to that service&rsquo;s own API, to read the counts the tile shows. Nothing goes to {PRODUCT_NAME}.</td>
           </tr>
         </tbody>
       </table>
