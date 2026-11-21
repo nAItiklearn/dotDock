@@ -208,7 +208,8 @@
   padding: var(--space-1);
   border: var(--hairline) solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  /* Opaque: a menu sits over busy widgets and wallpapers, and its labels must read on any of them. */
+  background: var(--surface-2);
   box-shadow: var(--shadow);
   color: var(--text);
   animation: menu-in var(--dur-fast) var(--ease-out) both;
@@ -230,7 +231,7 @@
 }
 .widget-menu__item:hover:not(:disabled),
 .widget-menu__item:focus-visible {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--text) 9%, transparent);
   outline: none;
 }
 .widget-menu__item:disabled {

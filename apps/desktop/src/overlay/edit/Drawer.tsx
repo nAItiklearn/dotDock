@@ -13,7 +13,8 @@ import { announce, editUi, useEditUi, type DrawerTab } from "../editUi";
 import { addOrigin, removeWithExit } from "../directActions";
 import { WidgetPreview } from "../WidgetPreview";
 
-const PREVIEW_MAX_WIDTH = 296;
+/** Drawer width less the body, card and stage padding: a preview never makes the card scroll sideways. */
+const PREVIEW_MAX_WIDTH = 248;
 const PREVIEW_MAX_HEIGHT = 112;
 
 const TABS: readonly { value: DrawerTab; label: string }[] = [
