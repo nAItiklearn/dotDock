@@ -145,3 +145,8 @@ Numbered D-019 because D-017 and D-018 exist on `main`; the backend track's bran
 - **Context:** visual QA over seven wallpapers showed the circle shape as an ellipse on Wide, Landscape, Portrait, Tall and Panorama. A 4x3 or 3x4 ellipse reads as an egg, and the reference desktop (`1747058098-43375-ss7-thumb.webp`) puts a wide photo in a pill.
 - **Decision:** the circle shape keeps fully round ends: a true circle on Small, Medium and Large, a pill (radius half the short side) on every other size. The dot ring is spaced evenly by distance along the pill, with an even count so it is symmetric on both axes. The option is titled "Circle or pill"; the stored value stays `circle`, so saved layouts need no migration.
 - **Rejected:** keeping the ellipse (eggs on 4x3 and 3x4); centring a true circle inside wide sizes (wastes most of the footprint).
+
+## D-037 Developer tiles move to V2 (lead, 2026-11-21 20:05)
+- **Context:** the independent checker failed the developer tiles track (4.60): the code is clean and tested, but no part of the core creates `Integrations` or registers the `dock_integrations*` commands, so every tile reads "Not available" in the real app.
+- **Decision:** the developer tiles (GitHub, Vercel, AI tokens) are not in V1. The branch (`worktree-agent-a60a1abdd36a54bde`, last commit d80b027) stays as is for V2. The website and the dock's gallery stop offering them in V1.
+- **Rejected:** wiring the core at the last minute before the 22:00 release; it touches the dock host's startup path, which is itself being fixed.
