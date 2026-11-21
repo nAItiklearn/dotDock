@@ -5,6 +5,7 @@ import { footprintOf, moveTo, rectOf, resizeTo } from "../../lib/layout/ops";
 import type { LayoutStore } from "../../lib/state/layoutStore";
 import type { AppSettings, Placement } from "../../lib/model/types";
 import { widgetCatalog } from "../catalog";
+import type { Handoff } from "../directPress";
 import { announce, editUi } from "../editUi";
 
 export interface GestureEnv {
@@ -51,12 +52,59 @@ export class GestureController {
   attach(): void {
     this.env.root.addEventListener("pointerdown", this.onPointerDown);
     this.env.root.addEventListener("focusin", this.onFocusIn);
+    // Losing the window (another app took focus) ends the gesture, so the drag shield never outlives it.
+    window.addEventListener("blur", this.onBlur);
   }
 
   detach(): void {
     this.cancel();
     this.env.root.removeEventListener("pointerdown", this.onPointerDown);
     this.env.root.removeEventListener("focusin", this.onFocusIn);
+    window.removeEventListener("blur", this.onBlur);
+  }
+
+  /**
+   * Continues a gesture that began on the plain desktop (press and hold, a drag, or the hover handle).
+   * The pointer is already captured by the widget; nothing restarts, so the widget never jumps.
+   */
+  adopt(h: Handoff): void {
+    const layout = this.env.layout.getState();
+    const origin = layout.placements.find((p) => p.id === h.id);
+    if (this.active || !origin || !h.el.hasPointerCapture(h.pointerId)) {
+      h.el.classList.remove("is-dragging");
+      h.el.style.translate = "0px 0px";
+      editUi.setState({ activeId: null, gesture: null, liftedId: null });
+      return;
+    }
+    this.active = {
+      kind: h.kind,
+      id: h.id,
+      pointerId: h.pointerId,
+      el: h.el,
+      startX: h.startX,
+      startY: h.startY,
+      base: layout.placements,
+      origin,
+      // A widget already following the pointer has passed the threshold; it keeps going without a hitch.
+      started: h.moving,
+      lastKey: "",
+      valid: null,
+      pointerX: h.pointerX,
+      pointerY: h.pointerY,
+      frame: 0,
+    };
+    this.listen(h.el);
+    if (h.moving) editUi.setState({ activeId: h.id, gesture: "move", liftedId: null });
+    if (h.moving || h.kind === "resize") this.active.frame = requestAnimationFrame(this.onFrame);
+  }
+
+  private readonly onBlur = (): void => this.cancel();
+
+  private listen(el: HTMLElement): void {
+    el.addEventListener("pointermove", this.onPointerMove);
+    el.addEventListener("pointerup", this.onPointerUp);
+    el.addEventListener("pointercancel", this.onPointerCancel);
+    el.addEventListener("lostpointercapture", this.onPointerCancel);
   }
 
   get isActive(): boolean {
@@ -107,9 +155,7 @@ export class GestureController {
       pointerY: e.clientY,
       frame: 0,
     };
-    slot.addEventListener("pointermove", this.onPointerMove);
-    slot.addEventListener("pointerup", this.onPointerUp);
-    slot.addEventListener("pointercancel", this.onPointerCancel);
+    this.listen(slot);
   };
 
   private readonly onPointerMove = (e: PointerEvent): void => {
@@ -138,7 +184,7 @@ export class GestureController {
     if (!a.started) {
       if (!passedDragThreshold(dx, dy)) return;
       a.started = true;
-      editUi.setState({ activeId: a.id, gesture: a.kind });
+      editUi.setState({ activeId: a.id, gesture: a.kind, liftedId: null });
       if (a.kind === "move") a.el.classList.add("is-dragging");
     }
     if (a.kind === "move") {
@@ -208,12 +254,13 @@ export class GestureController {
     a.el.removeEventListener("pointermove", this.onPointerMove);
     a.el.removeEventListener("pointerup", this.onPointerUp);
     a.el.removeEventListener("pointercancel", this.onPointerCancel);
+    a.el.removeEventListener("lostpointercapture", this.onPointerCancel);
     if (a.el.hasPointerCapture(a.pointerId)) a.el.releasePointerCapture(a.pointerId);
 
     const result = commit && a.started ? a.valid : null;
     if (a.started && a.kind === "move") this.settleMove(a, result);
 
-    editUi.setState({ preview: null, activeId: null, gesture: null, ghost: null, guides: [] });
+    editUi.setState({ preview: null, activeId: null, gesture: null, liftedId: null, ghost: null, guides: [] });
     if (result) {
       this.env.layout.getState().commit(result);
       const done = result.find((p) => p.id === a.id);

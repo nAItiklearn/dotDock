@@ -7,11 +7,27 @@ import { useLayoutStore, useNoticeStore, useSettingsStore } from "../lib/state/h
 import { useGridMetrics } from "../lib/state/useGridMetrics";
 import { eventMatches } from "../lib/shortcuts";
 import { isTauri } from "../providers/bridge";
+import { cellAtPoint } from "../lib/layout/gesture";
+import { widgetMenuItems } from "./directActions";
+import { DirectPress } from "./directPress";
 import { NoticeToasts } from "./NoticeToasts";
 import { editUi, resetEditUi, useEditUi } from "./editUi";
 import { invalidateHitRegions, reportEditMode, reportFirstFrame, syncHitRegions } from "./nativeHost";
-import { WidgetSlot } from "./WidgetSlot";
+import { widgetCatalog } from "./catalog";
+import { WidgetMenu } from "./WidgetMenu";
+import { markBootSettled, WidgetSlot } from "./WidgetSlot";
 import "./Overlay.css";
+
+function warmEditMode(): void {
+  void import("./edit/EditLayer");
+  void import("./edit/SlotChrome");
+}
+
+interface OpenMenu {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+}
 
 const EditLayer = lazy(() => import("./edit/EditLayer").then((m) => ({ default: m.EditLayer })));
 
@@ -63,8 +79,23 @@ export function Overlay({ forceThemeId }: { readonly forceThemeId?: string | nul
 
   useEffect(() => {
     reportFirstFrame();
-    return root.current ? syncHitRegions(root.current) : undefined;
+    // The boot frame is final; only widgets that appear after it (added, duplicated, restored) animate in.
+    const frame = requestAnimationFrame(markBootSettled);
+    const stopHits = root.current ? syncHitRegions(root.current) : undefined;
+    return () => {
+      cancelAnimationFrame(frame);
+      stopHits?.();
+    };
   }, []);
+
+  // Press and hold, or drag, a widget on the plain desktop to move it; drag its corner to resize it.
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return undefined;
+    const press = new DirectPress({ root: el, layout: app.layout, getSettings: () => app.settings.getState().settings, warm: warmEditMode });
+    press.attach();
+    return () => press.detach();
+  }, [app]);
 
   // Positions are published as custom properties, so the core's click map needs a nudge after they change.
   useEffect(() => {
@@ -84,15 +115,11 @@ export function Overlay({ forceThemeId }: { readonly forceThemeId?: string | nul
 
   // Warm the edit-mode chunk once the desktop is up, so the first right-click opens instantly.
   useEffect(() => {
-    const warm = (): void => {
-      void import("./edit/EditLayer");
-      void import("./edit/SlotChrome");
-    };
     if ("requestIdleCallback" in window) {
-      const handle = window.requestIdleCallback(warm, { timeout: 4000 });
+      const handle = window.requestIdleCallback(warmEditMode, { timeout: 4000 });
       return () => window.cancelIdleCallback(handle);
     }
-    const timer = setTimeout(warm, 2000);
+    const timer = setTimeout(warmEditMode, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -164,14 +191,24 @@ export function Overlay({ forceThemeId }: { readonly forceThemeId?: string | nul
     native.shortcuts.register(shortcuts).catch((err: unknown) => console.error("could not register shortcuts", err));
   }, [shortcuts]);
 
+  const [menu, setMenu] = useState<OpenMenu | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
+
   const onContextMenu = useCallback(
     (id: string, event: MouseEvent) => {
       event.preventDefault();
-      app.layout.getState().enterEdit(id);
-      if (editUi.getState().drawerOpen) editUi.setState({ drawerTab: "selected" });
+      const layout = app.layout.getState();
+      if (layout.editing) {
+        layout.select(id);
+        if (editUi.getState().drawerOpen) editUi.setState({ drawerTab: "selected" });
+      }
+      setMenu({ id, x: event.clientX, y: event.clientY });
     },
     [app],
   );
+
+  const menuPlacement = menu ? placements.find((p) => p.id === menu.id) : undefined;
+  const menuMeta = menuPlacement ? widgetCatalog.get(menuPlacement.widget) : undefined;
 
   return (
     <main className={`overlay${editing ? " overlay--editing" : ""}`} ref={root} tabIndex={-1} aria-label="Desktop widgets">
@@ -190,6 +227,25 @@ export function Overlay({ forceThemeId }: { readonly forceThemeId?: string | nul
         <Suspense fallback={null}>
           <EditLayer rootRef={root} metrics={metrics} openSettings={openSettingsWindow} />
         </Suspense>
+      ) : null}
+      {menu && menuPlacement && menuMeta ? (
+        <WidgetMenu
+          x={menu.x}
+          y={menu.y}
+          label={`${menuMeta.name} options`}
+          items={widgetMenuItems(
+            {
+              id: menuPlacement.id,
+              name: menuMeta.name,
+              sizes: menuMeta.sizes,
+              size: menuPlacement.size,
+              locked,
+              at: cellAtPoint(menu.x, menu.y, metrics, app.layout.getState().bounds),
+            },
+            app.layout,
+          )}
+          onClose={closeMenu}
+        />
       ) : null}
       {hasNotices ? <NoticeToasts /> : null}
       <div className="sr-only" role="status" aria-live="polite">

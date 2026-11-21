@@ -10,6 +10,7 @@ import { ConfigForm } from "../../lib/ui/ConfigForm";
 import { SizePicker } from "../../lib/ui/SizePicker";
 import { widgetCatalog } from "../catalog";
 import { announce, editUi, useEditUi, type DrawerTab } from "../editUi";
+import { addOrigin, removeWithExit } from "../directActions";
 import { WidgetPreview } from "../WidgetPreview";
 
 const PREVIEW_MAX_WIDTH = 296;
@@ -23,7 +24,9 @@ const TABS: readonly { value: DrawerTab; label: string }[] = [
 function GalleryCard({ meta, metrics }: { readonly meta: WidgetInfo; readonly metrics: GridMetrics }) {
   const [sizeId, setSizeId] = useState<string>(meta.sizes[0]?.id ?? "m");
   const add = (): void => {
-    const result = getApp().layout.getState().addWidget(meta.id, sizeId);
+    const at = editUi.getState().addAt;
+    const near = addOrigin(at, meta.sizes.find((s) => s.id === sizeId));
+    const result = getApp().layout.getState().addWidget(meta.id, sizeId, near);
     if (result.ok) announce(`${meta.name} added`);
   };
   return (
@@ -101,7 +104,7 @@ function SelectedTab() {
         <Button icon="duplicate" onClick={() => layout.getState().duplicate(selected.id)}>
           Duplicate
         </Button>
-        <Button variant="danger" icon="trash" onClick={() => layout.getState().remove(selected.id)}>
+        <Button variant="danger" icon="trash" onClick={() => void removeWithExit(layout, selected.id, meta.name)}>
           Remove
         </Button>
       </div>
@@ -118,7 +121,7 @@ export function Drawer({ metrics }: { readonly metrics: GridMetrics }) {
       <div className="drawer__panel">
         <header className="drawer__head">
           <Segmented label="Panel" value={tab} options={TABS} onChange={(next) => editUi.setState({ drawerTab: next })} />
-          <IconButton icon="close" label="Close panel" onClick={() => editUi.setState({ drawerOpen: false })} />
+          <IconButton icon="close" label="Close panel" onClick={() => editUi.setState({ drawerOpen: false, addAt: null })} />
         </header>
         <div className="drawer__body">
           {locked ? (

@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import type { SizeSpec } from "../../widgets/sizes";
-import { DRAG_THRESHOLD_PX, dragTarget, passedDragThreshold, sizesByProximity } from "./gesture";
+import {
+  cellAtPoint,
+  centredOrigin,
+  classifyPress,
+  DIRECT_DRAG_PX,
+  DRAG_THRESHOLD_PX,
+  dragTarget,
+  HOLD_MS,
+  HOLD_SLOP_PX,
+  passedDragThreshold,
+  sizesByProximity,
+} from "./gesture";
 import type { GridMetrics } from "./grid";
 
 const M: GridMetrics = { cell: 76, gap: 12, edge: 28 };
@@ -46,5 +57,31 @@ describe("resize snapping", () => {
     const before = sizes.map((s) => s.id).join();
     sizesByProximity(sizes, 900, 400, M);
     expect(sizes.map((s) => s.id).join()).toBe(before);
+  });
+});
+
+describe("direct press on the plain desktop", () => {
+  it("waits on a still press, lifts after the hold, and drags on real travel", () => {
+    expect(classifyPress(HOLD_MS - 1, 0, 0)).toBe("pending");
+    expect(classifyPress(HOLD_MS, HOLD_SLOP_PX, 0)).toBe("hold");
+    expect(classifyPress(10, DIRECT_DRAG_PX, 0)).toBe("drag");
+  });
+
+  it("treats a wobble past the hold slop but short of a drag as neither", () => {
+    expect(classifyPress(HOLD_MS * 2, HOLD_SLOP_PX + 1, 0)).toBe("none");
+  });
+});
+
+describe("pointing at a cell", () => {
+  it("finds the cell under a point and clamps to the grid", () => {
+    const bounds = { cols: 16, rows: 9 };
+    expect(cellAtPoint(M.edge + 1, M.edge + 1, M, bounds)).toEqual({ x: 0, y: 0 });
+    expect(cellAtPoint(M.edge + 88 * 3 + 5, M.edge + 88 * 2 + 5, M, bounds)).toEqual({ x: 3, y: 2 });
+    expect(cellAtPoint(-100, 99999, M, bounds)).toEqual({ x: 0, y: 8 });
+  });
+
+  it("centres a new widget on the pointed cell without leaving the grid", () => {
+    expect(centredOrigin({ x: 5, y: 4 }, 4, 2)).toEqual({ x: 4, y: 4 });
+    expect(centredOrigin({ x: 0, y: 0 }, 4, 2)).toEqual({ x: 0, y: 0 });
   });
 });

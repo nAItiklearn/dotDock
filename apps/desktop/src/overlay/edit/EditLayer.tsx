@@ -6,9 +6,12 @@ import { getApp } from "../../lib/state/app";
 import { useSettingsStore } from "../../lib/state/hooks";
 import { widgetCatalog } from "../catalog";
 import { announce, editUi, useEditUi } from "../editUi";
+import { takeHandoff } from "../directPress";
+import { removeWithExit } from "../directActions";
 import { Drawer } from "./Drawer";
 import { GestureController } from "./gestures";
 import { Toolbar } from "./Toolbar";
+import { UndoToast } from "./UndoToast";
 import "./edit.css";
 
 /** Keys that belong to the control that has focus, not to the layout. */
@@ -56,6 +59,9 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
     });
     gestures.attach();
     controller.current = gestures;
+    // A press and hold or drag on the plain desktop started edit mode; carry on with that same gesture.
+    const handoff = takeHandoff();
+    if (handoff) gestures.adopt(handoff);
     // Picking a widget while the drawer is open shows its options.
     const onPick = (e: PointerEvent): void => {
       if ((e.target as HTMLElement).closest("[data-slot-id]") && editUi.getState().drawerOpen) {
@@ -82,12 +88,13 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
       if (e.key === "Escape") {
         e.preventDefault();
         if (controller.current?.isActive) controller.current.cancel();
-        else if (editUi.getState().drawerOpen) editUi.setState({ drawerOpen: false });
+        else if (editUi.getState().drawerOpen) editUi.setState({ drawerOpen: false, addAt: null });
         else void state.exitEdit();
         return;
       }
       if (mod && !e.altKey && e.code === "KeyZ") {
         e.preventDefault();
+        editUi.setState({ undoToast: null });
         if (e.shiftKey) state.redo();
         else state.undo();
         return;
@@ -106,7 +113,7 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
         if (state.duplicate(id).ok) announce(`${name} duplicated`);
       } else if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
-        if (state.remove(id).ok) announce(`${name} removed`);
+        void removeWithExit(layout, id, name);
       } else if (e.key === "=" || e.key === "+" || e.key === "-") {
         e.preventDefault();
         const result = state.stepSize(id, e.key === "-" ? -1 : 1);
@@ -143,6 +150,7 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
           }}
         />
       ) : null}
+      <UndoToast />
       <Toolbar openSettings={openSettings} />
       {drawerOpen ? <Drawer metrics={metrics} /> : null}
       {gesture ? <div className="drag-shield" data-hit aria-hidden="true" /> : null}

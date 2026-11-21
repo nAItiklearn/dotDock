@@ -5,7 +5,7 @@ import { isTauri } from "../../providers/bridge";
  * Why the overlay needs keyboard input right now. The overlay never activates on its own (it must not
  * steal focus from apps); each reason below asks for it, and the core keeps focus while any one holds.
  */
-export type KeyboardReason = "typing" | "editing" | "file-dialog" | "undo";
+export type KeyboardReason = "typing" | "editing" | "file-dialog" | "menu";
 
 type Sender = (wanted: boolean) => void;
 

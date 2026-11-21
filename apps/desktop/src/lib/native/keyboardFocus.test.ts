@@ -30,7 +30,7 @@ describe("keyboard arbiter", () => {
   it("releasing a reason that never held sends nothing", () => {
     const sent: boolean[] = [];
     const a = createKeyboardArbiter((w) => sent.push(w));
-    a.hold("undo", false);
+    a.hold("menu", false);
     expect(sent).toEqual([]);
   });
 });
