@@ -5,6 +5,13 @@ import { majorOf, versionStatus, type Version } from "../src/lib/changelog.ts";
 import { releaseView, type ReleaseData } from "../src/lib/release.ts";
 import { FIRST_VERSION, VERSIONS } from "../src/data/changelog.ts";
 
+const NEXT = {
+  releasesUrl: "https://github.com/nAItiklearn/dotDock/releases",
+  version: "1.0.0",
+  installer: "dotDock_1.0.0_x64-setup.exe",
+  portable: "dotDock_1.0.0_x64-portable.exe",
+};
+
 const v = (major: number): Version => ({ major, name: `Version ${major}`, summary: "", groups: [] });
 const released = (tag: string): ReleaseData => ({
   tag,
@@ -19,14 +26,15 @@ const released = (tag: string): ReleaseData => ({
 });
 
 describe("versionStatus", () => {
-  it("before any release, the first version is in testing and the next is planned, with no date", () => {
-    const none = releaseView(null);
-    assert.deepEqual(versionStatus(v(1), none, 1), { state: "in-testing" });
-    assert.deepEqual(versionStatus(v(2), none, 1), { state: "planned" });
+  it("before the release data is read, the announced version is out and the next is in testing, with no date", () => {
+    const announced = releaseView(null, NEXT);
+    assert.deepEqual(versionStatus(v(1), announced, 1), { state: "out", tag: "v1.0.0", pageUrl: "https://github.com/nAItiklearn/dotDock/releases/latest" });
+    assert.deepEqual(versionStatus(v(2), announced, 1), { state: "in-testing" });
+    assert.deepEqual(versionStatus(v(3), announced, 1), { state: "planned" });
   });
 
   it("takes the date and the notes link from the published release", () => {
-    const s = versionStatus(v(1), releaseView(released("v1.0.2")), 1);
+    const s = versionStatus(v(1), releaseView(released("v1.0.2"), NEXT), 1);
     assert.equal(s.state, "released");
     if (s.state !== "released") return;
     assert.equal(s.tag, "v1.0.2");
@@ -35,7 +43,7 @@ describe("versionStatus", () => {
   });
 
   it("moves the next version into testing once a release is out, and marks older ones released", () => {
-    const r = releaseView(released("v2.1.0"));
+    const r = releaseView(released("v2.1.0"), NEXT);
     assert.deepEqual(versionStatus(v(1), r, 1), { state: "earlier" });
     assert.deepEqual(versionStatus(v(3), r, 1), { state: "in-testing" });
     assert.deepEqual(versionStatus(v(4), r, 1), { state: "planned" });

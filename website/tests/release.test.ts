@@ -4,6 +4,13 @@ import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { formatDate, formatSize, fromGitHub, releaseView, type GitHubRelease, type ReleaseData } from "../src/lib/release.ts";
 
+const NEXT = {
+  releasesUrl: "https://github.com/nAItiklearn/dotDock/releases",
+  version: "1.0.0",
+  installer: "dotDock_1.0.0_x64-setup.exe",
+  portable: "dotDock_1.0.0_x64-portable.exe",
+};
+
 const SHA = "3f2a9c0d4b1e6f7a8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b";
 const DATA: ReleaseData = {
   tag: "v1.0.0",
@@ -18,12 +25,18 @@ const DATA: ReleaseData = {
 };
 
 describe("releaseView", () => {
-  it("shows the unreleased state while there is no release", () => {
-    assert.deepEqual(releaseView(null), { state: "unreleased" });
+  it("offers the announced version through the latest-release links while there is no release data", () => {
+    assert.deepEqual(releaseView(null, NEXT), {
+      state: "announced",
+      version: "v1.0.0",
+      pageUrl: "https://github.com/nAItiklearn/dotDock/releases/latest",
+      downloadUrl: "https://github.com/nAItiklearn/dotDock/releases/latest/download/dotDock_1.0.0_x64-setup.exe",
+      portableUrl: "https://github.com/nAItiklearn/dotDock/releases/latest/download/dotDock_1.0.0_x64-portable.exe",
+    });
   });
 
   it("shows the real version, size, checksum and download link of a release", () => {
-    const v = releaseView(DATA);
+    const v = releaseView(DATA, NEXT);
     assert.equal(v.state, "released");
     if (v.state !== "released") return;
     assert.equal(v.version, "v1.0.0");
@@ -37,15 +50,15 @@ describe("releaseView", () => {
   });
 
   it("adds the v to a bare version number and lower-cases the checksum", () => {
-    const v = releaseView({ ...DATA, tag: "1.2.3", installer: { ...DATA.installer, sha256: SHA.toUpperCase() } });
+    const v = releaseView({ ...DATA, tag: "1.2.3", installer: { ...DATA.installer, sha256: SHA.toUpperCase() } }, NEXT);
     assert.ok(v.state === "released" && v.version === "v1.2.3" && v.sha256 === SHA);
   });
 
   it("refuses a malformed checksum, size, link or date instead of showing it", () => {
-    assert.throws(() => releaseView({ ...DATA, installer: { ...DATA.installer, sha256: "abc" } }), /SHA-256/);
-    assert.throws(() => releaseView({ ...DATA, installer: { ...DATA.installer, bytes: 0 } }), /size/);
-    assert.throws(() => releaseView({ ...DATA, installer: { ...DATA.installer, url: "http://example.invalid" } }), /Incomplete/);
-    assert.throws(() => releaseView({ ...DATA, publishedAt: "soon" }), /date/);
+    assert.throws(() => releaseView({ ...DATA, installer: { ...DATA.installer, sha256: "abc" } }, NEXT), /SHA-256/);
+    assert.throws(() => releaseView({ ...DATA, installer: { ...DATA.installer, bytes: 0 } }, NEXT), /size/);
+    assert.throws(() => releaseView({ ...DATA, installer: { ...DATA.installer, url: "http://example.invalid" } }, NEXT), /Incomplete/);
+    assert.throws(() => releaseView({ ...DATA, publishedAt: "soon" }, NEXT), /date/);
   });
 });
 
@@ -76,7 +89,7 @@ describe("fromGitHub", () => {
   it("picks the setup installer and its GitHub digest", () => {
     assert.deepEqual(fromGitHub(api), DATA);
   });
-  it("keeps the unreleased state for drafts, pre-releases and installers without a checksum", () => {
+  it("reads no release from drafts, pre-releases and installers without a checksum", () => {
     assert.equal(fromGitHub({ ...api, draft: true }), null);
     assert.equal(fromGitHub({ ...api, prerelease: true }), null);
     assert.equal(fromGitHub({ ...api, assets: api.assets.map((a) => ({ ...a, digest: null })) }), null);
@@ -87,6 +100,6 @@ describe("fromGitHub", () => {
 describe("src/data/release.json", () => {
   it("is null or a release the page can show", () => {
     const data = JSON.parse(readFileSync(new URL("../src/data/release.json", import.meta.url), "utf8")) as ReleaseData | null;
-    assert.doesNotThrow(() => releaseView(data));
+    assert.doesNotThrow(() => releaseView(data, NEXT));
   });
 });

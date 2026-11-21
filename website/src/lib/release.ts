@@ -1,7 +1,9 @@
 /**
  * The download page's release data. `src/data/release.json` holds the latest published release, or `null`
- * while none exists; `tools/release-data.mjs` writes it from the GitHub Releases API, so the version, size
- * and checksum on the page always come from a real release and are never typed by hand.
+ * while none exists; `tools/release-data.mjs` writes it from the GitHub Releases API, so the size and checksum
+ * on the page always come from a real release and are never typed by hand. Without it the page offers the
+ * announced version (NEXT_RELEASE in brand.ts) through GitHub's "latest release" links, which resolve the moment
+ * it is published.
  */
 
 /** One published release, as written to src/data/release.json. */
@@ -20,16 +22,25 @@ export interface ReleaseData {
     /** Lower-case hex SHA-256 of the installer. */
     readonly sha256: string;
   };
+  /** The portable build, when the release has one. */
+  readonly portable?: { readonly name: string; readonly url: string } | undefined;
 }
 
 /** What the download page shows. */
 export type ReleaseView =
-  | { readonly state: "unreleased" }
+  | {
+      readonly state: "announced";
+      readonly version: string;
+      readonly pageUrl: string;
+      readonly downloadUrl: string;
+      readonly portableUrl: string;
+    }
   | {
       readonly state: "released";
       readonly version: string;
       readonly pageUrl: string;
       readonly downloadUrl: string;
+      readonly portableUrl: string | null;
       readonly fileName: string;
       readonly size: string;
       readonly sha256: string;
@@ -56,11 +67,35 @@ export function formatDate(iso: string): string {
 }
 
 /**
- * The page model for a release, or the unreleased state for `null`. A release with a missing or malformed
- * field fails the build instead of showing a wrong checksum or size.
+ * GitHub's link to an asset of the latest published release: it redirects to the file once a release carries
+ * it, so the page needs no rebuild when the release goes out.
  */
-export function releaseView(data: ReleaseData | null): ReleaseView {
-  if (data === null) return { state: "unreleased" };
+export function latestAsset(releasesUrl: string, name: string): string {
+  return `${releasesUrl}/latest/download/${encodeURIComponent(name)}`;
+}
+
+/** The version a release is announced as, and the names of its two Windows assets. */
+export interface Announced {
+  readonly releasesUrl: string;
+  readonly version: string;
+  readonly installer: string;
+  readonly portable: string;
+}
+
+/**
+ * The page model for a release, or for `null` the announced version through the latest-release links. A release
+ * with a missing or malformed field fails the build instead of showing a wrong checksum or size.
+ */
+export function releaseView(data: ReleaseData | null, next: Announced): ReleaseView {
+  if (data === null) {
+    return {
+      state: "announced",
+      version: `v${next.version}`,
+      pageUrl: `${next.releasesUrl}/latest`,
+      downloadUrl: latestAsset(next.releasesUrl, next.installer),
+      portableUrl: latestAsset(next.releasesUrl, next.portable),
+    };
+  }
   const { tag, url, publishedAt, installer } = data;
   if (!tag || !url?.startsWith("https://") || !installer?.url?.startsWith("https://") || !installer.name) {
     throw new Error(`Incomplete release data for ${tag || "unknown tag"}`);
@@ -72,6 +107,7 @@ export function releaseView(data: ReleaseData | null): ReleaseView {
     version: tag.startsWith("v") ? tag : `v${tag}`,
     pageUrl: url,
     downloadUrl: installer.url,
+    portableUrl: data.portable?.url ?? null,
     fileName: installer.name,
     size: formatSize(installer.bytes),
     sha256,
@@ -101,19 +137,26 @@ export function isInstaller(name: string): boolean {
   return /-setup\.exe$/i.test(name);
 }
 
+/** The portable build runs without installing, named "...-portable.exe". */
+export function isPortable(name: string): boolean {
+  return /-portable\.exe$/i.test(name);
+}
+
 /**
  * Turns the GitHub API's latest release into release.json data, or `null` when it has no installer with a
- * checksum (a draft, a pre-release, or one still uploading): the page then keeps its unreleased state.
+ * checksum (a draft, a pre-release, or one still uploading): the page then offers the announced version.
  */
 export function fromGitHub(release: GitHubRelease): ReleaseData | null {
   if (release.draft || release.prerelease || !release.published_at) return null;
   const asset = release.assets.find((a) => isInstaller(a.name));
   const digest = asset?.digest?.startsWith("sha256:") ? asset.digest.slice("sha256:".length) : null;
   if (!asset || !digest) return null;
+  const portable = release.assets.find((a) => isPortable(a.name));
   return {
     tag: release.tag_name,
     url: release.html_url,
     publishedAt: release.published_at,
     installer: { name: asset.name, url: asset.browser_download_url, bytes: asset.size, sha256: digest.toLowerCase() },
+    ...(portable ? { portable: { name: portable.name, url: portable.browser_download_url } } : {}),
   };
 }

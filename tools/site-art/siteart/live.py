@@ -26,7 +26,7 @@ from .dots import F32, halftone
 from .pixel import LIT, MID, SHADE, grass, sparkle, stem_with_leaves
 from .scape import _layer, _rolling
 from .vignette import lily_pad, ripple, water_lily
-from .vista import BIG, Tint, _canvas, _cell, no_repeat
+from .vista import BIG, SPRITE_KINDS, Tint, _canvas, _cell, no_repeat, sprite
 
 Layers = dict[str, np.ndarray]
 
@@ -366,6 +366,74 @@ def paddock_sway(half: int):
     return render
 
 
+# --- the footer meadow -----------------------------------------------------------------------------------
+# A meadow under the footer's wordmark, full of flowers from edge to edge. Depth sets the size: small pixel
+# flowers on short stalks far back, then big round heads on tall leafy stems that grow larger and lower towards
+# the front, with a few closed buds on thin stems, and clumps of grass between them. The near flowers come in two
+# alternating sets, so the page can sway them out of step.
+
+SEED_MEADOW = 1401
+MEADOW_KINDS = ("poppy", "cornflower", "daisy", "tulip", "cosmos", "sunflower", "lily")
+MEADOW_BUD = 0.18                  # share of the near flowers drawn as a closed bud instead of an open head
+
+
+def meadow_land(width: int, height: int, scale: float, narrow: bool) -> Layers:
+    hills = _hills(width, height, scale, narrow, SEED_MEADOW, (0.40, 0.54, 0.66))
+    cv = _canvas(width, height, scale, narrow, SEED_MEADOW + 1)
+    _specks(cv, width, height, 0.62, 0.80, 110 if narrow else 300, ("petal", "gold", "cream", "violet", "pink"))
+    # Small pixel flowers on short stalks, in a loose band across the middle distance.
+    rng = np.random.default_rng(SEED_MEADOW + 2)
+    g = cv.cell_css
+    n = 16 if narrow else 46
+    kinds = no_repeat(rng, SPRITE_KINDS, n)
+    for i, kind in enumerate(kinds):
+        gx = int(((i + 0.5 + rng.uniform(-0.35, 0.35)) / n) * width / g)
+        gy = int(height * rng.uniform(0.66, 0.78) / g)
+        w, h = sprite(cv, kind, gx, gy)
+        for k in range(int(rng.integers(2, 5))):
+            cv.fill_cell("stalk", gx + w // 2, gy + h + k, MID)
+    return {**hills, **_only(_cells(cv))}
+
+
+def meadow_sway(half: int):
+    def render(width: int, height: int, scale: float, narrow: bool) -> Layers:
+        cv = _canvas(width, height, scale, narrow, SEED_MEADOW + 10 + half)
+        plan = np.random.default_rng(SEED_MEADOW + 9)                    # both halves share one plan
+        n = 15 if narrow else 38
+        kinds = no_repeat(plan, MEADOW_KINDS, n)
+        flowers = []
+        for i, kind in enumerate(kinds):
+            fx = (i + 0.5 + plan.uniform(-0.38, 0.38)) / n
+            depth = plan.random()                                        # 0 at the back of the near field, 1 in front
+            fy = 0.60 + 0.26 * depth
+            fr = (0.018 + 0.026 * depth) if narrow else (0.008 + 0.012 * depth)
+            bud = plan.random() < MEADOW_BUD
+            flowers.append((kind, fx, fy, fr, plan.uniform(-0.025, 0.025), bud))
+        flowers.sort(key=lambda f: f[2])                                 # far first, so nearer heads cover farther ones
+        for i, (kind, fx, fy, fr, bend, bud) in enumerate(flowers):
+            if i % 2 != half:
+                continue
+            cx, cy, r = fx * width, fy * height, fr * width
+            if bud:                                                      # a closed bud stands taller, on a thin stem
+                cy -= 1.6 * r
+                r *= 0.55
+                kind = "tulip"
+            stem_with_leaves(cv, (cx, cy + 0.4 * r), (cx + bend * width, height * 1.02), bend * width * 0.5,
+                             0.85 * cv.cell_css, (0.35, 0.65), r * 1.05)
+            BIG[kind](cv, cx, cy, r)
+        blades = 160 if narrow else 420
+        clump = 0.5 + 0.5 * np.sin(np.linspace(0.0, (6.0 if narrow else 13.0) * math.pi, 512) + plan.uniform(0, math.pi))
+        for k in range(blades):
+            u = plan.uniform(-0.01, 1.01)
+            c = float(clump[int(np.clip(u, 0.0, 0.999) * 511)])
+            tall = plan.uniform(0.04, 0.08 + 0.12 * c) * height
+            lean = plan.uniform(-0.03, 0.012) * width
+            if k % 2 == half and plan.random() < 0.5 + 0.5 * c:
+                grass(cv, u * width, height * 1.02, tall, lean, 0.85 * cv.cell_css)
+        return _only(_cells(cv))
+    return render
+
+
 def pond_land(width: int, height: int, scale: float, narrow: bool) -> Layers:
     hills = _hills(width, height, scale, narrow, SEED_POND, (0.36, 0.45, 0.52))
     hills.pop("near")
@@ -546,6 +614,9 @@ _SCENES: dict[str, tuple[int, Callable]] = {
     "live-paddock-tail": (SEED_PADDOCK + 2, paddock_part("tail")),
     "live-paddock-sway-a": (SEED_PADDOCK + 10, paddock_sway(0)),
     "live-paddock-sway-b": (SEED_PADDOCK + 11, paddock_sway(1)),
+    "live-meadow-land": (SEED_MEADOW, meadow_land),
+    "live-meadow-sway-a": (SEED_MEADOW + 10, meadow_sway(0)),
+    "live-meadow-sway-b": (SEED_MEADOW + 11, meadow_sway(1)),
     "live-pond-land": (SEED_POND, pond_land),
     "live-pond-pads-a": (SEED_POND + 2, pond_pads(0)),
     "live-pond-pads-b": (SEED_POND + 3, pond_pads(1)),

@@ -15,6 +15,6 @@ let data = null;
 if (res.ok) data = fromGitHub(await res.json());
 else if (res.status !== 404) throw new Error(`GitHub answered ${res.status} for the latest release of ${REPO}`);
 
-releaseView(data); // fails here, before writing, if the release is malformed
+if (data) releaseView(data, { releasesUrl: `https://github.com/${REPO}/releases`, version: "", installer: "", portable: "" }); // fails here, before writing, if the release is malformed
 writeFileSync(out, `${JSON.stringify(data, null, 1)}\n`);
 console.log(data ? `release.json: ${data.tag}, ${data.installer.name}` : "release.json: no published release");

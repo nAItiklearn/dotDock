@@ -7,7 +7,7 @@
 import geometry from "../data/live-scenes.json" with { type: "json" };
 import type { ArtName } from "./art";
 
-export type SceneName = "paddock" | "pond" | "reef";
+export type SceneName = "paddock" | "pond" | "reef" | "meadow";
 
 /** How a layer moves (styles/live.css). Every motion is a transform or an opacity. */
 export type Motion = "still" | "sway" | "sway-late" | "bob" | "bob-late" | "twinkle" | "twinkle-late" | "graze" | "swish" | "breathe" | "curl";
@@ -57,6 +57,18 @@ export const SCENES: Record<SceneName, Scene> = {
       { piece: "vista-butterfly-red", path: "loop", beat: "wings", x: 0.2, y: 0.5 },
       { piece: "vista-butterfly-gold", path: "drift", beat: "wings", x: 0.72, y: 0.58 },
       { piece: "vista-butterfly-violet", path: "loop", beat: "wings", x: 0.86, y: 0.42, wideOnly: true },
+    ],
+    specks: { kind: "petal", colours: ["petal", "pink", "gold", "cream", "violet"] },
+  },
+  meadow: {
+    layers: [
+      { piece: "live-meadow-land", motion: "still" },
+      { piece: "live-meadow-sway-b", motion: "sway-late" },
+      { piece: "live-meadow-sway-a", motion: "sway" },
+    ],
+    sprites: [
+      { piece: "vista-butterfly-red", path: "drift", beat: "wings", x: 0.3, y: 0.42 },
+      { piece: "vista-butterfly-gold", path: "loop", beat: "wings", x: 0.78, y: 0.36, wideOnly: true },
     ],
     specks: { kind: "petal", colours: ["petal", "pink", "gold", "cream", "violet"] },
   },

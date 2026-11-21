@@ -22,6 +22,7 @@ export interface Version {
 /** How a version shows on the page. */
 export type VersionStatus =
   | { readonly state: "released"; readonly tag: string; readonly date: string; readonly dateTime: string; readonly pageUrl: string }
+  | { readonly state: "out"; readonly tag: string; readonly pageUrl: string }
   | { readonly state: "earlier" }
   | { readonly state: "in-testing" }
   | { readonly state: "planned" };
@@ -35,13 +36,16 @@ export function majorOf(tag: string): number | null {
 }
 
 /**
- * The version of the latest published release is released, with its date; an older one came out before it. The
- * version after it (or the first version, before any release) is being built and tested; anything later is planned.
+ * The version of the latest release is out: with its date once tools/release-data.mjs has read it, or as the
+ * announced version before that. An older one came out before it. The version after it (or the first version,
+ * when there is none) is being built and tested; anything later is planned.
  */
 export function versionStatus(version: Version, release: ReleaseView, first: number): VersionStatus {
-  const latest = release.state === "released" ? majorOf(release.version) : null;
-  if (release.state === "released" && version.major === latest) {
-    return { state: "released", tag: release.version, date: release.date, dateTime: release.dateTime, pageUrl: release.pageUrl };
+  const latest = majorOf(release.version);
+  if (version.major === latest) {
+    return release.state === "released"
+      ? { state: "released", tag: release.version, date: release.date, dateTime: release.dateTime, pageUrl: release.pageUrl }
+      : { state: "out", tag: release.version, pageUrl: release.pageUrl };
   }
   if (latest !== null && version.major < latest) return { state: "earlier" };
   const next = latest === null ? first : latest + 1;

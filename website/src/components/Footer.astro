@@ -9,7 +9,7 @@ import {
   REPO_URL,
   ROUTES,
 } from "../brand";
-import Art from "./Art.astro";
+import LiveScene from "./LiveScene.astro";
 import Mark from "./Mark.astro";
 
 const year = new Date().getFullYear();
@@ -76,7 +76,7 @@ const columns = [
 
   <div class="footer__stage" aria-hidden="true">
     <span class="footer__mark"><Mark size={48} class="footer__mark-icon" />{PRODUCT_NAME}</span>
-    <Art piece="meadow" class="footer__art" parallax={0.06} />
+    <LiveScene scene="meadow" />
   </div>
 
   <div class="wrap">

@@ -1698,6 +1698,757 @@
    }
   }
  },
+ "live-meadow-land": {
+  "seed": 1401,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "live-meadow-land-wide-far-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 31422
+      },
+      "2": {
+       "file": "live-meadow-land-wide-far-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 84880
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "live-meadow-land-wide-mid-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 28910
+      },
+      "2": {
+       "file": "live-meadow-land-wide-mid-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 75290
+      }
+     },
+     "near": {
+      "1": {
+       "file": "live-meadow-land-wide-near-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 81220
+      },
+      "2": {
+       "file": "live-meadow-land-wide-near-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 202370
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "live-meadow-land-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 764
+      },
+      "2": {
+       "file": "live-meadow-land-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1378
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-meadow-land-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 430
+      },
+      "2": {
+       "file": "live-meadow-land-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 836
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-meadow-land-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 444
+      },
+      "2": {
+       "file": "live-meadow-land-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 828
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-meadow-land-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 156
+      },
+      "2": {
+       "file": "live-meadow-land-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 316
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-meadow-land-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 372
+      },
+      "2": {
+       "file": "live-meadow-land-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 716
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-meadow-land-wide-violet-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 418
+      },
+      "2": {
+       "file": "live-meadow-land-wide-violet-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 806
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-meadow-land-wide-apricot-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 266
+      },
+      "2": {
+       "file": "live-meadow-land-wide-apricot-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 574
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-meadow-land-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 388
+      },
+      "2": {
+       "file": "live-meadow-land-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 742
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "far": {
+      "1": {
+       "file": "live-meadow-land-narrow-far-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 12266
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-far-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 29786
+      }
+     },
+     "mid": {
+      "1": {
+       "file": "live-meadow-land-narrow-mid-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 9802
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-mid-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 23384
+      }
+     },
+     "near": {
+      "1": {
+       "file": "live-meadow-land-narrow-near-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 26172
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-near-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 63826
+      }
+     },
+     "stalk": {
+      "1": {
+       "file": "live-meadow-land-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 340
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 548
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-meadow-land-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 228
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 300
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-meadow-land-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 266
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 354
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-meadow-land-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 94
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 140
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-meadow-land-narrow-pink-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 186
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-pink-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 262
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-meadow-land-narrow-violet-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 262
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-violet-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 368
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-meadow-land-narrow-apricot-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 122
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-apricot-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 212
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-meadow-land-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 210
+      },
+      "2": {
+       "file": "live-meadow-land-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 292
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-meadow-sway-a": {
+  "seed": 1411,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-meadow-sway-a-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 1700
+      },
+      "2": {
+       "file": "live-meadow-sway-a-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 2322
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-meadow-sway-a-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 498
+      },
+      "2": {
+       "file": "live-meadow-sway-a-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1064
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-meadow-sway-a-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 494
+      },
+      "2": {
+       "file": "live-meadow-sway-a-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1034
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-meadow-sway-a-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 222
+      },
+      "2": {
+       "file": "live-meadow-sway-a-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 568
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-meadow-sway-a-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 318
+      },
+      "2": {
+       "file": "live-meadow-sway-a-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 850
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-meadow-sway-a-wide-violet-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 308
+      },
+      "2": {
+       "file": "live-meadow-sway-a-wide-violet-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 840
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-meadow-sway-a-wide-apricot-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 428
+      },
+      "2": {
+       "file": "live-meadow-sway-a-wide-apricot-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 968
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-meadow-sway-a-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 470
+      },
+      "2": {
+       "file": "live-meadow-sway-a-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1004
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-meadow-sway-a-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 792
+      },
+      "2": {
+       "file": "live-meadow-sway-a-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 962
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-meadow-sway-a-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 184
+      },
+      "2": {
+       "file": "live-meadow-sway-a-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 370
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-meadow-sway-a-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 128
+      },
+      "2": {
+       "file": "live-meadow-sway-a-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 216
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-meadow-sway-a-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 144
+      },
+      "2": {
+       "file": "live-meadow-sway-a-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 332
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-meadow-sway-a-narrow-violet-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 232
+      },
+      "2": {
+       "file": "live-meadow-sway-a-narrow-violet-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 414
+      }
+     },
+     "apricot": {
+      "1": {
+       "file": "live-meadow-sway-a-narrow-apricot-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 178
+      },
+      "2": {
+       "file": "live-meadow-sway-a-narrow-apricot-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 362
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-meadow-sway-a-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 200
+      },
+      "2": {
+       "file": "live-meadow-sway-a-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 388
+      }
+     }
+    }
+   }
+  }
+ },
+ "live-meadow-sway-b": {
+  "seed": 1412,
+  "variants": {
+   "wide": {
+    "w": 1920,
+    "h": 600,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-meadow-sway-b-wide-stalk-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 1804
+      },
+      "2": {
+       "file": "live-meadow-sway-b-wide-stalk-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 2440
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-meadow-sway-b-wide-petal-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 556
+      },
+      "2": {
+       "file": "live-meadow-sway-b-wide-petal-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 1104
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-meadow-sway-b-wide-gold-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 324
+      },
+      "2": {
+       "file": "live-meadow-sway-b-wide-gold-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 874
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-meadow-sway-b-wide-heart-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 186
+      },
+      "2": {
+       "file": "live-meadow-sway-b-wide-heart-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 518
+      }
+     },
+     "pink": {
+      "1": {
+       "file": "live-meadow-sway-b-wide-pink-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 350
+      },
+      "2": {
+       "file": "live-meadow-sway-b-wide-pink-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 892
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-meadow-sway-b-wide-violet-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 402
+      },
+      "2": {
+       "file": "live-meadow-sway-b-wide-violet-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 960
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-meadow-sway-b-wide-cream-1x.webp",
+       "w": 1920,
+       "h": 600,
+       "bytes": 452
+      },
+      "2": {
+       "file": "live-meadow-sway-b-wide-cream-2x.webp",
+       "w": 3840,
+       "h": 1200,
+       "bytes": 992
+      }
+     }
+    }
+   },
+   "narrow": {
+    "w": 720,
+    "h": 480,
+    "layers": {
+     "stalk": {
+      "1": {
+       "file": "live-meadow-sway-b-narrow-stalk-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 748
+      },
+      "2": {
+       "file": "live-meadow-sway-b-narrow-stalk-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 894
+      }
+     },
+     "petal": {
+      "1": {
+       "file": "live-meadow-sway-b-narrow-petal-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 314
+      },
+      "2": {
+       "file": "live-meadow-sway-b-narrow-petal-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 490
+      }
+     },
+     "gold": {
+      "1": {
+       "file": "live-meadow-sway-b-narrow-gold-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 172
+      },
+      "2": {
+       "file": "live-meadow-sway-b-narrow-gold-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 362
+      }
+     },
+     "heart": {
+      "1": {
+       "file": "live-meadow-sway-b-narrow-heart-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 172
+      },
+      "2": {
+       "file": "live-meadow-sway-b-narrow-heart-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 360
+      }
+     },
+     "violet": {
+      "1": {
+       "file": "live-meadow-sway-b-narrow-violet-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 184
+      },
+      "2": {
+       "file": "live-meadow-sway-b-narrow-violet-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 370
+      }
+     },
+     "cream": {
+      "1": {
+       "file": "live-meadow-sway-b-narrow-cream-1x.webp",
+       "w": 720,
+       "h": 480,
+       "bytes": 170
+      },
+      "2": {
+       "file": "live-meadow-sway-b-narrow-cream-2x.webp",
+       "w": 1440,
+       "h": 960,
+       "bytes": 354
+      }
+     }
+    }
+   }
+  }
+ },
  "live-paddock-head": {
   "seed": 1103,
   "variants": {
@@ -3569,247 +4320,6 @@
        "w": 1440,
        "h": 960,
        "bytes": 454
-      }
-     }
-    }
-   }
-  }
- },
- "meadow": {
-  "seed": 71,
-  "variants": {
-   "wide": {
-    "w": 1920,
-    "h": 420,
-    "layers": {
-     "far": {
-      "1": {
-       "file": "meadow-wide-far-1x.webp",
-       "w": 1920,
-       "h": 420,
-       "bytes": 23218
-      },
-      "2": {
-       "file": "meadow-wide-far-2x.webp",
-       "w": 3840,
-       "h": 840,
-       "bytes": 57598
-      }
-     },
-     "mid": {
-      "1": {
-       "file": "meadow-wide-mid-1x.webp",
-       "w": 1920,
-       "h": 420,
-       "bytes": 33154
-      },
-      "2": {
-       "file": "meadow-wide-mid-2x.webp",
-       "w": 3840,
-       "h": 840,
-       "bytes": 81042
-      }
-     },
-     "near": {
-      "1": {
-       "file": "meadow-wide-near-1x.webp",
-       "w": 1920,
-       "h": 420,
-       "bytes": 44168
-      },
-      "2": {
-       "file": "meadow-wide-near-2x.webp",
-       "w": 3840,
-       "h": 840,
-       "bytes": 106512
-      }
-     },
-     "stalk": {
-      "1": {
-       "file": "meadow-wide-stalk-1x.webp",
-       "w": 1920,
-       "h": 420,
-       "bytes": 1416
-      },
-      "2": {
-       "file": "meadow-wide-stalk-2x.webp",
-       "w": 3840,
-       "h": 840,
-       "bytes": 1942
-      }
-     },
-     "petal": {
-      "1": {
-       "file": "meadow-wide-petal-1x.webp",
-       "w": 1920,
-       "h": 420,
-       "bytes": 480
-      },
-      "2": {
-       "file": "meadow-wide-petal-2x.webp",
-       "w": 3840,
-       "h": 840,
-       "bytes": 952
-      }
-     },
-     "gold": {
-      "1": {
-       "file": "meadow-wide-gold-1x.webp",
-       "w": 1920,
-       "h": 420,
-       "bytes": 98
-      },
-      "2": {
-       "file": "meadow-wide-gold-2x.webp",
-       "w": 3840,
-       "h": 840,
-       "bytes": 206
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "meadow-wide-heart-1x.webp",
-       "w": 1920,
-       "h": 420,
-       "bytes": 76
-      },
-      "2": {
-       "file": "meadow-wide-heart-2x.webp",
-       "w": 3840,
-       "h": 840,
-       "bytes": 178
-      }
-     },
-     "grain": {
-      "1": {
-       "file": "meadow-wide-grain-1x.webp",
-       "w": 1920,
-       "h": 420,
-       "bytes": 39392
-      },
-      "2": {
-       "file": "meadow-wide-grain-2x.webp",
-       "w": 3840,
-       "h": 840,
-       "bytes": 99212
-      }
-     }
-    }
-   },
-   "narrow": {
-    "w": 720,
-    "h": 300,
-    "layers": {
-     "far": {
-      "1": {
-       "file": "meadow-narrow-far-1x.webp",
-       "w": 720,
-       "h": 300,
-       "bytes": 6888
-      },
-      "2": {
-       "file": "meadow-narrow-far-2x.webp",
-       "w": 1440,
-       "h": 600,
-       "bytes": 15808
-      }
-     },
-     "mid": {
-      "1": {
-       "file": "meadow-narrow-mid-1x.webp",
-       "w": 720,
-       "h": 300,
-       "bytes": 9716
-      },
-      "2": {
-       "file": "meadow-narrow-mid-2x.webp",
-       "w": 1440,
-       "h": 600,
-       "bytes": 22376
-      }
-     },
-     "near": {
-      "1": {
-       "file": "meadow-narrow-near-1x.webp",
-       "w": 720,
-       "h": 300,
-       "bytes": 13260
-      },
-      "2": {
-       "file": "meadow-narrow-near-2x.webp",
-       "w": 1440,
-       "h": 600,
-       "bytes": 30538
-      }
-     },
-     "stalk": {
-      "1": {
-       "file": "meadow-narrow-stalk-1x.webp",
-       "w": 720,
-       "h": 300,
-       "bytes": 634
-      },
-      "2": {
-       "file": "meadow-narrow-stalk-2x.webp",
-       "w": 1440,
-       "h": 600,
-       "bytes": 694
-      }
-     },
-     "petal": {
-      "1": {
-       "file": "meadow-narrow-petal-1x.webp",
-       "w": 720,
-       "h": 300,
-       "bytes": 262
-      },
-      "2": {
-       "file": "meadow-narrow-petal-2x.webp",
-       "w": 1440,
-       "h": 600,
-       "bytes": 338
-      }
-     },
-     "gold": {
-      "1": {
-       "file": "meadow-narrow-gold-1x.webp",
-       "w": 720,
-       "h": 300,
-       "bytes": 68
-      },
-      "2": {
-       "file": "meadow-narrow-gold-2x.webp",
-       "w": 1440,
-       "h": 600,
-       "bytes": 96
-      }
-     },
-     "heart": {
-      "1": {
-       "file": "meadow-narrow-heart-1x.webp",
-       "w": 720,
-       "h": 300,
-       "bytes": 46
-      },
-      "2": {
-       "file": "meadow-narrow-heart-2x.webp",
-       "w": 1440,
-       "h": 600,
-       "bytes": 80
-      }
-     },
-     "grain": {
-      "1": {
-       "file": "meadow-narrow-grain-1x.webp",
-       "w": 720,
-       "h": 300,
-       "bytes": 12518
-      },
-      "2": {
-       "file": "meadow-narrow-grain-2x.webp",
-       "w": 1440,
-       "h": 600,
-       "bytes": 31050
       }
      }
     }

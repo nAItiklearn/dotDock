@@ -143,18 +143,6 @@ html:not([data-theme="paper"]) .hero__scape .art__mid {
   right: calc(var(--tuft-w) * -0.3);
 }
 
-/* ---------- Footer meadow ---------- */
-.footer__art {
-  --meadow-w: max(100%, 1200px);
-  width: var(--meadow-w);
-  margin-left: calc(50% - var(--meadow-w) / 2);
-}
-@media (max-width: 899px) {
-  .footer__art {
-    --meadow-w: 720px;
-  }
-}
-
 /* ---------- Bands: wide, low pictures between sections ---------- */
 .band {
   position: relative;

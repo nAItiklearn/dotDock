@@ -1,12 +1,12 @@
 ---
 import Page from "../layouts/Page.astro";
-import { PRODUCT_NAME, RELEASES_URL } from "../brand";
+import { PRODUCT_NAME, RELEASES_URL, NEXT_RELEASE } from "../brand";
 import { FIRST_VERSION, VERSIONS } from "../data/changelog";
 import { versionStatus } from "../lib/changelog";
 import { releaseView, type ReleaseData } from "../lib/release";
 import releaseData from "../data/release.json";
 
-const release = releaseView(releaseData as ReleaseData | null);
+const release = releaseView(releaseData as ReleaseData | null, NEXT_RELEASE);
 const versions = VERSIONS.map((v) => ({ ...v, status: versionStatus(v, release, FIRST_VERSION) }));
 const id = (major: number) => `v${major}`;
 ---
@@ -32,12 +32,13 @@ const id = (major: number) => `v${major}`;
           <div class="release__name">
             <h2 class="release__title" id={id(v.major)}>{v.status.state === "planned" ? `Next: ${v.name}` : v.name}</h2>
             <p class="caps caps-row chip-label release__status">
-              <span class={v.status.state === "released" || v.status.state === "earlier" ? "dot" : "dot dot--hollow"} aria-hidden="true" />
+              <span class={v.status.state === "released" || v.status.state === "out" || v.status.state === "earlier" ? "dot" : "dot dot--hollow"} aria-hidden="true" />
               {v.status.state === "released" && (
                 <>
                   Released <time datetime={v.status.dateTime}>{v.status.date}</time>
                 </>
               )}
+              {v.status.state === "out" && `Released as ${v.status.tag}`}
               {v.status.state === "earlier" && "Released"}
               {v.status.state === "in-testing" && "Being tested, not released yet"}
               {v.status.state === "planned" && "Planned, no date"}
@@ -57,7 +58,7 @@ const id = (major: number) => `v${major}`;
             </article>
           ))}
         </div>
-        {v.status.state === "released" && (
+        {(v.status.state === "released" || v.status.state === "out") && (
           <p class="release__notes">
             <a href={v.status.pageUrl} rel="noopener">Release notes for {v.status.tag}</a>
           </p>
