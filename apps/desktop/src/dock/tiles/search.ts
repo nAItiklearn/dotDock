@@ -26,8 +26,16 @@ export const isEngine = (value: unknown): value is Engine => typeof value === "s
 const ADDRESS = /^(?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:[/?#]\S*)?$/i;
 const HAS_SCHEME = /^https?:\/\//i;
 
+/** Endings of file names people type, which look like a domain but are not one: "notes.txt" is searched for. */
+const FILE_ENDINGS = new Set(["txt", "exe", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "png", "jpg", "jpeg", "gif", "svg", "zip", "rar", "md", "js", "ts", "json", "csv", "mp3", "mp4", "mov", "wav", "dll", "msi", "bat", "ps1", "py", "log", "ini", "cfg"]);
+
 /** True when Enter opens the typed site instead of searching for the words. */
-export const isAddressQuery = (query: string): boolean => ADDRESS.test(query.trim());
+export function isAddressQuery(query: string): boolean {
+  const text = query.trim();
+  if (!ADDRESS.test(text)) return false;
+  if (HAS_SCHEME.test(text) || /[/?#:]/.test(text.replace(HAS_SCHEME, ""))) return true;
+  return !FILE_ENDINGS.has(text.slice(text.lastIndexOf(".") + 1).toLowerCase());
+}
 
 /**
  * Where Enter goes: a typed address opens that site (over https unless it said http), and anything else is searched

@@ -4,7 +4,7 @@ import { cityById, type City } from "../../widgets/data/cities";
 import { useProvider } from "../../providers/store";
 import { useDockStore } from "../store";
 import { plural, t } from "../strings";
-import { convertMoney, formatMoney } from "./currency";
+import { convertMoney, formatMoney, resolvePair } from "./currency";
 import { useFeed } from "./feeds";
 import { useMinuteClock, useTicker } from "./hooks";
 import { readFeed } from "./hub";
@@ -14,7 +14,7 @@ import { Mark, TileShell, Words, issueText, type TileControls } from "./shell";
 import { arcFraction, arcPoint, deviceTimeZone, homeCity, nextEvent, sunDay } from "./sun";
 import { useTools } from "./toolsStore";
 import { parseAmount } from "./units";
-import { blowsToward, compassPoint } from "./wind";
+import { beaufort, blowsToward, compassPoint } from "./wind";
 import "./more.css";
 
 interface FaceProps {
@@ -25,6 +25,18 @@ const SECOND_MS = 1000;
 const MINUTE_MS = 60_000;
 
 const hourMinute = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" });
+
+const zoneFormats = new Map<string, Intl.DateTimeFormat>();
+
+/** Hours and minutes as a clock in `timeZone` shows them: a sunrise is told in the place's own time. */
+export function timeIn(timeZone: string): Intl.DateTimeFormat {
+  let format = zoneFormats.get(timeZone);
+  if (!format) {
+    format = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", timeZone });
+    zoneFormats.set(timeZone, format);
+  }
+  return format;
+}
 
 // Flip clock -------------------------------------------------------------------------------------------------------
 
@@ -94,7 +106,7 @@ export function SunFace({ controls }: FaceProps) {
   }
   const day = sunDay(now, city.lat, city.lon);
   const next = nextEvent(now, city.lat, city.lon);
-  const title = next ? t(`tile.sun.${next.kind}`, { time: hourMinute.format(next.at) }) : t(day.kind === "night" ? "tile.sun.night" : "tile.sun.allday");
+  const title = next ? t(`tile.sun.${next.kind}`, { time: timeIn(city.timeZone).format(next.at) }) : t(day.kind === "night" ? "tile.sun.night" : "tile.sun.allday");
   return (
     <TileShell id="sun" label={`${t("tile.sun")}, ${city.name}, ${title}`} controls={controls}>
       <span className="sun-face">
@@ -128,7 +140,7 @@ export function WindFace() {
   const point = t(`tile.wind.point.${compassPoint(from)}`);
   const gust = data.gustKmh !== undefined && data.gustKmh > kmh ? t("tile.wind.gusts", { speed: speed.format(data.gustKmh) }) : null;
   return (
-    <TileShell id="wind" label={[t("tile.wind"), speed.format(kmh), t("tile.wind.from", { point }), gust].filter((p) => p).join(", ")}>
+    <TileShell id="wind" label={[t("tile.wind"), speed.format(kmh), t("tile.wind.from", { point }), t("tile.wind.force", { force: beaufort(kmh) }), gust].filter((p) => p).join(", ")}>
       <Mark>
         {/* Drawn pointing north, turned to the bearing the air moves toward. */}
         <svg className="wind__arrow" viewBox="0 0 24 24" aria-hidden="true" style={{ transform: `rotate(${blowsToward(from)}deg)` }}>
@@ -216,14 +228,15 @@ export function CurrencyFace({ controls }: FaceProps) {
   const setup = useTools((s) => s.currency);
   const amount = parseAmount(setup.amount);
   const rates = read.state === "ready" ? read.data : null;
-  const result = rates && amount !== null ? convertMoney(rates, setup.from, setup.to, amount) : null;
-  const title = rates && amount !== null && result !== null ? `${formatMoney(amount, setup.from)} = ${formatMoney(result, setup.to)}` : read.state === "issue" ? issueText(read.issue) : t("tile.currency");
+  const pair = rates ? resolvePair(rates, setup) : setup;
+  const result = rates && amount !== null ? convertMoney(rates, pair.from, pair.to, amount) : null;
+  const title = rates && amount !== null && result !== null ? `${formatMoney(amount, pair.from)} = ${formatMoney(result, pair.to)}` : read.state === "issue" ? issueText(read.issue) : t("tile.currency");
   return (
     <TileShell id="currency" label={[t("tile.currency"), title].join(", ")} state={read.state} controls={controls}>
       <Mark>
         <Icon name="coin" />
       </Mark>
-      <Words title={title} sub={rates ? `${setup.from} → ${setup.to}` : null} />
+      <Words title={title} sub={rates ? `${pair.from} → ${pair.to}` : null} />
     </TileShell>
   );
 }

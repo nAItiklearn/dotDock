@@ -22,7 +22,7 @@ interface MemoState {
   /** Why recording is not possible here, or null when it is. */
   readonly issue: TileIssue | null;
   readonly startedAt: number | null;
-  /** Loudness readings of the recording in progress, 0 to 1. */
+  /** The latest MEMO_BARS loudness readings of the recording in progress, 0 to 1. */
   readonly levels: readonly number[];
   readonly memos: readonly MemoMeta[];
   /** The memo being played back, if any. */
@@ -34,7 +34,14 @@ function readMeta(): MemoMeta[] {
     const value: unknown = JSON.parse(localStorage.getItem(META_KEY) ?? "[]");
     if (!Array.isArray(value)) return [];
     return value.filter(
-      (m): m is MemoMeta => typeof m === "object" && m !== null && typeof (m as MemoMeta).id === "string" && Number.isFinite((m as MemoMeta).durationMs) && Array.isArray((m as MemoMeta).peaks),
+      (m): m is MemoMeta =>
+        typeof m === "object" &&
+        m !== null &&
+        typeof (m as MemoMeta).id === "string" &&
+        Number.isFinite((m as MemoMeta).createdAt) &&
+        Number.isFinite((m as MemoMeta).durationMs) &&
+        Array.isArray((m as MemoMeta).peaks) &&
+        (m as MemoMeta).peaks.every((v) => Number.isFinite(v)),
     );
   } catch {
     return [];
@@ -104,15 +111,27 @@ interface Session {
   readonly timer: ReturnType<typeof setInterval>;
   readonly limit: ReturnType<typeof setTimeout>;
   readonly chunks: Blob[];
+  /** Every loudness reading of this recording; only the tail is published, so nothing is copied per reading. */
+  readonly levels: number[];
+  /** Resolves once the recorder has stopped, however it stopped. */
+  readonly stopped: Promise<void>;
 }
 
 let session: Session | null = null;
-let player: HTMLAudioElement | null = null;
+/** Set by Stop while the microphone is still being opened: the recording is dropped as soon as it would start. */
+let cancelled = false;
+let player: { readonly id: string; readonly audio: HTMLAudioElement | null } | null = null;
+
+function release(stream: MediaStream, context: AudioContext | null): void {
+  stream.getTracks().forEach((track) => track.stop());
+  void context?.close().catch(() => undefined);
+}
 
 /** Starts recording; the browser asks for the microphone the first time. A refusal reads as "no device". */
 export async function startMemo(): Promise<void> {
   const state = useMemos.getState();
   if (state.status !== "idle" || state.issue === "unsupported") return;
+  cancelled = false;
   useMemos.setState({ status: "starting", levels: [] });
   let stream: MediaStream;
   try {
@@ -121,40 +140,62 @@ export async function startMemo(): Promise<void> {
     useMemos.setState({ status: "idle", issue: "no-device" });
     return;
   }
-  const context = new AudioContext();
-  const analyser = context.createAnalyser();
-  analyser.fftSize = ANALYSER_SIZE;
-  context.createMediaStreamSource(stream).connect(analyser);
-  const samples = new Uint8Array(analyser.fftSize);
-  const recorder = new MediaRecorder(stream);
-  const chunks: Blob[] = [];
-  recorder.ondataavailable = (e) => chunks.push(e.data);
-  const timer = setInterval(() => {
-    analyser.getByteTimeDomainData(samples);
-    useMemos.setState((s) => ({ levels: [...s.levels, loudness(samples)] }));
-  }, SAMPLE_EVERY_MS);
-  const limit = setTimeout(() => void stopMemo(), MAX_MEMO_MS);
-  session = { stream, recorder, context, timer, limit, chunks };
-  recorder.start();
-  useMemos.setState({ status: "recording", issue: null, startedAt: Date.now() });
+  if (cancelled) {
+    release(stream, null);
+    useMemos.setState({ status: "idle" });
+    return;
+  }
+  let context: AudioContext | null = null;
+  try {
+    context = new AudioContext();
+    const analyser = context.createAnalyser();
+    analyser.fftSize = ANALYSER_SIZE;
+    context.createMediaStreamSource(stream).connect(analyser);
+    const samples = new Uint8Array(analyser.fftSize);
+    const recorder = new MediaRecorder(stream);
+    const chunks: Blob[] = [];
+    const levels: number[] = [];
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+    const stopped = new Promise<void>((resolve) => {
+      recorder.onstop = () => resolve();
+      recorder.onerror = () => resolve();
+    });
+    const timer = setInterval(() => {
+      analyser.getByteTimeDomainData(samples);
+      levels.push(loudness(samples));
+      useMemos.setState({ levels: levels.slice(-MEMO_BARS) });
+    }, SAMPLE_EVERY_MS);
+    const limit = setTimeout(() => void stopMemo(), MAX_MEMO_MS);
+    session = { stream, recorder, context, timer, limit, chunks, levels, stopped };
+    // A microphone unplugged mid-memo ends the recording; what was recorded is kept, as if Stop was pressed.
+    void stopped.then(() => {
+      if (session?.recorder === recorder) void stopMemo();
+    });
+    recorder.start();
+    useMemos.setState({ status: "recording", issue: null, startedAt: Date.now() });
+  } catch {
+    session = null;
+    release(stream, context);
+    useMemos.setState({ status: "idle", startedAt: null, levels: [], issue: "error" });
+  }
 }
 
 /** Stops recording and keeps the memo: its audio in IndexedDB, its waveform and length in the list. */
 export async function stopMemo(): Promise<void> {
+  if (useMemos.getState().status === "starting") {
+    cancelled = true;
+    return;
+  }
   const current = session;
-  const { startedAt, levels } = useMemos.getState();
+  const { startedAt } = useMemos.getState();
   if (!current || startedAt === null) return;
   session = null;
   clearInterval(current.timer);
   clearTimeout(current.limit);
-  const stopped = new Promise<void>((resolve) => {
-    current.recorder.onstop = () => resolve();
-  });
-  current.recorder.stop();
-  await stopped;
-  current.stream.getTracks().forEach((track) => track.stop());
-  void current.context.close();
-  const memo: MemoMeta = { id: `memo-${startedAt}`, createdAt: startedAt, durationMs: Date.now() - startedAt, peaks: bars(levels, MEMO_BARS) };
+  if (current.recorder.state !== "inactive") current.recorder.stop();
+  await current.stopped;
+  release(current.stream, current.context);
+  const memo: MemoMeta = { id: `memo-${startedAt}`, createdAt: startedAt, durationMs: Date.now() - startedAt, peaks: bars(current.levels, MEMO_BARS) };
   const blob = new Blob(current.chunks, { type: current.recorder.mimeType });
   try {
     await withStore("readwrite", (store) => store.put(blob, memo.id));
@@ -168,35 +209,44 @@ export async function stopMemo(): Promise<void> {
   useMemos.setState({ status: "idle", startedAt: null, levels: [], memos: kept });
 }
 
-/** Plays a memo, or stops it when it is the one playing. */
+function stopPlayback(): void {
+  if (player?.audio) {
+    player.audio.pause();
+    URL.revokeObjectURL(player.audio.src);
+  }
+  player = null;
+  useMemos.setState({ playing: null });
+}
+
+/** Plays a memo, or stops it when it is the one playing. A newer press always wins over a slower earlier one. */
 export async function playMemo(id: string): Promise<void> {
-  if (player) {
-    player.pause();
-    URL.revokeObjectURL(player.src);
-    player = null;
-  }
-  if (useMemos.getState().playing === id) {
-    useMemos.setState({ playing: null });
-    return;
-  }
+  const same = player?.id === id;
+  stopPlayback();
+  if (same) return;
+  const claim = { id, audio: null };
+  player = claim;
+  useMemos.setState({ playing: id });
   const blob = await withStore<Blob | undefined>("readonly", (store) => store.get(id) as IDBRequest<Blob | undefined>).catch(() => undefined);
+  if (player !== claim) return;
   if (!blob) {
-    useMemos.setState({ issue: "error" });
+    player = null;
+    useMemos.setState({ playing: null, issue: "error" });
     return;
   }
   const audio = new Audio(URL.createObjectURL(blob));
-  player = audio;
+  const playing = { id, audio };
+  player = playing;
   audio.onended = () => {
-    URL.revokeObjectURL(audio.src);
-    if (player === audio) player = null;
-    useMemos.setState({ playing: null });
+    if (player === playing) stopPlayback();
+    else URL.revokeObjectURL(audio.src);
   };
-  useMemos.setState({ playing: id });
-  await audio.play().catch(() => useMemos.setState({ playing: null }));
+  await audio.play().catch(() => {
+    if (player === playing) stopPlayback();
+  });
 }
 
 export async function deleteMemo(id: string): Promise<void> {
-  if (useMemos.getState().playing === id) await playMemo(id);
+  if (player?.id === id) stopPlayback();
   await withStore("readwrite", (store) => store.delete(id)).catch(() => undefined);
   const memos = useMemos.getState().memos.filter((m) => m.id !== id);
   writeMeta(memos);

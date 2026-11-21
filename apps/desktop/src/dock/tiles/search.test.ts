@@ -18,6 +18,11 @@ describe("web search", () => {
     expect(searchTarget("ecosia", "what is 3.5 km")).toBe("https://www.ecosia.org/search?q=what%20is%203.5%20km");
   });
 
+  it("searches for a file name rather than opening it as a site", () => {
+    expect(searchTarget("google", "notes.txt")).toBe("https://www.google.com/search?q=notes.txt");
+    expect(searchTarget("google", "setup.exe")).toBe("https://www.google.com/search?q=setup.exe");
+  });
+
   it("does nothing for an empty field", () => {
     expect(searchTarget("brave", "   ")).toBeNull();
   });

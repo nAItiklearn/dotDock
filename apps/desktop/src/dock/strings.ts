@@ -160,6 +160,7 @@ const EN = {
   "tile.wind": "Wind",
   "tile.wind.from": "from the {point}",
   "tile.wind.gusts": "gusts {speed}",
+  "tile.wind.force": "force {force}",
   "tile.wind.point.N": "north",
   "tile.wind.point.NNE": "north-northeast",
   "tile.wind.point.NE": "northeast",

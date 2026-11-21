@@ -119,7 +119,7 @@ describe("web search", () => {
     expect(face("search")).toContain("Search the web");
     const html = popover("search");
     expect(html).toContain("Search with Ecosia or type an address");
-    expect(html).toMatch(/role="radio" aria-checked="true"[^>]*>Ecosia/);
+    expect(html).toMatch(/aria-pressed="true"[^>]*>Ecosia/);
     for (const name of ["DuckDuckGo", "Google", "Bing", "Brave Search"]) expect(html).toContain(name);
   });
 });

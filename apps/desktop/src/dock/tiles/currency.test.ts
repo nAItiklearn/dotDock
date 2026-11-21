@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { convertMoney, currencies, currencyName, DEFAULT_CURRENCY, formatMoney, parseCurrency } from "./currency";
+import { convertMoney, currencies, currencyName, DEFAULT_CURRENCY, formatMoney, parseCurrency, resolvePair } from "./currency";
 import type { RatesView } from "./ui-types";
 
 const rates: RatesView = { base: "EUR", publishedAt: Date.parse("2026-11-20T15:00:00Z"), rates: { USD: 1.1, INR: 92.5, JPY: 160 } };
@@ -21,6 +21,11 @@ describe("currency conversion", () => {
 
   it("lists the base first, then the rest by code", () => {
     expect(currencies(rates)).toEqual(["EUR", "INR", "JPY", "USD"]);
+  });
+
+  it("converts with codes the rates list, falling back from ones they no longer do", () => {
+    expect(resolvePair(rates, { from: "USD", to: "INR" })).toEqual({ from: "USD", to: "INR" });
+    expect(resolvePair(rates, { from: "XYZ", to: "ABC" })).toEqual({ from: "EUR", to: "INR" });
   });
 
   it("repairs a saved setup", () => {

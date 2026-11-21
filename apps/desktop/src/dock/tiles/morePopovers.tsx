@@ -5,13 +5,13 @@ import { actions } from "../bridge";
 import { useDockStore } from "../store";
 import { t } from "../strings";
 import { runTileCommand, tilesBackend } from "./backend";
-import { convertMoney, currencies, currencyName, formatMoney } from "./currency";
+import { convertMoney, currencies, currencyName, formatMoney, resolvePair } from "./currency";
 import { useFeed } from "./feeds";
 import { useTicker } from "./hooks";
 import { readFeed } from "./hub";
 import { clockText, MEMO_BARS } from "./memo";
 import { deleteMemo, playMemo, startMemo, stopMemo, useMemos } from "./memoRecorder";
-import { SunArc, useSunCity, Waveform } from "./moreFaces";
+import { SunArc, timeIn, useSunCity, Waveform } from "./moreFaces";
 import { agoParts } from "./recent";
 import { ENGINE_NAME, ENGINES, isAddressQuery, searchTarget } from "./search";
 import { issueText } from "./shell";
@@ -22,9 +22,8 @@ import { formatNumber, parseAmount } from "./units";
 
 const SECOND_MS = 1000;
 const MINUTE_MS = 60_000;
-const HOUR_MS = 60 * MINUTE_MS;
+const MINUTES_PER_HOUR = 60;
 
-const hourMinute = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" });
 const dayMonth = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
 const dateTime = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
@@ -32,8 +31,9 @@ const dateTime = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "sh
 
 /** "13 h 42 min": how long the sun is up. */
 function lengthText(ms: number): string {
-  const hours = Math.floor(ms / HOUR_MS);
-  const minutes = Math.round((ms - hours * HOUR_MS) / MINUTE_MS);
+  const total = Math.round(ms / MINUTE_MS);
+  const hours = Math.floor(total / MINUTES_PER_HOUR);
+  const minutes = total - hours * MINUTES_PER_HOUR;
   return t("tile.sun.length", { hours, minutes });
 }
 
@@ -55,11 +55,11 @@ export function SunBody() {
             <dl className="tp-facts">
               <div>
                 <dt className="caps">{t("tile.sun.rise")}</dt>
-                <dd>{hourMinute.format(day.sunrise)}</dd>
+                <dd>{timeIn(city.timeZone).format(day.sunrise)}</dd>
               </div>
               <div>
                 <dt className="caps">{t("tile.sun.set")}</dt>
-                <dd>{hourMinute.format(day.sunset)}</dd>
+                <dd>{timeIn(city.timeZone).format(day.sunset)}</dd>
               </div>
               <div>
                 <dt className="caps">{t("tile.sun.daylight")}</dt>
@@ -116,9 +116,9 @@ export function SearchBody() {
         <input className="tp-input" autoFocus value={query} placeholder={t("tile.search.placeholder", { engine: ENGINE_NAME[engine] })} aria-label={t("tile.search")} onChange={(e) => setQuery(e.target.value)} />
       </form>
       <p className="tp-hint">{target === null ? t("tile.search.hint") : isAddressQuery(query) ? t("tile.search.opens", { address: target }) : t("tile.search.enter", { engine: ENGINE_NAME[engine] })}</p>
-      <div className="tp-tabs" role="radiogroup" aria-label={t("tile.search.engine")}>
+      <div className="tp-tabs" role="group" aria-label={t("tile.search.engine")}>
         {ENGINES.map((e) => (
-          <button key={e} type="button" role="radio" aria-checked={e === engine} onClick={() => setEngine(e)}>
+          <button key={e} type="button" aria-pressed={e === engine} onClick={() => setEngine(e)}>
             {ENGINE_NAME[e]}
           </button>
         ))}
@@ -233,12 +233,13 @@ export function CurrencyBody() {
   if (read.state !== "ready") return read.state === "issue" ? <Empty title={issueText(read.issue)} hint={t(`tile.issue.${read.issue}.hint`)} /> : <Empty title={t("tile.currency")} />;
   const rates = read.data;
   const codes = currencies(rates);
+  const { from, to } = resolvePair(rates, setup);
   const amount = parseAmount(setup.amount);
-  const result = amount === null ? null : convertMoney(rates, setup.from, setup.to, amount);
+  const result = amount === null ? null : convertMoney(rates, from, to, amount);
   const select = (value: string, onChange: (code: string) => void, label: string) => (
     <label className="tp-field">
       <span className="caps">{label}</span>
-      <select className="tp-input" value={codes.includes(value) ? value : rates.base} onChange={(e) => onChange(e.target.value)}>
+      <select className="tp-input" value={value} onChange={(e) => onChange(e.target.value)}>
         {codes.map((c) => (
           <option key={c} value={c}>
             {c} · {currencyName(c)}
@@ -254,14 +255,14 @@ export function CurrencyBody() {
         <input className="tp-input" inputMode="decimal" value={setup.amount} aria-invalid={amount === null} onChange={(e) => setCurrency({ amount: e.target.value })} />
       </label>
       <div className="tp-units">
-        {select(setup.from, (from) => setCurrency({ from }), t("tile.convert.from"))}
-        <button type="button" className="tp-icon" aria-label={t("tile.currency.swap")} title={t("tile.currency.swap")} onClick={() => setCurrency({ from: setup.to, to: setup.from })}>
+        {select(from, (code) => setCurrency({ from: code }), t("tile.convert.from"))}
+        <button type="button" className="tp-icon" aria-label={t("tile.currency.swap")} title={t("tile.currency.swap")} onClick={() => setCurrency({ from: to, to: from })}>
           <Icon name="swap" />
         </button>
-        {select(setup.to, (to) => setCurrency({ to }), t("tile.convert.to"))}
+        {select(to, (code) => setCurrency({ to: code }), t("tile.convert.to"))}
       </div>
       <div className="tp-result">
-        <b className="tp-big">{result === null ? t("tile.convert.invalid") : formatMoney(result, setup.to)}</b>
+        <b className="tp-big">{result === null ? t("tile.convert.invalid") : formatMoney(result, to)}</b>
         <button
           type="button"
           className="tp-icon"

@@ -23,6 +23,17 @@ export function currencies(rates: RatesView): string[] {
   return [rates.base, ...Object.keys(rates.rates).filter((c) => c !== rates.base).sort()];
 }
 
+/**
+ * The pair to convert with these rates: a saved code the rates no longer list falls back to the base for "from" and
+ * to the first other currency for "to", so what the selects show is what is converted.
+ */
+export function resolvePair(rates: RatesView, setup: { readonly from: string; readonly to: string }): { readonly from: string; readonly to: string } {
+  const codes = currencies(rates);
+  const from = codes.includes(setup.from) ? setup.from : rates.base;
+  const to = codes.includes(setup.to) ? setup.to : (codes.find((c) => c !== from) ?? rates.base);
+  return { from, to };
+}
+
 /** `amount` of `from` in `to`, or null when either has no rate. */
 export function convertMoney(rates: RatesView, from: string, to: string, amount: number): number | null {
   const a = rateOf(rates, from);
