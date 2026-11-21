@@ -2,7 +2,8 @@
 import Base from "../layouts/Base.astro";
 import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
-import FeatureSection, { type Bullet } from "../components/FeatureSection.astro";
+import ShotCard from "../components/ShotCard.astro";
+import IslandCarousel, { type IslandSlide } from "../components/IslandCarousel.astro";
 import Desktop from "../components/Desktop.astro";
 import Scaled from "../components/Scaled.astro";
 import Widget from "../components/Widget.astro";
@@ -12,51 +13,80 @@ import Art from "../components/Art.astro";
 import Band from "../components/Band.astro";
 import { PRODUCT_NAME, ROUTES } from "../brand";
 import { THEMES } from "../lib/themes";
+import { Image } from "astro:assets";
+
+import stack from "../assets/features/stack.webp";
+import magnify from "../assets/features/magnify.webp";
+import categories from "../assets/features/categories.webp";
+import library from "../assets/features/library.webp";
+import previews from "../assets/features/previews.webp";
+import menu from "../assets/features/menu.webp";
+import edit from "../assets/features/edit.webp";
+import badges from "../assets/features/badges.webp";
+import prefs from "../assets/features/prefs.webp";
+import gallery from "../assets/features/gallery.webp";
+import tileAgenda from "../assets/features/tile-agenda.webp";
+import tileSystem from "../assets/features/tile-system.webp";
+import tileFocus from "../assets/features/tile-focus.webp";
+import tilesSystem from "../assets/features/tiles-system.webp";
+import tilesDay from "../assets/features/tiles-day.webp";
+import tilesGapA from "../assets/features/tiles-gap-a.webp";
+import tilesGapB from "../assets/features/tiles-gap-b.webp";
+import tilesGapC from "../assets/features/tiles-gap-c.webp";
+import desktop from "../assets/features/desktop.webp";
+import themeGlass from "../assets/features/theme-glass.webp";
+import themeGlassLite from "../assets/features/theme-glass-lite.webp";
+import themeObsidian from "../assets/features/theme-obsidian.webp";
+import themePaper from "../assets/features/theme-paper.webp";
+import themeAurum from "../assets/features/theme-aurum.webp";
+import themeMinimal from "../assets/features/theme-minimal.webp";
+import islandThinking from "../assets/island/thinking.webp";
+import islandReading from "../assets/island/reading.webp";
+import islandRunning from "../assets/island/running.webp";
+import islandWaiting from "../assets/island/waiting.webp";
+import islandDone from "../assets/island/done.webp";
+import islandLimit from "../assets/island/limit.webp";
+import islandError from "../assets/island/error.webp";
+import islandCodex from "../assets/island/codex.webp";
+import islandCopilot from "../assets/island/copilot.webp";
+import islandOpencode from "../assets/island/opencode.webp";
+import islandTwo from "../assets/island/two.webp";
 
 const title = `Features: ${PRODUCT_NAME}`;
 const description = `Everything ${PRODUCT_NAME} puts on your Windows desktop: a dock that files your apps for you, an island for your AI coding agents, widgets and themes, designed together as one environment.`;
 
-const dock: Bullet[] = [
-  { title: "Magnification", text: "Icons grow gently under the pointer, up to about a quarter larger, and stay sharp." },
-  { title: "Smart categories", text: "New apps are filed into stacks such as Productivity, Development, AI and Creative, read from your Start menu and Store apps. No network call and no AI service." },
-  { title: "Stacks you control", text: "Rename, recolour and reorder stacks, or drag an app into another one." },
-  { title: "App Library", text: "A full-screen view of every category, with instant search across apps, files, a calculator and unit conversion." },
-  { title: "Running apps and previews", text: "A dot under each running app, two for several windows, and the accent colour for the focused one. Hover for live window thumbnails." },
-  { title: "Context menu", text: "Right-click a running app for a new window, to pin or unpin it, to move it to a stack or to close all its windows." },
-  { title: "Edit mode", text: "Pin, reorder and rearrange by dragging. Your layout is saved and comes back after a restart." },
-  { title: "Tiles with real data", text: "Now playing, clock and calendar, a focus timer, system stats, weather and quick toggles, each with a popover. They read your PC; nothing is made up." },
-  { title: "Themes, including glass", text: "Glass blurs the Windows backdrop behind the dock, and a lighter glass takes over when transparency is off. Obsidian, Paper and Aurum are solid; Minimal shows icons only." },
-  { title: "Float or reserve", text: "Choose whether maximised windows stop above the dock or slide under it, on any screen edge." },
-  { title: "Replaces the taskbar, safely", text: "The taskbar is hidden, never killed. A watchdog brings it back whichever way the app exits, even a hard kill, and one click returns you to stock Windows." },
-  { title: "Fast and light", text: "A native Rust core. The dock's backend idles at 0.08 to 0.13 % CPU on the author's laptop, and the dock is benchmarked against the macOS Dock." },
+/** Every dock theme, captured from the real dock over the same wallpaper. */
+const dockThemes = [
+  { name: "Glass", img: themeGlass, note: "Blurs the desktop behind it" },
+  { name: "Glass lite", img: themeGlassLite, note: "For when transparency is off" },
+  { name: "Obsidian", img: themeObsidian, note: "Solid charcoal" },
+  { name: "Paper", img: themePaper, note: "Solid light" },
+  { name: "Aurum", img: themeAurum, note: "Warm and golden" },
+  { name: "Minimal", img: themeMinimal, note: "Icons only" },
 ];
 
-const island: Bullet[] = [
-  { title: "Any agent", text: "Works with Claude Code, Codex, Copilot CLI and OpenCode, and with any other agent through an open protocol." },
-  { title: "What it is doing", text: "Thinking, reading a file, running a command: the phase, the file or command, the token count and the time elapsed." },
-  { title: "Done and needs you", text: "A short summary when a task finishes, and a clear prompt when the agent is waiting for you." },
-  { title: "Errors, said plainly", text: "Signed out, offline, busy or at a usage limit, with the time the limit resets." },
-  { title: "Jump to the terminal", text: "Click the island to focus the right terminal, dismiss it, move it aside, or choose when it rests." },
-  { title: "Safe to connect", text: "Connect and Disconnect put your agent's settings back exactly as they were." },
+/** Rows of live tiles, each set chosen in the dock's own settings. */
+const tileRows = [
+  { name: "System", img: tilesSystem, note: "System load, processor, battery, quick toggles, world clock" },
+  { name: "Your day", img: tilesDay, note: "Today, next meeting, stopwatch, reminders, contacts" },
+  { name: "Outside", img: tilesGapA, note: "Network, sunrise and sunset, wind, flip and analog clocks" },
+  { name: "Tools", img: tilesGapB, note: "Currency, web search, history, voice memo, audio devices" },
+  { name: "Focus", img: tilesGapC, note: "Focus timer, water, a progress goal, emoji, microphone" },
 ];
 
-const widgets: Bullet[] = [
-  { title: "Three clock styles", text: "Dots, blocks or stripes, always in step with your PC." },
-  { title: "The system at a glance", text: "Battery, memory and disk as rings and dot grids." },
-  { title: "Photo widget", text: "Your own picture, edge to edge or fitted, in colour, black and white or in the theme's accent." },
-  { title: "Media", text: "What is playing, with controls, from any player on your PC." },
-  { title: "Focus", text: "A timer that really counts and a to-do list that really ticks." },
-  { title: "Weather", text: "The forecast for the place you choose, from Open-Meteo, fetched only after you pick one." },
-  { title: "Edit mode", text: "Add, move, resize and duplicate widgets on a snapping grid." },
-  { title: "Yours alone", text: "No account and no telemetry. What you place stays on your PC." },
+const islandSlides: IslandSlide[] = [
+  { img: islandThinking, eyebrow: "Claude Code", title: "Thinking, with the token count", alt: "The island at the top of the screen showing Thinking and the tokens written so far" },
+  { img: islandReading, eyebrow: "Reading", title: "The file it is reading", alt: "The island showing the file the agent is reading" },
+  { img: islandRunning, eyebrow: "Running", title: "The command it runs", alt: "The island showing the command the agent is running" },
+  { img: islandWaiting, eyebrow: "Needs you", title: "When it waits for permission", alt: "The island in red, saying the agent needs permission to run a command" },
+  { img: islandDone, eyebrow: "Done", title: "A short summary at the end", alt: "The island showing that the task is done, with a one-line summary" },
+  { img: islandLimit, eyebrow: "Usage limit", title: "When the limit resets", alt: "The island showing a usage limit and the time it resets" },
+  { img: islandError, eyebrow: "Signed out", title: "Errors, said plainly", alt: "The island asking you to sign in again" },
+  { img: islandCodex, eyebrow: "Codex", title: "Codex, editing a file", alt: "The island following a Codex session that is editing a file" },
+  { img: islandCopilot, eyebrow: "Copilot CLI", title: "Copilot, running a command", alt: "The island following a Copilot CLI session that is running a command" },
+  { img: islandOpencode, eyebrow: "OpenCode", title: "OpenCode, searching the code", alt: "The island following an OpenCode session that is searching the code" },
+  { img: islandTwo, eyebrow: "Two at once", title: "Several sessions, one island", alt: "The island with two sessions, shown by two markers on its right" },
 ];
-
-const themes: Bullet[] = [
-  { title: "Three themes", text: "Obsidian, Paper and Aurum, each with its own wallpaper." },
-  { title: "A theme from your own wallpaper", text: "Choose a picture and dotDock draws the palette for the whole desktop from it." },
-  { title: "One theme everywhere", text: "The home screen, the dock and the island change together." },
-];
-
 ---
 
 <Base title={title} description={description}>
@@ -65,59 +95,128 @@ const themes: Bullet[] = [
     <div class="features-top">
       <div class="features-bloom features-bloom--l" aria-hidden="true"><Art piece="bouquet-left" /></div>
       <div class="features-bloom features-bloom--r" aria-hidden="true"><Art piece="bouquet-right" /></div>
-    <header class="features-head wrap">
-      <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>Features</p>
-      <h1 class="h2 h1">One desktop that fits together.</h1>
-      <p class="lede">The dock, the island, the home screen and the themes are designed together, as one environment for your Windows desktop.</p>
-    </header>
+      <header class="features-head wrap">
+        <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>Features</p>
+        <h1 class="h2 h1">One desktop that fits together.</h1>
+        <p class="lede">The dock, the island, the home screen and the themes are designed together, as one environment for your Windows desktop. Every picture on this page is the real app.</p>
+      </header>
     </div>
 
-    <FeatureSection id="dock" large label="The dock" status="In development" scene="scene-dock" bullets={dock} shotLabel="The dock with the Development stack open above it">
-      <Fragment slot="title">A dock that <span class="dim">files your apps for you.</span></Fragment>
-      <Fragment slot="lede">It replaces the Windows taskbar with a floating dock, a full-screen App Library and a few live tiles, all drawn in the same dots as the home screen.</Fragment>
-      <img class="shot-img" src="/media/dock/dock-stack.webp" width="1500" height="814" alt="The dock running in its test harness on a windswept-grass wallpaper, with the Development stack open above it" loading="lazy" decoding="async" />
-      <VideoSlot slot="after" name="dock" label="The dock in use: magnification, a stack opening, the App Library and window previews" caption="The dock, recorded from the app." />
-    </FeatureSection>
+    <section class="section feat" id="dock" aria-labelledby="dock-title">
+      <div class="wrap">
+        <div class="section__head feat__head reveal">
+          <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>The dock<span class="feature__status">In development</span></p>
+          <h2 class="h2" id="dock-title">A dock that <span class="dim">files your apps for you.</span></h2>
+          <p class="lede">It replaces the Windows taskbar with a floating dock, a full-screen App Library and live tiles, all drawn in the same dots as the home screen.</p>
+        </div>
+
+        <div class="feat__grid">
+          <ShotCard span="full" eyebrow="Stacks" title="Your apps, filed into stacks." text="New apps go into stacks such as Productivity, Development and Creative, read from your Start menu and Store apps. No network call and no AI service." img={stack} alt="The dock with the Development stack open above it, showing its apps in a grid" focus="50% 100%" />
+          <ShotCard eyebrow="Magnification" title="Icons grow under the pointer." text="Up to about a quarter larger, and still sharp." img={magnify} alt="The dock with the pointer over the Development stack, which is larger than its neighbours" focus="40% 100%" />
+          <ShotCard eyebrow="Smart categories" title="One click opens a category." text="Rename, recolour and reorder stacks, or drag an app into another one." img={categories} alt="The Productivity stack open above the dock" focus="35% 100%" />
+          <ShotCard span="full" eyebrow="App Library" title="Every app, one search away." text="A full-screen view of every category, with instant search across apps, files, a calculator and unit conversion." img={library} alt="The App Library over the desktop, with apps grouped by category and a search field" whole />
+          <ShotCard eyebrow="Window previews" title="Hover to see its windows." text="A dot under each running app, two for several windows, and live thumbnails on hover." img={previews} alt="Three window previews of the browser above the dock" focus="0% 100%" />
+          <ShotCard eyebrow="Context menu" title="Right-click for the rest." text="A new window, remove it, move it to a stack, or close all its windows." img={menu} alt="The dock's right-click menu for the browser" focus="0% 100%" />
+          <ShotCard eyebrow="Edit mode" title="Drag to rearrange." text="Pin, reorder and remove by dragging. Your layout comes back after a restart." img={edit} alt="The dock in edit mode, its items ready to be dragged" focus="30% 100%" />
+          <ShotCard eyebrow="New apps" title="A dot on the stack it went into." text="When you install an app, its stack carries a dot until you open it." img={badges} alt="The Utilities stack with a red dot after a new app was installed" focus="45% 100%" />
+          <ShotCard span="full" eyebrow="Customise on the dock" title="Every setting, right beside the dock." text="Icon size, magnification, the look, hiding when not in use and keeping windows clear of it, in a small panel that opens from the dock. Each change shows on the dock behind it at once." img={prefs} alt="The dock's settings panel open above the dock" focus="50% 100%" />
+          <ShotCard eyebrow="Widgets on the dock" title="Add a widget from a gallery." text="Search or filter, then click or drag one onto the dock." img={gallery} alt="The widget gallery above the dock, with clock, now playing and system cards" focus="50% 100%" />
+          <ShotCard eyebrow="Today" title="Your calendar, a click away." text="Tiles open a panel with the detail. They read your PC; nothing is made up." img={tileAgenda} alt="The Today panel above the dock, listing the day's events" focus="45% 100%" />
+          <ShotCard eyebrow="System" title="Load, memory and battery." img={tileSystem} alt="The system panel above the dock with processor and memory history" focus="45% 100%" />
+          <ShotCard eyebrow="Focus" title="A focus timer with breaks." img={tileFocus} alt="The focus timer panel above the dock" focus="45% 100%" />
+
+          <ShotCard span="full" eyebrow="Live tiles" title="Over twenty tiles. Pick the ones you want." text="Each row below is the same dock with a different set of tiles, chosen in its settings.">
+            <ul class="strips">
+              {
+                tileRows.map((r) => (
+                  <li class="strip">
+                    <Image src={r.img} alt={`The dock with the ${r.name} tiles: ${r.note}`} widths={[800, 1400, 2200]} sizes="(min-width: 900px) 1080px, 100vw" loading="lazy" decoding="async" class="strip__img" />
+                    <p class="strip__label"><span class="strip__name">{r.name}</span><span class="strip__note">{r.note}</span></p>
+                  </li>
+                ))
+              }
+            </ul>
+          </ShotCard>
+
+          <ShotCard span="full" eyebrow="Dock themes" title="Six looks, one dock." text="Glass blurs the Windows backdrop behind the dock, and a lighter glass takes over when transparency is off. Obsidian, Paper and Aurum are solid; Minimal shows icons only.">
+            <ul class="strips strips--two">
+              {
+                dockThemes.map((t) => (
+                  <li class="strip">
+                    <Image src={t.img} alt={`The dock in the ${t.name} theme`} widths={[640, 1120, 1680]} sizes="(min-width: 900px) 540px, 100vw" loading="lazy" decoding="async" class="strip__img" />
+                    <p class="strip__label"><span class="strip__name">{t.name}</span><span class="strip__note">{t.note}</span></p>
+                  </li>
+                ))
+              }
+            </ul>
+          </ShotCard>
+
+          <ShotCard span="full" eyebrow="Replaces the taskbar, safely" title="Hidden, never killed." text="A watchdog brings the taskbar back however the app exits, and one click returns you to stock Windows." img={desktop} alt="The whole desktop with the dock in place of the taskbar" whole />
+        </div>
+      </div>
+    </section>
 
     <Band piece="band-butterflies" />
 
-    <FeatureSection id="island" label="The agent island" status="In development" scene="scene-island" bullets={island} shotLabel="A desktop with the island at the top of the screen">
-      <Fragment slot="title">An island for <span class="dim">your AI coding agents.</span></Fragment>
-      <Fragment slot="lede">A notch at the top of the screen shows what your coding agent is doing, so you can look away from the terminal and still know.</Fragment>
-      <Scaled><Desktop layout="b" /></Scaled>
-      <VideoSlot slot="after" name="notch" label="The island following a real coding session from thinking to done" caption="The island, recorded from the app." />
-    </FeatureSection>
+    <section class="section feat" id="island" aria-labelledby="island-title">
+      <div class="wrap">
+        <div class="section__head feat__head reveal">
+          <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>The agent island<span class="feature__status">In development</span></p>
+          <h2 class="h2" id="island-title">An island for <span class="dim">your AI coding agents.</span></h2>
+          <p class="lede">A notch at the top of the screen shows what your coding agent is doing, so you can look away from the terminal and still know. It follows Claude Code, Codex, Copilot CLI and OpenCode, and any other agent through an open protocol. Click it to jump to the right terminal.</p>
+        </div>
+        <IslandCarousel slides={islandSlides} label="The island's states" />
+      </div>
+    </section>
 
     <Band piece="band-pond" />
 
-    <FeatureSection id="widgets" label="The home screen" status="In development" scene="scene-home" bullets={widgets} shotLabel="A board of home-screen widgets">
-      <Fragment slot="title">Widgets that <span class="dim">live on your desktop.</span></Fragment>
-      <Fragment slot="lede">Clocks, rings, grids, a calendar, media controls and your own photos, placed on a grid and drawn in dots. Time, date, calendar and battery are live on this page; a hollow dot marks a sample value.</Fragment>
-      <div class="cluster">
-        <Widget kind="clock" clockStyle="blocks" place="--w:4" />
-        <Widget kind="photo" />
-        <Widget kind="ring" />
-        <Widget kind="calendar" />
-        <Widget kind="music" />
+    <section class="section feat" id="widgets" aria-labelledby="widgets-title">
+      <div class="wrap">
+        <div class="section__head feat__head reveal">
+          <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>The home screen<span class="feature__status">In development</span></p>
+          <h2 class="h2" id="widgets-title">Widgets that <span class="dim">live on your desktop.</span></h2>
+          <p class="lede">Placed on a snapping grid and drawn in dots. The widgets below are live on this page where your browser can supply the data; a hollow dot marks a sample value.</p>
+        </div>
+        <div class="feat__grid">
+          <ShotCard eyebrow="Clocks" title="Dots, blocks or stripes." text="Always in step with your PC."><div class="feat__live"><Widget kind="clock" clockStyle="blocks" place="--w:4" /></div></ShotCard>
+          <ShotCard eyebrow="Photo" title="Your own picture." text="Edge to edge or fitted, in colour, black and white or the theme's accent."><div class="feat__live"><Widget kind="photo" photo={1} /></div></ShotCard>
+          <ShotCard span="third" eyebrow="Battery" title="Charge as a ring."><div class="feat__live"><Widget kind="ring" /></div></ShotCard>
+          <ShotCard span="third" eyebrow="Month" title="Today, ringed."><div class="feat__live"><Widget kind="calendar" /></div></ShotCard>
+          <ShotCard span="third" eyebrow="Media" title="Any player on your PC."><div class="feat__live"><Widget kind="music" /></div></ShotCard>
+        </div>
       </div>
-    </FeatureSection>
+    </section>
 
     <Band piece="band-octopus" />
 
-    <FeatureSection id="themes" label="Themes" status="In development" scene="scene-themes" bullets={themes} shotLabel="The same desktop in Obsidian, Paper and Aurum">
-      <Fragment slot="title">Yours, <span class="dim">down to the dot.</span></Fragment>
-      <Fragment slot="lede">Every part of the desktop follows one theme. Pick a look, or let your own wallpaper decide.</Fragment>
-      <div class="trio">
-        {
-          THEMES.map((t) => (
-            <div class="trio__item">
-              <Scaled><Desktop theme={t.id} layout={t.id === "paper" ? "a" : "b"} /></Scaled>
-              <p class="trio__name">{t.name}</p>
-            </div>
-          ))
-        }
+    <section class="section feat" id="themes" aria-labelledby="themes-title">
+      <div class="wrap">
+        <div class="section__head feat__head reveal">
+          <p class="caps caps-row chip-label"><span class="dot" aria-hidden="true"></span>Themes<span class="feature__status">In development</span></p>
+          <h2 class="h2" id="themes-title">Yours, <span class="dim">down to the dot.</span></h2>
+          <p class="lede">The home screen, the dock and the island change together. Pick Obsidian, Paper or Aurum, or choose a picture and {PRODUCT_NAME} draws the palette for the whole desktop from it.</p>
+        </div>
+        <div class="trio reveal">
+          {
+            THEMES.map((t) => (
+              <div class="trio__item">
+                <Scaled><Desktop theme={t.id} layout={t.id === "paper" ? "a" : "b"} /></Scaled>
+                <p class="trio__name">{t.name}</p>
+              </div>
+            ))
+          }
+        </div>
       </div>
-    </FeatureSection>
+    </section>
+
+    <section class="section feat feat--videos" aria-label="Recordings">
+      <div class="wrap">
+        <VideoSlot name="tour" label="A tour of the whole desktop: the home screen, the dock and the island" caption="The whole desktop, recorded from the app." />
+        <VideoSlot name="dock" label="The dock in use: magnification, a stack opening, the App Library and window previews" caption="The dock, recorded from the app." />
+        <VideoSlot name="notch" label="The island following a real coding session from thinking to done" caption="The island, recorded from the app." />
+      </div>
+    </section>
 
     <Cta />
   </main>
@@ -128,5 +227,6 @@ const themes: Bullet[] = [
     import "../scripts/theme";
     import "../scripts/live";
     import "../scripts/island";
+    import "../scripts/carousel";
   </script>
 </Base>

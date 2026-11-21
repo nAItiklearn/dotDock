@@ -155,40 +155,6 @@ html:not([data-theme="paper"]) .hero__scape .art__mid {
   }
 }
 
-/* ---------- Scenes behind the product shots of the Features page ---------- */
-.scene {
-  position: relative;
-  isolation: isolate;
-  overflow: clip;
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--radius-art);
-  background: var(--bg);
-}
-.scene__art {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  display: grid;
-  align-items: end;
-}
-.scene__art > .art {
-  --scene-w: max(100%, 1000px);
-  width: var(--scene-w);
-  margin-left: calc(50% - var(--scene-w) / 2);
-}
-@media (max-width: 899px) {
-  .scene__art > .art {
-    --scene-w: 560px;
-  }
-}
-.scene__shot {
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  min-height: clamp(280px, 40vw, 560px);
-  padding: clamp(20px, 4vw, 56px);
-}
-
 /* ---------- Bands: wide, low pictures between sections ---------- */
 .band {
   position: relative;

@@ -36,6 +36,9 @@ async function fitClip(c, clip) {
   return { x, y, width: right - x, height: bottom - y };
 }
 
+/** Hides the settings panel's Position heading and its buttons. */
+const HIDE_POSITION = `(() => { const head = [...document.querySelectorAll('.prefs *')].find((e) => e.children.length === 0 && e.textContent.trim().toLowerCase() === 'position'); if (!head) throw new Error('no Position row'); const row = head.closest('section, fieldset, .prefs__group') ?? head.parentElement; row.style.display = 'none'; })()`;
+
 const st = (code) => `dockDev.store.getState().${code}`;
 const settings = (patch) => `dockDev.dev.patchSettings(${JSON.stringify(patch)})`;
 /** Centre of the dock item whose accessible name starts with `name`. */
@@ -57,7 +60,8 @@ const SHOTS = [
   { name: "menu", rightClick: "Atlas Browser", clip: TALL },
   { name: "previews", hover: "Atlas Browser", wait: 1600, clip: TALL },
   { name: "edit", setup: [st("setEditing(true)")], clip: DOCK },
-  { name: "prefs", click: "Customise the dock", clip: TALL },
+  // The dock lives on the bottom edge only (owner decision, 2026-11-21): the position row is left out of the shot.
+  { name: "prefs", click: "Customise the dock", after: HIDE_POSITION, clip: TALL },
   { name: "gallery", rightClick: "Atlas Browser", menuItem: "Add a widget", clip: TALL },
   { name: "tile-agenda", setup: [settings({ tiles: DAY })], clickTile: "agenda", clip: TALL },
   { name: "tile-system", setup: [settings({ tiles: SYSTEM })], clickTile: "system", clip: TALL },
@@ -68,7 +72,6 @@ const SHOTS = [
   { name: "tiles-system", setup: [settings({ tiles: SYSTEM })], clip: DOCK },
   { name: "tiles-day", setup: [settings({ tiles: DAY })], clip: DOCK },
   { name: "badges", setup: [`dockDev.dev.install("Lumen Notes", "utilities")`], clip: DOCK },
-  { name: "edge-left", setup: [settings({ edge: "left" })], clip: FULL },
   { name: "desktop", clip: FULL },
 ];
 
@@ -111,7 +114,15 @@ async function run(only) {
           await c.click(mx, my);
         }
       }
-      if (!shot.hover) await c.eval("document.activeElement && document.activeElement.blur && document.activeElement.blur()");
+      if (shot.after) {
+        await sleep(500);
+        await c.eval(shot.after);
+      }
+      if (!shot.hover) {
+        await c.eval("document.activeElement && document.activeElement.blur && document.activeElement.blur()");
+        // Park the pointer on the wallpaper so no tooltip is left hanging at the edge of the shot.
+        await c.mouse("mouseMoved", W / 2, 120);
+      }
       await sleep(900);
       const clip = await fitClip(c, shot.clip);
       if (process.env.CAPTURE_DEBUG) console.log(shot.name, JSON.stringify(clip));

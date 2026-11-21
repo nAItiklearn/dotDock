@@ -1,0 +1,49 @@
+---
+/**
+ * One card of the Features bento: an uppercase eyebrow, a short title, an optional line of text, then a real
+ * capture of the feature (tools/capture-dock.mjs, tools/capture-island.mjs), or a live widget passed in the slot.
+ * `span` sets the card's width on the 6-column grid; `focus` is the CSS object-position that keeps the part of a
+ * wide capture that matters in view when the card crops it.
+ */
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  text?: string;
+  img?: ImageMetadata;
+  alt?: string;
+  span?: "full" | "half" | "third";
+  focus?: string;
+  /** Show the whole capture instead of cropping it to the card's frame. */
+  whole?: boolean;
+}
+const { eyebrow, title, text, img, alt = "", span = "half", focus = "50% 100%", whole = false } = Astro.props;
+const SIZES = { full: "(min-width: 900px) 1120px, 100vw", half: "(min-width: 900px) 560px, 100vw", third: "(min-width: 900px) 372px, 100vw" } as const;
+---
+
+<article class:list={["shot-card", `shot-card--${span}`, "reveal"]}>
+  <header class="shot-card__head">
+    <p class="shot-card__eyebrow">{eyebrow}</p>
+    <h3 class="shot-card__title">{title}</h3>
+    {text && <p class="shot-card__text">{text}</p>}
+  </header>
+  <div class:list={["shot-card__media", whole && "shot-card__media--whole"]}>
+    {
+      img && (
+        <Image
+          src={img}
+          alt={alt}
+          widths={[640, 1120, 1680, 2240]}
+          sizes={SIZES[span]}
+          loading="lazy"
+          decoding="async"
+          class="shot-card__img"
+          style={`object-position:${focus}`}
+        />
+      )
+    }
+    <slot />
+  </div>
+</article>
