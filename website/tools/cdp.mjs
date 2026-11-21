@@ -81,7 +81,7 @@ export async function launch(port, height) {
     frames(ms, scrollPx, within) {
       return evaluate(`new Promise((resolve) => {
         const deltas = []; let last = performance.now(); const end = last + ${ms};
-        const tick = (t) => { deltas.push(t - last); last = t; if (${scrollPx}) scrollBy(0, ${scrollPx}); if (t < end) requestAnimationFrame(tick); else {
+        const tick = (t) => { deltas.push(t - last); last = t; if (${scrollPx}) scrollBy({ top: ${scrollPx}, behavior: 'instant' }); if (t < end) requestAnimationFrame(tick); else {
           const sorted = [...deltas].sort((a, b) => a - b);
           resolve({ frames: deltas.length, mean: +(deltas.reduce((a, b) => a + b, 0) / deltas.length).toFixed(2),
             p95: +sorted[Math.floor(sorted.length * 0.95)].toFixed(2), max: +sorted[sorted.length - 1].toFixed(2),

@@ -19,7 +19,7 @@ mkdirSync(outDir, { recursive: true });
 const b = await launch(9352, 900);
 const report = [];
 const toScene = (sel) =>
-  b.evaluate(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); scrollTo(0, Math.round(el.getBoundingClientRect().top + scrollY - (innerHeight - el.offsetHeight) / 2)); return true; })()`);
+  b.evaluate(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); scrollTo({ top: Math.round(el.getBoundingClientRect().top + scrollY - (innerHeight - el.offsetHeight) / 2), behavior: 'instant' }); return true; })()`);
 
 if (mode === "check" || mode === "all") {
   await b.viewport(1440);
@@ -73,10 +73,10 @@ if (mode === "perf" || mode === "all") {
       await sleep(1500);
       const first = await b.frames(6000, 0, ".live");
       const steady = await b.frames(6000, 0, ".live");
-      await b.evaluate(`scrollTo(0, document.querySelector('.live--${scene}').getBoundingClientRect().top + scrollY - innerHeight)`);
+      await b.evaluate(`scrollTo({ top: document.querySelector('.live--${scene}').getBoundingClientRect().top + scrollY - innerHeight, behavior: 'instant' })`);
       await sleep(600);
       const scroll = await b.frames(3000, 6, ".live");
-      await b.evaluate("scrollTo(0, 0)");
+      await b.evaluate("scrollTo({ top: 0, behavior: 'instant' })");
       await sleep(600);
       const paused = await b.evaluate(`document.querySelector('.live--${scene}').classList.contains('live--paused')`);
       report.push(`${scene} @${w} cpu x${slow}: first 6 s in view (masks decoding) ${JSON.stringify(first)}; next 6 s ${JSON.stringify(steady)}; scrolling past ${JSON.stringify(scroll)}; paused off screen ${paused}`);

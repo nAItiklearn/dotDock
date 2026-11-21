@@ -16,7 +16,7 @@ const b = await launch(9351, 900);
 const report = [];
 const toVista = async (offset) => {
   const y = await b.evaluate("document.querySelector('.vista').getBoundingClientRect().top + scrollY");
-  await b.evaluate(`scrollTo(0, ${Math.round(y) - offset})`);
+  await b.evaluate(`scrollTo({ top: ${Math.round(y) - offset}, behavior: 'instant' })`);
 };
 
 if (mode === "shots" || mode === "all") {
@@ -63,7 +63,7 @@ if (mode === "perf" || mode === "all") {
     await sleep(800);
     report.push(`frames @${w}: ${JSON.stringify(await b.frames(6000, 0, ".vista"))}`);
     // Off screen the meadow is paused.
-    await b.evaluate("scrollTo(0, document.body.scrollHeight)");
+    await b.evaluate("scrollTo({ top: document.body.scrollHeight, behavior: 'instant' })");
     await sleep(600);
     report.push(`paused off screen @${w}: ${await b.evaluate("document.querySelector('.vista').classList.contains('vista--paused')")}`);
   }
