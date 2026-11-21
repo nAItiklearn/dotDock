@@ -166,7 +166,7 @@ export function Island() {
                 />
                 {settings.showScene ? (
                   <motion.div className="scene" style={{ top: layout.sceneTop, y: follow }}>
-                    <SceneCanvas phase={shown.phase} iconStyle={settings.iconStyle} cell={SCENE_CELL * scale} live={active} />
+                    <SceneCanvas phase={shown.phase} sessionId={shown.id} iconStyle={settings.iconStyle} cell={SCENE_CELL * scale} live={active} />
                   </motion.div>
                 ) : null}
                 <motion.div className="pager-slot" style={{ top: pagerTop, y: follow }}>

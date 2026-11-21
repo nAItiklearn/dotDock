@@ -4,7 +4,7 @@ import type { IconStyle, Phase } from "../protocol";
 import { creatureCells } from "./creature";
 import { landscape } from "./landscape";
 import { GROUND_ROW, SCENE_COLS, SCENE_ROWS, SPRITE_FEET, SPRITE_WIDTH, type Emit } from "./layout";
-import type { SceneState } from "./motion";
+import { isEntering, type SceneState } from "./motion";
 
 /** Cells dimmer than this are not worth a draw call. */
 const VISIBLE = 0.03;
@@ -50,7 +50,8 @@ export function drawScene(ctx: CanvasRenderingContext2D, frame: SceneFrame, styl
   const facing = frame.state.dir;
   const column = (c: number): number => (facing > 0 ? left + c : left + SPRITE_WIDTH - 1 - c);
   const row = (r: number): number => GROUND_ROW - SPRITE_FEET + r;
-  for (const pose of frame.poses) {
+  const walkingIn: readonly PoseLayer[] = [{ phase: "reading", tp: 0, weight: 1 }];
+  for (const pose of isEntering(frame.state) ? walkingIn : frame.poses) {
     if (pose.weight <= 0) continue;
     creatureCells(pose.phase, pose.tp, frame.t, frame.state.gait, frame.state.speed, paint(pose.weight, column, row));
   }
