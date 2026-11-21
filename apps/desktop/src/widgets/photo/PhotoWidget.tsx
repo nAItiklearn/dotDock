@@ -167,7 +167,9 @@ function useCaptionInk(stage: RefObject<HTMLElement | null>, tint: PhotoTint): C
       setInk(inputs ? captionInk(inputs.line, inputs.backdrop, inputs.palette) : null);
     };
     measure();
-    return watchTheme(measure);
+    // A theme change (a new wallpaper's palette) repaints the stylesheet in the next frame; the caption
+    // must change in that same frame, not one later in the old ink.
+    return watchTheme(() => flushSync(measure));
   }, [stage, tint]);
   return ink;
 }
