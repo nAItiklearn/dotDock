@@ -7,6 +7,7 @@ import { indicatorFor, lengthKind, magnifyWeight, type AppEntry, type BarEntry, 
 import { plural, t } from "./strings";
 import { StatusPill, Tile } from "./tiles/Tile";
 import { canResize } from "./tiles/sizes";
+import { TileBoundary } from "./tiles/TileBoundary";
 import type { TileControls } from "./tiles/shell";
 import { toneVar } from "./tones";
 
@@ -152,7 +153,9 @@ function Face({ entry, editing, roving, open, handlers, box }: Omit<SlotProps, "
           handlers.context(entry, e, e.currentTarget);
         }}
       >
-        <Tile id={entry.id} controls={controls} />
+        <TileBoundary id={entry.id}>
+          <Tile id={entry.id} controls={controls} />
+        </TileBoundary>
         {removable ? <RemoveBadge name={name} onRemove={() => handlers.remove(entry)} /> : null}
         {editing && canResize(entry.id) ? <ResizeBadge name={name} compact={entry.size === "compact"} onResize={() => handlers.resize(entry)} /> : null}
       </div>
