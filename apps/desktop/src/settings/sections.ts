@@ -64,7 +64,7 @@ export const PAGES: readonly PageMeta[] = [
   { id: "dock-items", section: "dock", title: "Items", icon: "dock", description: "The apps and stacks kept on the dock, in order." },
   { id: "dock-tiles", section: "dock", title: "Tiles", icon: "widgets", description: "The live tiles at the end of the dock." },
   { id: "dock-look", section: "dock", title: "Appearance", icon: "appearance", description: "How the dock bar is drawn over your desktop." },
-  { id: "dock-behaviour", section: "dock", title: "Behaviour", icon: "move", description: "Size, magnification, position and auto-hide." },
+  { id: "dock-behaviour", section: "dock", title: "Behaviour", icon: "move", description: "Size, magnification and auto-hide." },
   { id: "dock-taskbar", section: "dock", title: "Taskbar", icon: "display", description: "How the dock sits with maximised windows and the Windows taskbar." },
 
   { id: "agents", section: "notch", title: "Agents", icon: "notch", description: "The coding agents the notch follows, and how it tells you a task is done." },

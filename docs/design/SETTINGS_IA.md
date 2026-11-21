@@ -34,7 +34,7 @@ Nothing else in Settings duplicates these two. A part's own page never carries a
 - **Home screen / Profiles:** list, switch, rename, reset, delete, create.
 - **Home screen / Widgets:** the live gallery; add a widget to the active profile.
 - **Home screen / Displays:** each screen's resolution and scaling and its own safe margin.
-- **Dock:** items (pinned apps, stacks, order), tiles (native tiles and their data), appearance (theme, glass, size, magnification), behaviour (auto-hide, position, monitors), taskbar (how the replacement behaves). The switch back to the Windows taskbar is not here; it is one of the two switches at the end of Settings. The dock tracks own these pages.
+- **Dock:** items (pinned apps, stacks, order), tiles (native tiles and their data), appearance (the dock theme), behaviour (size, magnification, auto-hide; the dock sits at the bottom only), taskbar (how the replacement behaves). The switch back to the Windows taskbar is not here; it is one of the two switches at the end of Settings. The dock tracks own these pages.
 - **Notch / Agents:** connect and disconnect each agent, what the island reads, notifications and sound. New agents (Copilot CLI, OpenCode, the generic protocol) add a row each here.
 - **Notch / Appearance:** show the island, idle state, dot style, size, distance from the top, which details show, movement.
 - **Themes & wallpaper / Themes:** theme, switch automatically, your themes and the theme editor, theme from wallpaper (modules track), corner roundness, motion, font.

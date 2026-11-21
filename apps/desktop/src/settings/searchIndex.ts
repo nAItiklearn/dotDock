@@ -42,7 +42,6 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("dock-look", "dock-theme", "Dock theme", "glass blur acrylic obsidian paper aurum minimal bar look"),
   e("dock-behaviour", "dock-icon-size", "Dock icon size", "bigger smaller scale"),
   e("dock-behaviour", "dock-magnification", "Dock magnification", "zoom grow hover"),
-  e("dock-behaviour", "dock-edge", "Dock position", "bottom top left right edge side"),
   e("dock-behaviour", "dock-auto-hide", "Hide the dock automatically", "autohide auto-hide slide"),
   e("dock-taskbar", "dock-reserve-space", "Keep windows clear of the dock", "maximise maximize app bar reserve space overlap"),
   e("dock-taskbar", "dock-windows-taskbar", "Windows taskbar and the dock", "replace taskbar"),

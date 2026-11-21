@@ -158,10 +158,11 @@ describe("Dock / Behaviour", () => {
     expect(magnificationText(1.6)).toBe("160%");
   });
 
-  it("moves the dock to another edge", async () => {
+  it("has no position control: the dock sits at the bottom only", async () => {
     render(<DockBehaviourPage />);
-    fireEvent.click(await screen.findByRole("radio", { name: "Left" }));
-    expect((await lastWrite()).edge).toBe("left");
+    await screen.findByRole("slider", { name: "Icon size" });
+    expect(screen.queryByRole("radiogroup", { name: /position/i })).toBeNull();
+    expect(screen.queryByText(/position on screen/i)).toBeNull();
   });
 
   it("turns auto-hide on", async () => {

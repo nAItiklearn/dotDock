@@ -13,6 +13,7 @@ export interface DockSettings {
   /** Owned by the "Use the Windows taskbar" switch at the end of Settings; never edited here. */
   readonly enabled: boolean;
   readonly replaceTaskbar: boolean;
+  /** Always "bottom": the dock sits at the bottom only (owner, 2026-11-21). Passed through, never edited. */
   readonly edge: DockEdge;
   /** Keep maximised windows clear of the dock (an app bar) instead of floating over them. */
   readonly reserveSpace: boolean;
@@ -31,8 +32,6 @@ export interface DockAppName {
   readonly id: string;
   readonly name: string;
 }
-
-export const DOCK_EDGES: readonly DockEdge[] = ["bottom", "top", "left", "right"];
 
 /** The dock's own clamps (`src/dock/geometry.ts`): it never draws outside these. */
 export const DOCK_ICON_LIMITS = { min: 32, max: 80, step: 2, default: 48 } as const;

@@ -5,7 +5,6 @@ import {
   clampIconSize,
   clampMagnification,
   DEFAULT_DOCK_SETTINGS,
-  DOCK_EDGES,
   DOCK_ICON_LIMITS,
   DOCK_MAGNIFICATION_LIMITS,
   DOCK_THEMES,
@@ -18,11 +17,10 @@ import {
   tileName,
   tilesNotOnDock,
   type DockAppName,
-  type DockEdge,
   type DockSettings,
   type DockThemeId,
 } from "../../lib/native/dock";
-import { Button, IconButton, Segmented, SelectField, Slider, Switch } from "../../lib/ui/controls";
+import { Button, IconButton, SelectField, Slider, Switch } from "../../lib/ui/controls";
 import { hrefFor } from "../sections";
 import { NativeGate, useNativeResource, useNativeWrite, type NativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
@@ -30,7 +28,7 @@ import { PageHeader, Row, Section } from "../ui/layout";
 /** The bundled windswept-grass wallpaper every dock preview sits on, as the dock's own harness does. */
 export const PREVIEW_WALLPAPER = "/wallpaper-thumbs/meadow-dots-dark.jpg";
 
-const DOCK_OFFERS = ["Choose what is on the dock, and in what order.", "Change its size, magnification, position and auto-hide."];
+const DOCK_OFFERS = ["Choose what is on the dock, and in what order.", "Change its size, magnification and auto-hide."];
 
 /** The dock's settings, changed on screen at once and then written to the dock's own store. */
 function useDockSettings(): { readonly resource: NativeResource<DockSettings>; readonly change: (next: DockSettings) => void } {
@@ -252,8 +250,6 @@ export function DockAppearancePage() {
 
 // ----------------------------------------------------------------------- behaviour
 
-const EDGE_LABELS: Readonly<Record<DockEdge, string>> = { bottom: "Bottom", top: "Top", left: "Left", right: "Right" };
-
 export const magnificationText = (factor: number): string => (factor <= DOCK_MAGNIFICATION_LIMITS.min ? "Off" : `${Math.round(factor * 100)}%`);
 
 function BehaviourBody({ settings, change }: { readonly settings: DockSettings; readonly change: (next: DockSettings) => void }) {
@@ -301,16 +297,8 @@ function BehaviourBody({ settings, change }: { readonly settings: DockSettings; 
           </span>
         </Row>
       </Section>
-      <Section title="Placement">
-        <Row id="dock-edge" label="Position on screen">
-          <Segmented
-            label="Position on screen"
-            value={settings.edge}
-            options={DOCK_EDGES.map((edge) => ({ value: edge, label: EDGE_LABELS[edge] }))}
-            onChange={(edge) => change({ ...settings, edge })}
-          />
-        </Row>
-        <Row id="dock-auto-hide" label="Hide automatically" description="Slides away until the pointer reaches that edge of the screen.">
+      <Section title="Hiding">
+        <Row id="dock-auto-hide" label="Hide automatically" description="Slides away until the pointer reaches the bottom of the screen.">
           <Switch label="Hide the dock automatically" checked={settings.autoHide} onChange={(autoHide) => change({ ...settings, autoHide })} />
         </Row>
       </Section>
