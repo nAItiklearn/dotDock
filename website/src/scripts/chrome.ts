@@ -54,27 +54,30 @@ function initScaled(): void {
 /** How far ahead of the viewport a piece of art starts to load and decode: a couple of screens, so a fast flick
  * down the page finds every mask decoded before it arrives. */
 const ART_AHEAD = "2000px 0px";
-const MASK_URL = /url\("?([^")]+)"?\)/g;
-
 /**
- * The masks a piece paints with, as its current rules resolve them (the narrow or wide render, at this screen's
- * pixel ratio). The browser would decode a mask on the main thread the first time it paints it, which shows as a
- * stall while scrolling; decoding them here first, asynchronously, takes that work off the scroll.
+ * Starts loading and decoding a piece before it is on screen. A flattened piece's picture for the current theme is
+ * switched to eager loading and decoded asynchronously; a masked piece's masks are decoded the same way through
+ * images of their own, as its rules resolve them. Either way the scroll never waits on a decode.
  */
-function decodeMasks(piece: Element): void {
-  const urls = new Set<string>();
+function decodeAhead(piece: Element): void {
+  const ignore = (): void => {
+    // A picture that fails to load leaves its piece empty; nothing to recover.
+  };
+  for (const img of piece.querySelectorAll<HTMLImageElement>(".art__flat img")) {
+    if (img.parentElement && getComputedStyle(img.parentElement).display === "none") continue;
+    img.loading = "eager";
+    img.decode().catch(ignore);
+  }
   for (const layer of piece.querySelectorAll(".art__layer")) {
     const cs = getComputedStyle(layer);
     const image = cs.getPropertyValue("mask-image") || cs.getPropertyValue("-webkit-mask-image");
-    for (const m of image.matchAll(MASK_URL)) if (m[1]) urls.add(m[1]);
-  }
-  for (const src of urls) {
-    const img = new Image();
-    img.decoding = "async";
-    img.src = src;
-    img.decode().catch(() => {
-      // A mask that fails to load leaves its layer empty; nothing to recover.
-    });
+    for (const m of image.matchAll(/url[(]"?([^")]+)"?[)]/g)) {
+      if (!m[1]) continue;
+      const img = new Image();
+      img.decoding = "async";
+      img.src = m[1];
+      img.decode().catch(ignore);
+    }
   }
 }
 
@@ -90,7 +93,7 @@ function initArt(): void {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         entry.target.classList.add("art--on");
-        decodeMasks(entry.target);
+        decodeAhead(entry.target);
         io.unobserve(entry.target);
       }
     },
