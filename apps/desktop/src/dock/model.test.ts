@@ -68,12 +68,12 @@ describe("buildEntries", () => {
       input({ pinned: [{ kind: "app", id: "code" }, { kind: "stack", category: "media" }], tiles: ["clock"] }, [win("1", "term"), win("2", null)]),
       options,
     );
-    expect(keys(entries)).toEqual(["library", "app:code", "stack:media", "divider:0", "app:term", "exe:exe:2", "divider:1", "tile:clock", "divider:2", "status"]);
+    expect(keys(entries)).toEqual(["library", "app:code", "stack:media", "divider:0", "app:term", "exe:exe:2", "divider:1", "tile:clock", "divider:2", "status", "more"]);
   });
 
   it("leaves out empty sections instead of drawing double dividers", () => {
     const entries = buildEntries(input({ pinned: [{ kind: "app", id: "code" }] }), { ...options, status: false });
-    expect(keys(entries)).toEqual(["library", "app:code"]);
+    expect(keys(entries)).toEqual(["library", "app:code", "more"]);
   });
 
   it("drops pinned items whose app or category is gone, and unknown tile ids", () => {
@@ -81,7 +81,7 @@ describe("buildEntries", () => {
       input({ pinned: [{ kind: "app", id: "uninstalled" }, { kind: "stack", category: "custom:gone" }], tiles: ["weather", "clock", "clock"] }),
       { ...options, status: false },
     );
-    expect(keys(entries)).toEqual(["library", "divider:0", "tile:clock"]);
+    expect(keys(entries)).toEqual(["library", "divider:0", "tile:clock", "more"]);
   });
 
   it("shows a running pinned app once, with its windows", () => {
@@ -112,7 +112,7 @@ describe("buildEntries", () => {
 
   it("adds the add tile in edit mode", () => {
     const entries = buildEntries(input({ pinned: [{ kind: "app", id: "code" }] }), { ...options, editing: true, status: false });
-    expect(keys(entries)).toEqual(["library", "app:code", "add"]);
+    expect(keys(entries)).toEqual(["library", "app:code", "add", "more"]);
   });
 });
 

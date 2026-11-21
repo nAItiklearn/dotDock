@@ -81,7 +81,9 @@ export type BarEntry =
   | { readonly kind: "library"; readonly key: string }
   | { readonly kind: "tile"; readonly key: string; readonly id: TileId; readonly size: TileSize }
   | { readonly kind: "status"; readonly key: string }
-  | { readonly kind: "add"; readonly key: string };
+  | { readonly kind: "add"; readonly key: string }
+  /** The ⋯ button at the end of the dock: it opens the one panel that customises the whole dock. */
+  | { readonly kind: "more"; readonly key: string };
 
 export const PREVIEW_ICONS = 4;
 
@@ -111,6 +113,7 @@ export function magnifyWeight(entry: BarEntry): number {
       return MAGNIFY_WEIGHT.stack;
     case "library":
     case "add":
+    case "more":
       return MAGNIFY_WEIGHT.control;
     default:
       return 0;
@@ -209,6 +212,7 @@ export function buildEntries(input: BuildInput, options: BuildOptions): BarEntry
     if (section.length === 0) continue;
     entries.push({ kind: "divider", key: `divider:${dividers++}` }, ...section);
   }
+  entries.push({ kind: "more", key: "more" });
   return entries;
 }
 

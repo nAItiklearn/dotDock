@@ -75,6 +75,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
   const stack = useDockStore((s) => s.stack);
   const tile = useDockStore((s) => s.tile);
   const gallery = useDockStore((s) => s.gallery);
+  const prefs = useDockStore((s) => s.prefs);
   const menu = useDockStore((s) => s.menu);
   const pointerInside = useDockStore((s) => s.pointerInside);
   const reduced = useReducedMotion();
@@ -301,6 +302,9 @@ export function Bar({ hidden, onLayout }: BarProps) {
         case "add":
           store.showGallery(store.gallery === null ? { from: rectOf(face) } : null);
           return;
+        case "more":
+          store.showPrefs(store.prefs === null ? { from: rectOf(face) } : null);
+          return;
         case "stack":
           if (store.stack?.category === entry.category.id) {
             store.openStack(null);
@@ -338,7 +342,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
 
     /** Set from the press that opened a panel until the click that ends it has passed, so that click does not toggle the panel shut. */
     let openedOnPress = false;
-    const panelOf = (entry: BarEntry): string => (entry.kind === "library" ? "library" : entry.kind === "stack" ? "stack" : entry.kind === "tile" ? "tile" : entry.kind === "add" ? "gallery" : "menu");
+    const panelOf = (entry: BarEntry): string => (entry.kind === "library" ? "library" : entry.kind === "stack" ? "stack" : entry.kind === "tile" ? "tile" : entry.kind === "add" ? "gallery" : entry.kind === "more" ? "prefs" : "menu");
     const openOnPress = (entry: BarEntry, face: HTMLElement, startedAt: number): void => {
       markOpenStart(panelOf(entry), startedAt);
       open(entry, face);
@@ -460,7 +464,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
     store.setMenu({ key: null, at: { x: e.clientX, y: e.clientY } });
   };
 
-  const rovingKey = entries.some((entry) => entry.key === roving && (entry.kind === "app" || entry.kind === "stack" || entry.kind === "library" || entry.kind === "add"))
+  const rovingKey = entries.some((entry) => entry.key === roving && (entry.kind === "app" || entry.kind === "stack" || entry.kind === "library" || entry.kind === "add" || entry.kind === "more"))
     ? roving
     : "library";
 
@@ -504,7 +508,7 @@ export function Bar({ hidden, onLayout }: BarProps) {
               editing={editing}
               roving={entry.key === rovingKey}
               peak={peak}
-              open={(entry.kind === "stack" && stack?.category === entry.category.id) || (entry.kind === "add" && gallery !== null) || (entry.kind === "tile" && tile?.id === entry.id)}
+              open={(entry.kind === "stack" && stack?.category === entry.category.id) || (entry.kind === "add" && gallery !== null) || (entry.kind === "more" && prefs !== null) || (entry.kind === "tile" && tile?.id === entry.id)}
               handlers={handlers}
             />
           ))}

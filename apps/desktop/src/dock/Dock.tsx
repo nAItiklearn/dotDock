@@ -7,7 +7,7 @@ import type { Rect } from "./geometry";
 import { loadContextMenu, loadGallery, loadLibrary, loadPrefs, loadPreview, loadStackPopover, loadTilePopover, usePanel, whenIdle } from "./prefetch";
 import { useDockStore } from "./store";
 import { isTranslucent, resolveTheme } from "./theme";
-import { useAutoHide, useKeyboardFocus, useNoticeTimeout, useRegions, type PanelRects } from "./useDockShell";
+import { useAutoHide, useCloseOnBlur, useKeyboardFocus, useNoticeTimeout, useOpenPanelRects, useRegions, type PanelRects } from "./useDockShell";
 import { useDockPalette } from "./useDockTheme";
 import { useViewport } from "./useViewport";
 import "./dock.css";
@@ -73,7 +73,10 @@ export function Dock() {
   const modal = libraryOpen || stack !== null || tile !== null || gallery !== null || prefs !== null || menu !== null;
   const busy = pointerInside || editing || modal;
   const hidden = useAutoHide(autoHide && !frozen, busy);
-  useRegions(layout, hidden, panels, viewport, modal);
+  const openRects = useOpenPanelRects(rootRef, modal);
+  const hitPanels = useMemo(() => ({ ...panels, ...openRects }), [panels, openRects]);
+  useRegions(layout, hidden, hitPanels, viewport, libraryOpen);
+  useCloseOnBlur(modal);
   useKeyboardFocus(editing || modal);
   useNoticeTimeout();
 

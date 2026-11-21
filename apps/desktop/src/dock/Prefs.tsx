@@ -1,12 +1,12 @@
-import { useEffect, useLayoutEffect, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
 import { Icon } from "../design-system/Icon";
 import { actions } from "./bridge";
 import { clampIconSize, clampMagnification, ICON_LIMITS, MAGNIFICATION_LIMITS, placeBesideDock, PREFS, type Rect } from "./geometry";
 import { markOpenPainted } from "./openMarks";
 import type { DockEdge } from "./protocol";
-import { useDockStore } from "./store";
+import { DEFAULT_SETTINGS, useDockStore } from "./store";
 import { t } from "./strings";
-import { DOCK_THEMES, type DockThemeId } from "./theme";
+import { DEFAULT_THEME, DOCK_THEMES, type DockThemeId } from "./theme";
 import { useViewport } from "./useViewport";
 import "./panels.css";
 import "./tiles/popovers.css";
@@ -26,6 +26,14 @@ function Switch({ checked, label, onChange }: { readonly checked: boolean; reado
   );
 }
 
+/**
+ * What Reset puts back: the items, tiles, size, magnification, position, hiding and look the dock starts with. Whether
+ * the dock runs and whether it replaces the taskbar are left as they are; those are not part of how the dock looks.
+ */
+export function resetPatch(current: { readonly enabled: boolean; readonly replaceTaskbar: boolean }) {
+  return { ...DEFAULT_SETTINGS, enabled: current.enabled, replaceTaskbar: current.replaceTaskbar };
+}
+
 /** Shown beside "Glass" when the dock is drawing something else in its place. */
 export const drawnAsHint = (choice: DockThemeId, drawn: DockThemeId): string | null =>
   choice === drawn ? null : t("prefs.theme.drawnAs", { theme: t(`prefs.theme.${drawn}`) });
@@ -42,6 +50,17 @@ export function Prefs({ from, drawn }: { readonly from: Rect; /** The theme the 
   const size = Math.round(clampIconSize(settings.iconSize));
   const factor = clampMagnification(settings.magnification);
   const hint = drawnAsHint(choice, drawn);
+  const [resetStep, setResetStep] = useState<"idle" | "confirm" | "done">("idle");
+  const store = useDockStore.getState;
+  const reset = (): void => {
+    if (resetStep !== "confirm") {
+      setResetStep("confirm");
+      return;
+    }
+    void actions.updateSettings(resetPatch(store().settings));
+    store().setThemeChoice(DEFAULT_THEME);
+    setResetStep("done");
+  };
 
   useLayoutEffect(() => {
     markOpenPainted("prefs");
@@ -77,6 +96,32 @@ export function Prefs({ from, drawn }: { readonly from: Rect; /** The theme the 
             <Icon name="cross" />
           </button>
         </header>
+
+        <div className="prefs__scroll">
+        <section className="prefs__group">
+          <h3 className="caps">{t("prefs.items")}</h3>
+          <div className="prefs__actions">
+            <button type="button" onClick={() => store().setLibrary(true)}>
+              <Icon name="plus" />
+              {t("prefs.items.app")}
+            </button>
+            <button type="button" onClick={() => store().showGallery({ from })}>
+              <Icon name="plus" />
+              {t("prefs.items.widget")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                store().showPrefs(null);
+                store().setEditing(true);
+              }}
+            >
+              <Icon name="move" />
+              {t("prefs.items.arrange")}
+            </button>
+          </div>
+          <p className="tp-hint">{t("prefs.items.hint")}</p>
+        </section>
 
         <section className="prefs__group">
           <h3 className="caps">{t("prefs.position")}</h3>
@@ -134,6 +179,23 @@ export function Prefs({ from, drawn }: { readonly from: Rect; /** The theme the 
           </div>
           {hint ? <p className="tp-hint" role="status">{hint}</p> : null}
         </section>
+
+        <section className="prefs__group">
+          <h3 className="caps">{t("prefs.taskbar")}</h3>
+          <Switch checked={settings.replaceTaskbar} label={t("prefs.taskbar.replace")} onChange={(replaceTaskbar) => void actions.updateSettings({ replaceTaskbar })} />
+        </section>
+
+        <section className="prefs__group">
+          <button type="button" className="prefs__reset" data-confirm={resetStep === "confirm" ? "true" : undefined} onClick={reset}>
+            {resetStep === "confirm" ? t("prefs.reset.confirm") : t("prefs.reset")}
+          </button>
+          {resetStep === "done" ? (
+            <p className="tp-hint" role="status">
+              {t("prefs.reset.done")}
+            </p>
+          ) : null}
+        </section>
+        </div>
       </div>
     </div>
   );

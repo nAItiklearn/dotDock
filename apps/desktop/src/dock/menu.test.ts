@@ -57,8 +57,8 @@ const find = (items: readonly MenuItem[], id: string): MenuItem => {
 
 describe("menuFor the bar", () => {
   it("offers the library and edit mode, and flips the edit entry while editing", () => {
-    expect(labels(menuFor(null, context().ctx))).toEqual(["Edit dock", "Add widget…", "Dock settings…", "Show App Library"]);
-    expect(labels(menuFor(null, context({ editing: true }).ctx))).toEqual(["Done editing", "Add widget…", "Dock settings…", "Show App Library"]);
+    expect(labels(menuFor(null, context().ctx))).toEqual(["Arrange and remove", "Add a widget…", "Customise the dock…", "Show App Library"]);
+    expect(labels(menuFor(null, context({ editing: true }).ctx))).toEqual(["Done editing", "Add a widget…", "Customise the dock…", "Show App Library"]);
   });
 
   it("runs the actions", () => {
@@ -76,7 +76,7 @@ describe("menuFor a pinned running app", () => {
   it("opens a new window, unpins, moves to a stack and closes every window", () => {
     const { ctx, calls } = context({ windows: running });
     const items = menuFor("app:code", ctx);
-    expect(labels(items)).toEqual(["New window", "Remove from dock", "Move to stack", "Close all windows (2)", "Edit dock", "Add widget…", "Dock settings…"]);
+    expect(labels(items)).toEqual(["New window", "Remove from dock", "Move to stack", "Close all windows (2)", "Arrange and remove", "Add a widget…", "Customise the dock…"]);
     find(items, "open").run?.();
     find(items, "pin").run?.();
     find(items, "close").run?.();
@@ -102,7 +102,7 @@ describe("menuFor an app that is not pinned", () => {
   it("offers to keep it in the dock", () => {
     const { ctx, calls } = context();
     const items = menuFor("app:chess", ctx);
-    expect(labels(items)).toEqual(["Open", "Keep in dock", "Move to stack", "Edit dock", "Add widget…", "Dock settings…"]);
+    expect(labels(items)).toEqual(["Open", "Keep in dock", "Move to stack", "Arrange and remove", "Add a widget…", "Customise the dock…"]);
     find(items, "pin").run?.();
     expect(calls[0]).toContain('"app","id":"chess"');
   });
@@ -121,19 +121,19 @@ describe("menuFor stacks, tiles and windows without an entry", () => {
     const { ctx, calls } = context();
     find(menuFor("tile:clock", ctx), "remove").run?.();
     expect(calls).toEqual([`settings ${JSON.stringify({ tiles: [] })}`]);
-    expect(labels(menuFor("tile:weather", ctx))).toEqual(["Edit dock", "Add widget…", "Dock settings…", "Show App Library"]);
+    expect(labels(menuFor("tile:weather", ctx))).toEqual(["Arrange and remove", "Add a widget…", "Customise the dock…", "Show App Library"]);
   });
 
   it("closes a group of windows that has no Start menu entry", () => {
     const { ctx, calls } = context({ windows: [win("9", null, "x"), win("10", null, "x")] });
     const items = menuFor("exe:x", ctx);
-    expect(labels(items)).toEqual(["Close all windows (2)", "Edit dock", "Add widget…", "Dock settings…"]);
+    expect(labels(items)).toEqual(["Close all windows (2)", "Arrange and remove", "Add a widget…", "Customise the dock…"]);
     find(items, "close").run?.();
     expect(calls).toEqual(["close 9,10"]);
   });
 
   it("falls back to the bar menu for unknown keys", () => {
-    expect(labels(menuFor("app:gone", context().ctx))).toEqual(["Edit dock", "Add widget…", "Dock settings…", "Show App Library"]);
+    expect(labels(menuFor("app:gone", context().ctx))).toEqual(["Arrange and remove", "Add a widget…", "Customise the dock…", "Show App Library"]);
   });
 });
 
