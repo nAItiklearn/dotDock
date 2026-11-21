@@ -8,7 +8,7 @@ import { Icon } from "../../lib/ui/Icon";
 import { NativeGate, useNativeResource, type NativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
 import { useAppInfo } from "../useAppInfo";
-import { SafeModeBanner, useStartupChange } from "./StartupPage";
+import { useStartupChange } from "./StartupPage";
 
 const COPIED_FLASH_MS = 2200;
 
@@ -180,7 +180,6 @@ function EnvironmentSection({ resource, state }: { readonly resource: NativeReso
 function RecoveryBody({ resource, state, info }: { readonly resource: NativeResource<StartupState>; readonly state: StartupState; readonly info: AppInfo | null }) {
   return (
     <>
-      <SafeModeBanner state={state} />
       <Section title="Way back">
         <RestoreRow />
       </Section>

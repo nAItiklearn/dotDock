@@ -1,7 +1,6 @@
 import type { StartupState, StartupToggle } from "../../lib/native/api";
 import { getNativeApi } from "../../lib/native/api";
 import { Switch } from "../../lib/ui/controls";
-import { Icon } from "../../lib/ui/Icon";
 import { NativeGate, useNativeResource, useNativeWrite, type NativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
 
@@ -11,23 +10,10 @@ export function useStartupChange(resource: NativeResource<StartupState>): (setti
   return (setting, value) => write((state) => ({ ...state, [setting]: value }), () => getNativeApi().startup.set(setting, value));
 }
 
-export function SafeModeBanner({ state }: { readonly state: StartupState }) {
-  if (!state.safeMode) return null;
-  return (
-    <div className="banner" role="status">
-      <Icon name="info" size={18} />
-      <div>
-        <strong>Safe mode.</strong> This session started without changing the desktop. Settings are available; the overlay and launch at sign-in are off.
-      </div>
-    </div>
-  );
-}
-
 function StartupBody({ resource, state }: { readonly resource: NativeResource<StartupState>; readonly state: StartupState }) {
   const change = useStartupChange(resource);
   return (
     <>
-      <SafeModeBanner state={state} />
       <Section title="With Windows">
         <Row id="launch" label="Launch at sign-in" description="Starts with no delay, so the desktop is ready when Windows is.">
           <Switch checked={state.launchAtSignIn} label="Launch at sign-in" onChange={(v) => change("launchAtSignIn", v)} />

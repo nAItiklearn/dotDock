@@ -40,7 +40,8 @@ describe("searchSettings", () => {
 
   it("finds by title, keyword and page name", () => {
     expect(searchSettings("corner")[0]?.id).toBe("radius");
-    expect(searchSettings("fullscreen").map((h) => h.id)).toContain("pause-rules");
+    expect(searchSettings("cycle").map((h) => h.id)).toContain("shortcut-nextProfile");
+    expect(searchSettings("fullscreen")).toEqual([]);
     expect(searchSettings("shortcuts").map((h) => h.page)).toContain("shortcuts");
     expect(searchSettings("notch").map((h) => h.page)).toContain("notch-look");
   });

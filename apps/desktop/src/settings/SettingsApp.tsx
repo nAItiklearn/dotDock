@@ -10,7 +10,6 @@ import { DataPage } from "./pages/DataPage";
 import { DisplaysPage } from "./pages/DisplaysPage";
 import { LayoutPage } from "./pages/LayoutPage";
 import { AgentsPage, NotchLookPage } from "./pages/NotchPages";
-import { PerformancePage } from "./pages/PerformancePage";
 import { ProfilesPage } from "./pages/ProfilesPage";
 import { RecoveryPage } from "./pages/RecoveryPage";
 import { ShortcutsPage } from "./pages/ShortcutsPage";
@@ -35,7 +34,6 @@ const PAGE_COMPONENTS: Readonly<Record<PageId, () => ReactNode>> = {
   "notch-look": () => <NotchLookPage />,
   themes: () => <ThemesPage />,
   wallpapers: () => <WallpapersPage />,
-  performance: () => <PerformancePage />,
   shortcuts: () => <ShortcutsPage />,
   data: () => <DataPage />,
   recovery: () => <RecoveryPage />,

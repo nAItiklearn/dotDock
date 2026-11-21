@@ -18,8 +18,6 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("startup", "startup-delay", "Windows startup delay", "wait seconds boot slow"),
 
   e("about", "version", "Version", "build release"),
-  e("about", "updates", "Check for updates", "new version download"),
-  e("about", "updates-auto", "Check for updates automatically", "daily background update service"),
   e("about", "licences", "Licences", "license third party notices fonts open source"),
   e("about", "attribution", "Credits and attribution", "open-meteo weather nothing affiliated"),
 
@@ -69,9 +67,6 @@ export const SEARCH_ENTRIES: readonly SearchEntry[] = [
   e("wallpapers", "wallpaper-library", "Wallpaper library", "image background import desktop picture"),
   e("wallpapers", "wallpaper-fit", "Fit mode", "fill fit stretch tile center span"),
 
-  e("performance", "pause-rules", "Pause rules", "fullscreen game battery saver lock"),
-  e("performance", "refresh", "System data refresh", "hz rate cpu memory update"),
-  e("performance", "frame-stats", "Frame stats", "fps frame time cpu memory usage"),
 
   e("shortcuts", "shortcut-toggleEditMode", "Edit layout hotkey", "keyboard global bind"),
   e("shortcuts", "shortcut-openSettings", "Open Settings hotkey", "keyboard global bind"),

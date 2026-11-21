@@ -3,11 +3,11 @@
 //! `src/lib/native/commands.test.ts` fails when the UI invokes a name this file (or lib.rs) does not register.
 
 use crate::desktop_host::{self, Hwnd};
+use dotdock_shell::core_prefs::{self, CorePrefs};
 use dotdock_shell::hotkey::{Hotkeys, Status};
 use dotdock_shell::wallpaper::{self, Fit};
-use dotdock_shell::wallpaper_library::{Assignment, Library, IMPORTED_PREFIX};
-use dotdock_shell::core_prefs::{self, CorePrefs};
 use dotdock_shell::wallpaper_library::mime_of;
+use dotdock_shell::wallpaper_library::{Assignment, Library, IMPORTED_PREFIX};
 use dotdock_shell::{autostart, boot_log, desktop_icons, displays, file_dialog};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

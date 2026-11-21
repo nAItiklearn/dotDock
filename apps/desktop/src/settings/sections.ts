@@ -17,7 +17,6 @@ export type PageId =
   | "notch-look"
   | "themes"
   | "wallpapers"
-  | "performance"
   | "shortcuts"
   | "data"
   | "recovery";
@@ -50,7 +49,7 @@ const ALL_SECTIONS: readonly SectionMeta[] = [
 /** Every page, grouped by section in tab order. */
 export const PAGES: readonly PageMeta[] = [
   { id: "startup", section: "general", title: "Startup", icon: "power", description: "How the app starts with Windows." },
-  { id: "about", section: "general", title: "About", icon: "info", description: "Version, updates, credits and licences." },
+  { id: "about", section: "general", title: "About", icon: "info", description: "Version, credits and licences." },
 
   { id: "layout", section: "home", title: "Layout", icon: "home", description: "The widgets on your desktop, and how they behave while you arrange them." },
   { id: "profiles", section: "home", title: "Profiles", icon: "layers", description: "Complete arrangements of widgets you can switch between." },
@@ -63,7 +62,6 @@ export const PAGES: readonly PageMeta[] = [
   { id: "themes", section: "themes", title: "Themes", icon: "appearance", description: "Themes, colours, shape and motion. The desktop updates as you change them." },
   { id: "wallpapers", section: "themes", title: "Wallpapers", icon: "wallpaper", description: "Choose what sits behind your widgets, display by display." },
 
-  { id: "performance", section: "system", title: "Performance", icon: "gauge", description: "When the desktop pauses itself, and how often system data refreshes." },
   { id: "shortcuts", section: "system", title: "Shortcuts", icon: "keyboard", description: "Global hotkeys, and the keys that work while you edit." },
   { id: "data", section: "system", title: "Data and privacy", icon: "privacy", description: "What is stored and where, and how to back it up or wipe it." },
   { id: "recovery", section: "system", title: "Recovery and logs", icon: "restore", description: "The way back to the stock Windows desktop, and what to send with a bug report." },
