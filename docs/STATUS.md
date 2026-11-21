@@ -1,17 +1,17 @@
 # Live status (rewritten every 30 min)
 
-**Last check:** 2026-11-21 09:53. **Disk D:** 16 GB free (limit 12 GB). **Screen:** free (stale 09:16 notch lock removed).
-Full list of owner requests: `docs/OWNER_REQUESTS.md`. All tracks restarted on Opus at 09:30 after the agents died on an API auth error.
+**Last check:** 2026-11-21 11:24. **Disk D:** 15 GB free (limit 12 GB). **Screen:** theme live run (lock since 11:18). Taskbar checked 11:10: auto-hide on, visible.
+Full list of owner requests: `docs/OWNER_REQUESTS.md`. Order set by the owner: dock features working and hard-tested first, dock themes last; then notch, home screen, website.
 
 | Track | Working on now | Last commit | Flags |
 |---|---|---|---|
-| Dock host (real dock on the desktop) | Merged the dock UI's tile error boundaries and frame-batched feeds; real-desktop click-through test next | 6 min ago | |
-| Dock UI | Pixel audit of the drawn dock at 100/125/150 % committed; missing tiles next | 4 min ago | |
-| Notch | Restarted; picking up the live run and per-state animations | 38 min ago | |
-| Theme + two switches | Restarted; finishing reviewer B's fixes (9 files uncommitted) | 63 min ago | Fresh agent, watch |
-| Settings | Restarted; wiring the missing native commands | 34 min ago | |
-| GitHub/dev tiles | Restarted; finishing the final review (12 files uncommitted) | 68 min ago | Fresh agent, watch |
-| Website | Restarted; pixel scenes and the Features page | 36 min ago | |
-| Download page | Visible-browser QA script committed; walkthrough next | 1 min ago | |
-| Home screen direct editing | Restarted; finishing move/resize/delete/add (17 files uncommitted) | 2 h ago | Fresh agent, watch |
+| Dock host (real dock on the desktop) | Fixing the white full-screen dock the owner saw (opaque window, whole-monitor hit region, 2 apps); transparent glass window; then hard test | 48 min ago | Watch |
+| Dock UI | Bar on the device-pixel grid committed; glass theme, pre-made categories, every feature hard-tested, other themes last | 10 min ago | |
+| Notch | Committing again; animations, adapter and stress tests | 15 min ago | |
+| Theme + two switches | Live run on screen | 68 min ago | On screen |
+| Settings | Native commands and the invoke-name test (110 files uncommitted) | 2 h ago | Pushed (2 of 2): WIP save + restart at 11:37 if still no commit |
+| GitHub/dev tiles | Developer tile polish committed; final report | 58 min ago | |
+| Website | Real dock captures committed; LaunchMe-style bento layout, notch carousel, content audit | 54 min ago | |
+| Download page | Fixes committed; then animated scenes for home, Privacy, Features (never over text, mobile-friendly) | 6 min ago | |
+| Home screen direct editing | Fixing the overlay click-through bugs, then the owner's four fixes | 40 min ago | |
 | Photo widget | Merged into main (1b135f3), 4.83 | merged | Done |
