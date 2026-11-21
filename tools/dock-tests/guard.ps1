@@ -62,6 +62,7 @@ function Check([string]$Caption, [bool]$Ok, [string]$Detail = '') {
 try {
   Save-Screen $before
   $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$CdpPort"
+  $startedAt = Get-Date
   Start-Process -FilePath $Exe -WorkingDirectory (Split-Path -Parent $Exe) -WindowStyle Hidden
   $deadline = (Get-Date).AddSeconds(40)
   $shown = $false
@@ -69,7 +70,8 @@ try {
     Start-Sleep -Milliseconds 250
     $shown = (Invoke-Dock $CdpPort 'document.querySelector(".dock") !== null') -eq $true
   }
-  Check 'The dock draws its bar' $shown
+  # An upper bound on the start time: each poll of the page costs a node start and a CDP round trip.
+  Check 'The dock draws its bar' $shown ('drawn within {0:N0} ms of the process start' -f ((Get-Date) - $startedAt).TotalMilliseconds)
   Start-Sleep -Milliseconds 1500
 
   if ($shown) {
