@@ -3,7 +3,7 @@ import type { Category, CategoryId, DockApp } from "./protocol";
 
 // The store reads the page address and local storage when it is created; the tests have neither.
 vi.stubGlobal("location", { search: "" });
-const { isFrozen, useDockStore } = await import("./store");
+const { isFrozen, normaliseSettings, useDockStore, DEFAULT_SETTINGS } = await import("./store");
 
 const NOW = Date.now();
 const category = (id: CategoryId): Category => ({ id, name: null, tone: "neutral", order: 0 });
@@ -59,5 +59,14 @@ describe("isFrozen", () => {
 
   it.each(["locked", "displayOff", "fullscreen"] as const)("is true when the core says %s", (reason) => {
     expect(isFrozen({ ...calm, [reason]: true, frozen: true })).toBe(true);
+  });
+});
+
+describe("the dock's position", () => {
+  it("is always the bottom: a dock.json from an older build that says left is drawn at the bottom", () => {
+    const old = { ...DEFAULT_SETTINGS, edge: "left" } as unknown as typeof DEFAULT_SETTINGS;
+    expect(normaliseSettings(old).edge).toBe("bottom");
+    useDockStore.getState().applySettings(old);
+    expect(useDockStore.getState().settings.edge).toBe("bottom");
   });
 });

@@ -30,7 +30,6 @@ export function Library({ open: isOpen }: { readonly open: boolean }) {
   const seen = useDockStore((s) => s.seen);
   // Running dots only matter while the library is showing; a closed one does not re-render for window changes.
   const windows = useDockStore((s) => (isOpen ? s.windows : NO_WINDOWS));
-  const edge = useDockStore((s) => s.settings.edge);
   const [query, setQuery] = useState("");
   const [pos, setPos] = useState<GridPosition>(START);
   const [cols, setCols] = useState(1);
@@ -132,7 +131,6 @@ export function Library({ open: isOpen }: { readonly open: boolean }) {
       role="dialog"
       aria-modal="true"
       aria-label={t("library.title")}
-      data-edge={edge}
       data-open={isOpen ? "true" : "false"}
       aria-hidden={!isOpen}
       style={shell}
@@ -193,7 +191,7 @@ export function Library({ open: isOpen }: { readonly open: boolean }) {
                       onOpen={launch}
                       onContext={(a, e) => {
                         const r = e.currentTarget.getBoundingClientRect();
-                        useDockStore.getState().setMenu({ key: `app:${a.id}`, at: anchorPoint({ x: r.left, y: r.top, w: r.width, h: r.height }, edge) });
+                        useDockStore.getState().setMenu({ key: `app:${a.id}`, at: anchorPoint({ x: r.left, y: r.top, w: r.width, h: r.height }) });
                       }}
                       onHover={() => setPos({ section: s, index: i })}
                     />

@@ -16,10 +16,9 @@ describe("the pixel audit", () => {
 
   it("checks every gap along the dock against the spacing token", () => {
     const row = [box("a", 0, 0, 48, 48), box("b", 58, 0, 48, 48), box("c", 116, 0, 48, 48)];
-    expect(gaps(row, false, 10, 1)).toEqual([]);
-    const wrong = gaps([box("a", 0, 0, 48, 48), box("b", 62, 0, 48, 48)], false, 10, 1);
+    expect(gaps(row, 10, 1)).toEqual([]);
+    const wrong = gaps([box("a", 0, 0, 48, 48), box("b", 62, 0, 48, 48)], 10, 1);
     expect(wrong[0]?.detail).toBe("14.00 px, token 10 px");
-    expect(gaps([box("a", 0, 0, 48, 48), box("b", 0, 58, 48, 48)], true, 10, 1)).toEqual([]);
   });
 
   it("flags text that does not fit its box", () => {

@@ -176,3 +176,16 @@ edge: the app bar is always `ABE_BOTTOM`, the window ends at the bottom of the w
 the plan reserves a strip or not. `DockSettings.edge` stays on the wire for the UI, but the service puts every
 loaded or saved setting back at the bottom (`at_the_bottom`), so an old file or a stale control cannot move it.
 Setting the dock by hand also marks the first layout as done, so it never replaces the user's choice.
+
+## D-031 The dock is bottom-only (2026-11-21, owner decision)
+- The dock is the taskbar, so it sits bottom-centre and nowhere else. The position setting, its control in the
+  customise panel, the fixture's edge picker, every top/left/right and vertical code path (geometry, engine, regions,
+  previews, panels, CSS) and their tests are removed. `geometry.test.ts` "the dock is bottom-centred" and
+  `store.test.ts` "the dock's position" guard it.
+- The core's `DockSettings.edge` stays on the wire for now (the Rust struct requires it); the UI types it as
+  `"bottom"` and normalises anything else on the way in, so a `dock.json` from an older build still draws at the bottom.
+
+## D-032 The first-run dock is laid out by the core, not the UI (2026-11-21)
+- The dock host already lays out an empty dock once from the machine's apps (D-027, `dock/src/starter.rs`), with a
+  `laidOut` flag in `dock.json`. A second seeder in the UI, remembered in WebView local storage, would race it and
+  forget itself whenever the WebView profile is reset, so the UI has none: one owner, one flag, in the core.

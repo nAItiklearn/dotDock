@@ -37,13 +37,13 @@ export function deviceGrid(boxes: readonly Box[], dpr: number): Finding[] {
 }
 
 /** Neighbours along the dock whose gap is not the spacing token (within one device pixel's rounding). */
-export function gaps(row: readonly Box[], vertical: boolean, gap: number, dpr: number): Finding[] {
-  const sorted = [...row].sort((a, b) => (vertical ? a.top - b.top : a.left - b.left));
+export function gaps(row: readonly Box[], gap: number, dpr: number): Finding[] {
+  const sorted = [...row].sort((a, b) => a.left - b.left);
   const findings: Finding[] = [];
   for (let i = 1; i < sorted.length; i += 1) {
     const a = sorted[i - 1] as Box;
     const b = sorted[i] as Box;
-    const actual = vertical ? b.top - (a.top + a.height) : b.left - (a.left + a.width);
+    const actual = b.left - (a.left + a.width);
     if (Math.abs(actual - gap) > 1 / dpr + PIXEL_TOLERANCE) findings.push({ check: "gap", name: `${a.name} → ${b.name}`, detail: `${actual.toFixed(2)} px, token ${gap} px` });
   }
   return findings;
@@ -109,7 +109,7 @@ const SETTLE_FRAMES = 12;
  * Measures the dock as drawn now and runs every check. `gap` is the spacing token in CSS px; the pointer is moved
  * over each item in turn to look for anything that shifts.
  */
-export async function auditDock(gap: number, vertical: boolean): Promise<{ readonly dpr: number; readonly measured: number; readonly findings: Finding[] }> {
+export async function auditDock(gap: number): Promise<{ readonly dpr: number; readonly measured: number; readonly findings: Finding[] }> {
   const dpr = window.devicePixelRatio;
   const faces = [...document.querySelectorAll(".dock .face")].map((el, i) => boxOf(nameOf(el, i), el));
   const discs = [...document.querySelectorAll(".dock .disc, .dock .tile")].map((el, i) => boxOf(nameOf(el, i), el));
@@ -138,7 +138,7 @@ export async function auditDock(gap: number, vertical: boolean): Promise<{ reado
   window.dispatchEvent(new PointerEvent("pointermove", { clientX: 0, clientY: 0, pointerType: "mouse" }));
   const findings = [
     ...deviceGrid([...before, ...panels], dpr),
-    ...gaps(faces, vertical, gap, dpr),
+    ...gaps(faces, gap, dpr),
     ...overflow(texts),
     ...centred(centres, dpr),
     ...dedupe(shifts),

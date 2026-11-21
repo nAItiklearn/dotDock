@@ -21,7 +21,7 @@ Add-Type -Namespace DotDock -Name Keys -MemberDefinition @'
 [DllImport("user32.dll")] public static extern void keybd_event(byte vk, byte scan, uint flags, System.UIntPtr extra);
 [DllImport("user32.dll")] public static extern bool SetWindowPos(System.IntPtr h, System.IntPtr after, int x, int y, int w, int h2, uint flags);
 '@
-$cdp = Join-Path $here 'cdp.mjs'
+$cdp = Join-Path $here 'cdp-eval.mjs'
 $failed = 0
 
 function Step([string]$Caption, [scriptblock]$Check) {

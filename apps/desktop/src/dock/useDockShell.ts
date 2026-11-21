@@ -42,7 +42,6 @@ export function useRegions(layout: BarLayout | null, hidden: boolean, panels: Pa
     const open = Object.values(panels).filter((r): r is Rect => r !== null);
     const rects = computeRegions({
       bar: layout.bar,
-      edge: layout.edge,
       engaged: pointerInside,
       headroom: layout.headroom,
       growth: layout.growth,

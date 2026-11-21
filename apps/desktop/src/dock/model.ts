@@ -31,6 +31,7 @@ export const TILE_IDS = [
   "flip",
   "sun",
   "wind",
+  "weather",
   "currency",
   "search",
   "history",

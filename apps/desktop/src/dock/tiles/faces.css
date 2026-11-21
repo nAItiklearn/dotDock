@@ -1,7 +1,6 @@
 /*
  * The compact faces of the live tiles that sit on the dock. A face is --d-icon tall (already scaled by the
  * magnification the slot was drawn for) and as long as its length ratio; everything inside is a share of --d-icon.
- * On a vertical dock the words and quick buttons go and the round mark alone stays.
  */
 .tile {
   --mark: calc(var(--d-icon) * 0.78);
@@ -253,18 +252,14 @@
   font-size: var(--text-xs);
 }
 
-.dock-anchor[data-axis="y"] .tile__text,
-.dock-anchor[data-axis="y"] .tile__action,
 .face--tile[data-size="compact"] .tile__text,
 .face--tile[data-size="compact"] .tile__action {
   display: none;
 }
-.dock-anchor[data-axis="y"] .tile,
 .face--tile[data-size="compact"] .tile {
   justify-content: center;
   padding: 0;
 }
-.dock-anchor[data-axis="y"] .avatars .avatar:nth-child(n + 2),
 .face--tile[data-size="compact"] .avatars .avatar:nth-child(n + 2) {
   display: none;
 }
@@ -339,7 +334,4 @@
 .tile__toggle:focus-visible {
   outline: var(--focus-ring) solid var(--accent);
   outline-offset: var(--focus-ring);
-}
-.dock-anchor[data-axis="y"] .tile--toggles .tile__toggle:nth-child(n + 3) {
-  display: none;
 }

@@ -1,5 +1,4 @@
 import { computeMagnify, type MagnifyFrame, type RestItem } from "./magnify";
-import type { DockEdge } from "./protocol";
 import { advance, omegaForSettle, rest, type SpringState } from "./spring";
 
 /** How long each spring takes to settle (2 %). All of them are critically damped: no overshoot. */
@@ -56,7 +55,6 @@ export interface EngineConfig {
   /** Distance from the pointer at which magnification fades out, in px. */
   readonly reach: number;
   readonly gap: number;
-  readonly edge: DockEdge;
   /** Reduced motion: no magnification, and everything lands in place at once. */
   readonly reduced: boolean;
 }
@@ -93,9 +91,6 @@ interface DragState {
   pointer: number;
 }
 
-const isVertical = (edge: DockEdge): boolean => edge === "left" || edge === "right";
-/** +1 when the screen's inside is towards larger coordinates, -1 otherwise. */
-const insideSign = (edge: DockEdge): 1 | -1 => (edge === "top" || edge === "left" ? 1 : -1);
 const px = (n: number): string => String(Math.round(n * 100) / 100);
 /** Translations land on whole device pixels, so a face is never resampled between two of them: no smear at rest or in motion. */
 const snap = (n: number): number => {
@@ -148,13 +143,6 @@ export class DockEngine {
   };
 
   configure(config: EngineConfig): void {
-    if (config.edge !== this.config.edge) {
-      this.plateWritten = { start: "", mid: "", end: "" };
-      this.labelWritten = "";
-      for (const item of this.items) {
-        item.written = "";
-      }
-    }
     this.config = config;
     this.kick();
   }
@@ -362,7 +350,7 @@ export class DockEngine {
     const grow = APPEAR_FROM + (1 - APPEAR_FROM) * Math.min(1, Math.max(0, item.appear.x));
     // The face is drawn `render` times larger than its slot, so the scale shown is relative to that.
     const s = (scale * grow) / item.render;
-    const move = isVertical(this.config.edge) ? `translate3d(0,${px(snap(shift))}px,0)` : `translate3d(${px(snap(shift))}px,0,0)`;
+    const move = `translate3d(${px(snap(shift))}px,0,0)`;
     const text = Math.abs(s - 1) < SCALE_STEP ? move : `${move} scale(${s.toFixed(4)})`;
     if (text !== item.written) {
       item.written = text;
@@ -386,11 +374,10 @@ export class DockEngine {
     const mid0 = Math.max(this.barSize - 2 * this.cap + 2 * PLATE_OVERLAP, 1);
     const drawn = this.barSize + endDelta - startDelta;
     const stretch = Math.max(drawn - 2 * this.cap + 2 * PLATE_OVERLAP, 1) / mid0;
-    const v = isVertical(this.config.edge);
-    const move = (d: number): string => (v ? `translate3d(0,${px(snap(d))}px,0)` : `translate3d(${px(snap(d))}px,0,0)`);
+    const move = (d: number): string => `translate3d(${px(snap(d))}px,0,0)`;
     const next = {
       start: move(startDelta),
-      mid: `${move(startDelta)} ${v ? "scaleY" : "scaleX"}(${stretch.toFixed(4)})`,
+      mid: `${move(startDelta)} scaleX(${stretch.toFixed(4)})`,
       end: move(endDelta),
     };
     for (const part of ["start", "mid", "end"] as const) {
@@ -418,10 +405,9 @@ export class DockEngine {
     if (label.name.textContent !== item.name) label.name.textContent = item.name;
     if (label.sub.textContent !== item.sub) label.sub.textContent = item.sub;
     const centre = item.start + item.size / 2 + item.shift;
-    const lift = ((frame.scale[index] ?? 1) - 1) * item.size * insideSign(this.config.edge);
-    const text = isVertical(this.config.edge)
-      ? `translate3d(${px(snap(lift))}px,${px(snap(centre))}px,0) translateY(-50%)`
-      : `translate3d(${px(snap(centre))}px,${px(snap(lift))}px,0) translateX(-50%)`;
+    // Magnified items grow up, away from the screen's bottom edge, so the label rises with them.
+    const lift = -((frame.scale[index] ?? 1) - 1) * item.size;
+    const text = `translate3d(${px(snap(centre))}px,${px(snap(lift))}px,0) translateX(-50%)`;
     if (text === this.labelWritten) return;
     this.labelWritten = text;
     label.root.style.transform = text;

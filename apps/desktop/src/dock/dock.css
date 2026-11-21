@@ -100,20 +100,12 @@
  * A translucent bar is three overlapping pieces, so where the middle runs under an end the fill would be doubled, a
  * visible seam. The middle is clipped to stop where the ends begin, and still reaches past the bar for its shadow.
  */
-.dock-root[data-seamless="true"] .dock-anchor[data-axis="x"] .plate__mid {
+.dock-root[data-seamless="true"] .dock-anchor .plate__mid {
   clip-path: polygon(
     var(--d-overlap) calc(-1 * var(--shadow-reach)),
     calc(100% - var(--d-overlap)) calc(-1 * var(--shadow-reach)),
     calc(100% - var(--d-overlap)) calc(100% + var(--shadow-reach)),
     var(--d-overlap) calc(100% + var(--shadow-reach))
-  );
-}
-.dock-root[data-seamless="true"] .dock-anchor[data-axis="y"] .plate__mid {
-  clip-path: polygon(
-    calc(-1 * var(--shadow-reach)) var(--d-overlap),
-    calc(100% + var(--shadow-reach)) var(--d-overlap),
-    calc(100% + var(--shadow-reach)) calc(100% - var(--d-overlap)),
-    calc(-1 * var(--shadow-reach)) calc(100% - var(--d-overlap))
   );
 }
 
@@ -159,7 +151,7 @@ body {
   color: var(--text);
 }
 
-/* The anchor pins the dock to its screen edge; --origin is where magnified items grow from. */
+/* The anchor pins the dock to the bottom of the screen, centred; --origin is where magnified items grow from. */
 .dock-anchor {
   --d-dot: calc(var(--d-icon) * 0.08);
   --d-badge: calc(var(--d-icon) * 0.34);
@@ -167,30 +159,10 @@ body {
   inset: 0;
   display: flex;
   pointer-events: none;
-}
-.dock-anchor[data-edge="bottom"] {
   --origin: 50% 100%;
   align-items: flex-end;
   justify-content: center;
   padding-bottom: var(--d-edge);
-}
-.dock-anchor[data-edge="top"] {
-  --origin: 50% 0;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: var(--d-edge);
-}
-.dock-anchor[data-edge="left"] {
-  --origin: 0 50%;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: var(--d-edge);
-}
-.dock-anchor[data-edge="right"] {
-  --origin: 100% 50%;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: var(--d-edge);
 }
 
 .dock {
@@ -202,17 +174,8 @@ body {
 .dock[data-hidden="true"] {
   transition-duration: var(--dur-slow);
 }
-.dock-anchor[data-edge="bottom"] .dock[data-hidden="true"] {
+.dock-anchor .dock[data-hidden="true"] {
   transform: translateY(calc(var(--d-bar) + var(--d-edge) + var(--d-icon)));
-}
-.dock-anchor[data-edge="top"] .dock[data-hidden="true"] {
-  transform: translateY(calc(-1 * (var(--d-bar) + var(--d-edge) + var(--d-icon))));
-}
-.dock-anchor[data-edge="left"] .dock[data-hidden="true"] {
-  transform: translateX(calc(-1 * (var(--d-bar) + var(--d-edge) + var(--d-icon))));
-}
-.dock-anchor[data-edge="right"] .dock[data-hidden="true"] {
-  transform: translateX(calc(var(--d-bar) + var(--d-edge) + var(--d-icon)));
 }
 
 /*
@@ -240,24 +203,24 @@ body {
 .plate__cap {
   z-index: 1;
 }
-.dock-anchor[data-axis="x"] .plate__cap {
+.dock-anchor .plate__cap {
   top: 0;
   bottom: 0;
   width: calc(var(--d-bar) / 2);
 }
-.dock-anchor[data-axis="x"] .plate__cap--start {
+.dock-anchor .plate__cap--start {
   clip-path: inset(calc(-1 * var(--shadow-reach)) 0 calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)));
   left: 0;
   border-right: 0;
   border-radius: var(--plate-radius) 0 0 var(--plate-radius);
 }
-.dock-anchor[data-axis="x"] .plate__cap--end {
+.dock-anchor .plate__cap--end {
   clip-path: inset(calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) 0);
   right: 0;
   border-left: 0;
   border-radius: 0 var(--plate-radius) var(--plate-radius) 0;
 }
-.dock-anchor[data-axis="x"] .plate__mid {
+.dock-anchor .plate__mid {
   clip-path: inset(calc(-1 * var(--shadow-reach)) 0);
   top: 0;
   bottom: 0;
@@ -267,33 +230,6 @@ body {
   border-right: 0;
   transform-origin: 0 50%;
 }
-.dock-anchor[data-axis="y"] .plate__cap {
-  left: 0;
-  right: 0;
-  height: calc(var(--d-bar) / 2);
-}
-.dock-anchor[data-axis="y"] .plate__cap--start {
-  clip-path: inset(calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) 0 calc(-1 * var(--shadow-reach)));
-  top: 0;
-  border-bottom: 0;
-  border-radius: var(--plate-radius) var(--plate-radius) 0 0;
-}
-.dock-anchor[data-axis="y"] .plate__cap--end {
-  clip-path: inset(0 calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)) calc(-1 * var(--shadow-reach)));
-  bottom: 0;
-  border-top: 0;
-  border-radius: 0 0 var(--plate-radius) var(--plate-radius);
-}
-.dock-anchor[data-axis="y"] .plate__mid {
-  clip-path: inset(0 calc(-1 * var(--shadow-reach)));
-  left: 0;
-  right: 0;
-  top: calc(var(--d-bar) / 2 - var(--d-overlap));
-  bottom: calc(var(--d-bar) / 2 - var(--d-overlap));
-  border-top: 0;
-  border-bottom: 0;
-  transform-origin: 50% 0;
-}
 
 .dock__row {
   z-index: 1;
@@ -302,9 +238,6 @@ body {
   align-items: center;
   gap: var(--d-gap);
   padding: var(--d-pad);
-}
-.dock-anchor[data-axis="y"] .dock__row {
-  flex-direction: column;
 }
 
 /* A slot is the layout box the engine measures; it holds the face the engine moves and scales. */
@@ -318,16 +251,9 @@ body {
   height: var(--d-base);
   pointer-events: none;
 }
-.dock-anchor[data-axis="y"] .slot {
-  width: var(--d-base);
-  height: var(--len);
-}
 .slot[data-kind="status"] {
   display: flex;
   align-items: center;
-}
-.dock-anchor[data-axis="y"] .slot[data-kind="status"] {
-  justify-content: center;
 }
 
 /*
@@ -343,17 +269,8 @@ body {
   pointer-events: none;
 }
 /* Where magnified faces grow from: the slot edge on the screen-edge side. */
-.dock-anchor[data-edge="bottom"] .face {
+.dock-anchor .face {
   transform-origin: 50% 100%;
-}
-.dock-anchor[data-edge="top"] .face {
-  transform-origin: 50% 0;
-}
-.dock-anchor[data-edge="left"] .face {
-  transform-origin: 0 50%;
-}
-.dock-anchor[data-edge="right"] .face {
-  transform-origin: 100% 50%;
 }
 /* The status pill sizes itself from its content and never grows. */
 .slot[data-kind="status"] .face {
@@ -620,27 +537,10 @@ html[data-dragging="true"] * {
   height: calc(var(--dot) * 0.7);
   opacity: 0.6;
 }
-.dock-anchor[data-edge="bottom"] .dots {
+.dock-anchor .dots {
   left: 0;
   right: 0;
   bottom: calc(-1 * (var(--d-pad) * var(--r) / 2 + var(--d-dot) / 2));
-}
-.dock-anchor[data-edge="top"] .dots {
-  left: 0;
-  right: 0;
-  top: calc(-1 * (var(--d-pad) * var(--r) / 2 + var(--d-dot) / 2));
-}
-.dock-anchor[data-edge="left"] .dots {
-  top: 0;
-  bottom: 0;
-  left: calc(-1 * (var(--d-pad) * var(--r) / 2 + var(--d-dot) / 2));
-  flex-direction: column;
-}
-.dock-anchor[data-edge="right"] .dots {
-  top: 0;
-  bottom: 0;
-  right: calc(-1 * (var(--d-pad) * var(--r) / 2 + var(--d-dot) / 2));
-  flex-direction: column;
 }
 
 /* The divider is three dots across the axis. */
@@ -650,9 +550,6 @@ html[data-dragging="true"] * {
   justify-content: center;
   flex-direction: column;
   gap: calc(var(--d-dot) * 1.5);
-}
-.dock-anchor[data-axis="y"] .face--divider {
-  flex-direction: row;
 }
 .face--divider i {
   width: var(--d-dot);
@@ -698,13 +595,6 @@ html[data-dragging="true"] * {
   font-size: var(--text-xs);
   font-weight: 500;
   color: var(--text-dim);
-}
-.dock-anchor[data-axis="y"] .clock__time {
-  flex-direction: column;
-  align-items: center;
-}
-.dock-anchor[data-axis="y"] .clock__colon {
-  display: none;
 }
 
 .tile--media {
@@ -780,14 +670,6 @@ html[data-dragging="true"] * {
   outline: var(--focus-ring) solid var(--accent);
   outline-offset: var(--focus-ring);
 }
-.dock-anchor[data-axis="y"] .tile--media {
-  justify-content: center;
-  padding: 0;
-}
-.dock-anchor[data-axis="y"] .media__text,
-.dock-anchor[data-axis="y"] .media__button {
-  display: none;
-}
 
 /* The status pill: network, battery, clock. */
 .face--status {
@@ -841,18 +723,6 @@ html[data-dragging="true"] * {
   font-size: var(--text-xs);
   color: var(--text-dim);
 }
-.dock-anchor[data-axis="y"] .status {
-  flex-direction: column;
-  width: var(--d-status);
-  height: auto;
-  padding: calc(var(--d-icon) * 0.24) 0;
-}
-.dock-anchor[data-axis="y"] .status__time {
-  flex-direction: column;
-}
-.dock-anchor[data-axis="y"] .status__colon {
-  display: none;
-}
 
 /* The name of the hovered item. The engine moves it; opacity only fades it. */
 .dock__label {
@@ -877,21 +747,9 @@ html[data-dragging="true"] * {
 .dock__label[data-visible="true"] {
   opacity: 1;
 }
-.dock-anchor[data-edge="bottom"] .dock__label {
+.dock-anchor .dock__label {
   left: 0;
   bottom: calc(100% + var(--d-gap));
-}
-.dock-anchor[data-edge="top"] .dock__label {
-  left: 0;
-  top: calc(100% + var(--d-gap));
-}
-.dock-anchor[data-edge="left"] .dock__label {
-  top: 0;
-  left: calc(100% + var(--d-gap));
-}
-.dock-anchor[data-edge="right"] .dock__label {
-  top: 0;
-  right: calc(100% + var(--d-gap));
 }
 
 /* Stacking: library, then the click-away layer, then the bar, then everything that opens from it. */
@@ -957,26 +815,9 @@ html[data-dragging="true"] * {
   white-space: nowrap;
   pointer-events: none;
   animation: fade-in var(--dur-quick) linear;
-}
-.notice[data-edge="bottom"] {
   left: var(--notice-x);
   top: calc(var(--notice-y) - var(--notice-gap));
   translate: -50% -100%;
-}
-.notice[data-edge="top"] {
-  left: var(--notice-x);
-  top: calc(var(--notice-y) + var(--notice-gap));
-  translate: -50% 0;
-}
-.notice[data-edge="left"] {
-  left: calc(var(--notice-x) + var(--notice-gap));
-  top: var(--notice-y);
-  translate: 0 -50%;
-}
-.notice[data-edge="right"] {
-  left: calc(var(--notice-x) - var(--notice-gap));
-  top: var(--notice-y);
-  translate: -100% -50%;
 }
 .notice i {
   width: var(--marker);

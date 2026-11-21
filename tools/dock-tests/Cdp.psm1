@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-  Reads what the running dock shows, over WebView2 remote debugging (cdp.mjs). The expression goes through a file:
+  Reads what the running dock shows, over WebView2 remote debugging (cdp-eval.mjs). The expression goes through a file:
   Windows PowerShell strips the double quotes out of arguments it passes to a native program, which broke every
   selector like ".dock" when it was passed inline.
 #>
-$cdp = Join-Path $PSScriptRoot 'cdp.mjs'
+$cdp = Join-Path $PSScriptRoot 'cdp-eval.mjs'
 
 function Invoke-Dock([int]$Port, [string]$Expression, [string]$Page = 'dock.html') {
   $file = [System.IO.Path]::GetTempFileName()

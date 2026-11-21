@@ -21,17 +21,8 @@
   animation: fade-in var(--dur-quick) linear;
 }
 /* Leave the dock's own side free, so the bar stays reachable over the library. */
-.library[data-edge="bottom"] {
+.library {
   padding-bottom: calc(var(--d-bar) + var(--d-edge) * 2);
-}
-.library[data-edge="top"] {
-  padding-top: calc(var(--d-bar) + var(--d-edge) * 2 + var(--lib-pad));
-}
-.library[data-edge="left"] {
-  padding-left: calc(var(--d-bar) + var(--d-edge) * 2);
-}
-.library[data-edge="right"] {
-  padding-right: calc(var(--d-bar) + var(--d-edge) * 2);
 }
 .library::before {
   content: "";

@@ -1,9 +1,10 @@
 /*
- * Faces and popovers of the flip clock, sun arc, wind, currency, web search, history and voice memo tiles. Sizes are
+ * Faces and popovers of the flip clock, sun arc, wind, weather, currency, web search, history and voice memo tiles. Sizes are
  * shares of --d-icon on the dock and the popover tokens inside popovers, like the other tiles.
  */
 .tile--sun,
 .tile--wind,
+.tile--weather,
 .tile--currency,
 .tile--search,
 .tile--history,

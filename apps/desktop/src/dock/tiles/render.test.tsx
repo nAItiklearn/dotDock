@@ -564,16 +564,15 @@ describe("the dock settings popover", () => {
     return renderToStaticMarkup(<Prefs from={from} drawn={drawn} />);
   };
 
-  it("is a small labelled dialog with position, size, magnification, two switches and the look", () => {
+  it("is a small labelled dialog with size, magnification, two switches and the look, and no position", () => {
     const html = prefs();
     expect(html).toContain('aria-label="Customise the dock"');
-    for (const words of ["Position", "Icon size", "Magnification", "Hide when not in use", "Keep windows clear of the dock", "Look"]) expect(html).toContain(words);
+    expect(html).not.toContain("Position");
+    for (const words of ["Icon size", "Magnification", "Hide when not in use", "Keep windows clear of the dock", "Look"]) expect(html).toContain(words);
   });
 
-  it("marks the current position, size, magnification and look", () => {
-    const html = prefs({ edge: "left", iconSize: 56, magnification: 1.4 }, "paper", "paper");
-    expect(button(html, "Left")).toContain('aria-checked="true"');
-    expect(button(html, "Bottom")).toContain('aria-checked="false"');
+  it("marks the current size, magnification and look", () => {
+    const html = prefs({ iconSize: 56, magnification: 1.4 }, "paper", "paper");
     expect(html).toContain("56 px");
     expect(html).toContain("1.40×");
     expect(button(html, "Paper")).toContain('aria-checked="true"');
@@ -593,7 +592,7 @@ describe("the dock settings popover", () => {
   it("starts with the items: add an app, add a widget, arrange and remove", () => {
     const html = prefs();
     for (const words of ["Items", "Add an app", "Add a widget", "Arrange and remove"]) expect(button(html, words) ?? html).toContain(words);
-    expect(html.indexOf("Items")).toBeLessThan(html.indexOf("Position"));
+    expect(html.indexOf("Items")).toBeLessThan(html.indexOf("Icon size"));
   });
 
   it("ends with the taskbar switch and a reset", () => {
@@ -629,7 +628,7 @@ describe("tiles in edit mode", () => {
   const slot = (id: TileId, size: "regular" | "compact", editing: boolean): string => {
     const handlers = { activate: noop, press: noop, pressKey: noop, context: noop, remove: noop, resize: noop, focused: noop, pointerDown: noop };
     return renderToStaticMarkup(
-      <Slot entry={{ kind: "tile", key: `tile:${id}`, id, size }} icon={48} vertical={false} edge="bottom" editing={editing} roving={false} peak={1.25} open={false} handlers={handlers} dpr={1} />,
+      <Slot entry={{ kind: "tile", key: `tile:${id}`, id, size }} icon={48} editing={editing} roving={false} peak={1.25} open={false} handlers={handlers} dpr={1} />,
     );
   };
 

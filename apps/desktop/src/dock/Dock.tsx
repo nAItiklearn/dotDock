@@ -40,7 +40,7 @@ const sameRect = (a: Rect | null, b: Rect | null): boolean =>
   a === b || (a !== null && b !== null && a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h);
 
 function sameLayout(a: BarLayout, b: BarLayout): boolean {
-  return sameRect(a.bar, b.bar) && a.edge === b.edge && a.growth === b.growth && a.headroom === b.headroom && a.metrics.icon === b.metrics.icon;
+  return sameRect(a.bar, b.bar) && a.growth === b.growth && a.headroom === b.headroom && a.metrics.icon === b.metrics.icon;
 }
 
 /** The dock window: the bar and everything that opens from it. Nothing here knows where its data came from. */
@@ -130,7 +130,6 @@ export function Dock() {
       data-backdrop={backdrop.tone ?? mode}
       data-seamless={isTranslucent(theme) ? "true" : undefined}
       data-frozen={frozen ? "true" : undefined}
-      data-edge={layout?.edge}
       style={rootVars}
     >
       {libraryModule !== null && (warmLibrary || libraryOpen) ? <libraryModule.Library open={libraryOpen} /> : null}
@@ -156,7 +155,6 @@ export function Dock() {
           key={notice.id}
           className="notice"
           role="status"
-          data-edge={layout.edge}
           style={{ "--notice-x": `${layout.bar.x + layout.bar.w / 2}px`, "--notice-y": `${layout.bar.y + layout.bar.h / 2}px` } as CSSProperties}
         >
           <i />

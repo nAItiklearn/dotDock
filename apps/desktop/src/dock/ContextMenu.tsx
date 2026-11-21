@@ -93,7 +93,6 @@ function Rows({
 /** The menu of an item (or of the bar). Arrow keys move, Enter runs, Right opens a submenu, Esc closes. */
 export function ContextMenu({ target }: { readonly target: MenuTarget }) {
   const ctx = useMenuContext();
-  const edge = useDockStore((s) => s.settings.edge);
   const iconSize = useDockStore((s) => s.settings.iconSize);
   const viewport = useViewport();
   const items = useMemo(() => menuFor(target.key, ctx), [target.key, ctx]);
@@ -181,7 +180,7 @@ export function ContextMenu({ target }: { readonly target: MenuTarget }) {
     "--menu-sep": `${MENU.separator}px`,
   } as CSSProperties;
   const size = menuSize(items);
-  const pos = placeMenu(target.at, size, edge, viewport, target.key === null ? MENU.gap : metricsFor(iconSize).pad + MENU.gap * 2);
+  const pos = placeMenu(target.at, size, viewport, target.key === null ? MENU.gap : metricsFor(iconSize).pad + MENU.gap * 2);
   const subSize = menuSize(children);
   const opensLeft = pos.x + size.w + MENU.gap + subSize.w > viewport.w - 12;
   const subPos: Point = {
@@ -191,7 +190,7 @@ export function ContextMenu({ target }: { readonly target: MenuTarget }) {
 
   return (
     <>
-      <div className="menu" role="menu" data-edge={edge} style={{ left: pos.x, top: pos.y, width: size.w, ...vars }}>
+      <div className="menu" role="menu" style={{ left: pos.x, top: pos.y, width: size.w, ...vars }}>
         <Rows
           items={items}
           active={active}
@@ -208,7 +207,7 @@ export function ContextMenu({ target }: { readonly target: MenuTarget }) {
         />
       </div>
       {sub !== null ? (
-        <div className="menu menu--sub" role="menu" data-edge={edge} style={{ left: subPos.x, top: subPos.y, width: subSize.w, ...vars }}>
+        <div className="menu menu--sub" role="menu" style={{ left: subPos.x, top: subPos.y, width: subSize.w, ...vars }}>
           <Rows items={children} active={subActive} onActive={setSubActive} onRun={run} />
         </div>
       ) : null}

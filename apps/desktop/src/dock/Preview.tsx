@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Icon } from "../design-system/Icon";
 import { actions } from "./bridge";
-import { clampMagnification, isVertical, placeBesideDock, PREVIEW, previewLayout, type Rect } from "./geometry";
+import { clampMagnification, placeBesideDock, PREVIEW, previewLayout, type Rect } from "./geometry";
 import { enterPreview, leavePreview, subjectFor } from "./previewIntent";
 import { towardInside } from "./regions";
 import { useDockStore } from "./store";
@@ -26,11 +26,9 @@ export function Preview({ onRect }: PreviewProps) {
   const key = useDockStore((s) => s.previewKey);
   const apps = useDockStore((s) => s.apps);
   const windows = useDockStore((s) => s.windows);
-  const edge = useDockStore((s) => s.settings.edge);
   const iconSize = useDockStore((s) => s.settings.iconSize);
   const magnification = useDockStore((s) => s.settings.magnification);
   const viewport = useViewport();
-  const vertical = isVertical(edge);
   const subject = useMemo(() => subjectFor(key, { apps, windows }), [key, apps, windows]);
   const [anchor, setAnchor] = useState<Rect | null>(null);
 
@@ -44,11 +42,11 @@ export function Preview({ onRect }: PreviewProps) {
     if (!slot) return;
     const r = slot.getBoundingClientRect();
     const lift = (clampMagnification(magnification) - 1) * r.height;
-    setAnchor(towardInside({ x: r.left, y: r.top, w: r.width, h: r.height }, edge, lift));
-  }, [subjectKey, edge, magnification, iconSize]);
+    setAnchor(towardInside({ x: r.left, y: r.top, w: r.width, h: r.height }, lift));
+  }, [subjectKey, magnification, iconSize]);
 
-  const layout = useMemo(() => previewLayout(subject?.windows.length ?? 0, vertical, viewport), [subject?.windows.length, vertical, viewport]);
-  const pos = anchor ? placeBesideDock(anchor, layout, edge, viewport, PREVIEW_GAP) : null;
+  const layout = useMemo(() => previewLayout(subject?.windows.length ?? 0, viewport), [subject?.windows.length, viewport]);
+  const pos = anchor ? placeBesideDock(anchor, layout, viewport, PREVIEW_GAP) : null;
   const x = pos?.x;
   const y = pos?.y;
 
@@ -84,13 +82,13 @@ export function Preview({ onRect }: PreviewProps) {
   const hidden = layout.more;
 
   return (
-    <div className="preview" data-edge={edge} role="group" aria-label={subject.name} style={style} onPointerEnter={() => enterPreview(subject.key)} onPointerLeave={leavePreview}>
+    <div className="preview" role="group" aria-label={subject.name} style={style} onPointerEnter={() => enterPreview(subject.key)} onPointerLeave={leavePreview}>
       <header className="preview__head">
         <img className="art preview__icon" src={subject.icon} alt="" draggable={false} />
         <span className="preview__name">{subject.name}</span>
         <span className="caps">{plural("preview.windows", subject.windows.length)}</span>
       </header>
-      <div className="preview__well" style={{ gridTemplateColumns: vertical ? undefined : `repeat(${slots.length}, ${PREVIEW.slotW}px)` }}>
+      <div className="preview__well" style={{ gridTemplateColumns: `repeat(${slots.length}, ${PREVIEW.slotW}px)` }}>
         {slots.map((w) => (
           <button key={w.hwnd} type="button" className="preview__slot" aria-label={w.title} onClick={() => void actions.activate(w.hwnd, subject.name)}>
             <img className="art" src={w.icon} alt="" draggable={false} />

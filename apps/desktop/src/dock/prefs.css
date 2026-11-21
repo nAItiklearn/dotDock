@@ -15,13 +15,11 @@
   color: var(--text-dim);
 }
 
-.prefs__segments,
 .prefs__chips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
 }
-.prefs__segments button,
 .prefs__chips button {
   flex: 1 1 auto;
   height: var(--control-sm);
@@ -36,14 +34,12 @@
     background var(--dur-fast) var(--ease-out),
     color var(--dur-fast) var(--ease-out);
 }
-.prefs__segments button[aria-checked="true"],
 .prefs__chips button[aria-checked="true"] {
   border-color: transparent;
   background: var(--accent);
   color: var(--accent-ink);
 }
 @media (hover: hover) {
-  .prefs__segments button[aria-checked="false"]:hover,
   .prefs__chips button[aria-checked="false"]:hover {
     background: var(--surface-2);
     color: var(--text);
@@ -110,7 +106,6 @@
   background: var(--accent-ink);
   transform: translateX(calc(var(--control-sm) * 0.62));
 }
-.prefs__segments button:focus-visible,
 .prefs__chips button:focus-visible,
 .prefs__switch:focus-visible,
 .prefs__row input:focus-visible {

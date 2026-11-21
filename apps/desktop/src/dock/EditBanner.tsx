@@ -13,7 +13,7 @@ export interface EditBannerProps {
 /** Shown while the dock is being edited: what a drag does, and the way out. Esc also leaves edit mode. */
 export function EditBanner({ layout, onRect }: EditBannerProps) {
   const viewport = useViewport();
-  const pos = placeBesideDock(layout.bar, EDIT_BANNER, layout.edge, viewport, layout.headroom + EDIT_BANNER.gap);
+  const pos = placeBesideDock(layout.bar, EDIT_BANNER, viewport, layout.headroom + EDIT_BANNER.gap);
   const { x, y } = pos;
 
   useEffect(() => {

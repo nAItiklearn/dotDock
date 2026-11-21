@@ -121,7 +121,7 @@ describe("menuFor stacks, tiles and windows without an entry", () => {
     const { ctx, calls } = context();
     find(menuFor("tile:clock", ctx), "remove").run?.();
     expect(calls).toEqual([`settings ${JSON.stringify({ tiles: [] })}`]);
-    expect(labels(menuFor("tile:weather", ctx))).toEqual(["Arrange and remove", "Add a widget…", "Customise the dock…", "Show App Library"]);
+    expect(labels(menuFor("tile:stocks", ctx))).toEqual(["Arrange and remove", "Add a widget…", "Customise the dock…", "Show App Library"]);
   });
 
   it("closes a group of windows that has no Start menu entry", () => {
