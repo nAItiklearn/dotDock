@@ -45,14 +45,36 @@ screen. That driver fix was not re-run: the owner stopped testing (done is done)
 - Monitor and DPI change were not soaked: there is one monitor, and changing the display scale is a system setting
   outside this track's scope.
 
+## Run 2, after the first-expansion fix and the driver fix (180 s, seed 1, `soak2/`)
+Fix 4 (`5f1e07e`): a trace of the first expansion alone showed one 34 ms task, the snapshot event's React commit
+of the active tree (27.6 ms script, 6.2 ms forced layout). The expanded island's code now runs once at idle after
+start in a detached tree that is never attached to the page (one idle callback, no timer); test
+`src/island/prime.test.ts`.
+
+| Check | Result |
+|---|---|
+| Actions | 166: hover 16, leave 14, flick 20, click 17, right-click 23, swipe 21, pager 20, focus loss 20, rest 15 |
+| Console errors | 0 |
+| Stuck states | 0 (the driver fix holds: no aside flags) |
+| Frames | 10 807 at 60 Hz, p99 17.0 ms, **2 dropped**, worst 33.3 ms (one missed vsync each), no long animation frame |
+| Standby after the crash | 11.2 s |
+| Idle CPU, 60 s, per process | highest 0.050 %; tree total 0.173 % |
+| Baseline / idle frames | 0 dropped / 0 dropped |
+
+The two drops fall 6 s into the run, on the first hover over the first expanded island. They are single missed
+vsyncs with no script over 50 ms, so they are not the page's JavaScript; the likely cause is first-time
+compositor or GPU work (the plate's shadow layer, the canvases' first raster), not attributed yet. The 99.8 ms
+right-click frame of run 1 did not come back in 23 right-clicks and had no script attribution either; no change
+was made for it.
+
 ## Rubric (self-score, side by side with `1747058098-...-ss7-thumb.webp` status pill and `00-nthing-002-10.jpg`)
 Visual rubric (12.3): fidelity 4.7, typography and dot-matrix craft 4.8, spacing 4.8, colour and contrast 4.7,
 motion 4.6 (smooth springs, but the drops above), state completeness 4.9, consistency 4.7, originality 4.9.
 Average **4.76**.
 
-Owner's four axes: design 4.8, performance 4.5 (idle CPU met, 3 drops in 180 s against a target of 0), accuracy
-4.8 (every phase and the crash shown correctly, 0 errors), functionality 4.8. Average **4.7**: performance holds it
-under 4.8 until the remaining drops are attributed and gone.
+Owner's four axes after run 2: design 4.8, performance 4.6 (idle CPU met, 2 single-vsync drops in 180 s against a
+target of 0), accuracy 4.8 (every phase and the crash shown correctly, 0 errors, 0 stuck states), functionality
+4.8. Average **4.75**: performance holds it under 4.8 until the last two drops are gone.
 
 ## Verify
 ```
