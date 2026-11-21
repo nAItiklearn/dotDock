@@ -84,20 +84,33 @@ impl Hwnd {
 /// True while a text field in a widget (notes, to-do) has focus: only then may the overlay
 /// take keyboard focus. Otherwise it never activates, so it can never steal focus from apps.
 static TYPING: AtomicBool = AtomicBool::new(false);
+/// Whether the cursor is outside every hit area right now. Owned by the guard thread; read by
+/// `set_typing`, so asking for the keyboard never turns the whole full-screen window opaque to clicks.
+static CLICK_THROUGH: AtomicBool = AtomicBool::new(true);
 
 const WANTED: isize = (WS_EX_TOOLWINDOW.0 | WS_EX_LAYERED.0) as isize;
 const NO_ACTIVATE: isize = WS_EX_NOACTIVATE.0 as isize;
 const UNWANTED: isize = WS_EX_APPWINDOW.0 as isize;
 const TRANSPARENT: isize = WS_EX_TRANSPARENT.0 as isize;
 
+/// The extended style the overlay should have: desktop-level bits always, click-through outside the
+/// hit areas, and activation only while something in it needs the keyboard.
+fn desired_ex_style(ex: isize, click_through: bool, typing: bool) -> isize {
+    let wanted = (ex | WANTED) & !UNWANTED;
+    let wanted = if click_through { wanted | TRANSPARENT } else { wanted & !TRANSPARENT };
+    if typing {
+        wanted & !NO_ACTIVATE
+    } else {
+        wanted | NO_ACTIVATE
+    }
+}
+
 /// Re-applies desktop-level styles, keeping the current click-through bit. Returns true if anything changed.
 fn enforce_styles(hwnd: HWND, click_through: bool) -> bool {
     // SAFETY: style reads/writes on our own window; a destroyed handle just returns 0.
     unsafe {
         let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-        let mut wanted = (ex | WANTED) & !UNWANTED;
-        wanted = if click_through { wanted | TRANSPARENT } else { wanted & !TRANSPARENT };
-        wanted = if TYPING.load(Ordering::Acquire) { wanted & !NO_ACTIVATE } else { wanted | NO_ACTIVATE };
+        let wanted = desired_ex_style(ex, click_through, TYPING.load(Ordering::Acquire));
         if wanted == ex {
             return false;
         }
@@ -162,8 +175,9 @@ pub fn configure(hwnd: Hwnd) {
 pub fn set_typing(hwnd: Hwnd, typing: bool) {
     TYPING.store(typing, Ordering::Release);
     let h = hwnd.get();
-    // Click-through is off while the cursor is over the widget being typed into.
-    enforce_styles(h, false);
+    // Only the activation bit changes here. Click-through stays exactly as the cursor guard set it, so
+    // the overlay is hit-testable over its widgets and panels and nowhere else, even while it has focus.
+    enforce_styles(h, CLICK_THROUGH.load(Ordering::Acquire));
     if typing {
         // SAFETY: foreground request for our own window right after the user clicked it.
         unsafe {
@@ -229,9 +243,38 @@ pub fn spawn_guard(hwnd: Hwnd, regions: HitRegions) -> std::io::Result<()> {
             let over = cursor_in_css(h, cursor).is_some_and(|(x, y)| regions.contains(x, y));
             if over == click_through {
                 click_through = !over;
+                CLICK_THROUGH.store(click_through, Ordering::Release);
                 enforce_styles(h, click_through);
             }
         }
     })?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn keyboard_focus_never_changes_click_through() {
+        for click_through in [true, false] {
+            let idle = desired_ex_style(0, click_through, false);
+            let typing = desired_ex_style(idle, click_through, true);
+            assert_eq!(idle & TRANSPARENT, typing & TRANSPARENT);
+            assert_eq!(typing & TRANSPARENT != 0, click_through);
+        }
+    }
+
+    #[test]
+    fn activates_only_while_something_needs_the_keyboard() {
+        assert_ne!(desired_ex_style(0, true, false) & NO_ACTIVATE, 0);
+        assert_eq!(desired_ex_style(NO_ACTIVATE, true, true) & NO_ACTIVATE, 0);
+    }
+
+    #[test]
+    fn keeps_desktop_level_bits_and_drops_the_taskbar_button() {
+        let style = desired_ex_style(UNWANTED, true, true);
+        assert_eq!(style & WANTED, WANTED);
+        assert_eq!(style & UNWANTED, 0);
+    }
 }
