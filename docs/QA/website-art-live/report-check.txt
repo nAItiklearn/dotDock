@@ -1,1 +1,1 @@
-scene check / /features /privacy /download at 390, 414, 768, 1024, 1280, 1440: 24 scene boxes, 0 problems []
+scene check / /features /privacy /download /changelog at 390, 414, 768, 1024, 1280, 1440: 60 scene boxes, 0 problems []

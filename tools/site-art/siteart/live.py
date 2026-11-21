@@ -405,8 +405,8 @@ def meadow_sway(half: int):
         for i, kind in enumerate(kinds):
             fx = (i + 0.5 + plan.uniform(-0.38, 0.38)) / n
             depth = plan.random()                                        # 0 at the back of the near field, 1 in front
-            fy = 0.60 + 0.26 * depth
-            fr = (0.018 + 0.026 * depth) if narrow else (0.008 + 0.012 * depth)
+            fy = 0.50 + 0.34 * depth                                         # taller stems at the back
+            fr = (0.018 + 0.028 * depth) if narrow else (0.008 + 0.015 * depth)
             bud = plan.random() < MEADOW_BUD
             flowers.append((kind, fx, fy, fr, plan.uniform(-0.025, 0.025), bud))
         flowers.sort(key=lambda f: f[2])                                 # far first, so nearer heads cover farther ones
