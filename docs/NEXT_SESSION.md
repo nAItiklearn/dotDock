@@ -1,9 +1,24 @@
-# Next session: after the V1 release (written 2026-11-22 by the lead)
+# Next session: after 1.0.2 (written 2026-11-22 by the lead)
 
-Read this first. Rules still apply (`CLAUDE.md`, `docs/AGENT_RULES.md`). Agents on model `opus`. The owner watches
-live tests; test fast, real input, and before any on-screen step check nobody else is using the PC
-(`GetLastInputInfo`; an earlier run closed two of a person's game windows by mistake). Helpers used in the live
-test: `D:\dotDock\.claude\tmp-qa\` (act.ps1, probe.ps1, state.ps1, idle.ps1, setwp.ps1, lib.sh).
+## 1.0.2 is released (2026-11-22)
+- GitHub release v1.0.2 (installer, portable, .sig, latest.json); website download page and changelog updated.
+- Verified live on the installed build: Quick Settings closes on outside click, Esc and a second press (D-045);
+  calmer, steady dock (D-044); the owner's layout and wallpaper theme as defaults (D-044); the notch's one-time
+  Connect offer (D-046) works now that the hook is built into dotdock.exe (D-047), and the island animated for a
+  real Claude Code turn; the update popup is in 1.0.2 (D-048 in code: updater.rs), first testable when 1.0.3 ships.
+- Friends on 1.0.0/1.0.1 update from Settings > About (those builds have no popup).
+- The PC was running an old 1.0.1 build from a worktree; it now runs the installed app at %LOCALAPPDATA%\dotDock,
+  wallpaper set from the installed wallpapers folder.
+
+## Open
+- Website visit counter: code is live but hidden (`/api/visits` says available:false) because the project has no
+  KV_REST_API_URL/TOKEN. The owner created an Upstash Redis database but it is not connected to the `dotdock`
+  project yet (Vercel > dotdock > Storage > connect). Then redeploy and check the counter shows.
+- Videos: an agent is making three cinematic videos (overview, notch, dock) on branch `videos`, PR when done.
+- Settings freeze: fixed in code (built off the main thread); second launch opened Settings without a hang; the owner
+  to confirm the page content.
+
+## Earlier (before 1.0.2)
 
 ## Where things stand
 
