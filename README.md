@@ -1,10 +1,16 @@
 # dotDock
 
 An open source nothing inspired theme launcher for windows! with bunch of features!
-**website** - 
+**website** - https://dotdock.vercel.app/
+
+<img width="1893" height="932" alt="image" src="https://github.com/user-attachments/assets/385314ae-10d5-489b-9d22-adea252f0146" />
 
 ## what is this?
+
 its a theme to change the whole look of windows , I personally hate the default look and the taskbar , I see people making so many launcher and stuff , but somehow I never felt like using them for long , So I thought Ill make myself . I lwk like Nothing theme so decided to make the launcher on similar theme .
+
+<img width="1917" height="1078" alt="image" src="https://github.com/user-attachments/assets/9cfcc186-7c2c-4179-86c9-4b554d950eac" />
+
 There are basically 3 big features -
 
 1- you can customize your whole home screen , add/remove/resize widgets , with many themes/wallpapers options prebuilt in app , but you can still use yours or import on the app .
