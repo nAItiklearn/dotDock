@@ -179,6 +179,26 @@ fn launch(app: &AppHandle) -> Res<IslandHandle> {
     launch_into(app, &window, dirs).inspect_err(|_| lifecycle::destroy_window(app, ISLAND_LABEL))
 }
 
+/// The hook program built into the app by CI (`build.rs`); empty in a local build.
+const EMBEDDED_HOOK: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/island-hook.bin"));
+const HOOK_EXE: &str = "dotdock-island-hook.exe";
+
+/// Where Connect copies the hook from: the one beside the exe when there is one (a local build), otherwise the copy
+/// built into the app, written to the data folder first. Without either, Connect reports the missing hook.
+fn hook_source(data_dir: &std::path::Path) -> Res<std::path::PathBuf> {
+    let beside = std::env::current_exe().map_err(|e| e.to_string())?.with_file_name(HOOK_EXE);
+    if beside.is_file() || EMBEDDED_HOOK.is_empty() {
+        return Ok(beside);
+    }
+    let unpacked = data_dir.join(HOOK_EXE);
+    let current = std::fs::read(&unpacked).is_ok_and(|bytes| bytes == EMBEDDED_HOOK);
+    if !current {
+        std::fs::create_dir_all(data_dir).map_err(|e| e.to_string())?;
+        std::fs::write(&unpacked, EMBEDDED_HOOK).map_err(|e| format!("The notch's hook could not be unpacked: {e}"))?;
+    }
+    Ok(unpacked)
+}
+
 fn launch_into(app: &AppHandle, window: &WebviewWindow, dirs: ClaudeDirs) -> Res<IslandHandle> {
     let raw = Raw(window.hwnd().map_err(|e| e.to_string())?.0 as isize);
     set_click_through(hwnd(raw), true);
@@ -187,7 +207,7 @@ fn launch_into(app: &AppHandle, window: &WebviewWindow, dirs: ClaudeDirs) -> Res
     }
 
     let data_dir = dotdock_shell::app_data_dir().ok_or("There is no folder to keep the notch's settings in.")?;
-    let hook_source = std::env::current_exe().map_err(|e| e.to_string())?.with_file_name("dotdock-island-hook.exe");
+    let hook_source = hook_source(&data_dir)?;
     let service = IslandService::start(
         ServiceConfig { dirs, data_dir, hook_source, homes: AgentHomes::from_env() },
         TauriHost(app.clone()),

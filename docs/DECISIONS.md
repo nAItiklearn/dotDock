@@ -529,3 +529,9 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
   blocked it as well). So when Claude Code is installed and not connected, the idle notch offers once: "Connect" (the
   same reversible Connect as Settings, D-014) or "Not now", which hides the offer for good.
 - Codex needs nothing: its logs are read, so it animates the notch from the first run.
+
+## D-047 The notch's hook is built into dotdock.exe (live test of 1.0.2, 2026-11-22)
+- Every V1 download shipped `dotdock.exe` without `dotdock-island-hook.exe`, so Connect had nothing to install and
+  said "That did not work" (found when the owner pressed Connect on the installed 1.0.2). CI now builds the hook first
+  and `build.rs` embeds it (`DOTDOCK_EMBED_HOOK`; the build fails if the file is missing). At start the app writes it to
+  its data folder when no hook sits beside the exe, so the installer and the single-file portable exe both connect.
