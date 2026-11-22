@@ -25,6 +25,7 @@ export const TILES_WIRE = {
   hydration: "dock_hydration",
   audio: "dock_audio",
   toggles: "dock_toggles",
+  quickSettings: "dock_quick_settings",
   openUrl: "dock_open_url",
 } as const;
 
@@ -44,6 +45,7 @@ const tauriCommands: TilesCommands = {
   hydration: (op) => run(TILES_WIRE.hydration, { op }),
   audio: (op) => run(TILES_WIRE.audio, { op }),
   toggles: (op) => run(TILES_WIRE.toggles, { op }),
+  quickSettings: () => run(TILES_WIRE.quickSettings, {}),
   openUrl: (url) => (isWebAddress(url) ? run(TILES_WIRE.openUrl, { url }) : Promise.reject(new Error("not a web address"))),
 };
 
@@ -121,6 +123,7 @@ const detachedTiles: TilesBackend = {
     hydration: () => Promise.reject(new Error("no core")),
     audio: () => Promise.reject(new Error("no core")),
     toggles: () => Promise.reject(new Error("no core")),
+    quickSettings: () => Promise.reject(new Error("no core")),
     openUrl: () => Promise.reject(new Error("no core")),
   },
   subscribe: (names, listener) => {

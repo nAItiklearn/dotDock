@@ -72,6 +72,15 @@ pub fn is_web_address(url: &str) -> bool {
         && !url.chars().any(|c| c.is_control() || c.is_whitespace() || c == '"')
 }
 
+/// Windows' own Quick Settings panel: Wi-Fi networks, Bluetooth devices, brightness, volume and the rest, the panel the
+/// taskbar's network, sound and battery icons open. The dock's status area opens it, since the taskbar is hidden.
+pub const QUICK_SETTINGS_URI: &str = "ms-actioncenter:controlcenter/";
+
+/// Opens Windows' Quick Settings panel.
+pub fn open_quick_settings() -> Result<(), String> {
+    open(QUICK_SETTINGS_URI)
+}
+
 /// Opens a web address in the default browser, and nothing else.
 pub fn open_web(url: &str) -> Result<(), String> {
     if !is_web_address(url) {

@@ -102,6 +102,12 @@ pub fn dock_open_url(url: String, state: State<'_, TilesState>) -> Result<(), St
     state.0.open_url(&url)
 }
 
+/// The dock's status area was pressed: Windows' Quick Settings opens, as from the taskbar it stands in for.
+#[tauri::command(async)]
+pub fn dock_quick_settings() -> Result<(), String> {
+    dotdock_tiles::shell::open_quick_settings()
+}
+
 #[tauri::command(async)]
 pub fn dock_toggles(op: TogglesOp, state: State<'_, TilesState>) -> Result<(), String> {
     state.0.toggles(op)

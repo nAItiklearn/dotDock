@@ -6,6 +6,7 @@ import { sendMediaCommand } from "../../widgets/mediaControls";
 import { BatteryIcon, DockIcon } from "../DockIcons";
 import type { TileId } from "../model";
 import { t } from "../strings";
+import { runTileCommand, tilesBackend } from "./backend";
 import { AgendaFace, AudioFace, ContactsFace, FocusFace, HydrationFace, MeetingFace, MicFace, ProgressFace, RemindersFace, StopwatchFace, SystemFace } from "./faces";
 import { useMinuteClock } from "./hooks";
 import { AnalogFace, BatteryFace, ColourFace, ConvertFace, CpuFace, EmojiFace, NetworkFace, NotesFace, TogglesFace, WorldFace } from "./toolsFaces";
@@ -169,7 +170,7 @@ export function StatusPill() {
   const onAc = battery !== null && (battery.charging || battery.pluggedIn === true);
   const low = battery !== null && !onAc && battery.percent <= LOW_BATTERY;
   return (
-    <div className="status" role="group" aria-label={t("status.label")}>
+    <button type="button" className="status" aria-label={t("status.open")} title={t("status.open")} onClick={() => void runTileCommand(tilesBackend().commands.quickSettings())}>
       <span className="status__segment" role="img" aria-label={online ? t("status.online") : t("status.offline")} data-off={online ? undefined : "true"}>
         <DockIcon name={online ? "network" : "network-off"} />
       </span>
@@ -192,6 +193,6 @@ export function StatusPill() {
         <span>{minutes}</span>
         {suffix ? <span className="status__suffix">{suffix}</span> : null}
       </span>
-    </div>
+    </button>
   );
 }

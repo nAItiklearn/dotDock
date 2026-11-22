@@ -315,9 +315,10 @@
   height: 50%;
   width: auto;
 }
+/* On is a solid accent disc, off a plain one: a faint tint read as the same state. */
 .tile__toggle[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--accent) 24%, var(--surface-2));
-  color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 .tile__toggle:disabled {
   cursor: default;
