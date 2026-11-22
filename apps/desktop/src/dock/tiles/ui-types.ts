@@ -177,6 +177,8 @@ export interface TilesCommands {
   hydration(op: HydrationOp): Promise<void>;
   audio(op: AudioOp): Promise<void>;
   toggles(op: TogglesOp): Promise<void>;
+  /** Opens Windows' Quick Settings (Wi-Fi, Bluetooth, brightness, volume), as the taskbar's status icons do. */
+  quickSettings(): Promise<void>;
   /** Opens a web address (http or https only) in the user's default browser. */
   openUrl(url: string): Promise<void>;
 }

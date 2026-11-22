@@ -333,6 +333,8 @@ mod tests {
         assert_eq!(state.events[0].join.as_ref().map(|j| j.service), Some(MeetingService::Meet));
         assert!(matches!(rx.try_iter().last(), Some(TileData::Calendar(_))));
         cal.set_ics_file(None).unwrap();
-        assert_eq!(cal.state().source, CalendarSource::Windows);
+        if !store::tests::no_calendar_service() {
+            assert_eq!(cal.state().source, CalendarSource::Windows);
+        }
     }
 }

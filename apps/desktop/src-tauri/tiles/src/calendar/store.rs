@@ -88,7 +88,7 @@ pub fn has_any_events(around_ms: i64) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     #[test]
@@ -98,8 +98,22 @@ mod tests {
         assert_eq!(from_datetime(to_datetime(now)), now);
     }
 
+    /// Windows Server (the CI runner) has no calendar service; every Windows 10 and 11 desktop has one. Tests that
+    /// read the real store say so and stop there instead of failing on a machine the app does not target.
+    pub(crate) fn no_calendar_service() -> bool {
+        let now = crate::clock::now_ms();
+        let missing = matches!(fetch(now, now), Err(e) if e.contains("0x80070424"));
+        if missing {
+            eprintln!("skipped: this Windows has no calendar service (0x80070424)");
+        }
+        missing
+    }
+
     #[test]
     fn the_windows_calendar_can_be_read_without_package_identity() {
+        if no_calendar_service() {
+            return;
+        }
         let now = crate::clock::now_ms();
         let events = fetch(now, now + 7 * DAY_MS).expect("the store opens");
         assert!(events.windows(2).all(|w| w[0].start_ms <= w[1].start_ms), "soonest first");
@@ -110,6 +124,9 @@ mod tests {
     /// for the process; the second thread would then crash inside `RequestStoreAsync`.
     #[test]
     fn the_store_opens_again_on_a_later_thread_after_the_first_one_ended() {
+        if no_calendar_service() {
+            return;
+        }
         let now = crate::clock::now_ms();
         for _ in 0..2 {
             std::thread::spawn(move || {

@@ -679,6 +679,10 @@ html[data-dragging="true"] * {
   display: flex;
   align-items: center;
 }
+.status:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}
 .status {
   display: flex;
   align-items: center;
@@ -690,6 +694,9 @@ html[data-dragging="true"] * {
   background: var(--disc);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 7%, transparent), var(--lift-shadow);
   color: var(--text);
+  /* A button that opens Windows' Quick Settings: no button chrome beyond the capsule. */
+  font: inherit;
+  cursor: pointer;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   pointer-events: auto;

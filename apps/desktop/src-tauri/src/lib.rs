@@ -205,6 +205,7 @@ fn build_and_run(primary: bool) {
             tiles_host::dock_audio,
             tiles_host::dock_toggles,
             tiles_host::dock_open_url,
+            tiles_host::dock_quick_settings,
             media_command,
             weather_search,
             weather_set_place,

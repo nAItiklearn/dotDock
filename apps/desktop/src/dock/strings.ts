@@ -433,6 +433,7 @@ const EN = {
   "gallery.keywords.memo": "voice record recorder audio microphone note waveform",
 
   "status.label": "Status",
+  "status.open": "Wi-Fi, sound and battery: open Quick Settings",
   "status.online": "Online",
   "status.offline": "Offline",
   "status.battery": "Battery {percent}%",

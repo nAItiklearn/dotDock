@@ -1,6 +1,6 @@
 [package]
 name = "dotdock-tiles"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 license = "GPL-3.0-or-later"
 description = "Native data providers for the dock's live tiles: audio, microphone, calendar, clipboard, screenshots, downloads, toggles (no UI framework; unit-testable)"

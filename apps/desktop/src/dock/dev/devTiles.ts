@@ -286,6 +286,7 @@ export function createDevTiles(clock: () => number = Date.now): DevTiles {
       hydration: (op) => run(`hydration ${op.type}`, () => hydration(op)),
       audio: (op) => run(`audio ${op.type}`, () => audio(op)),
       toggles: (op) => run(`toggles ${op.type}`, () => toggles(op)),
+      quickSettings: () => run("quick settings", () => undefined),
       // The harness is a browser: the address opens in a new tab, as the core opens it in the default browser.
       openUrl: (url) => run(`open ${url}`, () => void globalThis.open?.(url, "_blank", "noopener")),
     },
