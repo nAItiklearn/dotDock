@@ -1,6 +1,6 @@
 # Progress
 
-**Version:** v1 (home screen, Agent Island, Settings, website). Tagged `v1.0.0` locally, not released.
+**Version:** v1.0.0 released 2026-11-22 (dock, island, home screen, themes, Settings, website at https://dotdock.vercel.app); v1.0.1 tagged. Next steps: `docs/NEXT_SESSION.md`.
 **Next:** v2, the dock and launcher. The owner's rule: no public release until the dock ships.
 
 ## V1 integration (2026-11-21, branch worktree-agent-ada7f4cb99f8b50da)

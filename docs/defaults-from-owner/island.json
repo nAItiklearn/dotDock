@@ -1,0 +1,19 @@
+{
+ "schema": 1,
+ "idle": "tiny",
+ "scale": 1,
+ "topOffset": 10,
+ "iconStyle": "dots",
+ "showDetail": true,
+ "showTokens": true,
+ "showElapsed": false,
+ "showProject": false,
+ "showScene": true,
+ "moveAside": true,
+ "followCursor": true,
+ "codex": true,
+ "notify": true,
+ "sound": true,
+ "volume": 0.5,
+ "doneLingerSecs": 6
+}

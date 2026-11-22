@@ -1,0 +1,63 @@
+{
+ "settings": {
+  "schema": 1,
+  "enabled": true,
+  "replaceTaskbar": true,
+  "edge": "bottom",
+  "reserveSpace": true,
+  "autoHide": true,
+  "iconSize": 48,
+  "magnification": 1.6,
+  "pinned": [
+   {
+    "kind": "app",
+    "id": "Microsoft.Windows.Explorer"
+   },
+   {
+    "kind": "app",
+    "id": "Chrome"
+   },
+   {
+    "kind": "app",
+    "id": "Microsoft.WindowsTerminal_8wekyb3d8bbwe!App"
+   },
+   {
+    "kind": "app",
+    "id": "Microsoft.VisualStudioCode"
+   },
+   {
+    "kind": "app",
+    "id": "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"
+   },
+   {
+    "kind": "app",
+    "id": "windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"
+   },
+   {
+    "kind": "stack",
+    "category": "productivity"
+   },
+   {
+    "kind": "stack",
+    "category": "development"
+   },
+   {
+    "kind": "stack",
+    "category": "creative"
+   },
+   {
+    "kind": "stack",
+    "category": "communication"
+   }
+  ],
+  "tiles": [
+   "clock",
+   "system",
+   "media",
+   "history",
+   "toggles"
+  ]
+ },
+ "theme": "obsidian",
+ "sizes": null
+}
