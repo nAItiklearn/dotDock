@@ -1,7 +1,7 @@
 /**
  * Dock magnification as plain maths. Every item has a rest span along the dock's axis; the pointer is a
  * pivot. Items near the pivot grow with a cosine falloff, and the row is stretched so no two items
- * overlap and the item under the pointer stays under it (the pivot is a fixed point of the mapping).
+ * overlap; the row grows evenly about its rest centre, so the bar never slides with the pointer.
  * Nothing here touches the DOM: the engine applies the result as transforms.
  */
 /** Pointer positions tried per item when bounding the growth. */
@@ -46,23 +46,6 @@ export function scaleFor(distance: number, config: MagnifyConfig, weight = 1): n
   return 1 + (config.peak - 1) * weight * config.engage * falloff(distance, config.radius);
 }
 
-/** Position of `pivot` along the drawn row, where the row's first item starts at 0. */
-function phiOfPivot(items: readonly RestItem[], scale: readonly number[], phiStart: readonly number[], phiEnd: readonly number[], pivot: number): number {
-  const n = items.length;
-  const first = items[0] as RestItem;
-  const last = items[n - 1] as RestItem;
-  if (pivot <= first.start) return pivot - first.start;
-  if (pivot >= last.start + last.size) return (phiEnd[n - 1] as number) + (pivot - (last.start + last.size));
-  for (let i = 0; i < n; i++) {
-    const item = items[i] as RestItem;
-    if (pivot > item.start + item.size) continue;
-    if (pivot >= item.start) return (phiStart[i] as number) + (pivot - item.start) * (scale[i] as number);
-    const previous = items[i - 1] as RestItem;
-    return (phiEnd[i - 1] as number) + (pivot - (previous.start + previous.size));
-  }
-  return 0;
-}
-
 export function computeMagnify(items: readonly RestItem[], pivot: number, config: MagnifyConfig, gap: number): MagnifyFrame {
   const n = items.length;
   if (n === 0) return { scale: [], shift: [], rowStart: 0, rowEnd: 0, hovered: -1 };
@@ -84,16 +67,20 @@ export function computeMagnify(items: readonly RestItem[], pivot: number, config
     phiEnd.push(cursor);
   });
 
-  const phiPivot = phiOfPivot(items, scale, phiStart, phiEnd, pivot);
+  // The row grows evenly about its rest centre, so the bar stays where it is while the pointer moves along it
+  // (owner, 2026-11-22): anchoring the row to the pointer slid the whole dock sideways.
+  const first = items[0] as RestItem;
+  const last = items[n - 1] as RestItem;
+  const rowStart = (first.start + last.start + last.size) / 2 - (phiEnd[n - 1] as number) / 2;
   const shift = items.map((item, i) => {
-    const drawnStart = pivot + (phiStart[i] as number) - phiPivot;
+    const drawnStart = rowStart + (phiStart[i] as number);
     return drawnStart + (item.size * (scale[i] as number)) / 2 - (item.start + item.size / 2);
   });
 
   const half = gap / 2;
   const hovered = items.findIndex((item) => pivot >= item.start - half && pivot <= item.start + item.size + half);
 
-  return { scale, shift, rowStart: pivot - phiPivot, rowEnd: pivot + (phiEnd[n - 1] as number) - phiPivot, hovered };
+  return { scale, shift, rowStart, rowEnd: rowStart + (phiEnd[n - 1] as number), hovered };
 }
 
 /**
