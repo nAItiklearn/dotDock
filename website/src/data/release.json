@@ -1,15 +1,15 @@
 {
- "tag": "v1.0.1",
- "url": "https://github.com/nAItiklearn/dotDock/releases/tag/v1.0.1",
- "publishedAt": "2026-11-22T11:46:31Z",
+ "tag": "v1.0.2",
+ "url": "https://github.com/nAItiklearn/dotDock/releases/tag/v1.0.2",
+ "publishedAt": "2026-11-22T14:31:09Z",
  "installer": {
-  "name": "dotDock_1.0.1_x64-setup.exe",
-  "url": "https://github.com/nAItiklearn/dotDock/releases/download/v1.0.1/dotDock_1.0.1_x64-setup.exe",
-  "bytes": 44581635,
-  "sha256": "4d6b462aa9d8807c0d192770e99c5c4b805d0d38bbeb4a83c237adfc9f9eb16e"
+  "name": "dotDock_1.0.2_x64-setup.exe",
+  "url": "https://github.com/nAItiklearn/dotDock/releases/download/v1.0.2/dotDock_1.0.2_x64-setup.exe",
+  "bytes": 44674880,
+  "sha256": "bbd8a6997e2e6b8e9551acb6a6716a270dab9986e85391d69142f2fb211442bd"
  },
  "portable": {
-  "name": "dotDock_1.0.1_x64-portable.exe",
-  "url": "https://github.com/nAItiklearn/dotDock/releases/download/v1.0.1/dotDock_1.0.1_x64-portable.exe"
+  "name": "dotDock_1.0.2_x64-portable.exe",
+  "url": "https://github.com/nAItiklearn/dotDock/releases/download/v1.0.2/dotDock_1.0.2_x64-portable.exe"
  }
 }

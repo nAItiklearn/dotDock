@@ -43,6 +43,16 @@ export const VERSIONS: readonly Version[] = [
         ],
       },
       {
+        title: "Updates 1.0.1 and 1.0.2",
+        items: [
+          "The dock's status area opens Windows Quick Settings, which closes again on an outside click, Esc or a second press.",
+          "A calmer dock: apps grow about as much as stacks, and the bar grows evenly in place instead of sliding with the pointer.",
+          "A ready home screen from the first start, in a theme made from your wallpaper.",
+          "The island offers once to connect Claude Code, and Connect now works from the download.",
+          "New versions are offered as soon as they are ready, and Settings no longer freezes when opened from the tray.",
+        ],
+      },
+      {
         title: "Themes and Settings",
         items: [
           "Obsidian, Paper and Aurum, or a theme taken from your own wallpaper, with a preview and undo.",

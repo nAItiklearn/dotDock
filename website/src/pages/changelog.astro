@@ -40,7 +40,7 @@ const id = (major: number) => `v${major}`;
               )}
               {v.status.state === "out" && `Released as ${v.status.tag}`}
               {v.status.state === "earlier" && "Released"}
-              {v.status.state === "in-testing" && "Being tested, not released yet"}
+              {v.status.state === "in-testing" && "Next, not released yet"}
               {v.status.state === "planned" && "Planned, no date"}
             </p>
           </div>
