@@ -86,9 +86,12 @@ pub fn schedule_startup_check(app: AppHandle) {
                     if ask_to_install(&app, &available.version) {
                         if let Err(err) = tauri::async_runtime::block_on(install_pending(&app)) {
                             dotdock_shell::boot_log::record(&format!("update install failed: {err}"));
-                            tell(&format!("dotDock {} could not be installed: {err}
+                            tell(&format!(
+                                "dotDock {} could not be installed: {err}
 
-You can try again in Settings > About.", available.version));
+You can try again in Settings > About.",
+                                available.version
+                            ));
                         }
                     }
                 }
