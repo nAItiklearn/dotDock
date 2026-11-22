@@ -17,7 +17,7 @@ export const FAQ: readonly FaqItem[] = [
     id: "safe",
     q: "Is it safe to try?",
     a: [
-      `Yes, and you can undo it. Before changing anything, ${PRODUCT_NAME} snapshots your wallpaper and desktop settings. One switch in Settings, "Use Windows desktop", puts them back, and uninstalling does the same.`,
+      `Yes, and you can undo it. Before changing anything, ${PRODUCT_NAME} snapshots your wallpaper and desktop settings. Turning off the "dotDock theme" switch at the end of Settings puts them back, and uninstalling does the same.`,
     ],
   },
   {
