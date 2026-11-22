@@ -82,7 +82,7 @@ export const LENGTH_RATIO = {
   weather: 2.7,
   currency: 3.6,
   search: 3.8,
-  history: 3.6,
+  history: 4.3,
   memo: 3.3,
   /** Measured once drawn; this estimate only sizes the dock before the first measurement. */
   status: 3.2,
