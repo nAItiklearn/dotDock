@@ -127,7 +127,8 @@ describe("Dock / Appearance", () => {
 
   it("saves the picked theme where the dock window reads it", () => {
     render(<DockAppearancePage />);
-    expect(screen.getByRole("radio", { name: /^Glass\s*A frosted/ }).getAttribute("aria-checked")).toBe("true");
+    // Nothing saved yet: the default look, Obsidian, is the one marked.
+    expect(screen.getByRole("radio", { name: /^Obsidian/ }).getAttribute("aria-checked")).toBe("true");
     fireEvent.click(screen.getByRole("radio", { name: /^Paper/ }));
     expect(localStorage.getItem(DOCK_THEME_STORAGE_KEY)).toBe("paper");
     expect(readDockTheme()).toBe("paper");

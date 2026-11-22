@@ -58,17 +58,16 @@ describe("computeMagnify", () => {
     expect(scales[3]).toBeCloseTo(scales[5] as number);
   });
 
-  it("keeps the point under the pointer where it is", () => {
+  it("grows the row evenly about its rest centre, so the bar never slides with the pointer", () => {
     const items = row(9);
-    for (const pivot of [centre(2) + 5, centre(4), 3 * (SIZE + GAP) + 10, 5 * (SIZE + GAP) + SIZE - 1, -20, 600]) {
+    const last = items[8] as RestItem;
+    const restCentre = (last.start + last.size) / 2;
+    for (const pivot of [centre(0), centre(2) + 5, centre(4), 5 * (SIZE + GAP) + SIZE - 1, centre(8), -20, 600]) {
       const frame = computeMagnify(items, pivot, FULL, GAP);
-      const hovered = frame.hovered;
-      if (hovered < 0) continue;
-      const item = items[hovered] as RestItem;
-      const s = frame.scale[hovered] as number;
-      const drawnStart = item.start + item.size / 2 + (frame.shift[hovered] as number) - (item.size * s) / 2;
-      const fraction = (pivot - item.start) / item.size;
-      expect(drawnStart + fraction * item.size * s).toBeCloseTo(pivot, 6);
+      expect((frame.rowStart + frame.rowEnd) / 2).toBeCloseTo(restCentre, 6);
+      const first = items[0] as RestItem;
+      const drawnFirstStart = first.start + first.size / 2 + (frame.shift[0] as number) - (first.size * (frame.scale[0] as number)) / 2;
+      expect(drawnFirstStart).toBeCloseTo(frame.rowStart, 6);
     }
   });
 

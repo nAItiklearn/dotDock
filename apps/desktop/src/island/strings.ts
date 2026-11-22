@@ -113,6 +113,8 @@ const EN = {
   "agent.file": "File",
   "connection.busy": "Working…",
   "connection.failed": "That did not work. Try again.",
+  "offer.title": "Show Claude Code in the notch?",
+  "offer.later": "Not now",
 } as const;
 
 export type StringKey = keyof typeof EN;

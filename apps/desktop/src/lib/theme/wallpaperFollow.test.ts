@@ -44,12 +44,20 @@ function useWallpaperTheme(app: AppContext, color: readonly [number, number, num
 
 const readImage = () => Promise.resolve(new Blob());
 
+/** A theme picked by hand from the gallery, not the one made from the wallpaper. */
+const HAND_PICKED = { ...DEFAULT_SETTINGS.theme, fixedId: "obsidian" };
+
 describe("following the Windows wallpaper", () => {
   it("follows only while the theme in use is the one made from the wallpaper", () => {
-    expect(followsWallpaper(DEFAULT_SETTINGS.theme)).toBe(false);
-    expect(followsWallpaper({ ...DEFAULT_SETTINGS.theme, fixedId: WALLPAPER_THEME_ID })).toBe(true);
-    expect(followsWallpaper({ ...DEFAULT_SETTINGS.theme, mode: "system", lightId: WALLPAPER_THEME_ID })).toBe(true);
-    expect(followedTheme(DEFAULT_SETTINGS.theme, palette(NIGHT_BLUE))).toBeNull();
+    expect(followsWallpaper(HAND_PICKED)).toBe(false);
+    expect(followsWallpaper({ ...HAND_PICKED, fixedId: WALLPAPER_THEME_ID })).toBe(true);
+    expect(followsWallpaper({ ...HAND_PICKED, mode: "system", lightId: WALLPAPER_THEME_ID })).toBe(true);
+    expect(followedTheme(HAND_PICKED, palette(NIGHT_BLUE))).toBeNull();
+  });
+
+  it("follows from the first start: the shipped theme is the one made from the wallpaper", () => {
+    expect(DEFAULT_SETTINGS.theme.fixedId).toBe(WALLPAPER_THEME_ID);
+    expect(followsWallpaper(DEFAULT_SETTINGS.theme)).toBe(true);
   });
 
   it("re-derives the palette from the new wallpaper and puts it in use in one update", async () => {
@@ -72,12 +80,13 @@ describe("following the Windows wallpaper", () => {
   });
 
   it("keeps the light or dark slot it fills in an automatic mode", () => {
-    const system = { ...DEFAULT_SETTINGS.theme, mode: "system" as const, darkId: WALLPAPER_THEME_ID };
+    const system = { ...HAND_PICKED, mode: "system" as const, darkId: WALLPAPER_THEME_ID };
     expect(followedTheme(system, palette(SUNNY_YELLOW))?.mode).toBe("dark");
   });
 
   it("never replaces a theme the user chose by hand, and does not even read the picture for it", async () => {
     const app = await boot();
+    app.settings.getState().update((s) => ({ ...s, theme: HAND_PICKED }));
     const read = vi.fn(readImage);
     const before = app.settings.getState().settings.theme;
     expect(await followWallpaper(app.settings, read, () => Promise.resolve(grid(SUNNY_YELLOW)))).toBe(false);

@@ -76,9 +76,35 @@ pub fn is_web_address(url: &str) -> bool {
 /// taskbar's network, sound and battery icons open. The dock's status area opens it, since the taskbar is hidden.
 pub const QUICK_SETTINGS_URI: &str = "ms-actioncenter:controlcenter/";
 
-/// Opens Windows' Quick Settings panel.
+/// Opens or closes Windows' Quick Settings panel, as Win+A does.
+///
+/// Opened through its URI, the panel never takes the keyboard focus, so Windows' light dismiss does not fire: a click
+/// elsewhere and Esc leave it open, and a second press opens it again (owner, 2026-11-22). Win+A is Windows' own
+/// toggle: the panel opens focused, closes on an outside click, on Esc and on the next press. The URI stays as the
+/// fallback for when the keys cannot be sent.
 pub fn open_quick_settings() -> Result<(), String> {
-    open(QUICK_SETTINGS_URI)
+    if toggle_with_win_a() {
+        Ok(())
+    } else {
+        open(QUICK_SETTINGS_URI)
+    }
+}
+
+/// Sends Win+A as one batch, so nothing typed in between can join the chord. True when all four keys went in.
+fn toggle_with_win_a() -> bool {
+    use windows::Win32::UI::Input::KeyboardAndMouse::{
+        SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_A,
+        VK_LWIN,
+    };
+    let key = |vk: VIRTUAL_KEY, flags: KEYBD_EVENT_FLAGS| INPUT {
+        r#type: INPUT_KEYBOARD,
+        Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: vk, wScan: 0, dwFlags: flags, time: 0, dwExtraInfo: 0 } },
+    };
+    let none = KEYBD_EVENT_FLAGS(0);
+    let chord = [key(VK_LWIN, none), key(VK_A, none), key(VK_A, KEYEVENTF_KEYUP), key(VK_LWIN, KEYEVENTF_KEYUP)];
+    // SAFETY: the inputs are plain values that live for the call, and the size is the size of one INPUT.
+    let sent = unsafe { SendInput(&chord, std::mem::size_of::<INPUT>() as i32) };
+    sent as usize == chord.len()
 }
 
 /// Opens a web address in the default browser, and nothing else.

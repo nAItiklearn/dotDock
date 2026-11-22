@@ -13,7 +13,7 @@ import type { DockBackdrop } from "./protocol";
 export const DOCK_THEMES = ["glass", "glass-lite", "obsidian", "paper", "aurum", "minimal"] as const;
 export type DockThemeId = (typeof DOCK_THEMES)[number];
 
-export const DEFAULT_THEME: DockThemeId = "glass";
+export const DEFAULT_THEME: DockThemeId = "obsidian";
 export const THEME_STORAGE_KEY = "dotdock.dock.theme";
 
 export const isDockTheme = (value: string | null): value is DockThemeId => value !== null && (DOCK_THEMES as readonly string[]).includes(value);

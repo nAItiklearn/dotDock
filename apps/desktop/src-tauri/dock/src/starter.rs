@@ -33,8 +33,9 @@ const MIN_STACK_APPS: usize = 3;
 /// Most stacks the first layout makes, so the bar stays short.
 const MAX_STACKS: usize = 4;
 
-/// Live tiles that show real data with no account or setup: the clock, what is playing, and the system meters.
-pub const STARTER_TILES: [&str; 3] = ["clock", "media", "system"];
+/// Live tiles that show real data with no account or setup: the clock, the system meters, what is playing, the apps
+/// opened lately and the quick toggles (the owner's own dock, 2026-11-22).
+pub const STARTER_TILES: [&str; 5] = ["clock", "system", "media", "history", "toggles"];
 
 /// The first layout for `apps`: pinned apps and stacks, then the tiles.
 pub fn starter_layout(apps: &[DockApp]) -> (Vec<PinnedItem>, Vec<String>) {
@@ -93,7 +94,7 @@ mod tests {
             })
             .collect();
         assert_eq!(ids, ["files", "edge", "term", "settings"]);
-        assert_eq!(tiles, ["clock", "media", "system"]);
+        assert_eq!(tiles, ["clock", "system", "media", "history", "toggles"]);
     }
 
     #[test]

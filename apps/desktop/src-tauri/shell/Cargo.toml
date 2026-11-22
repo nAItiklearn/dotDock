@@ -1,6 +1,6 @@
 [package]
 name = "dotdock-shell"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 license = "GPL-3.0-or-later"
 description = "Windows shell integration for dotDock (no UI framework; unit-testable)"

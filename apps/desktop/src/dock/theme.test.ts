@@ -67,17 +67,17 @@ describe("the saved choice", () => {
   };
   afterEach(() => vi.unstubAllGlobals());
 
-  it("is glass when nothing was chosen", () => {
+  it("is obsidian when nothing was chosen", () => {
     stubPage("", null);
     expect(readThemeChoice()).toBe(DEFAULT_THEME);
-    expect(DEFAULT_THEME).toBe("glass");
+    expect(DEFAULT_THEME).toBe("obsidian");
   });
 
   it("reads what was saved and ignores what is not a theme", () => {
     stubPage("", "paper");
     expect(readThemeChoice()).toBe("paper");
     stubPage("", "neon");
-    expect(readThemeChoice()).toBe("glass");
+    expect(readThemeChoice()).toBe(DEFAULT_THEME);
   });
 
   it("lets the page address pin a theme for a preview", () => {
@@ -87,14 +87,14 @@ describe("the saved choice", () => {
     expect(readThemeChoice()).toBe("paper");
   });
 
-  it("falls back to glass when storage cannot be read", () => {
+  it("falls back to the default look when storage cannot be read", () => {
     vi.stubGlobal("location", { search: "" });
     vi.stubGlobal("localStorage", {
       getItem: () => {
         throw new Error("denied");
       },
     });
-    expect(readThemeChoice()).toBe("glass");
+    expect(readThemeChoice()).toBe(DEFAULT_THEME);
   });
 
   it("saves the choice, and survives storage that refuses it", () => {

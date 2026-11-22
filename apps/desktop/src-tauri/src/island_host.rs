@@ -179,6 +179,26 @@ fn launch(app: &AppHandle) -> Res<IslandHandle> {
     launch_into(app, &window, dirs).inspect_err(|_| lifecycle::destroy_window(app, ISLAND_LABEL))
 }
 
+/// The hook program built into the app by CI (`build.rs`); empty in a local build.
+const EMBEDDED_HOOK: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/island-hook.bin"));
+const HOOK_EXE: &str = "dotdock-island-hook.exe";
+
+/// Where Connect copies the hook from: the one beside the exe when there is one (a local build), otherwise the copy
+/// built into the app, written to the data folder first. Without either, Connect reports the missing hook.
+fn hook_source(data_dir: &std::path::Path) -> Res<std::path::PathBuf> {
+    let beside = std::env::current_exe().map_err(|e| e.to_string())?.with_file_name(HOOK_EXE);
+    if beside.is_file() || EMBEDDED_HOOK.is_empty() {
+        return Ok(beside);
+    }
+    let unpacked = data_dir.join(HOOK_EXE);
+    let current = std::fs::read(&unpacked).is_ok_and(|bytes| bytes == EMBEDDED_HOOK);
+    if !current {
+        std::fs::create_dir_all(data_dir).map_err(|e| e.to_string())?;
+        std::fs::write(&unpacked, EMBEDDED_HOOK).map_err(|e| format!("The notch's hook could not be unpacked: {e}"))?;
+    }
+    Ok(unpacked)
+}
+
 fn launch_into(app: &AppHandle, window: &WebviewWindow, dirs: ClaudeDirs) -> Res<IslandHandle> {
     let raw = Raw(window.hwnd().map_err(|e| e.to_string())?.0 as isize);
     set_click_through(hwnd(raw), true);
@@ -187,7 +207,7 @@ fn launch_into(app: &AppHandle, window: &WebviewWindow, dirs: ClaudeDirs) -> Res
     }
 
     let data_dir = dotdock_shell::app_data_dir().ok_or("There is no folder to keep the notch's settings in.")?;
-    let hook_source = std::env::current_exe().map_err(|e| e.to_string())?.with_file_name("dotdock-island-hook.exe");
+    let hook_source = hook_source(&data_dir)?;
     let service = IslandService::start(
         ServiceConfig { dirs, data_dir, hook_source, homes: AgentHomes::from_env() },
         TauriHost(app.clone()),
@@ -228,7 +248,8 @@ pub fn island_ready(app: AppHandle) {
     }
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_state(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::InitialState> {
     s.with(|h| h.service.initial_state())
 }
@@ -239,7 +260,8 @@ pub fn island_set_regions(regions: Regions, s: State<'_, IslandSlot>) {
     let _ = s.with(|h| *h.regions.lock().unwrap_or_else(PoisonError::into_inner) = regions);
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_focus(id: String, s: State<'_, IslandSlot>) -> Res<dotdock_island::focus::FocusOutcome> {
     s.with(|h| h.service.focus(&id))
 }
@@ -249,17 +271,20 @@ pub fn island_dismiss(id: String, s: State<'_, IslandSlot>) {
     let _ = s.with(|h| h.service.dismiss(&id));
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_connect(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
     s.with(|h| h.service.connect().map_err(|e| e.to_string()))?
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_disconnect(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
     s.with(|h| h.service.disconnect().map_err(|e| e.to_string()))?
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_connect_agent(
     agent: Connectable,
     s: State<'_, IslandSlot>,
@@ -267,7 +292,8 @@ pub fn island_connect_agent(
     s.with(|h| h.service.connect_agent(agent).map_err(|e| e.to_string()))?
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_disconnect_agent(
     agent: Connectable,
     s: State<'_, IslandSlot>,
@@ -275,12 +301,14 @@ pub fn island_disconnect_agent(
     s.with(|h| h.service.disconnect_agent(agent).map_err(|e| e.to_string()))?
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_connection(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
     s.with(|h| h.service.connection())
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_set_settings(settings: IslandSettings, s: State<'_, IslandSlot>) -> Res<IslandSettings> {
     s.with(|h| {
         let saved = h.service.set_settings(settings).map_err(|e| e.to_string())?;

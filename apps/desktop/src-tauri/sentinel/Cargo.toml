@@ -1,6 +1,6 @@
 [package]
 name = "dotdock-sentinel"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 license = "GPL-3.0-or-later"
 description = "Restore watchdog: puts the Windows taskbar back when dotDock ends without doing it"

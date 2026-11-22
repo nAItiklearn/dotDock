@@ -1,6 +1,8 @@
 # Progress
 
 **Version:** v1.0.0 released 2026-11-22 (dock, island, home screen, themes, Settings, website at https://dotdock.vercel.app); v1.0.1 tagged. Next steps: `docs/NEXT_SESSION.md`.
+**1.0.2 (2026-11-22):** Quick Settings closes (Win+A, D-045), gentler dock bulge and the owner's setup as defaults
+(D-044), the notch offers once to connect Claude Code (D-046), Settings built off the main thread (no freeze).
 **Next:** v2, the dock and launcher. The owner's rule: no public release until the dock ships.
 
 ## V1 integration (2026-11-21, branch worktree-agent-ada7f4cb99f8b50da)

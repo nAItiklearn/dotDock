@@ -28,7 +28,21 @@ pub fn open_settings(app: &AppHandle) {
 }
 
 /// Opens Settings on a route such as `#/themes/wallpapers`, or moves the open window there.
+///
+/// Safe from any thread. The window is always built on a worker thread: built on the main thread from inside an event
+/// handler (the tray menu, a tray click, the second-launch callback), WebView2 waits on a message loop that is blocked
+/// in that very handler, and Settings stays blank while every dotDock window freezes (owner, 2026-11-22).
 pub fn open_settings_at(app: &AppHandle, route: Option<&str>) {
+    let app = app.clone();
+    let route = route.map(str::to_owned);
+    std::thread::spawn(move || show_or_build_settings(&app, route.as_deref()));
+}
+
+/// One open at a time, so two quick presses focus the window the first one built instead of building two.
+static OPENING: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn show_or_build_settings(app: &AppHandle, route: Option<&str>) {
+    let _one_at_a_time = OPENING.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     if let Some(window) = app.get_webview_window(SETTINGS_LABEL) {
         let _ = window.unminimize();
         let _ = window.set_focus();

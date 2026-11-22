@@ -248,7 +248,7 @@ pub struct DockSettings {
 /// Icon size at 100 % scaling and peak magnification of a fresh install. The UI track owns the look; these
 /// are the starting values that the settings page then lets the user change.
 pub const DEFAULT_ICON_SIZE: u32 = 48;
-pub const DEFAULT_MAGNIFICATION: f64 = 1.6;
+pub const DEFAULT_MAGNIFICATION: f64 = 1.2;
 
 impl DockSettings {
     /// The same settings with the dock at the bottom: the only edge it lives on, since it replaces the taskbar

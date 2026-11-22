@@ -501,3 +501,37 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
 - Today and Next meeting stay: they read the Windows calendar store. Their "needs setting up" hint now names the real
   step (add a calendar account in Windows Settings) instead of pointing to dock settings that have no calendar control.
 - Web search stays: `dock_open_url` exists in the tiles host, so B-002 item 3 is done.
+
+## D-044 1.0.2 defaults are the owner's own setup; a gentler dock bulge (owner, 2026-11-22)
+- Magnification: the range is now 1 to 1.3 (was 1.6), default 1.2. Apps bulged far more than category stacks, and the
+  owner liked the stacks' amount; stacks now take 0.75 of the bulge (were 0.3), so at the default an app grows to 1.2
+  and a stack to 1.15. A dock saved at 1.6 is clamped to 1.3 when drawn, so upgrades calm down too.
+- Home screen: the Work profile ships the owner's layout from `docs/defaults-from-owner/home-storage.json` (clock,
+  battery ring, player, photo frame, timer dial, fun fact, RAM grid, date pill; 9 by 8 cells, the owner's 1/32-cell
+  jitter snapped to whole rows so it fits 1366 x 768 unchanged, checked side by side at 1920 x 1080 and 1366 x 768; a
+  smaller screen moves what does not fit through `normalizePlacements`). The photo frame ships
+  empty: the owner's picture is personal.
+- Theme: the default is the one made from the user's wallpaper (as the owner's coral one was), derived once at the
+  first start from the primary display and again whenever the wallpaper changes. Until the picture is read, Obsidian.
+  A theme picked by hand is never read or replaced.
+- Dock: the Obsidian bar by default (was Glass), and the first layout adds the History and Quick settings tiles after
+  clock, system and media, as on the owner's dock. Pinned apps and stacks were already the owner's layout.
+
+## D-045 Quick Settings opens with Win+A, Windows' own toggle (owner bug, 2026-11-22)
+- Opened through `ms-actioncenter:controlcenter/`, the panel never took the keyboard focus, so Windows' light dismiss
+  did not fire: clicking the desktop and Esc left it open (reproduced live). Win+A, sent as one `SendInput` batch,
+  opens it focused; verified live that an outside click, Esc and a second Win+A all close it. The URI stays as the
+  fallback when the keys cannot be sent.
+
+## D-046 The notch asks once before connecting an agent; it never connects on its own (2026-11-22)
+- The owner asked for the notch to work without the user finding Connect. Connecting writes dotDock's hook into the
+  user's own Claude Code settings; doing that silently at startup is too much without asking (the lead's safety review
+  blocked it as well). So when Claude Code is installed and not connected, the idle notch offers once: "Connect" (the
+  same reversible Connect as Settings, D-014) or "Not now", which hides the offer for good.
+- Codex needs nothing: its logs are read, so it animates the notch from the first run.
+
+## D-047 The notch's hook is built into dotdock.exe (live test of 1.0.2, 2026-11-22)
+- Every V1 download shipped `dotdock.exe` without `dotdock-island-hook.exe`, so Connect had nothing to install and
+  said "That did not work" (found when the owner pressed Connect on the installed 1.0.2). CI now builds the hook first
+  and `build.rs` embeds it (`DOTDOCK_EMBED_HOOK`; the build fails if the file is missing). At start the app writes it to
+  its data folder when no hook sits beside the exe, so the installer and the single-file portable exe both connect.

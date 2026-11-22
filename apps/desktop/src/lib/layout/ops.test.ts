@@ -15,12 +15,23 @@ import {
   resizeTo,
   type LayoutContext,
 } from "./ops";
-import { rectsOverlap } from "./grid";
+import { boundsFor, rectsOverlap } from "./grid";
 import { rectOf } from "./ops";
 
 const ctx: LayoutContext = { bounds: { cols: 16, rows: 9 }, collision: "push", catalog: widgetCatalog };
 
-const work = defaultLayoutDoc("work").monitors["primary"]?.placements ?? [];
+/**
+ * A busy desk to exercise moves and swaps on: a large clock with a date, battery, two system cards side by side and
+ * a player below. It is a fixture rather than a shipped profile, so the mechanics stay tested when the defaults change.
+ */
+const desk: readonly Placement[] = [
+  placement("clock-1", "clock", "l", 0, 0),
+  placement("date-1", "date", "s", 7, 0),
+  placement("battery-1", "battery", "m", 9, 0),
+  placement("system-1", "system", "m", 8, 2),
+  { ...placement("system-2", "system", "m", 10, 2), config: { metric: "disk" } },
+  placement("music-1", "music", "m", 4, 4),
+];
 
 function placement(id: string, widget: string, size: string, x: number, y: number): Placement {
   return { id, widget, size, x, y, config: {} };
@@ -64,20 +75,47 @@ describe("the built-in profiles", () => {
   });
 });
 
+describe("the shipped Work layout", () => {
+  it("is the owner's home screen: eight widgets that fit a 1920x1080 display without overlap or rearranging", () => {
+    const placements = defaultLayoutDoc("work").monitors["primary"]?.placements ?? [];
+    expect(placements.map((p) => [p.id, p.widget, p.size])).toEqual([
+      ["clock-1", "clock", "m"],
+      ["battery-1", "battery", "m"],
+      ["music-1", "music", "l"],
+      ["photo-1", "photo", "s"],
+      ["timer-1", "timer", "s"],
+      ["fun-fact-1", "fun-fact", "m"],
+      ["system-1", "system", "m"],
+      ["date-1", "date", "m"],
+    ]);
+    // The grid metrics of tokens.css (cell 76, gap 12, edge 28) on a 1920x1080 viewport.
+    const bounds = boundsFor(1920, 1080, { cell: 76, gap: 12, edge: 28 });
+    expect(bounds).toEqual({ cols: 21, rows: 11 });
+    const onDesktop: LayoutContext = { ...ctx, bounds };
+    expect(overlapping(placements)).toBe(false);
+    for (const p of placements) {
+      const r = rectOf(ctx.catalog, p);
+      expect(r.x + r.w, `${p.id} right edge`).toBeLessThanOrEqual(bounds.cols);
+      expect(r.y + r.h, `${p.id} bottom edge`).toBeLessThanOrEqual(bounds.rows);
+    }
+    expect(normalizePlacements(placements, onDesktop)).toBe(placements);
+  });
+});
+
 describe("moveTo", () => {
   it("moves a widget to a free cell", () => {
-    const next = moveTo(work, "date-1", { x: 12, y: 0 }, ctx);
+    const next = moveTo(desk, "date-1", { x: 12, y: 0 }, ctx);
     expect(next?.find((p) => p.id === "date-1")).toMatchObject({ x: 12, y: 0 });
-    expect(next?.filter((p) => p.id !== "date-1")).toEqual(work.filter((p) => p.id !== "date-1"));
+    expect(next?.filter((p) => p.id !== "date-1")).toEqual(desk.filter((p) => p.id !== "date-1"));
   });
 
   it("never lets a drop leave the grid", () => {
-    const next = moveTo(work, "date-1", { x: 99, y: 99 }, ctx);
+    const next = moveTo(desk, "date-1", { x: 99, y: 99 }, ctx);
     expect(next?.find((p) => p.id === "date-1")).toMatchObject({ x: 14, y: 7 });
   });
 
   it("pushes a neighbour instead of overlapping it", () => {
-    const next = moveTo(work, "system-1", { x: 10, y: 2 }, ctx);
+    const next = moveTo(desk, "system-1", { x: 10, y: 2 }, ctx);
     expect(next).not.toBeNull();
     expect(overlapping(next ?? [])).toBe(false);
     expect(next?.find((p) => p.id === "system-1")).toMatchObject({ x: 10, y: 2 });
@@ -86,16 +124,16 @@ describe("moveTo", () => {
 
   it("swaps two widgets when the mode is swap", () => {
     const swapCtx: LayoutContext = { ...ctx, collision: "swap" };
-    const next = moveTo(work, "system-1", { x: 10, y: 2 }, swapCtx);
+    const next = moveTo(desk, "system-1", { x: 10, y: 2 }, swapCtx);
     expect(next?.find((p) => p.id === "system-1")).toMatchObject({ x: 10, y: 2 });
     expect(next?.find((p) => p.id === "system-2")).toMatchObject({ x: 8, y: 2 });
   });
 
   it("returns null for an unknown widget and does not mutate the input", () => {
-    const before = JSON.stringify(work);
-    expect(moveTo(work, "nope", { x: 0, y: 0 }, ctx)).toBeNull();
-    moveTo(work, "system-1", { x: 10, y: 2 }, ctx);
-    expect(JSON.stringify(work)).toBe(before);
+    const before = JSON.stringify(desk);
+    expect(moveTo(desk, "nope", { x: 0, y: 0 }, ctx)).toBeNull();
+    moveTo(desk, "system-1", { x: 10, y: 2 }, ctx);
+    expect(JSON.stringify(desk)).toBe(before);
   });
 });
 
@@ -179,11 +217,11 @@ describe("add, duplicate, remove, configure", () => {
   });
 
   it("removes and patches without touching other widgets", () => {
-    expect(removeWidget(work, "system-1")).toHaveLength(work.length - 1);
-    expect(removeWidget(work, "missing")).toBe(work);
-    const patched = patchConfig(work, "clock-1", { hour24: false });
+    expect(removeWidget(desk, "system-1")).toHaveLength(desk.length - 1);
+    expect(removeWidget(desk, "missing")).toBe(desk);
+    const patched = patchConfig(desk, "clock-1", { hour24: false });
     expect(patched.find((p) => p.id === "clock-1")?.config).toMatchObject({ hour24: false });
-    expect(patched.find((p) => p.id === "system-1")).toBe(work.find((p) => p.id === "system-1"));
+    expect(patched.find((p) => p.id === "system-1")).toBe(desk.find((p) => p.id === "system-1"));
   });
 });
 
@@ -194,7 +232,7 @@ describe("normalizePlacements", () => {
   });
 
   it("returns the same array when the layout is already valid", () => {
-    expect(normalizePlacements(work, ctx)).toBe(work);
+    expect(normalizePlacements(desk, ctx)).toBe(desk);
   });
 
   it("fits a layout made on a big display onto a small one without overlaps", () => {

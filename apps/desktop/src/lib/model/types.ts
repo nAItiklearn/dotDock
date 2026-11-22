@@ -12,6 +12,9 @@ export const BACKUP_SCHEMA = 1;
 export type MonitorId = string;
 export const PRIMARY_MONITOR: MonitorId = "primary";
 
+/** The custom theme made from the Windows wallpaper (`lib/theme/wallpaperTheme.ts`); one, replaced each time. */
+export const WALLPAPER_THEME_ID = "custom-from-wallpaper";
+
 // ---------------------------------------------------------------- layout
 
 export interface Placement {

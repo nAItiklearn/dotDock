@@ -158,10 +158,18 @@ jobs:
         run: cargo build --release -p dotdock-sentinel
         working-directory: apps/desktop/src-tauri
 
+      # The notch's hook is built into dotdock.exe (build.rs, D-047), so the installer and the portable exe both
+      # carry it: without it, Connect had no hook program and failed for every user.
+      - name: Build the island hook
+        run: cargo build --release -p dotdock-island-hook
+        working-directory: apps/desktop/src-tauri
+
       # beforeBuildCommand (pnpm build) produces the frontend; output is target/release/bundle/nsis.
       # Updater signatures need the release key, which only release.yml has, so CI bundles skip them.
       - name: Build bundle
         run: pnpm tauri build --config src-tauri/tauri.sentinel.conf.json --config '{"bundle":{"createUpdaterArtifacts":false}}'
+        env:
+          DOTDOCK_EMBED_HOOK: ${{ github.workspace }}/apps/desktop/src-tauri/target/release/dotdock-island-hook.exe
 
       - name: Read app version
         id: app

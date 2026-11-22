@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MAGNIFICATION_LIMITS } from "../geometry";
 import { useDockStore } from "../store";
 import { panelShownAtStart, togglesPanel } from "./panelKey";
 import type { EffectsChoice } from "../effects";
@@ -62,7 +63,7 @@ function Fixture() {
           </label>
           <label>
             magnification {settings.magnification.toFixed(2)}
-            <input type="range" min={1} max={1.6} step={0.05} value={settings.magnification} onChange={(e) => set({ magnification: Number(e.target.value) })} />
+            <input type="range" min={1} max={MAGNIFICATION_LIMITS.max} step={0.05} value={settings.magnification} onChange={(e) => set({ magnification: Number(e.target.value) })} />
           </label>
           <label>
             effects

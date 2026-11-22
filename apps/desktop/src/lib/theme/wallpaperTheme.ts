@@ -1,6 +1,6 @@
 import { OBSIDIAN, PAPER } from "../../design-system/themes";
 import { LIMITS } from "../model/defaults";
-import { THEME_SCHEMA } from "../model/types";
+import { THEME_SCHEMA, WALLPAPER_THEME_ID } from "../model/types";
 import { composite, contrastRatio, formatColor, parseColor, type Rgba } from "./color";
 import { DARK_RAMP, INK, LIGHT_RAMP, STATUS, WHITE, readableOn, type ContrastCheck, type Step } from "./derive";
 import { oklchToRgb, rgbToOklch, type Oklch } from "./oklch";
@@ -19,7 +19,7 @@ import { DEFAULT_SHADOW_STRENGTH, THEME_FILE_KIND, type ThemeDoc, type ThemeRole
 export type WallpaperMode = "dark" | "light";
 
 /** The generated theme is one custom theme, replaced each time, so repeated tries do not pile up. */
-export const WALLPAPER_THEME_ID = "custom-from-wallpaper";
+export { WALLPAPER_THEME_ID };
 
 /**
  * WCAG 2.2 AA for text, 4.5:1. The accent is held to it as well, not to the 3:1 of graphics: widgets

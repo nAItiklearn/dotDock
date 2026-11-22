@@ -296,3 +296,60 @@
 .island-prime * {
   pointer-events: none !important;
 }
+
+/* The one-time offer to connect Claude Code, under the idle notch (ConnectOffer.tsx, D-046). */
+.connect-offer {
+  position: absolute;
+  left: 50%;
+  top: var(--offer-top);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space-2) * var(--k));
+  padding: calc(var(--space-1) * var(--k)) calc(var(--space-1) * var(--k)) calc(var(--space-1) * var(--k)) calc(var(--space-3) * var(--k));
+  border-radius: var(--radius-pill);
+  background: rgb(from var(--surface) r g b / 1);
+  box-shadow: 0 calc(var(--space-1) * var(--k)) calc(var(--space-4) * var(--k)) var(--drop-shadow);
+  pointer-events: auto;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: calc(var(--text-sm) * var(--k));
+}
+.connect-offer__dot {
+  width: calc(var(--space-2) * var(--k));
+  height: calc(var(--space-2) * var(--k));
+  border-radius: 50%;
+  background: var(--accent);
+}
+.connect-offer__text {
+  color: var(--text);
+}
+.connect-offer__button {
+  height: calc(var(--control-sm) * var(--k));
+  padding: 0 calc(var(--space-3) * var(--k));
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text-dim);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.connect-offer__button:hover {
+  background: color-mix(in srgb, var(--text) 14%, transparent);
+}
+.connect-offer__button--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.connect-offer__button--primary:hover {
+  background: color-mix(in srgb, var(--accent) 86%, var(--text));
+}
+.connect-offer__button:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}
+.connect-offer__button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

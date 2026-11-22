@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DIRECT_DRAG_PX, HOLD_MS } from "../lib/layout/gesture";
+import { defaultLayoutDoc } from "../lib/model/defaults";
 import { createApp, type AppContext } from "../lib/state/app";
 import { MemoryBackend } from "../lib/storage/backend";
 import { widgetCatalog } from "./catalog";
@@ -55,6 +56,8 @@ function fire(on: EventTarget, type: string, target: EventTarget, props: Record<
 }
 
 const metrics = { cell: 76, gap: 12, edge: 28 };
+/** Where the shipped Work layout puts the RAM card the gestures pick up. */
+const SYSTEM_HOME_X = defaultLayoutDoc("work").monitors["primary"]?.placements.find((p) => p.id === "system-1")?.x ?? Number.NaN;
 let app: AppContext;
 let root: FakeEl;
 let slot: FakeEl;
@@ -191,7 +194,7 @@ describe("edit mode carries the gesture on", () => {
     expect(editUi.getState().gesture).toBeNull();
     const moved = app.layout.getState().placements.find((p) => p.id === "system-1");
     // Half a pitch (44 px) is half a cell: no jump to a whole cell.
-    expect(moved?.x).toBe(8.5);
+    expect(moved?.x).toBe(SYSTEM_HOME_X + 0.5);
     c.detach();
   });
 
@@ -232,7 +235,7 @@ describe("edit mode carries the gesture on", () => {
     const c = controller();
     window.dispatchEvent(new Event("blur"));
     expect(editUi.getState().gesture).toBeNull();
-    expect(app.layout.getState().placements.find((p) => p.id === "system-1")?.x).toBe(8);
+    expect(app.layout.getState().placements.find((p) => p.id === "system-1")?.x).toBe(SYSTEM_HOME_X);
     c.detach();
   });
 });
