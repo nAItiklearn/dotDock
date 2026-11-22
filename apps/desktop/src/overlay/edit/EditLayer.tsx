@@ -13,6 +13,7 @@ import { GestureController } from "./gestures";
 import { Toolbar } from "./Toolbar";
 import { UndoToast } from "./UndoToast";
 import "./edit.css";
+import { isKey } from "./keys";
 
 /** Keys that belong to the control that has focus, not to the layout. */
 const OWN_KEYS_SELECTOR = "input, select, textarea, [role='radio'], [role='slider'], [contenteditable='true']";
@@ -91,14 +92,14 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
         else void state.exitEdit();
         return;
       }
-      if (mod && !e.altKey && e.code === "KeyZ") {
+      if (mod && !e.altKey && isKey(e, "z")) {
         e.preventDefault();
         editUi.setState({ undoToast: null });
         if (e.shiftKey) state.redo();
         else state.undo();
         return;
       }
-      if (mod && !e.altKey && e.code === "KeyY") {
+      if (mod && !e.altKey && isKey(e, "y")) {
         e.preventDefault();
         state.redo();
         return;
@@ -107,7 +108,7 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
       if (inControl || !id || e.altKey) return;
       const name = widgetCatalog.get(state.placements.find((p) => p.id === id)?.widget ?? "")?.name ?? "Widget";
 
-      if (mod && e.code === "KeyD") {
+      if (mod && isKey(e, "d")) {
         e.preventDefault();
         if (state.duplicate(id).ok) announce(`${name} duplicated`);
       } else if (e.key === "Delete" || e.key === "Backspace") {

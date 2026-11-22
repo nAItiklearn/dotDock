@@ -113,7 +113,7 @@ export function SearchBody() {
         }}
       >
         <Icon name="search" />
-        <input className="tp-input" autoFocus value={query} placeholder={t("tile.search.placeholder", { engine: ENGINE_NAME[engine] })} aria-label={t("tile.search")} onChange={(e) => setQuery(e.target.value)} />
+        <input className="tp-input" autoFocus data-focus-field value={query} placeholder={t("tile.search.placeholder", { engine: ENGINE_NAME[engine] })} aria-label={t("tile.search")} onChange={(e) => setQuery(e.target.value)} />
       </form>
       <p className="tp-hint">{target === null ? t("tile.search.hint") : isAddressQuery(query) ? t("tile.search.opens", { address: target }) : t("tile.search.enter", { engine: ENGINE_NAME[engine] })}</p>
       <div className="tp-tabs" role="group" aria-label={t("tile.search.engine")}>

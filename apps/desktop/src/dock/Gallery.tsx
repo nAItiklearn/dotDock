@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useMemo, useState, type CSSProperties, type DragEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent } from "react";
 import { Icon } from "../design-system/Icon";
 import { actions } from "./bridge";
+import { useFocusField } from "./useFocusField";
 import { EmptyGlyph } from "./EmptyGlyph";
 import {
   actionOf,
@@ -127,6 +128,8 @@ export function Gallery({ open }: { readonly open: OpenGallery }) {
   const viewport = useViewport();
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState<GalleryCategory | "all">("all");
+  const panel = useRef<HTMLDivElement>(null);
+  useFocusField(panel);
 
   const pinnedStacks = useMemo(() => new Set(settings.pinned.flatMap((p) => (p.kind === "stack" ? [p.category] : []))), [settings.pinned]);
   const items = useMemo(() => galleryItems({ tiles: settings.tiles, pinnedStacks, categories, apps }), [settings.tiles, pinnedStacks, categories, apps]);
@@ -167,7 +170,7 @@ export function Gallery({ open }: { readonly open: OpenGallery }) {
   } as CSSProperties;
 
   return (
-    <div className="popover gallery" role="dialog" aria-label={t("gallery.title")} style={style} data-open="true">
+    <div ref={panel} className="popover gallery" role="dialog" aria-label={t("gallery.title")} style={style} data-open="true">
       <div className="popover__plate" />
       <div className="popover__content">
         <header className="popover__head">
@@ -181,6 +184,7 @@ export function Gallery({ open }: { readonly open: OpenGallery }) {
           className="gallery__search"
           type="search"
           autoFocus
+          data-focus-field
           value={query}
           placeholder={t("gallery.search")}
           aria-label={t("gallery.search")}

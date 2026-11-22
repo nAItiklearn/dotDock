@@ -375,8 +375,10 @@ pub async fn shortcuts_register(
 
 // ---------------------------------------------------------- windows and app info
 
-/// Opens or focuses Settings, on a `#/<section>/<page>` route when one is given.
-#[tauri::command]
+/// Opens or focuses Settings, on a `#/<section>/<page>` route when one is given. Async so it runs off the main
+/// thread: a window built from a synchronous command (which Windows runs on the main thread) never finished loading
+/// its page and stayed blank white.
+#[tauri::command(async)]
 pub fn settings_open(app: AppHandle, page: Option<String>) {
     // Only Settings' own routes; anything else opens it where it was.
     let route = page.filter(|p| p.starts_with("#/"));

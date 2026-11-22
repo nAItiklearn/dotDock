@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { Icon, type IconName } from "../../design-system/Icon";
 import { useProvider } from "../../providers/store";
 import { formatDuration, MS_PER_MINUTE } from "../../widgets/format";
@@ -30,6 +30,7 @@ import { ColourBody, ConvertBody, EmojiBody, NetworkBody, NotesBody, TogglesBody
 import type { ContactAction, TileIssue } from "./ui-types";
 import { CurrencyBody, HistoryBody, MemoBody, SearchBody, SunBody } from "./morePopovers";
 import { hydrationFill } from "./wave";
+import { useFocusField } from "../useFocusField";
 import "../panels.css";
 import "./popovers.css";
 
@@ -522,6 +523,8 @@ export function TilePopover({ open }: { readonly open: OpenTile }) {
   const size = TILE_POPOVER_SIZE[open.id];
   const pos = placeBesideDock(open.from, { w: size.w, h: size.h }, viewport, TILE_POPOVER.gap);
   const label = t(`tile.${open.id}`);
+  const panel = useRef<HTMLDivElement>(null);
+  useFocusField(panel);
 
   useLayoutEffect(() => {
     markOpenPainted("tile");
@@ -547,7 +550,7 @@ export function TilePopover({ open }: { readonly open: OpenTile }) {
   } as CSSProperties;
 
   return (
-    <div className="popover tilepop" role="dialog" aria-label={label} style={style} data-open="true" data-tile={open.id}>
+    <div ref={panel} className="popover tilepop" role="dialog" aria-label={label} style={style} data-open="true" data-tile={open.id}>
       <div className="popover__plate" />
       <div className="popover__content">
         <header className="popover__head">
