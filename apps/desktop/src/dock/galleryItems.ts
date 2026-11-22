@@ -12,10 +12,11 @@ export const GALLERY_CATEGORIES = ["time", "focus", "media", "system", "tools", 
 export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
 
 /**
- * Tiles not offered in V1 because nothing can fill them yet (D-043): the core has no exchange-rate or wind feed, and
- * no screen adds a contact. A tile already on someone's dock still draws; it just cannot be added again.
+ * Tiles not offered in V1 because nothing can fill them yet (D-043): the core has no exchange-rate or wind feed, the
+ * weather provider is not connected (the home-screen weather widget is held for the same reason, D-016), and no
+ * screen adds a contact. A tile already on someone's dock still draws; it just cannot be added again.
  */
-export const HELD_TILES: ReadonlySet<TileId> = new Set<TileId>(["contacts", "currency", "wind"]);
+export const HELD_TILES: ReadonlySet<TileId> = new Set<TileId>(["contacts", "currency", "weather", "wind"]);
 
 const TILE_CATEGORY: Readonly<Record<TileId, GalleryCategory>> = {
   clock: "time",
