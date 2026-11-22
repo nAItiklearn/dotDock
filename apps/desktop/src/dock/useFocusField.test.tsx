@@ -33,6 +33,16 @@ describe("useFocusField", () => {
     outside.remove();
   });
 
+  it("takes it back when the press that opened the panel ends, after the pressed item took focus", () => {
+    const pressed = document.createElement("button");
+    document.body.append(pressed);
+    const { getByLabelText } = render(<Panel />);
+    pressed.focus();
+    window.dispatchEvent(new Event("pointerup"));
+    expect(document.activeElement).toBe(getByLabelText("field"));
+    pressed.remove();
+  });
+
   it("leaves focus alone while it is already inside the panel, and in panels with no field", () => {
     const { getByText } = render(<Panel />);
     getByText("inside").focus();

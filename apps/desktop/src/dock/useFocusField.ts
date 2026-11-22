@@ -17,7 +17,13 @@ export function useFocusField(panel: RefObject<HTMLElement | null>): void {
       field.focus();
     };
     focus();
+    // A panel that opens on press mounts before the browser's own mouse-down step, which then focuses the item that
+    // was pressed; the release of that same press hands the keyboard back to the field.
+    window.addEventListener("pointerup", focus, { once: true });
     window.addEventListener("focus", focus);
-    return () => window.removeEventListener("focus", focus);
+    return () => {
+      window.removeEventListener("pointerup", focus);
+      window.removeEventListener("focus", focus);
+    };
   }, [panel]);
 }
