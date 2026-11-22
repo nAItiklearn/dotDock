@@ -65,8 +65,8 @@ export const VERSIONS: readonly Version[] = [
   },
   {
     major: 2,
-    name: "Version 2",
-    summary: "More tiles for the dock, drawn in the same dots. These are planned, not built yet; each one ships when it is ready.",
+    name: "Coming next",
+    summary: "More tiles for the dock, drawn in the same dots. Each one ships in an update when it is ready.",
     groups: [
       {
         title: "Planned dock tiles",

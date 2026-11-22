@@ -35,12 +35,12 @@ const id = (major: number) => `v${major}`;
               <span class={v.status.state === "released" || v.status.state === "out" || v.status.state === "earlier" ? "dot" : "dot dot--hollow"} aria-hidden="true" />
               {v.status.state === "released" && (
                 <>
-                  Released <time datetime={v.status.dateTime}>{v.status.date}</time>
+                  {v.status.tag.replace(/^v/, "")} released <time datetime={v.status.dateTime}>{v.status.date}</time>
                 </>
               )}
               {v.status.state === "out" && `Released as ${v.status.tag}`}
               {v.status.state === "earlier" && "Released"}
-              {v.status.state === "in-testing" && "Next, not released yet"}
+              {v.status.state === "in-testing" && "Planned"}
               {v.status.state === "planned" && "Planned, no date"}
             </p>
           </div>
