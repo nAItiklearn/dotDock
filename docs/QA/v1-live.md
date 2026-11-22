@@ -26,14 +26,16 @@ own answers). A check that touches the screen first confirms nobody else is usin
 | 14 | Typing in Web search went nowhere | Focus returned to the pressed tile | `useFocusField`, tests (`f76f3fa`, `7e7c3f6`) |
 | 15 | Ctrl+Z / Ctrl+Y / Ctrl+D ignored from some keyboards | Matched on `e.code` only | Also the typed letter when there is no code, test (`f76f3fa`) |
 | 16 | Picking a wallpaper in Settings did not recolour | dotDock's own wallpaper writes are not followed | The library pick announces itself (`da1bc85`) |
+| 18 | A tile added to the dock never updated (stopwatch stuck at 00:00) | Watch and unwatch ran in parallel on the core's thread pool | Run in order, test (`b1ec6fb`) |
+| 19 | Wide tiles clipped ("00… ST…") | Length ratios too short for their words | Ratios measured live and raised (`b1ec6fb`, `81d1a74`) |
 | 17 | Colours ran one wallpaper behind | Windows reports the new wallpaper a moment late | The core keeps and serves the announced file (`52a5576`) |
 
 ## Verified live on the final code
 
 - Hit-testing: dock items and widgets take clicks, empty desktop passes them through; the island takes clicks only
   while a session shows.
-- Dock: Chrome and Spotify open, focus, minimise and restore from their icons (5 rounds each, plus 6 rapid clicks;
-  File Explorer is re-tested below); stacks open and launch (Git CMD, Paint); App Library search + Enter launches Calculator; windows
+- Dock: Chrome, Spotify and File Explorer open, focus, minimise and restore from their icons (3 to 5 rounds each,
+  plus 6 rapid clicks); stacks open and launch (Git CMD, Paint); App Library search + Enter launches Calculator; windows
   close from the dock; right-click menu, Move to stack and back, Keep in dock, drag to reorder and back, remove and
   re-pin; icon size, magnification, auto-hide, all six looks; live window previews; the music tile drives Spotify.
 - All 22 tile popovers open with nothing overflowing or clipped (`popovers/*.png`); Web search opens the default
@@ -54,8 +56,14 @@ own answers). A check that touches the screen first confirms nobody else is usin
 - Safety: the quit shortcut (Ctrl+Alt+Shift+D) restores the taskbar with auto-hide, verified; a killed process is
   cleaned up by the sentinel, verified.
 
+## Final regression (build `81d1a74`)
+
+19 of 19 automated live checks pass (`final-regression.txt`); 15 random widget moves and resizes with no overlap and
+nothing off screen; undo x5 and redo x2; the layout survives a reload; 8 wallpaper picks in a row from Settings each
+recolour the widgets and the dock together, and Original brings the owner's picture back.
+
 ## Gate on the final code
 
-`tsc --noEmit` clean; vitest 1922 tests (1 skipped, explained in the suite); `cargo fmt --check`, `cargo clippy
+`tsc --noEmit` clean; vitest 1925 tests (1 skipped, explained in the suite); `cargo fmt --check`, `cargo clippy
 --workspace --all-targets -D warnings` clean; `cargo test --workspace` 655 passed; website `pnpm build` (0 errors,
 0 warnings) and 59 tests.
