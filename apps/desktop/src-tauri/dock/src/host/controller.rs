@@ -32,10 +32,9 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 use windows::Win32::UI::Shell::ABN_POSCHANGED;
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, FindWindowExW, FindWindowW, GetMessageW,
-    IsWindowVisible, KillTimer, PostMessageW,
-    PostQuitMessage, RegisterClassW, RegisterWindowMessageW, SetTimer, TranslateMessage, UnregisterClassW, MSG,
-    SPI_SETDESKWALLPAPER, SPI_SETWORKAREA, WINDOW_EX_STYLE, WM_APP, WM_CLOSE, WM_DESTROY, WM_DISPLAYCHANGE, WM_HOTKEY,
-    WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WS_EX_TOOLWINDOW, WS_POPUP,
+    IsWindowVisible, KillTimer, PostMessageW, PostQuitMessage, RegisterClassW, RegisterWindowMessageW, SetTimer,
+    TranslateMessage, UnregisterClassW, MSG, SPI_SETDESKWALLPAPER, SPI_SETWORKAREA, WINDOW_EX_STYLE, WM_APP, WM_CLOSE,
+    WM_DESTROY, WM_DISPLAYCHANGE, WM_HOTKEY, WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WS_EX_TOOLWINDOW, WS_POPUP,
 };
 
 const CLASS_NAME: windows::core::PCWSTR = w!("DotDockDockHost");

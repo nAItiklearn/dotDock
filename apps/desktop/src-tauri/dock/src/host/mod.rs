@@ -157,12 +157,9 @@ impl DockHost {
         }
     }
 
-    /// The window's handle, scale and width, for DWM thumbnails.
+    /// The window's handle and scale, for DWM thumbnails.
     pub fn metrics(&self) -> Option<WindowMetrics> {
         let window = self.attached().as_ref().map(|a| a.window)?;
-        window::exists(window).then(|| WindowMetrics {
-            window,
-            scale: window::scale(window),
-        })
+        window::exists(window).then(|| WindowMetrics { window, scale: window::scale(window) })
     }
 }

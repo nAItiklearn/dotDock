@@ -8,11 +8,11 @@
 use crate::protocol::Rect as CssRect;
 use std::io;
 use windows::Win32::Foundation::{HWND, RECT};
-use windows::Win32::UI::WindowsAndMessaging::IsIconic;
 use windows::Win32::Graphics::Dwm::{
     DwmQueryThumbnailSourceSize, DwmRegisterThumbnail, DwmUnregisterThumbnail, DwmUpdateThumbnailProperties,
     DWM_THUMBNAIL_PROPERTIES, DWM_TNP_OPACITY, DWM_TNP_RECTDESTINATION, DWM_TNP_SOURCECLIENTAREAONLY, DWM_TNP_VISIBLE,
 };
+use windows::Win32::UI::WindowsAndMessaging::IsIconic;
 
 /// Space between the slots of the preview card's well, in CSS px (`PREVIEW.slotGap` in the dock UI).
 pub const SLOT_GAP: f64 = 10.0;
@@ -107,7 +107,9 @@ pub fn slots(well: CssRect, count: usize, scale: f64) -> Vec<(f64, f64, f64, f64
     }
     let n = count as f64;
     let w = (well.w - SLOT_GAP * (n - 1.0)) / n;
-    (0..count).map(|i| ((well.x + i as f64 * (w + SLOT_GAP)) * scale, well.y * scale, w * scale, well.h * scale)).collect()
+    (0..count)
+        .map(|i| ((well.x + i as f64 * (w + SLOT_GAP)) * scale, well.y * scale, w * scale, well.h * scale))
+        .collect()
 }
 
 /// A source of `size` px scaled to fit inside `slot` (never enlarged), centred in it.
@@ -117,7 +119,12 @@ pub fn fit((sw, sh): (i32, i32), (x, y, w, h): (f64, f64, f64, f64)) -> RECT {
     let (fw, fh) = (sw * factor, sh * factor);
     let left = x + (w - fw) / 2.0;
     let top = y + (h - fh) / 2.0;
-    RECT { left: left.round() as i32, top: top.round() as i32, right: (left + fw).round() as i32, bottom: (top + fh).round() as i32 }
+    RECT {
+        left: left.round() as i32,
+        top: top.round() as i32,
+        right: (left + fw).round() as i32,
+        bottom: (top + fh).round() as i32,
+    }
 }
 
 #[cfg(test)]
