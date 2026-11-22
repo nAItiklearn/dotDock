@@ -256,6 +256,15 @@ fn read_limited(path: &Path, limit: u64) -> Result<Vec<u8>, WallpaperError> {
     std::fs::read(path).map_err(|e| WallpaperError::Read(e.to_string()))
 }
 
+/// The bytes of a wallpaper file dotDock itself named (the one it just announced), refusing anything that is not an
+/// absolute path to a file.
+pub fn image_at(path: &Path) -> Result<Vec<u8>, WallpaperError> {
+    if !path.is_absolute() || !path.is_file() {
+        return Err(WallpaperError::Read(format!("{} is not a wallpaper file", path.display())));
+    }
+    read_limited(path, MAX_IMAGE_BYTES)
+}
+
 /// The bytes of the picture Windows is showing as the wallpaper, so Settings can read its colours.
 /// The path comes from Windows, never from the caller.
 pub fn current_image() -> Result<Vec<u8>, WallpaperError> {

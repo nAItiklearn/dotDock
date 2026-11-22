@@ -156,6 +156,8 @@ export interface NativeApi {
     remove(id: string): Promise<void>;
     /** `wallpaper_current_image` () → raw file bytes. The picture Windows shows as the wallpaper; rejects for a solid colour. */
     currentImage(): Promise<Blob>;
+    /** The wallpaper the core last announced as changed (`wallpaper://changed`): the new picture, not the one before. */
+    announcedImage(): Promise<Blob>;
   };
 
   shortcuts: {
@@ -215,6 +217,7 @@ export const unavailableNativeApi: NativeApi = {
     importFile: unavailable,
     remove: unavailable,
     currentImage: unavailable,
+    announcedImage: unavailable,
   },
   shortcuts: { register: unavailable },
   window: { openSettings: unavailable },
@@ -247,6 +250,7 @@ export const tauriNativeApi: NativeApi = {
     importFile: () => call("wallpapers_import"),
     remove: (id) => call("wallpapers_remove", { id }),
     currentImage: async () => new Blob([await call<ArrayBuffer>("wallpaper_current_image")]),
+    announcedImage: async () => new Blob([await call<ArrayBuffer>("wallpaper_announced_image")]),
   },
   shortcuts: { register: (bindings) => call("shortcuts_register", { bindings }) },
   window: {

@@ -209,6 +209,7 @@ fn build_and_run(primary: bool) {
             weather_search,
             weather_set_place,
             wallpaper_current_image,
+            wallpaper_host::wallpaper_announced_image,
             core_commands::startup_get,
             core_commands::startup_set,
             core_commands::restore_windows,

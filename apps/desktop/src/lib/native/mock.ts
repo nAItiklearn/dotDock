@@ -137,6 +137,7 @@ export function createMockNativeApi(): NativeApi {
         return later(undefined);
       },
       currentImage: sampleWallpaper,
+      announcedImage: sampleWallpaper,
     },
     shortcuts: { register: () => later({ toggleEditMode: "ok", openSettings: "ok", nextProfile: "ok" }) },
     window: { openSettings: () => later(undefined) },

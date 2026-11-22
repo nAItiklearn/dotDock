@@ -35,7 +35,7 @@ void Promise.all([document.fonts.ready, app.start()]).then(() => {
   // The home screen follows the Windows wallpaper for every window: the dock and Settings read the same settings.
   if (isTauri()) {
     void listen(EVENT_WALLPAPER_CHANGED, () => {
-      followWallpaper(app.settings, () => getNativeApi().wallpapers.currentImage(), sampleImage).catch((err: unknown) =>
+      followWallpaper(app.settings, () => getNativeApi().wallpapers.announcedImage(), sampleImage).catch((err: unknown) =>
         console.error("following the wallpaper failed", err),
       );
     });
