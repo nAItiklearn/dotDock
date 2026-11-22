@@ -228,7 +228,8 @@ pub fn island_ready(app: AppHandle) {
     }
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_state(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::InitialState> {
     s.with(|h| h.service.initial_state())
 }
@@ -239,7 +240,8 @@ pub fn island_set_regions(regions: Regions, s: State<'_, IslandSlot>) {
     let _ = s.with(|h| *h.regions.lock().unwrap_or_else(PoisonError::into_inner) = regions);
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_focus(id: String, s: State<'_, IslandSlot>) -> Res<dotdock_island::focus::FocusOutcome> {
     s.with(|h| h.service.focus(&id))
 }
@@ -249,17 +251,20 @@ pub fn island_dismiss(id: String, s: State<'_, IslandSlot>) {
     let _ = s.with(|h| h.service.dismiss(&id));
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_connect(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
     s.with(|h| h.service.connect().map_err(|e| e.to_string()))?
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_disconnect(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
     s.with(|h| h.service.disconnect().map_err(|e| e.to_string()))?
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_connect_agent(
     agent: Connectable,
     s: State<'_, IslandSlot>,
@@ -267,7 +272,8 @@ pub fn island_connect_agent(
     s.with(|h| h.service.connect_agent(agent).map_err(|e| e.to_string()))?
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_disconnect_agent(
     agent: Connectable,
     s: State<'_, IslandSlot>,
@@ -275,12 +281,14 @@ pub fn island_disconnect_agent(
     s.with(|h| h.service.disconnect_agent(agent).map_err(|e| e.to_string()))?
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_connection(s: State<'_, IslandSlot>) -> Res<dotdock_island::service::ConnectionStatus> {
     s.with(|h| h.service.connection())
 }
 
-#[tauri::command]
+// Off the main thread: it reads or writes files, or activates another window.
+#[tauri::command(async)]
 pub fn island_set_settings(settings: IslandSettings, s: State<'_, IslandSlot>) -> Res<IslandSettings> {
     s.with(|h| {
         let saved = h.service.set_settings(settings).map_err(|e| e.to_string())?;

@@ -1,6 +1,6 @@
 [package]
 name = "dotdock-island-hook"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 license = "GPL-3.0-or-later"
 description = "Hook runner for Agent Island (Claude Code, GitHub Copilot CLI): records what the agent is doing, then exits"
