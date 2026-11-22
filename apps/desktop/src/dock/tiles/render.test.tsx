@@ -599,7 +599,7 @@ describe("the dock settings popover", () => {
 
   it("resets how the dock looks, but never whether it runs or replaces the taskbar", () => {
     const patch = resetPatch({ enabled: true, replaceTaskbar: true });
-    expect(patch).toMatchObject({ pinned: [], tiles: [], edge: "bottom", iconSize: 48, magnification: 1.25, autoHide: false, reserveSpace: true, enabled: true, replaceTaskbar: true });
+    expect(patch).toMatchObject({ pinned: [], tiles: [], edge: "bottom", iconSize: 48, magnification: 1.25, autoHide: true, reserveSpace: true, enabled: true, replaceTaskbar: true });
   });
 
   it("offers every look the dock has", () => {

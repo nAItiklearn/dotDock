@@ -287,7 +287,9 @@ impl Default for DockSettings {
             replace_taskbar: false,
             edge: DockEdge::Bottom,
             reserve_space: true,
-            auto_hide: false,
+            // Like the macOS dock and the Windows taskbar on auto-hide: out of the way until the cursor reaches
+            // the bottom edge (owner, 2026-11-22).
+            auto_hide: true,
             icon_size: DEFAULT_ICON_SIZE,
             magnification: DEFAULT_MAGNIFICATION,
             pinned: Vec::new(),

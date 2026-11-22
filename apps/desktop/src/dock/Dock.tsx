@@ -76,7 +76,7 @@ export function Dock() {
   const hidden = useAutoHide(autoHide && !frozen, busy);
   const openRects = useOpenPanelRects(rootRef, modal);
   const hitPanels = useMemo(() => ({ ...panels, ...openRects }), [panels, openRects]);
-  useRegions(layout, hidden, hitPanels, viewport, fullscreen);
+  useRegions(layout, hidden, autoHide && !frozen, hitPanels, viewport, fullscreen);
   useCloseOnBlur(modal);
   useKeyboardFocus(keyboard);
   useNoticeTimeout();

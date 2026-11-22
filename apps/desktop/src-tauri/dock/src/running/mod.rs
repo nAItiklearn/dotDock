@@ -70,6 +70,14 @@ impl AppIndex {
             return Some(id);
         }
         let path = normalise_path(exe?);
+        // File Explorer's windows carry no AppUserModelID and its shortcut points at a shell folder, not a program,
+        // so its windows are known by the program that draws them. Shell surfaces of the same process (desktop,
+        // taskbar) never get here: they are filtered out by class first.
+        if path.ends_with(r"\windows\explorer.exe") {
+            if let Some(id) = self.by_aumid.get(FILE_EXPLORER) {
+                return Some(id);
+            }
+        }
         if let Some(candidates) = self.by_exe.get(&path) {
             return candidates.iter().find(|c| c.plain).or_else(|| candidates.first()).map(|c| c.id.as_str());
         }
@@ -91,6 +99,9 @@ impl AppIndex {
         named.or(first).map(|(_, id)| id.as_str())
     }
 }
+
+/// File Explorer's AppUserModelID, lower case as the index stores it.
+const FILE_EXPLORER: &str = "microsoft.windows.explorer";
 
 /// `<name>_<publisher id>` from a lower-case program path under `\windowsapps\<name>_<version>_<arch>__<publisher id>\`.
 fn package_family(path: &str) -> Option<String> {
@@ -143,6 +154,19 @@ mod tests {
         assert_eq!(index.resolve(None, Some(exe)), Some("spotify"));
         assert_eq!(index.resolve(None, Some(r"C:\Program Files\WindowsApps\Other_1.0_x64__abc\x.exe")), None);
         assert_eq!(index.resolve(None, Some(r"C:\Apps\Spotify.exe")), None);
+    }
+
+    #[test]
+    fn file_explorer_windows_belong_to_file_explorer() {
+        let index = AppIndex::new(&[app(
+            "Microsoft.Windows.Explorer",
+            Some("Microsoft.Windows.Explorer"),
+            Some("::{52205FD8-5DFB-447D-801A-D0B52F2E83E1}"),
+            None,
+        )]);
+        assert_eq!(index.resolve(None, Some(r"C:\Windows\explorer.exe")), Some("Microsoft.Windows.Explorer"));
+        assert_eq!(index.resolve(None, Some(r"C:\Tools\explorer.exe")), None, "only the system's explorer");
+        assert_eq!(AppIndex::new(&[]).resolve(None, Some(r"C:\Windows\explorer.exe")), None);
     }
 
     #[test]

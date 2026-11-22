@@ -18,6 +18,11 @@ export interface RegionInput {
   /** Most the row can grow along its axis when magnified. */
   readonly growth: number;
   readonly hidden: boolean;
+  /**
+   * The dock hides itself. The strip along the screen edge then stays part of its area while it is shown too: a
+   * cursor resting on the edge is on the dock, so the dock does not slide away under it and wake again in a loop.
+   */
+  readonly autoHide: boolean;
   /** Popovers, menus and previews that take the pointer: each as drawn, never the empty space around it. */
   readonly panels: readonly Rect[];
   /**
@@ -42,8 +47,9 @@ export const hotStrip = (bar: Rect, viewport: Size): Rect => ({ x: bar.x, y: vie
 /** Rectangles for `dock_set_regions`: everything that must take the pointer, nothing else. */
 export function computeRegions(input: RegionInput): Rect[] {
   if (input.fullscreen) return [{ x: 0, y: 0, w: input.viewport.w, h: input.viewport.h }];
-  const dock = input.hidden ? hotStrip(input.bar, input.viewport) : dockZone(input);
-  return [dock, ...input.panels.map((p) => inflate(p, HIT_MARGIN))];
+  const strip = hotStrip(input.bar, input.viewport);
+  const dock = input.hidden ? [strip] : input.autoHide ? [dockZone(input), strip] : [dockZone(input)];
+  return [...dock, ...input.panels.map((p) => inflate(p, HIT_MARGIN))];
 }
 
 const sameRect = (a: Rect, b: Rect): boolean => a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;

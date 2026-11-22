@@ -5,7 +5,7 @@ import { alongAxis, computeRegions, coversWindow, dockZone, HOT_ZONE, hotStrip, 
 const VIEWPORT = { w: 1536, h: 864 };
 const BAR = { x: 400, y: 770, w: 700, h: 68 };
 
-const base: RegionInput = { bar: BAR, engaged: false, headroom: 34, growth: 80, hidden: false, panels: [], fullscreen: false, viewport: VIEWPORT };
+const base: RegionInput = { bar: BAR, engaged: false, headroom: 34, growth: 80, hidden: false, autoHide: false, panels: [], fullscreen: false, viewport: VIEWPORT };
 
 describe("towardInside and alongAxis", () => {
   it("extends the rect upwards, towards the middle of the screen", () => {
@@ -33,6 +33,15 @@ describe("computeRegions", () => {
     const [strip] = computeRegions({ ...base, hidden: true });
     expect(strip).toEqual({ x: 400, y: VIEWPORT.h - HOT_ZONE, w: 700, h: HOT_ZONE });
     expect(hotStrip(BAR, VIEWPORT)).toEqual(strip);
+  });
+
+  it("keeps the screen-edge strip on an auto-hiding dock while it is shown, so a cursor resting there keeps it up", () => {
+    const shown = computeRegions({ ...base, autoHide: true });
+    expect(shown).toEqual([computeRegions(base)[0], hotStrip(BAR, VIEWPORT)]);
+    const edge = { x: 700, y: VIEWPORT.h - 1 };
+    const covered = (r: { x: number; y: number; w: number; h: number }) => edge.x >= r.x && edge.x < r.x + r.w && edge.y >= r.y && edge.y < r.y + r.h;
+    expect(shown.some(covered)).toBe(true);
+    expect(computeRegions(base).some(covered)).toBe(false);
   });
 
   it("adds each open panel as drawn, and covers the whole window only for the App Library", () => {

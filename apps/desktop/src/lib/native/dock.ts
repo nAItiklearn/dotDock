@@ -44,7 +44,7 @@ export const DEFAULT_DOCK_SETTINGS: DockSettings = {
   replaceTaskbar: false,
   edge: "bottom",
   reserveSpace: true,
-  autoHide: false,
+  autoHide: true,
   iconSize: DOCK_ICON_LIMITS.default,
   magnification: DOCK_MAGNIFICATION_LIMITS.default,
   pinned: [],

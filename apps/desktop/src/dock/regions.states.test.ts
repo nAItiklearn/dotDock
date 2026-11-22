@@ -108,6 +108,7 @@ const input = (viewport: Size, extra: Partial<RegionInput> = {}): RegionInput =>
   headroom: HEADROOM,
   growth: GROWTH,
   hidden: false,
+  autoHide: false,
   panels: [],
   fullscreen: false,
   viewport,

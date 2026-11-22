@@ -12,7 +12,8 @@ export const DEFAULT_SETTINGS: DockSettings = {
   replaceTaskbar: false,
   edge: "bottom",
   reserveSpace: true,
-  autoHide: false,
+  // Out of the way until the cursor reaches the bottom edge, like the macOS dock (owner, 2026-11-22).
+  autoHide: true,
   iconSize: 48,
   magnification: 1.25,
   pinned: [],

@@ -32,7 +32,7 @@ export interface PanelRects {
  * Tells the core which rectangles take the pointer. Everything else clicks through to the desktop, so this is
  * what keeps a full-screen window from getting in the way of the apps beneath it.
  */
-export function useRegions(layout: BarLayout | null, hidden: boolean, panels: PanelRects, viewport: Size, fullscreen: boolean): void {
+export function useRegions(layout: BarLayout | null, hidden: boolean, autoHide: boolean, panels: PanelRects, viewport: Size, fullscreen: boolean): void {
   const pointerInside = useDockStore((s) => s.pointerInside);
   const sent = useRef<readonly Rect[]>([]);
   useEffect(() => {
@@ -44,6 +44,7 @@ export function useRegions(layout: BarLayout | null, hidden: boolean, panels: Pa
       headroom: layout.headroom,
       growth: layout.growth,
       hidden,
+      autoHide,
       panels: open,
       fullscreen,
       viewport,
@@ -51,7 +52,7 @@ export function useRegions(layout: BarLayout | null, hidden: boolean, panels: Pa
     if (sameRegions(rects, sent.current)) return;
     sent.current = rects;
     actions.setRegions(rects);
-  }, [layout, hidden, panels, viewport, pointerInside, fullscreen]);
+  }, [layout, hidden, autoHide, panels, viewport, pointerInside, fullscreen]);
 }
 
 /**

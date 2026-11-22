@@ -166,6 +166,8 @@ describe("Dock / Behaviour", () => {
   });
 
   it("turns auto-hide on", async () => {
+    dock = fakeDock({ ...START, autoHide: false });
+    setNativeApi(dock.api);
     render(<DockBehaviourPage />);
     fireEvent.click(await screen.findByRole("switch", { name: "Hide the dock automatically" }));
     expect((await lastWrite()).autoHide).toBe(true);
