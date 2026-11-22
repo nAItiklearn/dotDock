@@ -659,7 +659,7 @@ describe("tiles in edit mode", () => {
   it("marks a compact tile and gives it the length of one item", () => {
     expect(slot("agenda", "compact", false)).toContain('data-size="compact"');
     expect(slot("agenda", "compact", false)).toContain("--len:48px");
-    expect(slot("agenda", "regular", false)).toContain("--len:173px");
+    expect(slot("agenda", "regular", false)).toContain("--len:192px");
   });
 });
 

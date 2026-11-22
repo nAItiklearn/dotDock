@@ -46,19 +46,22 @@ export const RATIO = {
   label: 0.5,
 } as const;
 
-/** Length of each kind of item along the dock, in icon sizes. */
+/**
+ * Length of each kind of item along the dock, in icon sizes. Each wide tile's is what its words need at their usual
+ * length, measured live (a stopwatch at 2.6 showed "00…"); only names that vary, like History's, may end in "…".
+ */
 export const LENGTH_RATIO = {
   item: 1,
   divider: RATIO.divider,
   clock: 2.3,
   media: 3.8,
   system: 1.05,
-  agenda: 3.6,
+  agenda: 4.0,
   meeting: 3.9,
-  focus: 2.8,
-  stopwatch: 2.6,
+  focus: 4.4,
+  stopwatch: 4.0,
   hydration: 1,
-  reminders: 3.1,
+  reminders: 3.5,
   progress: 2.5,
   contacts: 2.1,
   mic: 1,
@@ -66,21 +69,21 @@ export const LENGTH_RATIO = {
   cpu: 1,
   battery: 1,
   analog: 1,
-  notes: 3.1,
+  notes: 3.3,
   colour: 1,
-  convert: 2.8,
+  convert: 4.2,
   emoji: 1,
-  world: 3.1,
-  network: 3.2,
+  world: 3.5,
+  network: 3.45,
   toggles: 3.4,
   flip: 2.2,
-  sun: 3.8,
+  sun: 4.35,
   wind: 2.7,
   weather: 2.7,
   currency: 3.6,
-  search: 2.8,
-  history: 3.1,
-  memo: 2.8,
+  search: 3.8,
+  history: 3.6,
+  memo: 3.3,
   /** Measured once drawn; this estimate only sizes the dock before the first measurement. */
   status: 3.2,
 } as const;

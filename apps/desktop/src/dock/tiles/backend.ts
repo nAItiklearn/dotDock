@@ -72,20 +72,32 @@ export function releasing(start: () => Promise<Unsubscribe>): Unsubscribe {
   };
 }
 
+/**
+ * Watch and unwatch run one after the other. They are async commands, which the core runs on a thread pool, so a
+ * renewal (unwatch the old set, watch the new one) could arrive the other way round and leave every feed stopped:
+ * a tile added to the dock (the stopwatch) then never updated.
+ */
+let feedOrder: Promise<unknown> = Promise.resolve();
+export function inOrder<T>(call: () => Promise<T>): Promise<T> {
+  const next = feedOrder.then(call, call);
+  feedOrder = next.catch(() => undefined);
+  return next;
+}
+
 const tauriTiles: TilesBackend = {
   commands: tauriCommands,
   subscribe: (names, listener) =>
     releasing(async () => {
       const off = await listen<Partial<TileFeeds>>(TILES_WIRE.feedEvent, (e) => listener(e.payload));
       try {
-        await invoke(TILES_WIRE.watch, { feeds: names });
+        await inOrder(() => invoke(TILES_WIRE.watch, { feeds: names }));
       } catch {
         // The core predates the feeds: say so instead of leaving the tiles waiting.
         listener(unsupported(names));
       }
       return () => {
         off();
-        invoke(TILES_WIRE.unwatch).catch(() => undefined);
+        inOrder(() => invoke(TILES_WIRE.unwatch)).catch(() => undefined);
       };
     }),
   watchMicLevel: (listener) =>

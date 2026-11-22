@@ -31,10 +31,10 @@
 .gallery__chips {
   display: flex;
   flex: none;
+  /* Wraps onto a second line: a row that scrolled sideways with no scrollbar looked cut off at the edge. */
+  flex-wrap: wrap;
   gap: var(--space-2);
   padding-bottom: var(--space-1);
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 .gallery__chip {
   display: inline-flex;
