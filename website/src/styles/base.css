@@ -623,7 +623,8 @@ button {
 .footer__mark-icon {
   width: 0.76em;
   height: 0.8em;
-}
+}
+
 .footer__meadow .live {
   margin-block: clamp(8px, 2vw, 24px) 0;
 }
@@ -648,9 +649,39 @@ button {
   }
 }
 
-.footer__visits {
+/* The live visit count in the top bar (scripts/visits.ts): shown only once the server has answered with a number. */
+.nav__visits {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 10px;
+  border: var(--hairline) solid var(--line);
+  border-radius: 999px;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+.nav__visits[hidden] {
+  display: none;
+}
+.nav__visits-dot {
+  animation: visits-pulse 2.4s ease-in-out infinite;
+}
+@keyframes visits-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav__visits-dot {
+    animation: none;
+  }
+}
+@media (max-width: 640px) {
+  .nav__visits {
+    display: none;
+  }
 }
