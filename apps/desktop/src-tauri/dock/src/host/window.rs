@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
 use windows::Win32::Foundation::{COLORREF, HWND, RECT};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetClientRect, GetCursorPos, GetForegroundWindow, GetWindowLongPtrW, GetWindowRect, IsWindow, SetForegroundWindow,
+    GetCursorPos, GetForegroundWindow, GetWindowLongPtrW, GetWindowRect, IsWindow, SetForegroundWindow,
     SetLayeredWindowAttributes, SetWindowLongPtrW, SetWindowPos, ShowWindow, LWA_ALPHA, GWL_EXSTYLE, HWND_TOPMOST, SWP_NOACTIVATE, SW_HIDE, SW_SHOWNOACTIVATE,
     USER_DEFAULT_SCREEN_DPI, WS_EX_APPWINDOW, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT,
 };
@@ -125,16 +125,6 @@ pub fn scale(window: isize) -> f64 {
     } else {
         f64::from(dpi) / f64::from(USER_DEFAULT_SCREEN_DPI)
     }
-}
-
-/// Width of the window's client area in physical px.
-pub fn client_width(window: isize) -> i32 {
-    let mut rect = RECT::default();
-    // SAFETY: reads the client rectangle of the dock window into a RECT we own.
-    unsafe {
-        let _ = GetClientRect(hwnd(window), &mut rect);
-    }
-    rect.right - rect.left
 }
 
 /// The cursor as the dock window sees it, and the window's way of taking or refusing clicks.

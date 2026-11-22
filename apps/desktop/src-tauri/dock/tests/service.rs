@@ -53,8 +53,8 @@ fn commands_refuse_what_they_cannot_do_and_keep_the_categories_sound() {
     assert!(service.save_categories(all).is_ok());
 
     // Hiding previews with nothing shown, and a bad handle, are harmless.
-    service.preview(0, 1.0, 1000, &PreviewArgs { hwnds: vec![], anchor: None });
-    service.preview(0, 1.0, 1000, &PreviewArgs { hwnds: vec!["not a handle".into()], anchor: None });
+    service.preview(0, 1.0, &PreviewArgs { hwnds: vec![], anchor: None });
+    service.preview(0, 1.0, &PreviewArgs { hwnds: vec!["not a handle".into()], anchor: None });
 
     // Icon URLs outside the cache name no file.
     assert!(service.icon_file("dock-icon://../../x.png", Duration::from_millis(10)).is_none());

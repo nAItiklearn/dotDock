@@ -381,7 +381,7 @@ pub fn dock_set_regions(rects: Vec<Rect>, state: State<'_, DockState>) {
 #[tauri::command(async)]
 pub fn dock_preview(hwnds: Vec<String>, anchor: Option<Rect>, state: State<'_, DockState>) {
     let Some(metrics) = state.host.metrics() else { return };
-    state.service.preview(metrics.window, metrics.scale, metrics.width_px, &PreviewArgs { hwnds, anchor });
+    state.service.preview(metrics.window, metrics.scale, &PreviewArgs { hwnds, anchor });
 }
 
 #[tauri::command(async)]

@@ -309,11 +309,11 @@ impl DockService {
     }
 
     /// Shows or hides live previews of an app's windows above `args.anchor`, inside the dock window `host`.
-    pub fn preview(&self, host: isize, scale: f64, host_width_px: i32, args: &PreviewArgs) {
+    pub fn preview(&self, host: isize, scale: f64, args: &PreviewArgs) {
         let mut previews = lock(&self.inner.previews);
         let sources: Vec<isize> = args.hwnds.iter().filter_map(|h| h.parse().ok()).collect();
         match (&args.anchor, sources.is_empty()) {
-            (Some(anchor), false) => previews.show(host, &sources, *anchor, scale, host_width_px),
+            (Some(anchor), false) => previews.show(host, &sources, *anchor, scale),
             _ => previews.hide(),
         }
     }

@@ -50,11 +50,11 @@ fn main() {
     println!("source size {sw}x{sh}, register took {registered:?}");
     drop(single);
 
-    // The path the dock takes: two previews of the same window above an anchor near the bottom of the host.
+    // The path the dock takes: two previews of the same window in a preview card's well of two slots.
     let mut previews = Previews::default();
-    let anchor = CssRect { x: 300.0, y: 280.0, w: 60.0, h: 20.0 };
+    let well = CssRect { x: 40.0, y: 120.0, w: 410.0, h: 126.0 };
     let started = Instant::now();
-    previews.show(host.0 as isize, &[source.0 as isize, source.0 as isize], anchor, 1.0, HOST.right - HOST.left);
+    previews.show(host.0 as isize, &[source.0 as isize, source.0 as isize], well, 1.0);
     println!("show took {:?}, previews shown: {}", started.elapsed(), previews.count());
     pump(SETTLE);
     let after = capture(HOST);

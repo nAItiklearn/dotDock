@@ -49,8 +49,6 @@ pub struct WindowMetrics {
     pub window: isize,
     /// DPI scale factor (1.25 at 125 %).
     pub scale: f64,
-    /// Client width in physical px.
-    pub width_px: i32,
 }
 
 struct Attached {
@@ -165,7 +163,6 @@ impl DockHost {
         window::exists(window).then(|| WindowMetrics {
             window,
             scale: window::scale(window),
-            width_px: window::client_width(window),
         })
     }
 }
