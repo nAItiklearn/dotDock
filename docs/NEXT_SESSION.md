@@ -19,6 +19,21 @@ test: `D:\dotDock\.claude\tmp-qa\` (act.ps1, probe.ps1, state.ps1, idle.ps1, set
 
 ## Owner requests, in order
 
+0. **(Owner, 2026-11-22, latest) The Quick Settings panel opens from the dock's status area but never closes.**
+   Windows' flyout normally closes when focus leaves it; with the taskbar hidden it may stay open. Reproduce live
+   (click the status area, then click the desktop, press Esc, click the status area again). Options: a second click
+   on the status area closes it (send the same URI again, or Win+A as a toggle via the shell), and make sure the
+   dock does not keep the foreground. Verify it closes on outside click, Esc and a second press.
+0b. **(Owner, latest) The notch must start animating as soon as an AI agent starts working**, without the user
+   having to find Connect. Decide how: on first run (or when the theme turns on), offer one clear prompt to connect
+   Claude Code / Codex / Copilot / OpenCode, or connect automatically with an undo; Codex works without a hook
+   (log watcher). The app editing a user's own `~/.claude/settings.json` through its documented Connect is product
+   behaviour (D-014), but the agent must still not edit the owner's live file by hand. Verify live with a real
+   agent turn. Log the decision.
+0c. The owner backed up the updater signing key (`dotdock-updater.key`) on 2026-11-22.
+5. Release the result as the next version (owner said "release the next v2": treat as 1.0.2 unless the dock-tile
+   V2 features are in; ask nothing, decide and log).
+
 1. **"Settings opens then freezes."** Not yet reproduced. `settings_open` was made async (`f76f3fa`) after it
    deadlocked the main thread from the home screen toolbar. Find which path still freezes: tray menu "Settings",
    second launch, Ctrl+Alt+S, dock "Customise the dock" > open Settings, and any page action. Look for other
