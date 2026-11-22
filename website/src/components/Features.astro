@@ -1,5 +1,6 @@
 ---
 import SectionHead from "./SectionHead.astro";
+import VideoSlot from "./VideoSlot.astro";
 import { ROUTES } from "../brand";
 
 // Each part is a miniature screen on a 20 x 11 dot lattice; "#" marks the cells that part owns,
@@ -61,10 +62,14 @@ function dots(list: readonly Cell[], r: number): string {
     .join("");
 }
 
+// A card shows its recording in place of the dot map once the recording exists (VideoSlot.astro).
+const recordings = new Set(Object.keys(import.meta.glob("/public/video/*")));
+const recorded = (name: string): boolean => recordings.has(`/public/video/${name}.mp4`) && recordings.has(`/public/video/${name}-poster.webp`);
+
 const parts = [
   { name: "Home screen", line: "Widgets, a photo frame and themes that live on the desktop.", status: "In version 1", live: true, own: cells(HOME), context: [] as Cell[] },
-  { name: "Dock", line: "Replaces the taskbar, files your apps into stacks and keeps a few live tiles at hand.", status: "In version 1", live: true, own: cells(DOCK), context: cells(HOME) },
-  { name: "Agent island", line: "Shows what your AI coding agents are doing, at the top of the screen.", status: "In version 1", live: true, own: cells(ISLAND), context: [...cells(HOME), ...cells(DOCK)] },
+  { name: "Dock", line: "Replaces the taskbar, files your apps into stacks and keeps a few live tiles at hand.", status: "In version 1", live: true, own: cells(DOCK), context: cells(HOME), video: "dock" as const },
+  { name: "Agent island", line: "Shows what your AI coding agents are doing, at the top of the screen.", status: "In version 1", live: true, own: cells(ISLAND), context: [...cells(HOME), ...cells(DOCK)], video: "notch" as const },
 ];
 ---
 
@@ -79,6 +84,9 @@ const parts = [
       {
         parts.map((p, i) => (
           <li class="part reveal" style={`--i:${i}`}>
+            {"video" in p && p.video && recorded(p.video) ? (
+              <VideoSlot variant="card" name={p.video} label={`${p.name}, in use`} />
+            ) : (
             <svg class="part__screen" viewBox={`0 0 ${COLS} ${ROWS}`} role="img" aria-label={`${p.name}: where it sits on the screen`}>
               <defs>
                 <pattern id={`part-lattice-${i}`} width="1" height="1" patternUnits="userSpaceOnUse">
@@ -89,6 +97,7 @@ const parts = [
               <path class="part__context" d={dots(p.context, 0.34)} />
               <path class="part__own" d={dots(p.own, 0.4)} />
             </svg>
+            )}
             <div class="part__meta">
               <h3 class="part__name">{p.name}</h3>
               <p class="caps caps-row">

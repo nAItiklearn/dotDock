@@ -1,34 +1,55 @@
 ---
 /**
- * A recording of the real app. It exists only when its files do: put `<name>.mp4` and `<name>-poster.webp`
- * in website/public/video/ (see "Adding a video" in website/README.md) and the slot appears; until then
- * nothing is rendered, so no empty frame or mock-up ever ships. The video loads nothing until it is played.
+ * A recording of the real app. It exists only when its files do: put `<name>.mp4`, `<name>.webm` (optional) and
+ * `<name>-poster.webp` in website/public/video/ and the slot appears; until then nothing is rendered, so no empty frame
+ * or mock-up ever ships. Videos play muted and looped while on screen (scripts/video.ts) and load nothing before; with
+ * reduced motion they wait on their poster with controls instead.
+ *
+ * - `stage`: the home page showing: the video alone, wide, with large rounded corners and nothing around it.
+ * - `card`: fills a feature card, in place of its dot map.
+ * - `section`: under a section head on the features page.
  */
+import loops from "../data/video-loops.json";
+
 interface Props {
   /** File stem in public/video: `tour`, `dock` or `notch`. */
   name: "tour" | "dock" | "notch";
   /** Accessible description of what the video shows. */
   label: string;
-  /** Visible caption under the frame. */
-  caption: string;
+  variant?: "stage" | "card" | "section";
 }
-const { name, label, caption } = Astro.props;
+const { name, label, variant = "section" } = Astro.props;
 
 const files = new Set(Object.keys(import.meta.glob("/public/video/*")));
-const src = `/video/${name}.mp4`;
+const mp4 = `/video/${name}.mp4`;
+const webm = `/video/${name}.webm`;
 const poster = `/video/${name}-poster.webp`;
 const captions = `/video/${name}.vtt`;
-const present = files.has(`/public${src}`) && files.has(`/public${poster}`);
+const present = files.has(`/public${mp4}`) && files.has(`/public${poster}`);
+// After the first play the footage loops between these times, skipping the logo sting and the closing card.
+const loop = (loops as Record<string, { start: number; end: number } | undefined>)[name];
+
 ---
 
 {
-  present && (
-    <figure class="video-slot reveal">
-      <video controls preload="none" playsinline poster={poster} aria-label={label}>
-        <source src={src} type="video/mp4" />
+  present && variant === "stage" && (
+    <figure class="screening reveal" aria-label={label}>
+      <video muted loop playsinline preload="none" poster={poster} aria-label={label} data-autoplay data-loop-start={loop?.start} data-loop-end={loop?.end}>
+        {files.has(`/public${webm}`) && <source src={webm} type="video/webm" />}
+        <source src={mp4} type="video/mp4" />
         {files.has(`/public${captions}`) && <track kind="captions" src={captions} srclang="en" label="English" />}
       </video>
-      <figcaption>{caption}</figcaption>
+    </figure>
+  )
+}
+{
+  present && variant !== "stage" && (
+    <figure class={`video-slot video-slot--${variant} reveal`}>
+      <video muted loop playsinline preload="none" poster={poster} aria-label={label} data-autoplay data-loop-start={loop?.start} data-loop-end={loop?.end}>
+        {files.has(`/public${webm}`) && <source src={webm} type="video/webm" />}
+        <source src={mp4} type="video/mp4" />
+        {files.has(`/public${captions}`) && <track kind="captions" src={captions} srclang="en" label="English" />}
+      </video>
     </figure>
   )
 }

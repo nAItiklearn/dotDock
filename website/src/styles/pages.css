@@ -268,25 +268,47 @@
   justify-content: flex-start;
 }
 
-/* ---------- Video slots: shown only when a real recording exists in public/video ---------- */
-.video-slot {
-  margin: clamp(40px, 6vw, 72px) auto 0;
-  max-width: 1080px;
-}
-.video-slot video {
+/* ---------- Recordings of the app (VideoSlot.astro): shown only when a real recording exists in public/video ---------- */
+.video-slot video,
+.screening__frame video {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--radius-art);
   background: var(--surface-2);
   object-fit: cover;
 }
-.video-slot figcaption {
+.video-slot--section {
+  margin: 0 auto clamp(32px, 5vw, 56px);
+  max-width: 1080px;
+}
+.video-slot--section video {
+  border-radius: var(--radius-art);
+}
+.video-slot--section figcaption {
   margin-top: var(--space-3);
   text-align: center;
   font-size: 14px;
   color: var(--text-dim);
+}
+.video-slot--card {
+  margin: 0;
+}
+.video-slot--card video {
+  border-radius: var(--radius-md);
+}
+
+/* The home page showing: the video alone, wide, with large rounded corners; nothing frames it (owner, 2026-11-23). */
+.screening {
+  width: min(100% - 2 * clamp(12px, 3vw, 40px), 1400px);
+  margin: clamp(32px, 5vw, 64px) auto 0;
+}
+.screening video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: clamp(18px, 2.4vw, 32px);
+  background: var(--surface-2);
 }
 
 /* Notice tables carry long file paths and licence names: on a phone they wrap inside the cell. */
