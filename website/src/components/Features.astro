@@ -62,9 +62,9 @@ function dots(list: readonly Cell[], r: number): string {
 }
 
 const parts = [
-  { name: "Home screen", line: "Widgets, a photo frame and themes that live on the desktop.", status: "In development", live: true, own: cells(HOME), context: [] as Cell[] },
-  { name: "Dock", line: "Replaces the taskbar, files your apps into stacks and keeps a few live tiles at hand.", status: "In development", live: true, own: cells(DOCK), context: cells(HOME) },
-  { name: "Agent island", line: "Shows what your AI coding agents are doing, at the top of the screen.", status: "In development", live: true, own: cells(ISLAND), context: [...cells(HOME), ...cells(DOCK)] },
+  { name: "Home screen", line: "Widgets, a photo frame and themes that live on the desktop.", status: "In version 1", live: true, own: cells(HOME), context: [] as Cell[] },
+  { name: "Dock", line: "Replaces the taskbar, files your apps into stacks and keeps a few live tiles at hand.", status: "In version 1", live: true, own: cells(DOCK), context: cells(HOME) },
+  { name: "Agent island", line: "Shows what your AI coding agents are doing, at the top of the screen.", status: "In version 1", live: true, own: cells(ISLAND), context: [...cells(HOME), ...cells(DOCK)] },
 ];
 ---
 
