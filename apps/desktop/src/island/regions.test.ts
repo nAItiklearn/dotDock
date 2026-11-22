@@ -26,6 +26,14 @@ describe("computeRegions", () => {
     expect(computeRegions({ rest: REST, mode, moveAside: true, aside: false })).toEqual({ interactive: [], hover: null });
   });
 
+  it("keeps the connect offer clickable while the island rests, and nothing else", () => {
+    const offer = { x: 120, y: 30, w: 280, h: 36 };
+    expect(computeRegions({ rest: REST, mode: "tiny", moveAside: true, aside: false, extra: offer })).toEqual({
+      interactive: [{ x: 120 - HIT_MARGIN, y: 30 - HIT_MARGIN, w: 280 + 2 * HIT_MARGIN, h: 36 + 2 * HIT_MARGIN }],
+      hover: null,
+    });
+  });
+
   it("starts the hover footprint at the screen edge so the gap above the island counts", () => {
     expect(computeRegions({ rest: REST, mode: "island", moveAside: true, aside: false }).hover?.y).toBe(0);
   });

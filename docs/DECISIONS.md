@@ -507,8 +507,9 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
   owner liked the stacks' amount; stacks now take 0.75 of the bulge (were 0.3), so at the default an app grows to 1.2
   and a stack to 1.15. A dock saved at 1.6 is clamped to 1.3 when drawn, so upgrades calm down too.
 - Home screen: the Work profile ships the owner's layout from `docs/defaults-from-owner/home-storage.json` (clock,
-  battery ring, player, photo frame, timer dial, fun fact, RAM grid, date pill; 9 by 8.5 cells, fits 1920 x 1080
-  without overlap; a smaller screen moves what does not fit through `normalizePlacements`). The photo frame ships
+  battery ring, player, photo frame, timer dial, fun fact, RAM grid, date pill; 9 by 8 cells, the owner's 1/32-cell
+  jitter snapped to whole rows so it fits 1366 x 768 unchanged, checked side by side at 1920 x 1080 and 1366 x 768; a
+  smaller screen moves what does not fit through `normalizePlacements`). The photo frame ships
   empty: the owner's picture is personal.
 - Theme: the default is the one made from the user's wallpaper (as the owner's coral one was), derived once at the
   first start from the primary display and again whenever the wallpaper changes. Until the picture is read, Obsidian.

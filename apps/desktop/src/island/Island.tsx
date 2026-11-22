@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type WheelEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type WheelEvent } from "react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { actions } from "./bridge";
+import { ConnectOffer, offerAnswered, shouldOffer } from "./ConnectOffer";
 import { Content, SUBTITLE_HOLD_MS, useHeldLine } from "./Content";
 import { BASE, SCENE_HEIGHT, layoutFor, modeFor, plateSize, type Layout } from "./geometry";
 import { Pager } from "./Pager";
@@ -49,7 +50,9 @@ export function Island() {
   const flash = useIslandStore((s) => s.flash);
   const direction = useIslandStore((s) => s.direction);
   const current = useCurrentSession();
+  const connection = useIslandStore((s) => s.connection);
   const reduced = useReducedMotion() ?? false;
+  const [answered, setAnswered] = useState(offerAnswered);
 
   const lastShown = useRef<SessionView | null>(null);
   useEffect(() => {
@@ -85,7 +88,17 @@ export function Island() {
 
   const slideRef = useRef<HTMLDivElement>(null);
   const restRef = useRef<HTMLDivElement>(null);
-  useRegions({ rest: restRef, anchor: slideRef, mode, moveAside: settings.moveAside, aside, layoutKey: `${top}|${size.w}|${size.h}` });
+  const offerRef = useRef<HTMLDivElement>(null);
+  const offering = shouldOffer(connection, answered, active);
+  useRegions({
+    rest: restRef,
+    anchor: slideRef,
+    mode,
+    moveAside: settings.moveAside,
+    aside,
+    layoutKey: `${top}|${size.w}|${size.h}|${offering}`,
+    extra: offerRef,
+  });
 
   const flashId = flash?.sessionId ?? null;
   useEffect(() => {
@@ -120,7 +133,7 @@ export function Island() {
     swipe.current = { travel: 0, at: now };
   };
 
-  const vars = islandVars(scale, layout);
+  const vars = { ...islandVars(scale, layout), "--offer-top": `${top + (BASE.tinyHeight + BASE.padding) * scale}px` } as CSSProperties;
   const pagerTop = settings.showScene ? layout.sceneTop + 4 * scale : layout.rowTop;
 
   return (
@@ -182,6 +195,7 @@ export function Island() {
           </motion.div>
         </div>
       </motion.div>
+      {offering ? <ConnectOffer offerRef={offerRef} onAnswered={() => setAnswered(true)} /> : null}
     </main>
   );
 }

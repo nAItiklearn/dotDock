@@ -63,18 +63,20 @@ function p(id: string, widget: string, size: string, x: number, y: number, confi
 /**
  * Placements of the built-in profiles, by registry widget id and size. The Work layout is the owner's own home
  * screen (2026-11-22, `docs/defaults-from-owner/home-storage.json`): the clock, battery ring, player, a photo frame,
- * the timer dial, a fun fact, the RAM grid and the date pill, nine columns by eight and a half rows. On a screen with
- * fewer rows, `normalizePlacements` moves what does not fit to the nearest free spot. The photo frame starts empty:
+ * the timer dial, a fun fact, the RAM grid and the date pill, nine columns by eight rows, with the RAM grid and the date
+ * set a little lower as the owner placed them. The owner's 1/32-cell jitter is snapped to whole rows, so the layout fits
+ * eight rows (1366 x 768) unchanged; the RAM grid's offset is pulled in by the edge there. On a screen with fewer rows,
+ * `normalizePlacements` moves what does not fit to the nearest free spot. The photo frame starts empty:
  * the picture is the user's to choose. Config is empty wherever the defaults are wanted.
  */
 const BUILTIN_PLACEMENTS: Readonly<Record<string, readonly Placement[]>> = {
   work: [
     p("clock-1", "clock", "m", 0, 0),
     p("battery-1", "battery", "m", 4, 0),
-    p("music-1", "music", "l", 0, 2.03125),
-    p("photo-1", "photo", "s", 4, 2.03125, { radius: 12 }),
-    p("timer-1", "timer", "s", 4, 4.03125),
-    p("fun-fact-1", "fun-fact", "m", 0, 6.03125, { rotation: "daily" }),
+    p("music-1", "music", "l", 0, 2),
+    p("photo-1", "photo", "s", 4, 2, { radius: 12 }),
+    p("timer-1", "timer", "s", 4, 4),
+    p("fun-fact-1", "fun-fact", "m", 0, 6, { rotation: "daily" }),
     p("system-1", "system", "m", 4, 6.3125),
     p("date-1", "date", "m", 6, 6.53125),
   ],

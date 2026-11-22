@@ -12,6 +12,8 @@ export interface RegionInput {
   readonly mode: Mode;
   readonly moveAside: boolean;
   readonly aside: boolean;
+  /** Anything else on screen that takes clicks while the island rests, such as the connect offer. */
+  readonly extra?: Rect | null;
 }
 
 const isActive = (mode: Mode): boolean => mode === "island";
@@ -21,11 +23,10 @@ const isActive = (mode: Mode): boolean => mode === "island";
  * The hover footprint always covers the resting position (down from the screen edge), also while the
  * island has slid away, so moving the cursor back out is what brings it back.
  */
-export function computeRegions({ rest, mode, moveAside, aside }: RegionInput): Regions {
-  if (!isActive(mode)) return { interactive: [], hover: null };
-  const interactive: Rect[] = aside
-    ? []
-    : [{ x: rest.x - HIT_MARGIN, y: rest.y - HIT_MARGIN, w: rest.w + 2 * HIT_MARGIN, h: rest.h + 2 * HIT_MARGIN }];
+export function computeRegions({ rest, mode, moveAside, aside, extra = null }: RegionInput): Regions {
+  const pad = (r: Rect): Rect => ({ x: r.x - HIT_MARGIN, y: r.y - HIT_MARGIN, w: r.w + 2 * HIT_MARGIN, h: r.h + 2 * HIT_MARGIN });
+  if (!isActive(mode)) return { interactive: extra ? [pad(extra)] : [], hover: null };
+  const interactive: Rect[] = aside ? [] : [pad(rest)];
   const hover: Rect | null = moveAside
     ? { x: rest.x - HOVER_MARGIN, y: 0, w: rest.w + 2 * HOVER_MARGIN, h: rest.y + rest.h + HOVER_MARGIN }
     : null;
