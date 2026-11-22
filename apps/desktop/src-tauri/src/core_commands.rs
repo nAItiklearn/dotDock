@@ -300,6 +300,7 @@ pub async fn wallpapers_assign(
         vec![monitor_id]
     };
     library()?.assign(&targets, wallpaper_id.as_deref(), fit).map_err(|e| e.to_string())?;
+    crate::wallpaper_host::user_picked(&app, &file);
     wallpapers_assignments(app).await
 }
 

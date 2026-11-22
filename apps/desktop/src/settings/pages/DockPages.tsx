@@ -175,8 +175,8 @@ export function DockTilesPage() {
 // ---------------------------------------------------------------------- appearance
 
 export const DOCK_THEME_META: Readonly<Record<DockThemeId, { readonly name: string; readonly line: string }>> = {
-  glass: { name: "Glass", line: "Blurs the desktop behind a tinted bar." },
-  "glass-lite": { name: "Glass lite", line: "The same bar, semi-opaque and without blur." },
+  glass: { name: "Glass", line: "A frosted, light-catching bar with a soft shadow." },
+  "glass-lite": { name: "Glass lite", line: "The same bar in your theme's colour, a little more solid." },
   obsidian: { name: "Obsidian", line: "Solid, in the dark home-screen palette." },
   paper: { name: "Paper", line: "Solid, in the light home-screen palette." },
   aurum: { name: "Aurum", line: "Solid, dark with gold." },

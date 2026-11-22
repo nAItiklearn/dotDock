@@ -40,6 +40,13 @@ pub fn start(app: &AppHandle) -> std::io::Result<()> {
     Ok(())
 }
 
+/// The user picked `path` in dotDock's own library. dotDock wrote it, so the follower rightly ignores Windows'
+/// announcement of it (theme on and off write wallpapers too, and must not re-theme), but this one is the user's
+/// choice: the theme made from the wallpaper follows it like any other.
+pub fn user_picked(app: &AppHandle, path: &std::path::Path) {
+    let _ = app.emit(EVENT_WALLPAPER_CHANGED, Changed { path: path.to_string_lossy().into_owned() });
+}
+
 /// Windows announced a wallpaper change.
 pub fn announce(app: &AppHandle) {
     if let Some(follow) = app.try_state::<WallpaperFollow>() {

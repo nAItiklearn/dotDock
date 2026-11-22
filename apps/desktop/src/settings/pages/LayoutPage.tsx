@@ -71,7 +71,7 @@ function LayoutWidgetsSection() {
                   <div className="list__main">
                     <span className="list__title">{meta?.name ?? "Unavailable widget"}</span>
                     <span className="caps">
-                      {meta ? `${size?.name ?? p.size} · column ${p.x + 1}, row ${p.y + 1}` : p.widget}
+                      {meta ? `${size?.name ?? p.size} · column ${Math.round(p.x) + 1}, row ${Math.round(p.y) + 1}` : p.widget}
                     </span>
                   </div>
                   <div className="list__actions">
