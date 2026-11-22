@@ -2,6 +2,7 @@ import {
   LAYOUT_SCHEMA,
   PRIMARY_MONITOR,
   SETTINGS_SCHEMA,
+  WALLPAPER_THEME_ID,
   type AppSettings,
   type LayoutDoc,
   type Placement,
@@ -41,7 +42,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   profiles: BUILTIN_PROFILES,
   theme: {
     mode: "fixed",
-    fixedId: "obsidian",
+    // The theme made from the user's own wallpaper (owner, 2026-11-22): derived once on the first start, then it
+    // follows each new wallpaper. Until the picture is read, the Obsidian fallback shows.
+    fixedId: WALLPAPER_THEME_ID,
     lightId: "paper",
     darkId: "obsidian",
     lightFrom: "07:00",
@@ -58,18 +61,22 @@ function p(id: string, widget: string, size: string, x: number, y: number, confi
 }
 
 /**
- * Placements of the built-in profiles, by registry widget id and size. The Work layout is modelled on the
- * reference desktop (a stacked clock top-left, cards beside it) and stays inside 12 columns by 6 rows,
- * so it fits a 1280x720 screen without being rearranged. Config is empty wherever the defaults are wanted.
+ * Placements of the built-in profiles, by registry widget id and size. The Work layout is the owner's own home
+ * screen (2026-11-22, `docs/defaults-from-owner/home-storage.json`): the clock, battery ring, player, a photo frame,
+ * the timer dial, a fun fact, the RAM grid and the date pill, nine columns by eight and a half rows. On a screen with
+ * fewer rows, `normalizePlacements` moves what does not fit to the nearest free spot. The photo frame starts empty:
+ * the picture is the user's to choose. Config is empty wherever the defaults are wanted.
  */
 const BUILTIN_PLACEMENTS: Readonly<Record<string, readonly Placement[]>> = {
   work: [
-    p("clock-1", "clock", "l", 0, 0),
-    p("date-1", "date", "s", 7, 0),
-    p("battery-1", "battery", "m", 9, 0),
-    p("system-1", "system", "m", 8, 2),
-    p("system-2", "system", "m", 10, 2, { metric: "disk" }),
-    p("music-1", "music", "m", 4, 4),
+    p("clock-1", "clock", "m", 0, 0),
+    p("battery-1", "battery", "m", 4, 0),
+    p("music-1", "music", "l", 0, 2.03125),
+    p("photo-1", "photo", "s", 4, 2.03125, { radius: 12 }),
+    p("timer-1", "timer", "s", 4, 4.03125),
+    p("fun-fact-1", "fun-fact", "m", 0, 6.03125, { rotation: "daily" }),
+    p("system-1", "system", "m", 4, 6.3125),
+    p("date-1", "date", "m", 6, 6.53125),
   ],
   focus: [
     p("clock-1", "clock", "m", 0, 0),

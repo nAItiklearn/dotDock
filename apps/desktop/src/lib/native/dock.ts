@@ -35,7 +35,7 @@ export interface DockAppName {
 
 /** The dock's own clamps (`src/dock/geometry.ts`): it never draws outside these. */
 export const DOCK_ICON_LIMITS = { min: 32, max: 80, step: 2, default: 48 } as const;
-export const DOCK_MAGNIFICATION_LIMITS = { min: 1, max: 1.6, step: 0.05, default: 1.6 } as const;
+export const DOCK_MAGNIFICATION_LIMITS = { min: 1, max: 1.3, step: 0.05, default: 1.2 } as const;
 
 /** Defaults of a fresh install (`DockSettings::default` in the core). */
 export const DEFAULT_DOCK_SETTINGS: DockSettings = {
@@ -54,7 +54,7 @@ export const DEFAULT_DOCK_SETTINGS: DockSettings = {
 /** How the dock bar is drawn (`src/dock/theme.ts`). */
 export const DOCK_THEMES = ["glass", "glass-lite", "obsidian", "paper", "aurum", "minimal"] as const;
 export type DockThemeId = (typeof DOCK_THEMES)[number];
-export const DEFAULT_DOCK_THEME: DockThemeId = "glass";
+export const DEFAULT_DOCK_THEME: DockThemeId = "obsidian";
 /** The dock window reads its theme from this key; Settings and the dock share the app's storage. */
 export const DOCK_THEME_STORAGE_KEY = "dotdock.dock.theme";
 

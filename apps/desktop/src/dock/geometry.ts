@@ -3,10 +3,10 @@
  * ratios: the TypeScript side sets them as CSS custom properties, the stylesheet never repeats them.
  */
 export const ICON_LIMITS = { min: 32, max: 80, fallback: 48 } as const;
-export const MAGNIFICATION_LIMITS = { min: 1, max: 1.6, fallback: 1.25 } as const;
+export const MAGNIFICATION_LIMITS = { min: 1, max: 1.3, fallback: 1.2 } as const;
 
 /** How much of the magnification each kind of item takes: apps grow fully, stacks a little, controls in between. */
-export const MAGNIFY_WEIGHT = { app: 1, stack: 0.3, control: 0.6 } as const;
+export const MAGNIFY_WEIGHT = { app: 1, stack: 0.75, control: 0.6 } as const;
 
 /** How large a face is drawn, in icon sizes: its peak, so magnifying only ever scales it down from there. */
 export const renderScale = (weight: number, peak: number): number => 1 + (Math.max(peak, 1) - 1) * weight;

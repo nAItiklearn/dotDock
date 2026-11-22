@@ -15,7 +15,8 @@ import { syncTypingFocus } from "./typingFocus";
 const params = new URLSearchParams(location.search);
 // `?theme=<id>` pins a theme for design previews and screenshots; normal runs follow Settings.
 const pinnedTheme = params.get("theme");
-const app = initApp({ catalog: widgetCatalog, ...displayFromLocation(location.search) });
+const display = displayFromLocation(location.search);
+const app = initApp({ catalog: widgetCatalog, ...display });
 
 const root = document.getElementById("root");
 if (!root) throw new Error("overlay.html is missing #root");
@@ -34,10 +35,14 @@ void Promise.all([document.fonts.ready, app.start()]).then(() => {
   syncTypingFocus();
   // The home screen follows the Windows wallpaper for every window: the dock and Settings read the same settings.
   if (isTauri()) {
-    void listen(EVENT_WALLPAPER_CHANGED, () => {
+    const follow = (): void => {
       followWallpaper(app.settings, () => getNativeApi().wallpapers.announcedImage(), sampleImage).catch((err: unknown) =>
         console.error("following the wallpaper failed", err),
       );
-    });
+    };
+    void listen(EVENT_WALLPAPER_CHANGED, follow);
+    // Once at start, from the primary display only: a fresh install makes its theme from the wallpaper it finds, and a
+    // wallpaper changed while dotDock was not running is picked up. A theme chosen by hand is never read or replaced.
+    if (display.isPrimary) follow();
   }
 });

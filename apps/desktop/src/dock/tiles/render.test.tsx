@@ -572,9 +572,9 @@ describe("the dock settings popover", () => {
   });
 
   it("marks the current size, magnification and look", () => {
-    const html = prefs({ iconSize: 56, magnification: 1.4 }, "paper", "paper");
+    const html = prefs({ iconSize: 56, magnification: 1.15 }, "paper", "paper");
     expect(html).toContain("56 px");
-    expect(html).toContain("1.40×");
+    expect(html).toContain("1.15×");
     expect(button(html, "Paper")).toContain('aria-checked="true"');
     expect(button(html, "Glass")).toContain('aria-checked="false"');
   });
@@ -603,7 +603,7 @@ describe("the dock settings popover", () => {
 
   it("resets how the dock looks, but never whether it runs or replaces the taskbar", () => {
     const patch = resetPatch({ enabled: true, replaceTaskbar: true });
-    expect(patch).toMatchObject({ pinned: [], tiles: [], edge: "bottom", iconSize: 48, magnification: 1.25, autoHide: true, reserveSpace: true, enabled: true, replaceTaskbar: true });
+    expect(patch).toMatchObject({ pinned: [], tiles: [], edge: "bottom", iconSize: 48, magnification: 1.2, autoHide: true, reserveSpace: true, enabled: true, replaceTaskbar: true });
   });
 
   it("offers every look the dock has", () => {
@@ -613,7 +613,8 @@ describe("the dock settings popover", () => {
 
   it("clamps a size or magnification outside the limits to what the dock really draws", () => {
     expect(prefs({ iconSize: 500 })).toContain("80 px");
-    expect(prefs({ magnification: 9 })).toContain("1.60×");
+    expect(prefs({ magnification: 9 })).toContain("1.30×");
+    expect(prefs({ magnification: 1.6 })).toContain("1.30×");
   });
 
   it("says when glass is drawn as something else", () => {

@@ -22,6 +22,10 @@ async function boot(backend = new MemoryBackend(), overrides: { monitorId?: stri
 const layout = (app: AppContext) => app.layout.getState();
 const settings = (app: AppContext) => app.settings.getState();
 const ids = (ps: readonly Placement[]): string[] => ps.map((p) => p.id);
+/** The shipped Work layout, which every fresh boot shows on the primary display. */
+const WORK = defaultLayoutDoc("work").monitors["primary"]?.placements ?? [];
+/** Where the shipped Work layout puts the RAM card; it is moved around by the edit-session tests. */
+const SYSTEM_HOME = { x: 4, y: 6.3125 };
 
 describe("first run", () => {
   it("shows the Work profile on the primary display", async () => {
@@ -52,7 +56,7 @@ describe("first run", () => {
 
   it("the primary display under a real id inherits the generic primary layout", async () => {
     const app = await boot(new MemoryBackend(), { monitorId: "DISPLAY1", isPrimary: true });
-    expect(layout(app).placements).toHaveLength(6);
+    expect(layout(app).placements).toHaveLength(WORK.length);
   });
 });
 
@@ -60,7 +64,7 @@ describe("edit session", () => {
   it("only edits while in edit mode", async () => {
     const app = await boot();
     expect(layout(app).moveTo("system-1", { x: 12, y: 0 })).toEqual({ ok: false, reason: "unknown" });
-    expect(layout(app).placements.find((p) => p.id === "system-1")).toMatchObject({ x: 8, y: 2 });
+    expect(layout(app).placements.find((p) => p.id === "system-1")).toMatchObject(SYSTEM_HOME);
   });
 
   it("moves, undoes and redoes", async () => {
@@ -70,7 +74,7 @@ describe("edit session", () => {
     expect(layout(app).placements.find((p) => p.id === "system-1")).toMatchObject({ x: 12, y: 0 });
     expect(layout(app).canUndo).toBe(true);
     layout(app).undo();
-    expect(layout(app).placements.find((p) => p.id === "system-1")).toMatchObject({ x: 8, y: 2 });
+    expect(layout(app).placements.find((p) => p.id === "system-1")).toMatchObject(SYSTEM_HOME);
     expect(layout(app).canRedo).toBe(true);
     layout(app).redo();
     expect(layout(app).placements.find((p) => p.id === "system-1")).toMatchObject({ x: 12, y: 0 });
@@ -124,11 +128,11 @@ describe("edit session", () => {
     const first = await boot(backend);
     layout(first).enterEdit();
     layout(first).moveTo("system-1", { x: 12, y: 0 });
-    layout(first).remove("system-2");
+    layout(first).remove("timer-1");
     await layout(first).exitEdit();
     const second = await boot(backend);
     expect(layout(second).placements.find((p) => p.id === "system-1")).toMatchObject({ x: 12, y: 0 });
-    expect(ids(layout(second).placements)).not.toContain("system-2");
+    expect(ids(layout(second).placements)).not.toContain("timer-1");
   });
 
   it("adds, duplicates and removes, selecting what it creates", async () => {
@@ -165,12 +169,12 @@ describe("edit session", () => {
   it("resizes through declared sizes and steps up and down", async () => {
     const app = await boot();
     layout(app).enterEdit();
-    expect(layout(app).resizeTo("clock-1", "m")).toEqual({ ok: true });
-    expect(layout(app).placements.find((p) => p.id === "clock-1")?.size).toBe("m");
-    expect(layout(app).stepSize("clock-1", 1)).toEqual({ ok: true });
+    expect(layout(app).resizeTo("clock-1", "l")).toEqual({ ok: true });
     expect(layout(app).placements.find((p) => p.id === "clock-1")?.size).toBe("l");
-    // The date widget's largest size is already its current one.
-    expect(layout(app).stepSize("date-1", 1)).toEqual({ ok: false, reason: "unknown" });
+    expect(layout(app).stepSize("clock-1", -1)).toEqual({ ok: true });
+    expect(layout(app).placements.find((p) => p.id === "clock-1")?.size).toBe("m");
+    // Compact is the clock's smallest size, so there is nothing further down.
+    expect(layout(app).stepSize("clock-1", -1)).toEqual({ ok: false, reason: "unknown" });
   });
 
   it("refuses a resize the crowded layout cannot absorb, and says why", async () => {
@@ -182,8 +186,9 @@ describe("edit session", () => {
       // Keep adding until the grid is full.
     }
     const before = layout(app).placements.length;
+    const size = layout(app).placements.find((p) => p.id === "clock-1")?.size;
     expect(layout(app).resizeTo("clock-1", "xl")).toEqual({ ok: false, reason: "no-room" });
-    expect(layout(app).placements.find((p) => p.id === "clock-1")?.size).toBe("l");
+    expect(layout(app).placements.find((p) => p.id === "clock-1")?.size).toBe(size);
     expect(layout(app).placements).toHaveLength(before);
     expect(app.notices.getState().notices.at(-1)?.key).toBe("layout:no-room");
   });
@@ -220,22 +225,25 @@ describe("edit session", () => {
     const app = await boot();
     settings(app).update((s) => ({ ...s, layout: { ...s.layout, collision: "swap" } }));
     layout(app).enterEdit();
-    layout(app).moveTo("system-1", { x: 10, y: 2 });
-    expect(layout(app).placements.find((p) => p.id === "system-2")).toMatchObject({ x: 8, y: 2 });
+    // The RAM card and the photo frame are both 2 x 2: dropping one on the other trades their places.
+    layout(app).moveTo("system-1", { x: 4, y: 2.03125 });
+    expect(layout(app).placements.find((p) => p.id === "system-1")).toMatchObject({ x: 4, y: 2.03125 });
+    expect(layout(app).placements.find((p) => p.id === "photo-1")).toMatchObject(SYSTEM_HOME);
   });
 
   it("refits a stored layout to a smaller display without touching what is stored", async () => {
     const backend = new MemoryBackend();
     const app = await boot(backend);
     layout(app).enterEdit();
-    layout(app).moveTo("date-1", { x: 14, y: 7 });
+    // The date pill (3 x 1) to the bottom-right corner of the 16 x 9 grid.
+    layout(app).moveTo("date-1", { x: 13, y: 8 });
     await layout(app).exitEdit();
     const small = await boot(backend);
     small.layout.getState().setBounds({ cols: 8, rows: 5 });
     const date = small.layout.getState().placements.find((p) => p.id === "date-1");
-    expect((date?.x ?? 99) + 2).toBeLessThanOrEqual(8);
-    expect((date?.y ?? 99) + 2).toBeLessThanOrEqual(5);
-    expect(JSON.parse((await backend.read("layouts/work")) ?? "{}").monitors.primary.placements.find((p: Placement) => p.id === "date-1")).toMatchObject({ x: 14, y: 7 });
+    expect((date?.x ?? 99) + 3).toBeLessThanOrEqual(8);
+    expect((date?.y ?? 99) + 1).toBeLessThanOrEqual(5);
+    expect(JSON.parse((await backend.read("layouts/work")) ?? "{}").monitors.primary.placements.find((p: Placement) => p.id === "date-1")).toMatchObject({ x: 13, y: 8 });
   });
 
   it("two displays saving at once do not erase each other", async () => {
@@ -352,7 +360,7 @@ describe("profiles", () => {
     expect(settings(app).settings.activeProfileId).toBe("evening");
     await vi.advanceTimersByTimeAsync(10);
     expect(layout(app).profileId).toBe("evening");
-    expect(layout(app).placements).toHaveLength(6);
+    expect(layout(app).placements).toHaveLength(WORK.length);
   });
 
   it("creates an empty profile", async () => {
@@ -378,7 +386,7 @@ describe("profiles", () => {
     expect(settings(app).settings.activeProfileId).toBe("work");
     await restore?.();
     expect(settings(app).settings.profiles.map((p) => p.id)).toContain("evening");
-    expect((await app.repo.load("evening")).monitors["primary"]?.placements).toHaveLength(6);
+    expect((await app.repo.load("evening")).monitors["primary"]?.placements).toHaveLength(WORK.length);
   });
 
   it("refuses to delete a built-in profile", async () => {
@@ -420,7 +428,8 @@ describe("custom themes", () => {
     settings(app).update((s) => ({ ...s, theme: { ...s.theme, mode: "system", fixedId: "custom-ember", lightId: "custom-ember" } }));
     settings(app).deleteTheme("custom-ember");
     expect(settings(app).customThemes).toEqual([]);
-    expect(settings(app).settings.theme).toMatchObject({ fixedId: "obsidian", lightId: "paper", darkId: "obsidian" });
+    const { fixedId, lightId, darkId } = DEFAULT_SETTINGS.theme;
+    expect(settings(app).settings.theme).toMatchObject({ fixedId, lightId, darkId });
   });
 
   it("imports a file under a fresh id and rejects a bad one with reasons", async () => {
@@ -477,7 +486,7 @@ describe("backup, restore and reset", () => {
     await settings(app).resetAll();
     expect(settings(app).settings).toEqual(DEFAULT_SETTINGS);
     expect(settings(app).customThemes).toEqual([]);
-    expect((await app.repo.load("work")).monitors["primary"]?.placements).toHaveLength(6);
+    expect((await app.repo.load("work")).monitors["primary"]?.placements).toHaveLength(WORK.length);
     expect(await backend.read("layouts/evening")).toBeNull();
     expect(await backend.read("themes/custom-ember")).toBeNull();
   });
