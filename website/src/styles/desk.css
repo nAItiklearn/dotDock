@@ -1,5 +1,5 @@
 /*
- * The desktop shot: screen frame, island, dock and the decorative objects beside it. Sizes are
+ * The desktop shot: screen frame, island and dock. Sizes are
  * fractions of the screen width (cqw), so the shot scales as one piece. The widgets inside use the
  * stage rules in widgets.css.
  */
@@ -30,7 +30,8 @@
     display: none;
   }
   .desk .stage__grid {
-    padding-top: 52px;
+    /* Clear of the island: its height in island units (sub line, state row, scene, gaps and padding) plus a gap. */
+    padding-top: calc(90 * 64cqw / 328 + var(--space-3));
     padding-bottom: 92px;
   }
 }
@@ -151,110 +152,24 @@
 }
 
 /* Dock: a pill of apps along the bottom. */
+.desk__dock-img {
+  display: none;
+  width: min(78cqw, 880px);
+  height: auto;
+}
+html[data-theme="obsidian"] .desk__dock-img[data-for="obsidian"],
+html[data-theme="paper"] .desk__dock-img[data-for="paper"],
+html[data-theme="aurum"] .desk__dock-img[data-for="aurum"],
+.desk[data-theme] .desk__dock-img,
+.desk[data-wallpaper] .desk__dock-img {
+  display: block;
+}
 .desk__dock {
   position: absolute;
   z-index: 2;
   left: 50%;
-  bottom: 2.2cqw;
-  display: flex;
-  align-items: center;
-  gap: 1cqw;
-  padding: 1cqw 1.4cqw;
-  border-radius: 999px;
-  background: var(--surface);
-  border: var(--hairline) solid var(--border);
-  box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  bottom: 2cqw;
   transform: translateX(-50%);
-}
-.desk__app {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 4.6cqw;
-  height: 4.6cqw;
-  min-width: 34px;
-  min-height: 34px;
-  border-radius: 50%;
-  background: var(--fill-faint);
-  box-shadow: inset 0 0 0 1px var(--border);
-}
-.desk__app svg {
-  width: 52%;
-  height: 52%;
-}
-.desk__app--active::after {
-  content: "";
-  position: absolute;
-  bottom: -0.9cqw;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-@media (max-width: 959px) {
-  .desk__dock {
-    bottom: 14px;
-    gap: 6px;
-    padding: 7px 10px;
-  }
-  .desk__app {
-    width: 34px;
-    height: 34px;
-  }
-  .desk__app:nth-child(n + 5) {
-    display: none;
-  }
-}
-
-/* Objects beside the screen: a halftone sphere and a segmented ring, both drawn in code. */
-.desk__sphere {
-  position: absolute;
-  z-index: 3;
-  left: -6.5%;
-  bottom: -13%;
-  width: clamp(100px, 19%, 300px);
-  aspect-ratio: 1;
-  background: var(--text);
-  -webkit-mask: var(--sphere) center / contain no-repeat;
-  mask: var(--sphere) center / contain no-repeat;
-  pointer-events: none;
-}
-.desk__ring {
-  position: absolute;
-  z-index: 3;
-  right: -3.5%;
-  top: -11%;
-  width: clamp(90px, 17%, 270px);
-  fill: none;
-  stroke-width: 11;
-  stroke-linecap: round;
-  pointer-events: none;
-}
-.desk__ring path {
-  stroke: var(--text);
-}
-.desk__ring .desk__ring-b {
-  stroke: var(--accent);
-}
-.desk__ring .desk__ring-d {
-  stroke-width: 6;
-  opacity: 0.55;
-}
-@media (max-width: 959px) {
-  .desk__sphere {
-    left: -3%;
-    bottom: -5%;
-    width: 30%;
-  }
-  .desk__ring {
-    right: -2%;
-    top: -7%;
-    width: 24%;
-  }
 }
 
 /* A little tilt on large screens so the shot has depth. */

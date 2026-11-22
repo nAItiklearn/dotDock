@@ -1,0 +1,252 @@
+{
+  "when": "2026-11-21T14:20:59.141Z",
+  "results": [
+    {
+      "feature": "widgets-render-real-data",
+      "pass": true,
+      "data": {
+        "info": [
+          "clock-1: SaturdayNovember 21PM",
+          "date-1: NovSaturday",
+          "battery-1: %2:15 left",
+          "system-1: %RAM",
+          "system-2: C:%221.1 / 236.1 GB",
+          "music-1: MusicNothing playingStart a track in any player"
+        ],
+        "problem": null
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f01-widgets-render-real-data.png"
+    },
+    {
+      "feature": "enter-edit-from-menu",
+      "pass": false,
+      "problem": "no Edit item in the widget menu",
+      "data": {
+        "problem": "no Edit item in the widget menu"
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f02-enter-edit-from-menu.png"
+    },
+    {
+      "feature": "toolbar-inside-work-area",
+      "pass": false,
+      "problem": "toolbar outside the work area",
+      "data": {
+        "info": {
+          "toolbar": null,
+          "work": {
+            "top": 0,
+            "right": 1536,
+            "bottom": 864,
+            "left": 0
+          }
+        },
+        "problem": "toolbar outside the work area"
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f03-toolbar-inside-work-area.png"
+    },
+    {
+      "feature": "select-a-then-b",
+      "pass": false,
+      "problem": "selected ",
+      "data": {
+        "info": [],
+        "problem": "selected "
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f04-select-a-then-b.png"
+    },
+    {
+      "feature": "deselect-on-empty-desktop",
+      "pass": true,
+      "data": {
+        "info": {
+          "under": "Progman|Program Manager|explorer",
+          "sel": []
+        },
+        "problem": null
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f05-deselect-on-empty-desktop.png"
+    },
+    {
+      "feature": "free-move-drag",
+      "pass": false,
+      "problem": "did not move",
+      "data": {
+        "info": {
+          "frames": {
+            "frames": 728,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 20.7,
+            "dropped": 0
+          },
+          "from": {
+            "x": 644,
+            "y": 28,
+            "w": 164,
+            "h": 164
+          },
+          "to": {
+            "x": 644,
+            "y": 28,
+            "w": 164,
+            "h": 164
+          }
+        },
+        "problem": "did not move"
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f06-free-move-drag.png"
+    },
+    {
+      "feature": "resize-with-handle",
+      "pass": false,
+      "problem": "size did not change (the widget may have one size only)",
+      "data": {
+        "info": {
+          "from": {
+            "x": 644,
+            "y": 28,
+            "w": 164,
+            "h": 164
+          },
+          "to": {
+            "x": 644,
+            "y": 28,
+            "w": 164,
+            "h": 164
+          }
+        },
+        "problem": "size did not change (the widget may have one size only)"
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f07-resize-with-handle.png"
+    },
+    {
+      "feature": "widgets-button-opens-gallery",
+      "pass": false,
+      "problem": "Cannot read properties of null (reading 'x')",
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f08-widgets-button-opens-gallery.png"
+    },
+    {
+      "feature": "add-from-gallery",
+      "pass": false,
+      "problem": "no Add button in the gallery",
+      "data": {
+        "problem": "no Add button in the gallery"
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f09-add-from-gallery.png"
+    },
+    {
+      "feature": "remove-and-undo-toast",
+      "pass": false,
+      "problem": "no remove button on the selected widget",
+      "data": {
+        "problem": "no remove button on the selected widget"
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f10-remove-and-undo-toast.png"
+    },
+    {
+      "feature": "done-leaves-edit-and-desktop-clicks-through",
+      "pass": false,
+      "problem": "Cannot read properties of null (reading 'x')",
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f11-done-leaves-edit-and-desktop-clicks-through.png"
+    },
+    {
+      "feature": "wallpaper-meadow-dots-dark",
+      "pass": true,
+      "data": {
+        "info": {
+          "frames": {
+            "frames": 518,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 21.52,
+            "dropped": 0
+          },
+          "surface": "#171714db",
+          "slotBg": [
+            "rgba(0, 0, 0, 0)",
+            "rgba(23, 23, 20, 0.86)",
+            "rgba(23, 23, 20, 0.86)"
+          ]
+        },
+        "problem": null
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f12-wallpaper-meadow-dots-dark.png"
+    },
+    {
+      "feature": "wallpaper-paper-ring-light",
+      "pass": true,
+      "data": {
+        "info": {
+          "frames": {
+            "frames": 659,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 20.1,
+            "dropped": 0
+          },
+          "surface": "#f6f2f2eb",
+          "slotBg": [
+            "rgba(0, 0, 0, 0)",
+            "rgba(246, 242, 242, 0.92)",
+            "rgba(246, 242, 242, 0.92)"
+          ]
+        },
+        "problem": null
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f13-wallpaper-paper-ring-light.png"
+    },
+    {
+      "feature": "wallpaper-soft-mono-dark",
+      "pass": true,
+      "data": {
+        "info": {
+          "frames": {
+            "frames": 543,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 17.1,
+            "dropped": 0
+          },
+          "surface": "#181714db",
+          "slotBg": [
+            "rgba(0, 0, 0, 0)",
+            "rgba(24, 23, 20, 0.86)",
+            "rgba(24, 23, 20, 0.86)"
+          ]
+        },
+        "problem": null
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f14-wallpaper-soft-mono-dark.png"
+    },
+    {
+      "feature": "wallpaper-liquid-gold-light",
+      "pass": true,
+      "data": {
+        "info": {
+          "frames": {
+            "frames": 656,
+            "p50": 16.7,
+            "p95": 16.8,
+            "max": 18.7,
+            "dropped": 0
+          },
+          "surface": "#f5f3f0eb",
+          "slotBg": [
+            "rgba(0, 0, 0, 0)",
+            "rgba(245, 243, 240, 0.92)",
+            "rgba(245, 243, 240, 0.92)"
+          ]
+        },
+        "problem": null
+      },
+      "shot": "D:\\dotDock\\.claude\\worktrees\\agent-a7c256b77a6ea94e5\\docs\\QA\\home-live\\v1\\f15-wallpaper-liquid-gold-light.png"
+    },
+    {
+      "feature": "idle-cpu",
+      "pass": true,
+      "data": {
+        "percentOfMachine": "0.052"
+      }
+    }
+  ]
+}

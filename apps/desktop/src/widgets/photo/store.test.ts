@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CENTRED } from "./frame";
+import { createPhotoStore, EMPTY_ENTRY } from "./store";
 
 const KEY = "dotdock.widgets.photos";
 
@@ -17,13 +18,15 @@ function fakeStorage(initial: Record<string, string> = {}): Storage {
   };
 }
 
-/** A fresh copy of the store module reading from the given storage, as a window starting up would. */
+/**
+ * A fresh store reading from the given storage, as a window starting up would. Built from the factory, not
+ * by reloading the module: a reload per case re-evaluated the whole import graph and, on a busy machine,
+ * ran past the test timeout.
+ */
 async function openStore(initial: Record<string, string> = {}) {
   const storage = fakeStorage(initial);
   vi.stubGlobal("localStorage", storage);
-  vi.resetModules();
-  const mod = await import("./store");
-  return { ...mod, storage };
+  return { usePhotoStore: createPhotoStore(), EMPTY_ENTRY, storage };
 }
 
 const saved = (storage: Storage): { state: { entries: Record<string, unknown> }; version: number } =>

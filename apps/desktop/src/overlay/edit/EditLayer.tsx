@@ -1,15 +1,19 @@
 import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
-import { cellStartPx, spanPx, type GridMetrics } from "../../lib/layout/grid";
+import { cellStartPx, type GridMetrics } from "../../lib/layout/grid";
 import type { Guide } from "../../lib/layout/guides";
 import { footprintOf } from "../../lib/layout/ops";
 import { getApp } from "../../lib/state/app";
 import { useSettingsStore } from "../../lib/state/hooks";
 import { widgetCatalog } from "../catalog";
 import { announce, editUi, useEditUi } from "../editUi";
+import { takeHandoff } from "../directPress";
+import { removeWithExit } from "../directActions";
 import { Drawer } from "./Drawer";
 import { GestureController } from "./gestures";
 import { Toolbar } from "./Toolbar";
+import { UndoToast } from "./UndoToast";
 import "./edit.css";
+import { isKey } from "./keys";
 
 /** Keys that belong to the control that has focus, not to the layout. */
 const OWN_KEYS_SELECTOR = "input, select, textarea, [role='radio'], [role='slider'], [contenteditable='true']";
@@ -39,7 +43,6 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
   const drawerOpen = useEditUi((s) => s.drawerOpen);
   const gesture = useEditUi((s) => s.gesture);
   const guides = useEditUi((s) => s.guides);
-  const ghost = useEditUi((s) => s.ghost);
   const showGuides = useSettingsStore((s) => s.settings.layout.guides);
   const controller = useRef<GestureController | null>(null);
   const metricsRef = useRef(metrics);
@@ -56,6 +59,9 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
     });
     gestures.attach();
     controller.current = gestures;
+    // A press and hold or drag on the plain desktop started edit mode; carry on with that same gesture.
+    const handoff = takeHandoff();
+    if (handoff) gestures.adopt(handoff);
     // Picking a widget while the drawer is open shows its options.
     const onPick = (e: PointerEvent): void => {
       if ((e.target as HTMLElement).closest("[data-slot-id]") && editUi.getState().drawerOpen) {
@@ -82,17 +88,18 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
       if (e.key === "Escape") {
         e.preventDefault();
         if (controller.current?.isActive) controller.current.cancel();
-        else if (editUi.getState().drawerOpen) editUi.setState({ drawerOpen: false });
+        else if (editUi.getState().drawerOpen) editUi.setState({ drawerOpen: false, addAt: null });
         else void state.exitEdit();
         return;
       }
-      if (mod && !e.altKey && e.code === "KeyZ") {
+      if (mod && !e.altKey && isKey(e, "z")) {
         e.preventDefault();
+        editUi.setState({ undoToast: null });
         if (e.shiftKey) state.redo();
         else state.undo();
         return;
       }
-      if (mod && !e.altKey && e.code === "KeyY") {
+      if (mod && !e.altKey && isKey(e, "y")) {
         e.preventDefault();
         state.redo();
         return;
@@ -101,12 +108,12 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
       if (inControl || !id || e.altKey) return;
       const name = widgetCatalog.get(state.placements.find((p) => p.id === id)?.widget ?? "")?.name ?? "Widget";
 
-      if (mod && e.code === "KeyD") {
+      if (mod && isKey(e, "d")) {
         e.preventDefault();
         if (state.duplicate(id).ok) announce(`${name} duplicated`);
       } else if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
-        if (state.remove(id).ok) announce(`${name} removed`);
+        void removeWithExit(layout, id, name);
       } else if (e.key === "=" || e.key === "+" || e.key === "-") {
         e.preventDefault();
         const result = state.stepSize(id, e.key === "-" ? -1 : 1);
@@ -132,17 +139,7 @@ export function EditLayer({ rootRef, metrics, openSettings }: EditLayerProps) {
       {showGuides
         ? guides.map((g) => <div key={`${g.axis}${g.edge}${g.at}`} className={`guide guide--${g.axis}`} style={guideStyle(g, metrics)} aria-hidden="true" />)
         : null}
-      {ghost ? (
-        <div
-          className="ghost"
-          aria-hidden="true"
-          style={{
-            width: spanPx(ghost.w, metrics),
-            height: spanPx(ghost.h, metrics),
-            transform: `translate3d(${cellStartPx(ghost.x, metrics)}px, ${cellStartPx(ghost.y, metrics)}px, 0)`,
-          }}
-        />
-      ) : null}
+      <UndoToast />
       <Toolbar openSettings={openSettings} />
       {drawerOpen ? <Drawer metrics={metrics} /> : null}
       {gesture ? <div className="drag-shield" data-hit aria-hidden="true" /> : null}

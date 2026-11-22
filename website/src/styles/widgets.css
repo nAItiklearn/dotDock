@@ -59,7 +59,9 @@
 }
 html[data-theme="obsidian"] :is(.stage__wp, .safety__wp)[data-for="obsidian"],
 html[data-theme="paper"] :is(.stage__wp, .safety__wp)[data-for="paper"],
-html[data-theme="aurum"] :is(.stage__wp, .safety__wp)[data-for="aurum"] {
+html[data-theme="aurum"] :is(.stage__wp, .safety__wp)[data-for="aurum"],
+.desk[data-theme] .stage__wp,
+.desk[data-wallpaper] .stage__wp {
   display: block;
 }
 
@@ -242,55 +244,8 @@ html[data-theme="paper"] .w-clock__digits {
   width: auto;
 }
 
-/* ---------- Calendar ---------- */
-.w-cal {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--k) * 6);
-  padding: calc(var(--k) * 18) calc(var(--k) * 24) calc(var(--k) * 14);
-}
-.w-cal__head {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  font-family: var(--font-dot);
-  font-variation-settings: "ROND" 100;
-  font-weight: 800;
-  font-size: max(15px, calc(var(--k) * 24));
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.w-cal__today {
-  color: var(--accent-text);
-}
-.w-cal__grid {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: 1fr;
-  align-items: center;
-  justify-items: center;
-  font-family: var(--font-mono);
-  font-size: max(9px, calc(var(--k) * 13));
-}
-.w-cal__day {
-  display: grid;
-  place-items: center;
-  width: max(14px, calc(var(--k) * 21));
-  height: max(14px, calc(var(--k) * 21));
-  border-radius: 50%;
-}
-.w-cal__day--today {
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-weight: 600;
-}
 
-/* ---------- RAM, weather, battery pill ---------- */
+/* ---------- RAM, battery pill ---------- */
 .w-ram {
   position: absolute;
   inset: 0;
@@ -315,44 +270,6 @@ html[data-theme="paper"] .w-clock__digits {
   width: calc(var(--k) * 150);
   height: auto;
 }
-.w-weather {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  gap: calc(var(--k) * 18);
-  padding: 0 calc(var(--k) * 30);
-}
-.w-weather__temp {
-  height: calc(var(--k) * 46);
-  width: auto;
-  flex: none;
-  color: var(--text);
-}
-.w-weather__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.w-weather__cond {
-  font-size: max(12px, calc(var(--k) * 16));
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.w-weather__range {
-  color: var(--text-dim);
-  font-weight: 400;
-  margin-left: 0.35em;
-}
-.w-weather__text .caps {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-}
 .w-bat {
   position: absolute;
   inset: 0;
@@ -375,26 +292,24 @@ html[data-theme="paper"] .w-clock__digits {
   text-overflow: ellipsis;
 }
 
-.sample-tag {
+/* A hollow dot marks a sample value; time, date and battery are live and carry none. */
+.sample-mark {
   position: absolute;
   z-index: 1;
-  top: calc(var(--k) * 14);
-  right: calc(var(--k) * 20);
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  top: calc(var(--k) * 16);
+  right: calc(var(--k) * 22);
+  width: max(6px, calc(var(--k) * 9));
+  height: max(6px, calc(var(--k) * 9));
+  border: max(1px, calc(var(--k) * 1.5)) solid var(--text-dim);
+  border-radius: 50%;
+  opacity: 0.7;
 }
-.w .sample-tag {
-  font-size: max(8px, calc(var(--k) * 10));
-}
-.sample-tag--circle {
-  top: calc(var(--k) * 24);
-  right: auto;
-  left: 50%;
-  transform: translateX(-50%);
+.w--circle .sample-mark {
+  top: 15%;
+  right: 15%;
 }
 
-/* ---------- Music, timer, to-do, forecast ---------- */
+/* ---------- Music, timer ---------- */
 .w-music {
   position: absolute;
   inset: 0;
@@ -478,6 +393,19 @@ html[data-theme="paper"] .w-clock__digits {
   font-weight: 500;
   line-height: 1;
 }
+/* One dot per minute of the countdown; a dot goes dark as its minute passes. */
+.w-timer__dots {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: calc(var(--k) * 12);
+  fill: var(--accent);
+}
+.w-timer__dots circle {
+  transition: fill var(--dur-med) var(--ease-out);
+}
+.w-timer__dots .is-off {
+  fill: var(--dot-off);
+}
 .w-timer__buttons {
   display: flex;
   align-items: center;
@@ -521,93 +449,78 @@ html[data-theme="paper"] .w-clock__digits {
   transform: none;
 }
 
-.w-todo {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--k) * 10);
-  padding: calc(var(--k) * 22) calc(var(--k) * 24);
-}
-.w-todo__list {
-  display: grid;
-  gap: calc(var(--k) * 8);
-}
-.w-todo__item {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--k) * 10);
-  cursor: pointer;
-  font-size: max(12px, calc(var(--k) * 15));
-}
-.w-todo__item input {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
-}
-.w-todo__box {
-  position: relative;
-  flex: none;
-  width: calc(var(--k) * 18);
-  height: calc(var(--k) * 18);
-  min-width: 14px;
-  min-height: 14px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--text-dim);
-  transition: background-color var(--dur-fast) var(--ease-out);
-}
-.w-todo__item input:checked + .w-todo__box {
-  background: var(--accent);
-  box-shadow: none;
-}
-.w-todo__item input:checked + .w-todo__box::after {
-  content: "";
-  position: absolute;
-  left: 34%;
-  top: 22%;
-  width: 24%;
-  height: 46%;
-  border: solid var(--accent-ink);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-.w-todo__item input:checked ~ .w-todo__text {
-  color: var(--text-dim);
-  text-decoration: line-through;
-}
-.w-todo__item input:focus-visible + .w-todo__box {
-  outline: 2px solid var(--accent-text);
-  outline-offset: 2px;
-}
 
-.w-fc {
+/* The day's range among the week's, as a short column of dots. */
+
+/* Music, playing: our own cover, the track, a progress line that moves and a quiet level meter. */
+.w-music__cover {
+  flex: none;
+  width: calc(var(--k) * 60);
+  height: calc(var(--k) * 60);
+  border-radius: calc(var(--k) * 14);
+  box-shadow: inset 0 0 0 1px var(--border);
+  image-rendering: pixelated;
+}
+.w-music__artist {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-dim);
+}
+.w-music__bar {
+  position: relative;
+  height: 3px;
+  margin-top: calc(var(--k) * 6);
+  border-radius: var(--radius-pill);
+  background: var(--dot-off);
+  overflow: hidden;
+}
+.w-music__fill {
   position: absolute;
   inset: 0;
+  border-radius: inherit;
+  background: var(--text);
+  transform-origin: left;
+  transform: scaleX(var(--at));
+  animation: music-progress var(--len) linear forwards;
+}
+@keyframes music-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+.w-music__eq {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: calc(var(--k) * 22) calc(var(--k) * 28) calc(var(--k) * 24);
+  align-items: flex-end;
+  gap: 2px;
+  height: calc(var(--k) * 22);
 }
-.w-fc__days {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  text-align: center;
+.w-music__eq i {
+  width: 3px;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--accent);
+  transform-origin: bottom;
+  animation: music-eq 1.1s var(--ease-out) infinite alternate;
 }
-.w-fc__day {
-  display: grid;
-  gap: calc(var(--k) * 6);
-  justify-items: center;
+.w-music__eq i:nth-child(2) { animation-delay: -0.35s; }
+.w-music__eq i:nth-child(3) { animation-delay: -0.7s; }
+.w-music__eq i:nth-child(4) { animation-delay: -0.2s; }
+@keyframes music-eq {
+  from { transform: scaleY(0.25); }
+  to { transform: scaleY(1); }
 }
-.w-fc__hi {
-  font-family: var(--font-mono);
-  font-size: max(13px, calc(var(--k) * 22));
-  font-weight: 500;
+.w-music__play--pause::after {
+  width: 34%;
+  height: 38%;
+  clip-path: polygon(0 0, 36% 0, 36% 100%, 0 100%, 0 0, 64% 0, 100% 0, 100% 100%, 64% 100%, 64% 0);
+  transform: none;
 }
-.w-fc__lo {
-  font-family: var(--font-mono);
-  font-size: max(11px, calc(var(--k) * 15));
-  color: var(--text-dim);
+@media (prefers-reduced-motion: reduce) {
+  .w-music__fill,
+  .w-music__eq i {
+    animation: none;
+  }
 }
 
 /* Widgets laid out as a free cluster instead of on the stage grid. */
@@ -653,4 +566,29 @@ html[data-theme="paper"] .w-clock__digits {
   .ring__value {
     transition: none;
   }
+}
+
+/* Product visuals keep the product's own label style: mono, spaced, upper case. */
+.w .caps,
+.stage .caps {
+  font-family: var(--font-mono);
+  font-size: var(--text-caps);
+  font-weight: 450;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* ---------- Photo: the picture fills the widget edge to edge (widgets/photo/PhotoWidget.css, no mat) ---------- */
+/* Borderless: the picture runs to the rounded edge, with no frame or ring around it. */
+.w--photo {
+  border-color: transparent;
+  border-radius: calc(var(--k) * 37);
+}
+.w--photo img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

@@ -1,6 +1,6 @@
 [package]
 name = "dotdock-island"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
 description = "Agent Island core: session states, transcript parsing and Connect/Disconnect (no UI framework; unit-testable)"

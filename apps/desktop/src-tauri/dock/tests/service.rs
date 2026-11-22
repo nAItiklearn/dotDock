@@ -53,8 +53,8 @@ fn commands_refuse_what_they_cannot_do_and_keep_the_categories_sound() {
     assert!(service.save_categories(all).is_ok());
 
     // Hiding previews with nothing shown, and a bad handle, are harmless.
-    service.preview(0, 1.0, 1000, &PreviewArgs { hwnds: vec![], anchor: None });
-    service.preview(0, 1.0, 1000, &PreviewArgs { hwnds: vec!["not a handle".into()], anchor: None });
+    service.preview(0, 1.0, &PreviewArgs { hwnds: vec![], anchor: None });
+    service.preview(0, 1.0, &PreviewArgs { hwnds: vec!["not a handle".into()], anchor: None });
 
     // Icon URLs outside the cache name no file.
     assert!(service.icon_file("dock-icon://../../x.png", Duration::from_millis(10)).is_none());
@@ -64,10 +64,12 @@ fn commands_refuse_what_they_cannot_do_and_keep_the_categories_sound() {
 #[test]
 fn settings_are_announced_and_survive_a_restart() {
     let dir = tempfile::tempdir().unwrap();
-    let wanted = DockSettings { edge: DockEdge::Left, icon_size: 64, auto_hide: true, ..DockSettings::default() };
+    let asked = DockSettings { edge: DockEdge::Left, icon_size: 64, auto_hide: true, ..DockSettings::default() };
+    // The dock lives at the bottom only (D-029): another edge is put back at the bottom.
+    let wanted = DockSettings { edge: DockEdge::Bottom, ..asked.clone() };
     {
         let (service, events) = start(dir.path());
-        assert!(service.set_settings(wanted.clone()).is_ok());
+        assert!(service.set_settings(asked).is_ok());
         let announced = std::iter::from_fn(|| events.recv_timeout(Duration::from_secs(5)).ok()).find_map(|e| {
             if let DockEvent::Settings(s) = e {
                 Some(s)

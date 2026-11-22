@@ -1,0 +1,34 @@
+---
+/**
+ * A recording of the real app. It exists only when its files do: put `<name>.mp4` and `<name>-poster.webp`
+ * in website/public/video/ (see "Adding a video" in website/README.md) and the slot appears; until then
+ * nothing is rendered, so no empty frame or mock-up ever ships. The video loads nothing until it is played.
+ */
+interface Props {
+  /** File stem in public/video: `tour`, `dock` or `notch`. */
+  name: "tour" | "dock" | "notch";
+  /** Accessible description of what the video shows. */
+  label: string;
+  /** Visible caption under the frame. */
+  caption: string;
+}
+const { name, label, caption } = Astro.props;
+
+const files = new Set(Object.keys(import.meta.glob("/public/video/*")));
+const src = `/video/${name}.mp4`;
+const poster = `/video/${name}-poster.webp`;
+const captions = `/video/${name}.vtt`;
+const present = files.has(`/public${src}`) && files.has(`/public${poster}`);
+---
+
+{
+  present && (
+    <figure class="video-slot reveal">
+      <video controls preload="none" playsinline poster={poster} aria-label={label}>
+        <source src={src} type="video/mp4" />
+        {files.has(`/public${captions}`) && <track kind="captions" src={captions} srclang="en" label="English" />}
+      </video>
+      <figcaption>{caption}</figcaption>
+    </figure>
+  )
+}

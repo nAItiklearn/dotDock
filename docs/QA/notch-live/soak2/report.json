@@ -1,0 +1,53 @@
+{
+ "seconds": 180,
+ "seed": 1,
+ "actions": {
+  "hover": 16,
+  "leave": 14,
+  "swipe": 21,
+  "blur": 20,
+  "rest": 15,
+  "flick": 20,
+  "rightClick": 23,
+  "page": 20,
+  "click": 17
+ },
+ "probes": 758,
+ "pacing": {
+  "frames": 10807,
+  "refreshHz": 60,
+  "medianMs": 16.7,
+  "p99Ms": 17,
+  "worstMs": 33.3,
+  "dropped": 2
+ },
+ "drops": [
+  {
+   "at": 1795267611719,
+   "ms": 33.1,
+   "during": "hover"
+  },
+  {
+   "at": 1795267612064,
+   "ms": 33.3,
+   "during": "hover"
+  }
+ ],
+ "slow": [],
+ "standbyMs": 11211,
+ "final": {
+  "mode": "tiny",
+  "aside": false,
+  "plate": {
+   "w": 44,
+   "h": 12
+  }
+ },
+ "problems": [
+  {
+   "what": "2 dropped frame(s)"
+  }
+ ],
+ "problemCount": 1,
+ "pass": false
+}

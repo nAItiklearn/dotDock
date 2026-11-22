@@ -1,7 +1,7 @@
 //! Returns the desktop to the user's original Windows state from the snapshot. Same effect as
 //! `tools/restore-windows.ps1`, but shipped inside the app so the uninstaller can always run it.
 
-use crate::{autostart, dock_guard, registry, snapshot, taskbar};
+use crate::{autostart, boot_log, desktop_icons, dock_guard, registry, snapshot, taskbar, wallpaper, wallpaper_follow};
 use windows::core::HSTRING;
 use windows::Win32::UI::WindowsAndMessaging::{
     SystemParametersInfoW, SPIF_SENDCHANGE, SPIF_UPDATEINIFILE, SPI_SETDESKWALLPAPER,
@@ -27,6 +27,8 @@ pub struct Report {
     pub autostart_removed: bool,
     pub wallpaper_restored: Option<String>,
     pub had_snapshot: bool,
+    /// The desktop icons are back the way the snapshot found them.
+    pub desktop_icons_restored: bool,
 }
 
 pub fn restore_windows() -> Result<Report, RestoreError> {
@@ -43,13 +45,19 @@ pub fn restore_windows() -> Result<Report, RestoreError> {
     if let Some(on) = snap.taskbar_auto_hide {
         taskbar::set_auto_hide(on);
     }
+    // Best effort: with no Explorer desktop there are no icons to bring back.
+    let icons = desktop_icons::original(snap.desktop_icons_visible, snap.hide_icons_registry);
+    report.desktop_icons_restored = desktop_icons::set_visible(icons).is_ok();
 
     // Prefer the private copy: the original path may be a file Windows has since overwritten
     // (Spotlight and slideshow write to `TranscodedWallpaper`).
-    let source = [snap.wallpaper_copy.as_deref(), snap.wallpaper.as_deref()]
-        .into_iter()
-        .flatten()
-        .find(|p| std::path::Path::new(p).is_file());
+    // A path that is not absolute or not a file is never handed to Windows: that once left a black desktop.
+    let candidates: Vec<&str> =
+        [snap.wallpaper_copy.as_deref(), snap.wallpaper.as_deref()].into_iter().flatten().collect();
+    let source = candidates.iter().copied().find(|p| wallpaper::is_usable(std::path::Path::new(p)));
+    if source.is_none() && !candidates.is_empty() {
+        boot_log::record(&format!("restore: no usable wallpaper among {candidates:?}, the wallpaper is left as it is"));
+    }
     if let Some(style) = snap.wallpaper_style.as_deref() {
         registry::set_string(DESKTOP_KEY, "WallpaperStyle", style)?;
     }
@@ -57,6 +65,7 @@ pub fn restore_windows() -> Result<Report, RestoreError> {
         registry::set_string(DESKTOP_KEY, "TileWallpaper", tile)?;
     }
     if let Some(path) = source {
+        wallpaper_follow::note_own_write(std::path::Path::new(path));
         let wide = HSTRING::from(path);
         // SAFETY: SPI_SETDESKWALLPAPER reads a NUL-terminated wide string that outlives the call.
         unsafe {

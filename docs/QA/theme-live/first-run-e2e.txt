@@ -1,0 +1,12 @@
+Wallpaper before the run: D:\dotDock\.claude\worktrees\agent-a169e2607b1c66971\assets\wallpapers\meadow-dots-dark.jpg
+[pass] first start applies meadow-dots
+[pass] Windows shows meadow-dots-dark.jpg
+[pass] the original wallpaper was snapshotted first
+[pass] the first-run marker is written
+[pass] a second start does not apply it again
+[pass] the wallpaper stays as the user left it
+restored: Report { autostart_removed: true, wallpaper_restored: Some("C:\\Users\\Lenovo\\AppData\\Local\\dockDock\\first-run-e2e\\20261121-063107\\LocalAppData\\dev.dotdock.desktop\\original-wallpaper.jpg"), had_snapshot: true }
+[pass] --restore-windows succeeds
+[pass] restore brings back the wallpaper from before the first start
+Wallpaper after the run: D:\dotDock\.claude\worktrees\agent-a169e2607b1c66971\assets\wallpapers\meadow-dots-dark.jpg
+All first-run checks passed

@@ -1,0 +1,11 @@
+---
+/**
+ * Shows a screen at its full layout and scales it down as a whole, so a small preview keeps the exact spacing of the
+ * large one: nothing overlaps or clips. The scaling is done in scripts/chrome.ts; on narrow screens, where the
+ * screen has its own small layout, it is left alone.
+ */
+---
+
+<div class="scaled" data-scaled>
+  <div class="scaled__inner" data-scaled-inner><slot /></div>
+</div>

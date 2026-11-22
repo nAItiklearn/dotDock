@@ -3,6 +3,16 @@
 **Version:** v1 (home screen, Agent Island, Settings, website). Tagged `v1.0.0` locally, not released.
 **Next:** v2, the dock and launcher. The owner's rule: no public release until the dock ships.
 
+## V1 integration (2026-11-21, branch worktree-agent-ada7f4cb99f8b50da)
+- One branch with the theme + Settings, notch, dock host + dock UI, release (1.0.0, signed updates), home screen and
+  website tracks. One line ending for the repository (D-040).
+- The dock is a part of the environment (`DockPart`, `TaskbarPart`): it replaces the taskbar through the D0 guard while
+  the dotDock theme is on. One switch at the end of Settings; no taskbar switch in V1 (D-041).
+- The theme follows the Windows wallpaper (`WM_SETTINGCHANGE` / `SPI_SETDESKWALLPAPER`, event-driven), and no code path
+  hands Windows a wallpaper path that is not an absolute path to a file (D-042).
+- No gradients anywhere in the app (tested over CSS, TS, TSX, SVG); no developer or account cards in the dock gallery.
+- Waiting for the lead's live test before v1.0.0 is released.
+
 ## v1: what is done
 ### Core (Rust, Tauri 2)
 - Desktop overlay at desktop level: hidden until the UI is ready, cursor-driven click-through, one guard thread owns its Win32 styles (D-010), re-fits on display and DPI changes.
@@ -48,6 +58,12 @@
 
 ## v2: the dock (in progress)
 **Release rule (owner, 2026-11-20):** release the app and the website once everything averages 4.8 on the rubric and every phase of `docs/QA/V2_TEST_PLAN.md` has passed.
+- Spec `docs/DOCK_SPEC.md`, research `docs/design/DOCK_RESEARCH.md`, benchmark vs the macOS Dock and CoolDock `docs/design/DOCK_BENCHMARK.md`, contract `docs/dock/CONTRACT.md` + `apps/desktop/src/dock/protocol.ts`.
+- D0 safety: done so far: both restore paths show the taskbar and restore auto-hide (tested live). Running: sentinel watchdog and hard-kill test (safety track).
+- D1 + D2 running (backend track): app catalogue, automatic category classifier, icons, running windows, launch, thumbnail and app-bar spikes.
+- D3 running (UI track): dock bar, magnification, category stacks, App Library, edit mode, three themes.
+- D6 running (tiles track): native providers in `apps/desktop/src-tauri/tiles/` (crate `dotdock-tiles`, no UI framework). `DockTiles` serves the UI's seven first-wave feeds and six commands in the shapes of the UI's `ui-types.ts` (audio, microphone and its level, calendar as next meeting and agenda, contacts, plus a core-owned stopwatch and water log); `TileHub` serves the second wave (clipboard, screenshots, downloads, shelf, toggles, system history, voice memo, colour picker). Providers run only while a tile that needs them is on the dock. `cargo test -p dotdock-tiles`: 166 passed, 2 audible tests run on request (`-- --ignored`); clippy `-D warnings` clean. What each tile reads and what was measured: `docs/dock/TILES.md`. Decisions: D-024. Host wiring (Tauri commands and events) is the integration step.
+- Rule: the Windows taskbar is never hidden for real use until D4 passes and the owner reviews it (`replaceTaskbar` defaults to off).
 
 Merged on main:
 - D0 safety: taskbar marker, sentinel watchdog, recovery at start; 120/120 real restore tests; sentinel bundled in the MSVC installer.
@@ -55,7 +71,7 @@ Merged on main:
 - Logo and icon set; six desktop wallpapers at 4.5+; island verified live with real Claude Code sessions (plate made opaque).
 - Specs: DOCK_SPEC, DOCK_BENCHMARK (incl. stack input-to-visible under 50 ms), DOCK_MARKET, FEATURE_PARITY, WEBSITE_SYSTEM, LAUNCH_VIDEO, V2_TEST_PLAN.
 
-Running (worktree tracks): dock UI (latency fix, every feature testable, CoolDock tiles, themes incl. glass), native tiles (real data), dock host integration (window, glass backdrop, app bar, taskbar replacement), notch for any AI agent (Copilot CLI, OpenCode, generic protocol), modules on/off + theme from own wallpaper, website redesign (Inter Display, art-led hero, Features page, showcase strip).
+Running (worktree tracks): dock UI (latency fix, every feature testable, CoolDock tiles, themes incl. glass), native tiles (real data), dock host integration (window, glass backdrop, app bar, taskbar replacement), notch for any AI agent (Copilot CLI, OpenCode, generic protocol), the environment as one unit with two Settings switches and a theme from the user's own wallpaper (branch worktree-agent-aa4d6d019cc73921a, D-021 and D-022), website redesign (Inter Display, art-led hero, Features page, showcase strip).
 
 ## Machine notes that affect boot time
 - 22 apps autostart from `HKCU\Run` and compete at sign-in.

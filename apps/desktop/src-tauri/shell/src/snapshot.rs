@@ -21,7 +21,7 @@ pub struct Snapshot {
     pub wallpaper_style: Option<String>,
     pub tile_wallpaper: Option<String>,
     pub hide_icons_registry: Option<u32>,
-    /// Unknown from Rust without enumerating windows; restore skips a null.
+    /// Seen on screen when the snapshot was taken; null when the desktop was not Explorer's.
     pub desktop_icons_visible: Option<bool>,
     pub serialize_key_existed: bool,
     pub startup_delay_in_m_sec: Option<u32>,
@@ -84,7 +84,7 @@ pub fn ensure(autostart_active: bool) -> Result<(), SnapshotError> {
         wallpaper_style: registry::get_string(DESKTOP_KEY, "WallpaperStyle")?,
         tile_wallpaper: registry::get_string(DESKTOP_KEY, "TileWallpaper")?,
         hide_icons_registry: registry::get_dword(ADVANCED_KEY, "HideIcons")?,
-        desktop_icons_visible: None,
+        desktop_icons_visible: crate::desktop_icons::visible(),
         serialize_key_existed: registry::key_exists(SERIALIZE_KEY)?,
         startup_delay_in_m_sec: registry::get_dword(SERIALIZE_KEY, STARTUP_DELAY_VALUE)?,
         run_entry_existed: registry::get_string(RUN_KEY, AUTOSTART_NAME)?.is_some(),

@@ -2,13 +2,14 @@ import { useEffect, useLayoutEffect, useRef, type CSSProperties, type KeyboardEv
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { actions } from "./bridge";
 import { Content, SUBTITLE_HOLD_MS, useHeldLine } from "./Content";
-import { BASE, SCENE_HEIGHT, layoutFor, modeFor, plateSize } from "./geometry";
+import { BASE, SCENE_HEIGHT, layoutFor, modeFor, plateSize, type Layout } from "./geometry";
 import { Pager } from "./Pager";
 import { Plate, usePlateMotion } from "./Plate";
 import type { SessionView } from "./protocol";
 import { SceneCanvas } from "./scene/SceneCanvas";
 import { SCENE_CELL } from "./scene/layout";
 import { plateRadius } from "./squash";
+import { StandbyDot } from "./StandbyDot";
 import { useCurrentSession, useIslandStore } from "./store";
 import { detailLine, t } from "./strings";
 import { useRegions } from "./useRegions";
@@ -20,8 +21,24 @@ const SWIPE_DISTANCE = 40;
 const SWIPE_PAUSE_MS = 250;
 const FLASH_MS = 2200;
 
-function tokenRadius(): number {
+export function tokenRadius(): number {
   return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--radius-md")) || 0;
+}
+
+/** The custom properties the stylesheet sizes every row from (see Island.css). */
+export function islandVars(scale: number, layout: Layout): CSSProperties {
+  return {
+    "--k": scale,
+    "--pad": `${BASE.padding * scale}px`,
+    "--sub-h": `${BASE.subtitleRow * scale}px`,
+    "--state-h": `${BASE.stateRow * scale}px`,
+    "--orb": `${BASE.orb * scale}px`,
+    "--scene-w": `${BASE.islandWidth * scale - 2 * BASE.padding * scale}px`,
+    "--scene-h": `${SCENE_HEIGHT * scale}px`,
+    "--active-w": `${layout.w}px`,
+    "--active-h": `${layout.h}px`,
+    "--tiny-dot": `${3 * scale}px`,
+  } as CSSProperties;
 }
 
 /** The floating status island. Everything it shows comes from the store; nothing here knows where data came from. */
@@ -78,7 +95,6 @@ export function Island() {
   }, [flash, flashId]);
 
   const swipe = useRef({ travel: 0, at: 0 });
-  if (mode === "off") return null;
 
   const focusCurrent = (): void => {
     if (current) void actions.focus(current.id);
@@ -104,18 +120,7 @@ export function Island() {
     swipe.current = { travel: 0, at: now };
   };
 
-  const vars = {
-    "--k": scale,
-    "--pad": `${BASE.padding * scale}px`,
-    "--sub-h": `${BASE.subtitleRow * scale}px`,
-    "--state-h": `${BASE.stateRow * scale}px`,
-    "--orb": `${BASE.orb * scale}px`,
-    "--scene-w": `${BASE.islandWidth * scale - 2 * BASE.padding * scale}px`,
-    "--scene-h": `${SCENE_HEIGHT * scale}px`,
-    "--active-w": `${layout.w}px`,
-    "--active-h": `${layout.h}px`,
-    "--tiny-dot": `${3 * scale}px`,
-  } as CSSProperties;
+  const vars = islandVars(scale, layout);
   const pagerTop = settings.showScene ? layout.sceneTop + 4 * scale : layout.rowTop;
 
   return (
@@ -142,7 +147,7 @@ export function Island() {
             transition={{ duration: reduced ? 0 : 0.14, delay: mode === "tiny" && !reduced ? 0.16 : 0 }}
           >
             <i />
-            <i className="island__standby-lit" />
+            <StandbyDot breathing={mode === "tiny" && !reduced} />
             <i />
           </motion.div>
           <motion.div
@@ -166,7 +171,7 @@ export function Island() {
                 />
                 {settings.showScene ? (
                   <motion.div className="scene" style={{ top: layout.sceneTop, y: follow }}>
-                    <SceneCanvas phase={shown.phase} iconStyle={settings.iconStyle} cell={SCENE_CELL * scale} live={active} />
+                    <SceneCanvas phase={shown.phase} sessionId={shown.id} iconStyle={settings.iconStyle} cell={SCENE_CELL * scale} live={active} />
                   </motion.div>
                 ) : null}
                 <motion.div className="pager-slot" style={{ top: pagerTop, y: follow }}>

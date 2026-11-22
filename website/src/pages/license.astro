@@ -14,12 +14,14 @@ import {
 
 const fonts = [
   { name: "Doto", holder: "The Doto Project Authors", file: "/licenses/Doto-OFL.txt" },
-  { name: "Geist", holder: "The Geist Project Authors", file: "/licenses/Geist-OFL.txt" },
+  { name: "Inter and Inter Display", holder: "The Inter Project Authors", file: "/licenses/Inter-OFL.txt" },
   { name: "Geist Mono", holder: "The Geist Project Authors", file: "/licenses/GeistMono-OFL.txt" },
 ];
 ---
 
 <Page
+  artTop="band-butterflies"
+  artBottom="band-pond"
   title={`Licence and notices: ${PRODUCT_NAME}`}
   description={`${PRODUCT_NAME} is free software under ${LICENSE_SPDX}. What that lets you do, plus the licences and attributions for fonts, weather data and other third-party material.`}
   label="Licence"
@@ -76,7 +78,7 @@ const fonts = [
       <p>
         <strong>Weather data by <a href={OPEN_METEO_URL} rel="noopener">Open-Meteo.com</a></strong>, licensed
         <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>. The app shows this attribution
-        in About and in the weather widget details.
+        in About and in the weather tile on the dock.
       </p>
     </div>
   </section>

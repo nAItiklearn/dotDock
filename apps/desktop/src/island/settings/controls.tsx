@@ -105,17 +105,19 @@ export function Slider({ id, value, min, max, step, disabled = false, display, o
   const fill = ((value - min) / (max - min)) * 100;
   return (
     <div className="isl-slider">
-      <input
-        id={id}
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        disabled={disabled}
-        style={{ "--fill": `${fill}%` } as CSSProperties}
-        onChange={(e) => onChange(snap(e.currentTarget.valueAsNumber, step))}
-      />
+      <span className="isl-slider__track" style={{ "--fill": `${fill}%` } as CSSProperties}>
+        <span className="isl-slider__fill" />
+        <input
+          id={id}
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(snap(e.currentTarget.valueAsNumber, step))}
+        />
+      </span>
       <output className="isl-slider__value tabular" htmlFor={id}>
         {display}
       </output>

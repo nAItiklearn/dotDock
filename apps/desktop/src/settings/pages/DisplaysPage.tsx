@@ -6,7 +6,6 @@ import { Slider } from "../../lib/ui/controls";
 import { Icon } from "../../lib/ui/Icon";
 import { NativeGate, useNativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
-import { pageById } from "../pageMeta";
 
 function DisplayCard({ display }: { readonly display: DisplayInfo }) {
   const app = getApp();
@@ -72,11 +71,10 @@ function DisplayCard({ display }: { readonly display: DisplayInfo }) {
 
 export function DisplaysPage() {
   const resource = useNativeResource((api) => api.displays.list());
-  const page = pageById("displays");
   const defaultMargin = DEFAULT_SETTINGS.layout.edgeMargin;
   return (
     <>
-      <PageHeader title={page.title} description={page.description} />
+      <PageHeader page="displays" />
       <NativeGate
         resource={resource}
         icon="display"

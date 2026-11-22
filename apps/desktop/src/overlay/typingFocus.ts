@@ -1,5 +1,5 @@
-import { invoke } from "@tauri-apps/api/core";
 import { isTauri } from "../providers/bridge";
+import { holdKeyboard } from "../lib/native/keyboardFocus";
 
 /** Elements that need keyboard input: the overlay may take focus only while one is focused. */
 function isTextField(el: EventTarget | null): boolean {
@@ -18,9 +18,7 @@ export function syncTypingFocus(): () => void {
   const set = (next: boolean): void => {
     if (next === typing) return;
     typing = next;
-    invoke("overlay_set_typing", { typing: next }).catch((err: unknown) =>
-      console.error("overlay_set_typing failed", err),
-    );
+    holdKeyboard("typing", next);
   };
   const onIn = (e: FocusEvent): void => set(isTextField(e.target));
   // relatedTarget is where focus goes next; null means it left the overlay entirely.

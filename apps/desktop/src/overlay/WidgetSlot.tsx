@@ -1,10 +1,21 @@
-import { lazy, memo, Suspense, type CSSProperties, type MouseEvent } from "react";
+import { lazy, memo, Suspense, useState, type CSSProperties, type MouseEvent } from "react";
 import { cellStartPx, type GridMetrics } from "../lib/layout/grid";
 import { footprintOf } from "../lib/layout/ops";
 import type { Placement } from "../lib/model/types";
+import { Icon } from "../lib/ui/Icon";
 import { WidgetView } from "../widgets/WidgetView";
 import { widgetCatalog } from "./catalog";
 import { useEditUi } from "./editUi";
+
+let bootSettled = false;
+
+/**
+ * Called once the first layout is on screen. Widgets that mount after this (added, duplicated, a removal
+ * undone) play the enter animation; the boot frame is final and never animates (MASTER_SPEC 7).
+ */
+export function markBootSettled(): void {
+  bootSettled = true;
+}
 
 const SlotChrome = lazy(() => import("./edit/SlotChrome").then((m) => ({ default: m.SlotChrome })));
 
@@ -36,6 +47,8 @@ export const WidgetSlot = memo(function WidgetSlot({ placement, metrics, editing
   // stored position and only the preview of *other* widgets applies.
   const live = useEditUi((s) => s.preview?.get(placement.id)) ?? placement;
   const gesture = useEditUi((s) => (s.activeId === placement.id ? s.gesture : null));
+  const lifted = useEditUi((s) => s.liftedId === placement.id);
+  const [entering] = useState(() => bootSettled);
   const meta = widgetCatalog.get(live.widget);
   if (!meta && !editing) return null;
 
@@ -46,7 +59,15 @@ export const WidgetSlot = memo(function WidgetSlot({ placement, metrics, editing
   const style = { "--w": w, "--h": h, transform: `translate3d(${tx}px, ${ty}px, 0)` } as CSSProperties;
   const name = meta?.name ?? "Unavailable widget";
   const label = `${name}, ${w} by ${h} cells, column ${live.x + 1}, row ${live.y + 1}`;
-  const classes = ["overlay__slot", editing ? "is-editing" : "", selected ? "is-selected" : "", gesture === "move" ? "is-dragging" : ""];
+  const classes = [
+    "overlay__slot",
+    entering ? "is-entering" : "",
+    editing ? "is-editing" : "",
+    selected ? "is-selected" : "",
+    gesture === "move" ? "is-dragging" : "",
+    lifted && gesture !== "move" ? "is-lifted" : "",
+  ];
+  const resizable = (meta?.sizes.length ?? 0) > 1;
 
   return (
     <div
@@ -74,8 +95,12 @@ export const WidgetSlot = memo(function WidgetSlot({ placement, metrics, editing
       </div>
       {editing ? (
         <Suspense fallback={null}>
-          <SlotChrome id={placement.id} name={name} selected={selected} locked={locked} resizable={(meta?.sizes.length ?? 0) > 1} />
+          <SlotChrome id={placement.id} name={name} selected={selected} locked={locked} resizable={resizable} />
         </Suspense>
+      ) : resizable && !locked ? (
+        <span className="overlay__resize" data-resize-handle aria-hidden="true">
+          <Icon name="resize" size={16} />
+        </span>
       ) : null}
     </div>
   );

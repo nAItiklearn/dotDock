@@ -105,9 +105,10 @@ describe("sanitizeSettings", () => {
 });
 
 describe("sanitizePlacements", () => {
-  it("coerces coordinates to non-negative integers and strips non-JSON config values", () => {
+  it("coerces coordinates to non-negative position steps and strips non-JSON config values", () => {
     const [p] = sanitizePlacements([{ id: "c", widget: "clock", size: "m", x: 2.7, y: -4, config: { a: 1, bad: () => 1, nested: { ok: true } } }]);
-    expect(p).toMatchObject({ x: 3, y: 0 });
+    // Free placement keeps the fraction, rounded to the nearest 1/32 of a cell.
+    expect(p).toMatchObject({ x: 86 / 32, y: 0 });
     expect(p?.config).toEqual({ a: 1, nested: { ok: true } });
   });
 

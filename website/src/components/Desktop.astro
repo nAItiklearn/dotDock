@@ -3,34 +3,37 @@
  * A desktop shot drawn in code: the theme's wallpaper, real widget components, the notch-style
  * island at the top and the dock at the bottom, in a screen frame. The island plays a scripted
  * session with the product's own beetle, landscape and state icons (scripts/island.ts); the dock
- * is the design for an upcoming part, so it is an illustration. The widgets are the same ones the
+ * is the product's design drawn in markup (Dock.astro), so it is an illustration. The widgets are the same ones the
  * rest of the page uses (live where the browser can supply the data, labelled otherwise).
  */
 import Widget from "./Widget.astro";
 import type { WidgetKind } from "../lib/widgets";
-import { THEMES } from "../lib/themes";
+import { THEMES, type ThemeId } from "../lib/themes";
 import { WALLPAPERS } from "../lib/wallpapers";
 
 interface Props {
   /** "a" puts the clock top-left; "b" mirrors the whole layout. */
   layout?: "a" | "b";
-  /** Draw the decorative dot sphere and ring beside the screen. */
-  objects?: boolean;
+  /** Pin the screen to one theme (its colours and its wallpaper) whatever theme the page is in. */
+  theme?: ThemeId;
+  /** Show the wallpaper of this theme whatever theme the page is in (the windswept grass is Aurum's). */
+  wallpaper?: ThemeId;
   class?: string;
 }
-const { layout = "a", objects = false, class: className = "" } = Astro.props;
+const { layout = "a", theme, wallpaper, class: className = "" } = Astro.props;
+const pinned = wallpaper ?? theme;
+const wallpapers = pinned ? THEMES.filter((t) => t.id === pinned) : THEMES;
 
 const COLS = 12;
 /** x, y, w, h on the 12-column desktop grid; `small` is the [x, y, w, h] on narrow screens, or null to hide. */
 const items: { kind: WidgetKind; x: number; y: number; w: number; h: number; small: [number, number, number, number] | null }[] = [
   { kind: "clock", x: 0, y: 0, w: 4, h: 2, small: [0, 0, 4, 2] },
   { kind: "ring", x: 0, y: 2, w: 2, h: 2, small: [0, 2, 2, 2] },
-  { kind: "calendar", x: 2, y: 2, w: 3, h: 2, small: null },
-  { kind: "date", x: 5, y: 2, w: 2, h: 2, small: [2, 2, 2, 2] },
-  { kind: "ram", x: 0, y: 4, w: 2, h: 2, small: null },
-  { kind: "disk", x: 2, y: 4, w: 2, h: 2, small: null },
-  { kind: "weather", x: 4, y: 4, w: 3, h: 1, small: [0, 4, 4, 1] },
-  { kind: "batpill", x: 4, y: 5, w: 3, h: 1, small: null },
+  { kind: "date", x: 2, y: 2, w: 2, h: 2, small: [2, 2, 2, 2] },
+  { kind: "ram", x: 4, y: 2, w: 2, h: 2, small: null },
+  { kind: "disk", x: 0, y: 4, w: 2, h: 2, small: null },
+  { kind: "timer", x: 2, y: 4, w: 3, h: 1, small: [0, 4, 4, 1] },
+  { kind: "batpill", x: 2, y: 5, w: 3, h: 1, small: null },
   { kind: "music", x: 7, y: 5, w: 4, h: 1, small: null },
 ];
 
@@ -40,52 +43,13 @@ function place(item: (typeof items)[number]): string {
   return `--x:${x};--y:${item.y};--w:${item.w};--h:${item.h};--mx:${small[0]};--my:${small[1]};--mw:${small[2]};--mh:${small[3]}`;
 }
 
-// Dock glyphs: 3 x 3 dot patterns by lit cell index. Abstract on purpose; no brand icons.
-const GLYPHS = [
-  [0, 1, 2, 3, 4, 5, 6, 7, 8],
-  [0, 3, 6, 7, 8],
-  [0, 1, 2, 3, 5, 6, 7, 8],
-  [1, 3, 4, 5, 7],
-  [0, 2, 4, 6, 8],
-  [0, 2, 3, 5, 6, 8],
-];
-const ACTIVE_GLYPH = 2;
-function glyphPaths(lit: readonly number[]): { on: string; off: string } {
-  let on = "";
-  let off = "";
-  for (let i = 0; i < 9; i++) {
-    const cx = (i % 3) + 0.5;
-    const cy = Math.floor(i / 3) + 0.5;
-    const d = `M${cx - 0.36} ${cy}a0.36 0.36 0 1 0 0.72 0a0.36 0.36 0 1 0 -0.72 0Z`;
-    if (lit.includes(i)) on += d;
-    else off += d;
-  }
-  return { on, off };
-}
-
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const sphereUrl = `url(${base}/art/sphere.svg)`;
 ---
 
-<div class={`desk ${className}`.trim()} data-layout={layout}>
-  {
-    objects && (
-      <>
-        <span class="desk__sphere" style={`--sphere:${sphereUrl}`} aria-hidden="true" />
-        <svg class="desk__ring" viewBox="0 0 100 100" aria-hidden="true">
-          <path class="desk__ring-a" d="M50 8a42 42 0 0 1 36.4 21" />
-          <path class="desk__ring-b" d="M91 56a42 42 0 0 1-27 34.5" />
-          <path class="desk__ring-c" d="M37 91.5A42 42 0 0 1 9 50" />
-          <path class="desk__ring-d" d="M14.5 33A42 42 0 0 1 36 12.5" />
-        </svg>
-      </>
-    )
-  }
-
+<div class={`desk ${className}`.trim()} data-layout={layout} data-theme={theme} data-wallpaper={wallpaper}>
   <div class="desk__bezel">
     <div class="stage desk__screen" data-stage>
       {
-        THEMES.map((t) => (
+        wallpapers.map((t) => (
           <img
             class="stage__wp"
             data-for={t.id}
@@ -119,19 +83,11 @@ const sphereUrl = `url(${base}/art/sphere.svg)`;
         }
       </div>
 
-      <div class="desk__dock" aria-hidden="true">
+      <div class="desk__dock">
         {
-          GLYPHS.map((glyph, i) => {
-            const p = glyphPaths(glyph);
-            return (
-              <span class:list={["desk__app", i === ACTIVE_GLYPH && "desk__app--active"]}>
-                <svg viewBox="0 0 3 3">
-                  <path d={p.off} fill="var(--dot-off)" />
-                  <path d={p.on} fill="var(--text)" />
-                </svg>
-              </span>
-            );
-          })
+          wallpapers.map((t) => (
+            <img class="desk__dock-img" data-for={t.id} src={`/media/dock/dock-bar-${t.id}.webp`} width="1820" height="100" alt="" loading="lazy" decoding="async" />
+          ))
         }
       </div>
     </div>

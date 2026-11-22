@@ -7,7 +7,6 @@ import { useSettingsStore } from "../../lib/state/hooks";
 import { chordFromEvent, findConflicts, formatShortcut, globalShortcutIssue, type ShortcutIssue } from "../../lib/shortcuts";
 import { Button, Kbd, Shortcut } from "../../lib/ui/controls";
 import { PageHeader, Row, Section } from "../ui/layout";
-import { pageById } from "../pageMeta";
 
 const ACTION_COPY: Readonly<Record<ShortcutAction, { readonly label: string; readonly description: string }>> = {
   toggleEditMode: { label: "Edit layout", description: "Enter or leave edit mode from anywhere in Windows." },
@@ -120,11 +119,10 @@ export function ShortcutsPage() {
 
   const set = (action: ShortcutAction, shortcut: string): void =>
     app.settings.getState().update((s) => ({ ...s, shortcuts: { ...s.shortcuts, [action]: shortcut } }));
-  const page = pageById("shortcuts");
 
   return (
     <>
-      <PageHeader title={page.title} description={page.description} />
+      <PageHeader page="shortcuts" />
       <Section title="Global hotkeys" description="These work from any app. Each needs Ctrl, Alt or the Windows key.">
         {SHORTCUT_ACTIONS.map((action) => {
           const status = statuses[action];

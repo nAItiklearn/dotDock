@@ -4,13 +4,15 @@ import { ISSUES_URL, OPEN_METEO_URL, PRODUCT_NAME } from "../brand";
 ---
 
 <Page
+  artTop="band-horse"
+  sceneBottom="reef"
   title={`Privacy: ${PRODUCT_NAME} keeps everything on your PC`}
-  description={`${PRODUCT_NAME} is local-first: no account, no telemetry. The only network calls are the weather forecast and an update check you can turn off.`}
+  description={`${PRODUCT_NAME} is local-first: no account, no telemetry. The only network call is the weather forecast, and only if you add a weather tile.`}
   label="Privacy"
   heading="Local first. Nothing phones home."
 >
   <Fragment slot="lede">
-    {PRODUCT_NAME} has no account and no telemetry. This page lists the only two things that ever leave your PC, and what this website does.
+    {PRODUCT_NAME} has no account and no telemetry. This page lists the only thing that ever leaves your PC, and what this website does.
   </Fragment>
 
   <section class="block reveal" aria-labelledby="pv-out">
@@ -23,13 +25,8 @@ import { ISSUES_URL, OPEN_METEO_URL, PRODUCT_NAME } from "../brand";
         <tbody>
           <tr>
             <th scope="row"><a href={OPEN_METEO_URL} rel="noopener">Open-Meteo</a> forecast and place search</th>
-            <td>Only if you add a weather widget, and only after you pick a place.</td>
+            <td>Only if you add a weather tile to the dock, and only after you pick a place.</td>
             <td>The place you searched for, then its coordinates. You can search by name instead of sharing your location.</td>
-          </tr>
-          <tr>
-            <th scope="row">Update check</th>
-            <td>Periodically, in the background. You can turn it off in Settings.</td>
-            <td>A request for the latest version information. As with any web request, the server sees your IP address.</td>
           </tr>
         </tbody>
       </table>
@@ -56,8 +53,14 @@ import { ISSUES_URL, OPEN_METEO_URL, PRODUCT_NAME } from "../brand";
     <h2 class="block__title" id="pv-site">This website</h2>
     <div class="block__content">
       <ul class="ticks">
-        <li>No cookies, no analytics, no tracking pixels, no third-party scripts, fonts or CDNs. Everything is served from this site.</li>
+        <li>No cookies, no analytics, no tracking pixels, no third-party scripts, fonts or CDNs. Everything is served from this site, which Vercel hosts, so as with any web request its servers see your IP address while the page loads.</li>
         <li>Your theme choice is kept in your browser&rsquo;s local storage and never sent anywhere.</li>
+        <li>
+          An anonymous visit counter in the footer. A browser that has not been counted today asks the site to add one to a single
+          total, and every page view reads that total. The total is one number stored with Upstash Redis through Vercel. It is
+          not tied to you: no IP address, cookie, account or identifier is stored, and the only thing kept in your browser is the
+          date you were last counted (local storage). If the counter is unavailable, it is hidden rather than guessed.
+        </li>
         <li>The live widgets on the home page read your clock and, if your browser offers it, your battery level. That happens in the page on your device; nothing is sent.</li>
       </ul>
     </div>

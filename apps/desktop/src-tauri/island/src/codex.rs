@@ -11,12 +11,12 @@ use crate::hook::{first_line, project_name};
 use crate::phase::{AgentKind, Phase};
 use crate::problem::{classify, ProblemKind};
 use crate::state::SessionState;
+use crate::tail::Tail;
 use crate::transcript::parse_iso_ms;
 use crate::util::clip;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 
@@ -45,8 +45,7 @@ pub struct CodexUpdate {
 }
 
 struct Thread {
-    offset: u64,
-    partial: Vec<u8>,
+    tail: Tail,
     state: SessionState,
     started: bool,
     turn_base_tokens: u64,
@@ -121,38 +120,17 @@ impl CodexReader {
         if !is_rollout(path) {
             return None;
         }
-        let mut file = std::fs::File::open(path).ok()?;
-        let size = file.metadata().ok()?.len();
-        let first = !self.threads.contains_key(path);
         let thread = self.threads.entry(path.to_owned()).or_insert_with(|| Thread {
-            offset: size.saturating_sub(FIRST_READ_WINDOW),
-            partial: Vec::new(),
+            tail: Tail::new(),
             state: SessionState::new(AgentKind::Codex, &session_id_for(path)),
             started: false,
             turn_base_tokens: 0,
             total_tokens: 0,
         });
-        if size < thread.offset {
-            thread.offset = 0;
-            thread.partial.clear();
-        }
-        if size == thread.offset {
-            return None;
-        }
-        file.seek(SeekFrom::Start(thread.offset)).ok()?;
-        let mut chunk = Vec::new();
-        file.take(size - thread.offset).read_to_end(&mut chunk).ok()?;
-        thread.offset = size;
-        let mut buffer = std::mem::take(&mut thread.partial);
-        buffer.extend_from_slice(&chunk);
-        let complete_to = buffer.iter().rposition(|b| *b == b'\n').map_or(0, |i| i + 1);
-        thread.partial = buffer.split_off(complete_to);
-        let text = String::from_utf8_lossy(&buffer);
-        // A first read that starts mid-file begins inside a line.
-        let skip = usize::from(first && thread.offset > FIRST_READ_WINDOW);
+        let lines = thread.tail.read_lines(path, FIRST_READ_WINDOW)?;
         let before = thread.state.clone();
         let mut finished = false;
-        for line in text.lines().skip(skip) {
+        for line in &lines {
             let Ok(line) = serde_json::from_str::<Line>(line) else { continue };
             finished |= thread.apply(&line);
         }

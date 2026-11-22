@@ -139,7 +139,14 @@ pub struct ProcessCache {
 
 impl ProcessCache {
     fn path(&mut self, pid: u32) -> Option<String> {
-        self.paths.entry(pid).or_insert_with(|| process_path(pid)).clone()
+        if let Some(Some(known)) = self.paths.get(&pid) {
+            return Some(known.clone());
+        }
+        // A process that has only just started can refuse the query; asking again on the next refresh keeps its
+        // windows from staying unmatched (a second, unpinned icon beside the pinned app) for its whole life.
+        let found = process_path(pid);
+        self.paths.insert(pid, found.clone());
+        found
     }
 }
 

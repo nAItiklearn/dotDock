@@ -4,11 +4,8 @@
  */
 export const PRODUCT_NAME = "dotDock";
 
-/** One line, used in the page title and social previews. The last word is drawn in dot-matrix type. */
-export const TAGLINE_FIRST = "Windows,";
-export const TAGLINE_SECOND = "reimagined in";
-export const TAGLINE_DOTS = "dots";
-export const TAGLINE = `${TAGLINE_FIRST} ${TAGLINE_SECOND} ${TAGLINE_DOTS}.`;
+/** One line, used in the hero, the page title and social previews. */
+export const TAGLINE = "Windows, in dots.";
 
 export const REPO_URL = "https://github.com/nAItiklearn/dotDock";
 export const RELEASES_URL = `${REPO_URL}/releases`;
@@ -22,10 +19,23 @@ export const GPL_URL = "https://www.gnu.org/licenses/gpl-3.0.html";
 /** In-site routes. Every page, the nav and the footer link through these. */
 export const ROUTES = {
   home: "/",
+  features: "/features",
   download: "/download",
   faq: "/faq",
   privacy: "/privacy",
   license: "/license",
+  changelog: "/changelog",
+} as const;
+
+/**
+ * The release the download page offers until tools/release-data.mjs has read it from GitHub: the version and the
+ * two Windows assets the release workflow uploads. The links go through GitHub's latest-release redirect.
+ */
+export const NEXT_RELEASE = {
+  releasesUrl: RELEASES_URL,
+  version: "1.0.0",
+  installer: "dotDock_1.0.0_x64-setup.exe",
+  portable: "dotDock_1.0.0_x64-portable.exe",
 } as const;
 
 export const LICENSE_SPDX = "GPL-3.0-or-later";
@@ -33,17 +43,6 @@ export const LICENSE_SPDX = "GPL-3.0-or-later";
 /** Required wherever the project mentions what it is inspired by. Do not reword. */
 export const DISCLAIMER =
   "Inspired by Nothing OS. Not affiliated with or endorsed by Nothing Technology Limited.";
-
-/**
- * Latest published release, or null while none exists. Checked with
- * `gh release list -R nAItiklearn/dotDock`; update by hand when the first release ships.
- * No version string is ever invented: the download section reads this and nothing else.
- */
-export interface Release {
-  readonly tag: string;
-  readonly url: string;
-}
-export const LATEST_RELEASE: Release | null = null;
 
 /**
  * Absolute site URL for canonical, sitemap and social-card links. Set with the SITE_URL

@@ -45,10 +45,34 @@ impl ClaudeDirs {
     }
 }
 
-/// `%USERPROFILE%\.codex\sessions`, where Codex writes its rollout logs.
+/// `$CODEX_HOME\sessions`, otherwise `%USERPROFILE%\.codex\sessions`: where Codex writes its rollout logs. Codex
+/// itself honours `CODEX_HOME`, so a relocated Codex is followed too.
 pub fn codex_sessions_dir() -> Option<PathBuf> {
-    let home = std::env::var_os("USERPROFILE").or_else(|| std::env::var_os("HOME"))?;
-    Some(PathBuf::from(home).join(".codex").join("sessions"))
+    codex_sessions_dir_from(non_empty_env("CODEX_HOME"), home_dir())
+}
+
+fn codex_sessions_dir_from(codex_home: Option<PathBuf>, home: Option<PathBuf>) -> Option<PathBuf> {
+    codex_home.or_else(|| home.map(|h| h.join(".codex"))).map(|root| root.join("sessions"))
+}
+
+fn home_dir() -> Option<PathBuf> {
+    std::env::var_os("USERPROFILE").or_else(|| std::env::var_os("HOME")).map(PathBuf::from)
+}
+
+fn non_empty_env(name: &str) -> Option<PathBuf> {
+    std::env::var_os(name).filter(|v| !v.is_empty()).map(PathBuf::from)
+}
+
+/// `$COPILOT_HOME`, otherwise `%USERPROFILE%\.copilot`: where GitHub Copilot CLI keeps its configuration and `hooks`.
+pub fn copilot_home() -> Option<PathBuf> {
+    non_empty_env("COPILOT_HOME").or_else(|| home_dir().map(|h| h.join(".copilot")))
+}
+
+/// `$XDG_CONFIG_HOME\opencode`, otherwise `%USERPROFILE%\.config\opencode`: OpenCode's global configuration and `plugins`.
+pub fn opencode_config_dir() -> Option<PathBuf> {
+    non_empty_env("XDG_CONFIG_HOME")
+        .or_else(|| home_dir().map(|h| h.join(".config")))
+        .map(|config| config.join("opencode"))
 }
 
 #[cfg(test)]
@@ -63,5 +87,19 @@ mod tests {
             dirs.sessions_dir(),
             PathBuf::from(r"C:\Users\me\.claude").join("tools").join("island").join("sessions")
         );
+    }
+
+    #[test]
+    fn codex_home_relocates_the_rollout_logs() {
+        let home = Some(PathBuf::from(r"C:\Users\me"));
+        assert_eq!(
+            codex_sessions_dir_from(None, home.clone()),
+            Some(PathBuf::from(r"C:\Users\me").join(".codex").join("sessions"))
+        );
+        assert_eq!(
+            codex_sessions_dir_from(Some(PathBuf::from(r"D:\codex")), home),
+            Some(PathBuf::from(r"D:\codex").join("sessions"))
+        );
+        assert_eq!(codex_sessions_dir_from(None, None), None);
     }
 }

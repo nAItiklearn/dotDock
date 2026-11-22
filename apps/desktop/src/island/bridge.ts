@@ -6,6 +6,7 @@ import {
   EVENT_POINTER,
   EVENT_SETTINGS,
   EVENT_SNAPSHOT,
+  type ConnectableAgent,
   type ConnectionStatus,
   type FocusOutcome,
   type InitialState,
@@ -26,6 +27,8 @@ export interface IslandBackend {
   dismiss: (id: string) => void;
   connect: () => Promise<ConnectionStatus>;
   disconnect: () => Promise<ConnectionStatus>;
+  connectAgent: (agent: ConnectableAgent) => Promise<ConnectionStatus>;
+  disconnectAgent: (agent: ConnectableAgent) => Promise<ConnectionStatus>;
   saveSettings: (settings: IslandSettings) => void;
   ready: () => void;
 }
@@ -56,6 +59,8 @@ const tauriBackend: IslandBackend = {
   dismiss: (id) => fireAndForget(CMD.dismiss, { id }),
   connect: () => invoke<ConnectionStatus>(CMD.connect),
   disconnect: () => invoke<ConnectionStatus>(CMD.disconnect),
+  connectAgent: (agent) => invoke<ConnectionStatus>(CMD.connectAgent, { agent }),
+  disconnectAgent: (agent) => invoke<ConnectionStatus>(CMD.disconnectAgent, { agent }),
   saveSettings: (settings) => fireAndForget(CMD.setSettings, { settings }),
   ready: () => fireAndForget(CMD.ready),
 };
@@ -69,11 +74,18 @@ const detachedBackend: IslandBackend = {
   dismiss: () => undefined,
   connect: () => Promise.reject(new Error("No Claude Code connection in a plain browser")),
   disconnect: () => Promise.reject(new Error("No Claude Code connection in a plain browser")),
+  connectAgent: () => Promise.reject(new Error("No agent connection in a plain browser")),
+  disconnectAgent: () => Promise.reject(new Error("No agent connection in a plain browser")),
   saveSettings: () => undefined,
   ready: () => undefined,
 };
 
 let backend: IslandBackend = isTauri() ? tauriBackend : detachedBackend;
+
+/** False in a plain browser: there is no core to show the island, store its settings or connect agents. */
+export function hasIslandBackend(): boolean {
+  return backend !== detachedBackend;
+}
 
 /** Lets the dev-only fixture panel stand in for the core. Never called in production code paths. */
 export function setBackend(next: IslandBackend): void {
@@ -137,5 +149,13 @@ export const actions = {
 
   async disconnect(): Promise<void> {
     useIslandStore.getState().applyConnection(await backend.disconnect());
+  },
+
+  async connectAgent(agent: ConnectableAgent): Promise<void> {
+    useIslandStore.getState().applyConnection(await backend.connectAgent(agent));
+  },
+
+  async disconnectAgent(agent: ConnectableAgent): Promise<void> {
+    useIslandStore.getState().applyConnection(await backend.disconnectAgent(agent));
   },
 };

@@ -1,6 +1,7 @@
 //! One object the app holds: the monitor, the settings, Connect/Disconnect and the chimes, behind the calls
 //! the island window makes. The host (the Tauri core) only forwards events to the window and shows toasts.
 
+use crate::agents::{self, AgentConnectError, AgentHomes, AgentState, Connectable};
 use crate::connect::{ConnectError, Connector, Status};
 use crate::engine::{Alert, AlertKind, Snapshot};
 use crate::focus::FocusOutcome;
@@ -24,17 +25,24 @@ pub enum ServiceError {
     Install(#[from] InstallError),
     #[error(transparent)]
     Settings(#[from] settings::SettingsError),
+    #[error(transparent)]
+    Agent(#[from] AgentConnectError),
     #[error("Claude Code is not installed on this machine")]
     NoClaude,
 }
 
+/// Folder name, under the app's data folder, where agents report what they are doing.
+const FEED_DIR: &str = "agents";
+
 /// What the app gives the service.
 pub struct ServiceConfig {
     pub dirs: ClaudeDirs,
-    /// The app's data folder; settings and the installed hook copy live under it.
+    /// The app's data folder; settings, the agent feed and the installed hook copy live under it.
     pub data_dir: PathBuf,
     /// The bundled `dotdock-island-hook.exe`, usually next to the app's own executable.
     pub hook_source: PathBuf,
+    /// Where GitHub Copilot CLI and OpenCode keep their configuration, for Connect.
+    pub homes: AgentHomes,
 }
 
 /// Receives what the service produces. Implemented by the Tauri core: emit events, show toasts.
@@ -61,12 +69,24 @@ pub enum ConnectionState {
     HookMissing,
 }
 
+/// One agent that Connect sets up with a file of its own.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct AgentConnection {
+    pub agent: Connectable,
+    pub state: AgentState,
+    /// The file Connect writes, empty when the machine has no folder to look in.
+    pub file: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConnectionStatus {
     pub state: ConnectionState,
     pub settings_path: String,
     pub codex_available: bool,
+    pub agents: Vec<AgentConnection>,
+    /// The folder any agent can report to (`docs/ISLAND_PROTOCOL.md`).
+    pub feed_dir: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -83,10 +103,7 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
 
 /// Copy for a system toast. Short, specific, no exclamation marks.
 pub fn notification_copy(alert: &Alert) -> NotificationCopy {
-    let agent = match alert.agent {
-        crate::phase::AgentKind::Claude => "Claude Code",
-        crate::phase::AgentKind::Codex => "Codex",
-    };
+    let agent = alert.agent_label.as_str();
     let (title, body) = match alert.kind {
         AlertKind::Done => (format!("{agent} finished"), alert.text.clone().unwrap_or_else(|| alert.project.clone())),
         AlertKind::Waiting => {
@@ -98,7 +115,10 @@ pub fn notification_copy(alert: &Alert) -> NotificationCopy {
         }
         AlertKind::Error => {
             let body = match alert.problem.as_ref().map(|p| p.kind) {
-                Some(ProblemKind::Login) => "Signed out. Run /login in the terminal.".to_owned(),
+                Some(ProblemKind::Login) if alert.agent == crate::phase::AgentKind::Claude => {
+                    "Signed out. Run /login in the terminal.".to_owned()
+                }
+                Some(ProblemKind::Login) => format!("Signed out. Sign in to {agent} again."),
                 Some(ProblemKind::Connection) => "Cannot reach the API. Check the connection and resend.".to_owned(),
                 _ => alert.problem.as_ref().map_or_else(|| alert.project.clone(), |p| p.message.clone()),
             };
@@ -141,6 +161,7 @@ impl IslandService {
                 dirs: cfg.dirs.clone(),
                 codex_root: codex_sessions_dir(),
                 codex_enabled: current.codex,
+                feed_dir: cfg.data_dir.join(FEED_DIR),
                 engine: current.engine_config(),
             },
             move |output| match output {
@@ -150,9 +171,6 @@ impl IslandService {
                 }
                 Output::Alert(alert) => {
                     let s = lock(&sink_settings).clone();
-                    if !s.enabled {
-                        return;
-                    }
                     if s.sound {
                         sound::play(chime_for(alert.kind), s.volume);
                     }
@@ -180,15 +198,36 @@ impl IslandService {
         Ok(hookexe::install(&self.cfg.hook_source, &self.hook_dir())?)
     }
 
-    /// Entries that are ours but point at a vanished or older hook are repointed. Nothing happens for users
-    /// who never connected.
+    fn feed_dir(&self) -> PathBuf {
+        self.cfg.data_dir.join(FEED_DIR)
+    }
+
+    /// The file Connect writes for `agent` when the hook program is `hook`.
+    fn agent_file(&self, agent: Connectable, hook: &std::path::Path) -> Option<agents::OwnedFile> {
+        agents::owned_file(agent, &self.cfg.homes, hook, &self.feed_dir())
+    }
+
+    fn agent_state(&self, agent: Connectable) -> AgentState {
+        self.agent_file(agent, &self.current_hook()).map_or(AgentState::NotFound, |file| file.status())
+    }
+
+    /// Entries and files that are ours but point at a vanished or older hook or feed folder are repointed.
+    /// Nothing happens for agents that were never connected.
     fn repair_if_moved(&self) {
-        let registered = self.connector(self.current_hook()).status();
-        if !matches!(registered, Ok(Status::Connected | Status::Outdated | Status::HookMissing)) {
+        let ours =
+            |state: AgentState| matches!(state, AgentState::Connected | AgentState::Outdated | AgentState::HookMissing);
+        let claude = matches!(
+            self.connector(self.current_hook()).status(),
+            Ok(Status::Connected | Status::Outdated | Status::HookMissing)
+        );
+        let connected: Vec<Connectable> = Connectable::ALL.into_iter().filter(|a| ours(self.agent_state(*a))).collect();
+        if !claude && connected.is_empty() {
             return;
         }
         let Ok(hook) = self.install_hook() else { return };
-        if self.connector(hook.clone()).connect().is_ok() {
+        let claude_ok = !claude || self.connector(hook.clone()).connect().is_ok();
+        let agents_ok = connected.iter().all(|a| self.agent_file(*a, &hook).is_some_and(|file| file.connect().is_ok()));
+        if claude_ok && agents_ok {
             hookexe::remove_old(&self.hook_dir(), &hook);
         }
     }
@@ -218,7 +257,35 @@ impl IslandService {
             },
             settings_path: self.cfg.dirs.settings_file().to_string_lossy().into_owned(),
             codex_available: codex_sessions_dir().is_some_and(|d| d.exists()),
+            agents: Connectable::ALL
+                .into_iter()
+                .map(|agent| AgentConnection {
+                    agent,
+                    state: self.agent_state(agent),
+                    file: self
+                        .agent_file(agent, &self.current_hook())
+                        .map_or_else(String::new, |file| file.path().to_string_lossy().into_owned()),
+                })
+                .collect(),
+            feed_dir: self.feed_dir().to_string_lossy().into_owned(),
         }
+    }
+
+    /// Writes the file that makes `agent` report to the island. Never edits a file of the agent's.
+    pub fn connect_agent(&self, agent: Connectable) -> Result<ConnectionStatus, ServiceError> {
+        let hook = self.install_hook()?;
+        let file = self.agent_file(agent, &hook).ok_or(AgentConnectError::NotInstalled(agent.label()))?;
+        file.connect()?;
+        self.monitor.rescan();
+        Ok(self.connection())
+    }
+
+    /// Deletes that file again.
+    pub fn disconnect_agent(&self, agent: Connectable) -> Result<ConnectionStatus, ServiceError> {
+        if let Some(file) = self.agent_file(agent, &self.current_hook()) {
+            file.disconnect()?;
+        }
+        Ok(self.connection())
     }
 
     pub fn connect(&self) -> Result<ConnectionStatus, ServiceError> {
@@ -293,6 +360,7 @@ mod tests {
         Alert {
             session_id: "s".into(),
             agent: AgentKind::Claude,
+            agent_label: "Claude Code".into(),
             kind,
             project: "dotDock".into(),
             text: text.map(str::to_owned),
@@ -322,6 +390,19 @@ mod tests {
         assert_eq!(bare.body, "dotDock");
     }
 
+    #[test]
+    fn toast_copy_names_the_agent_that_spoke() {
+        let mut copilot = alert(AlertKind::Done, Some("Added the dock tests."), None);
+        copilot.agent = AgentKind::Copilot;
+        copilot.agent_label = "GitHub Copilot CLI".into();
+        assert_eq!(notification_copy(&copilot).title, "GitHub Copilot CLI finished · dotDock");
+        let login = Problem { kind: ProblemKind::Login, message: "Signed out".into(), resets: None };
+        let mut aider = alert(AlertKind::Error, None, Some(login));
+        aider.agent = AgentKind::Other;
+        aider.agent_label = "Aider".into();
+        assert_eq!(notification_copy(&aider).body, "Signed out. Sign in to Aider again.");
+    }
+
     fn fixture() -> (tempfile::TempDir, ServiceConfig) {
         let dir = tempfile::tempdir().expect("tempdir");
         let dirs = ClaudeDirs::at(dir.path().join(".claude"));
@@ -330,7 +411,12 @@ mod tests {
         let hook_source = dir.path().join("app").join("dotdock-island-hook.exe");
         std::fs::create_dir_all(hook_source.parent().expect("parent")).expect("app dir");
         std::fs::write(&hook_source, b"hook v1").expect("hook");
-        let cfg = ServiceConfig { dirs, data_dir: dir.path().join("data"), hook_source };
+        let homes =
+            AgentHomes { copilot: Some(dir.path().join(".copilot")), opencode: Some(dir.path().join("opencode")) };
+        for home in [&homes.copilot, &homes.opencode].into_iter().flatten() {
+            std::fs::create_dir_all(home).expect("agent home");
+        }
+        let cfg = ServiceConfig { dirs, data_dir: dir.path().join("data"), hook_source, homes };
         (dir, cfg)
     }
 
@@ -358,13 +444,19 @@ mod tests {
     #[test]
     fn an_updated_hook_is_repointed_at_startup_for_connected_users_only() {
         let (_dir, cfg) = fixture();
-        let (source, dirs, data) = (cfg.hook_source.clone(), cfg.dirs.clone(), cfg.data_dir.clone());
+        let (source, dirs, data, homes) =
+            (cfg.hook_source.clone(), cfg.dirs.clone(), cfg.data_dir.clone(), cfg.homes.clone());
         let first = IslandService::start(cfg, Arc::new(Recorder::default())).expect("start");
         first.connect().expect("connect");
         drop(first);
         std::fs::write(&source, b"hook v2, rebuilt").expect("update");
         let second = IslandService::start(
-            ServiceConfig { dirs: dirs.clone(), data_dir: data.clone(), hook_source: source.clone() },
+            ServiceConfig {
+                dirs: dirs.clone(),
+                data_dir: data.clone(),
+                hook_source: source.clone(),
+                homes: homes.clone(),
+            },
             Arc::new(Recorder::default()),
         )
         .expect("restart");
@@ -375,7 +467,7 @@ mod tests {
         drop(second);
         std::fs::write(&source, b"hook v3, rebuilt again").expect("update");
         let third = IslandService::start(
-            ServiceConfig { dirs, data_dir: data, hook_source: source },
+            ServiceConfig { dirs, data_dir: data, hook_source: source, homes },
             Arc::new(Recorder::default()),
         )
         .expect("third");
@@ -387,6 +479,93 @@ mod tests {
     }
 
     #[test]
+    fn copilot_and_opencode_connect_and_disconnect_without_touching_any_file_of_theirs() {
+        let (dir, cfg) = fixture();
+        let (copilot, opencode) =
+            (cfg.homes.copilot.clone().expect("copilot"), cfg.homes.opencode.clone().expect("opencode"));
+        std::fs::write(copilot.join("config.json"), b"{ \"model\": \"gpt\" }\r\n").expect("copilot config");
+        std::fs::write(opencode.join("opencode.json"), b"{ \"model\": \"x\" }\r\n").expect("opencode config");
+        let claude_settings = cfg.dirs.settings_file();
+        let claude_before = std::fs::read(&claude_settings).expect("claude settings");
+        let service = IslandService::start(cfg, Arc::new(Recorder::default())).expect("start");
+
+        let states = |s: &ConnectionStatus| s.agents.iter().map(|a| (a.agent, a.state)).collect::<Vec<_>>();
+        assert_eq!(
+            states(&service.connection()),
+            vec![(Connectable::Copilot, AgentState::Disconnected), (Connectable::OpenCode, AgentState::Disconnected)]
+        );
+        let status = service.connect_agent(Connectable::Copilot).expect("connect copilot");
+        assert_eq!(states(&status)[0], (Connectable::Copilot, AgentState::Connected));
+        assert!(copilot.join("hooks").join("dotdock-island.json").is_file());
+        let status = service.connect_agent(Connectable::OpenCode).expect("connect opencode");
+        assert_eq!(states(&status)[1], (Connectable::OpenCode, AgentState::Connected));
+        assert!(opencode.join("plugins").join("dotdock-island.js").is_file());
+        assert!(status.feed_dir.ends_with("agents"));
+        assert_eq!(
+            std::fs::read(&claude_settings).expect("claude settings"),
+            claude_before,
+            "Claude Code's settings are not part of this"
+        );
+
+        service.disconnect_agent(Connectable::Copilot).expect("disconnect copilot");
+        let status = service.disconnect_agent(Connectable::OpenCode).expect("disconnect opencode");
+        assert_eq!(
+            states(&status),
+            vec![(Connectable::Copilot, AgentState::Disconnected), (Connectable::OpenCode, AgentState::Disconnected)]
+        );
+        assert_eq!(std::fs::read(copilot.join("config.json")).expect("read"), b"{ \"model\": \"gpt\" }\r\n");
+        assert_eq!(std::fs::read(opencode.join("opencode.json")).expect("read"), b"{ \"model\": \"x\" }\r\n");
+        assert!(
+            !copilot.join("hooks").join("dotdock-island.json").exists()
+                && !opencode.join("plugins").join("dotdock-island.js").exists()
+        );
+        drop(dir);
+    }
+
+    #[test]
+    fn connected_agents_are_repointed_after_an_update_and_disconnected_ones_stay_alone() {
+        let (_dir, cfg) = fixture();
+        let (source, dirs, data, homes) =
+            (cfg.hook_source.clone(), cfg.dirs.clone(), cfg.data_dir.clone(), cfg.homes.clone());
+        let first = IslandService::start(cfg, Arc::new(Recorder::default())).expect("start");
+        first.connect_agent(Connectable::Copilot).expect("connect");
+        drop(first);
+        std::fs::write(&source, b"hook v2, rebuilt").expect("update");
+        let second = IslandService::start(
+            ServiceConfig { dirs, data_dir: data, hook_source: source, homes },
+            Arc::new(Recorder::default()),
+        )
+        .expect("restart");
+        let state = |agent| second.connection().agents.into_iter().find(|a| a.agent == agent).map(|a| a.state);
+        assert_eq!(state(Connectable::Copilot), Some(AgentState::Connected), "repointed at the new hook program");
+        assert_eq!(state(Connectable::OpenCode), Some(AgentState::Disconnected), "never connected, never touched");
+    }
+
+    #[test]
+    fn an_agent_that_is_not_installed_cannot_be_connected() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let hook = dir.path().join("hook.exe");
+        std::fs::write(&hook, b"x").expect("hook");
+        let cfg = ServiceConfig {
+            dirs: ClaudeDirs::at(dir.path().join("none")),
+            data_dir: dir.path().join("data"),
+            hook_source: hook,
+            homes: AgentHomes { copilot: Some(dir.path().join("no-copilot")), opencode: None },
+        };
+        let service = IslandService::start(cfg, Arc::new(Recorder::default())).expect("start");
+        assert!(matches!(
+            service.connect_agent(Connectable::Copilot),
+            Err(ServiceError::Agent(AgentConnectError::NotInstalled(_)))
+        ));
+        assert!(matches!(
+            service.connect_agent(Connectable::OpenCode),
+            Err(ServiceError::Agent(AgentConnectError::NotInstalled(_)))
+        ));
+        assert!(service.connection().agents.iter().all(|a| a.state == AgentState::NotFound));
+        assert!(!dir.path().join("no-copilot").exists());
+    }
+
+    #[test]
     fn connect_refuses_without_a_claude_folder() {
         let dir = tempfile::tempdir().expect("tempdir");
         let hook = dir.path().join("hook.exe");
@@ -395,6 +574,7 @@ mod tests {
             dirs: ClaudeDirs::at(dir.path().join("none")),
             data_dir: dir.path().join("data"),
             hook_source: hook,
+            homes: AgentHomes::default(),
         };
         let service = IslandService::start(cfg, Arc::new(Recorder::default())).expect("start");
         assert!(matches!(service.connect(), Err(ServiceError::NoClaude)));

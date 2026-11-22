@@ -1,0 +1,165 @@
+---
+import Page from "../layouts/Page.astro";
+import { PRODUCT_NAME, RELEASES_URL, NEXT_RELEASE } from "../brand";
+import { FIRST_VERSION, VERSIONS } from "../data/changelog";
+import { versionStatus } from "../lib/changelog";
+import { releaseView, type ReleaseData } from "../lib/release";
+import releaseData from "../data/release.json";
+
+const release = releaseView(releaseData as ReleaseData | null, NEXT_RELEASE);
+const versions = VERSIONS.map((v) => ({ ...v, status: versionStatus(v, release, FIRST_VERSION) }));
+const id = (major: number) => `v${major}`;
+---
+
+<Page
+  artTop="band-meadow"
+  sceneBottom="pond"
+  title={`Changelog: what is in each version of ${PRODUCT_NAME}`}
+  description={`What each version of ${PRODUCT_NAME} contains, and the dock tiles planned for the next one. Releases are published on GitHub.`}
+  label="Changelog"
+  heading="What is in each version."
+>
+  <Fragment slot="lede">
+    What {PRODUCT_NAME} contains, version by version, and what is planned next. Each release, with its installer and notes,
+    is published on <a href={RELEASES_URL} rel="noopener">GitHub Releases</a>.
+  </Fragment>
+
+  {
+    versions.map((v) => (
+      <section class="release reveal" aria-labelledby={id(v.major)}>
+        <header class="release__head">
+          <p class="release__num" aria-hidden="true">V{v.major}</p>
+          <div class="release__name">
+            <h2 class="release__title" id={id(v.major)}>{v.status.state === "planned" ? `Next: ${v.name}` : v.name}</h2>
+            <p class="caps caps-row chip-label release__status">
+              <span class={v.status.state === "released" || v.status.state === "out" || v.status.state === "earlier" ? "dot" : "dot dot--hollow"} aria-hidden="true" />
+              {v.status.state === "released" && (
+                <>
+                  Released <time datetime={v.status.dateTime}>{v.status.date}</time>
+                </>
+              )}
+              {v.status.state === "out" && `Released as ${v.status.tag}`}
+              {v.status.state === "earlier" && "Released"}
+              {v.status.state === "in-testing" && "Being tested, not released yet"}
+              {v.status.state === "planned" && "Planned, no date"}
+            </p>
+          </div>
+          <p class="release__summary">{v.summary}</p>
+        </header>
+        <div class="release__groups">
+          {v.groups.map((g) => (
+            <article class="release__group">
+              <h3 class="release__group-title">{g.title}</h3>
+              <ul class="ticks">
+                {g.items.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+        {(v.status.state === "released" || v.status.state === "out") && (
+          <p class="release__notes">
+            <a href={v.status.pageUrl} rel="noopener">Release notes for {v.status.tag}</a>
+          </p>
+        )}
+      </section>
+    ))
+  }
+</Page>
+
+<style>
+  .release {
+    display: grid;
+    gap: var(--space-8);
+    padding-top: clamp(40px, 6vw, 80px);
+  }
+  .release + .release {
+    margin-top: clamp(40px, 6vw, 80px);
+    border-top: var(--hairline) solid var(--line);
+  }
+  .release__head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: clamp(20px, 3vw, 40px);
+    row-gap: var(--space-4);
+  }
+  /* The version number in the dot face, the way the wordmark is drawn. */
+  .release__num {
+    font-family: var(--font-dot);
+    font-variation-settings: "ROND" 100;
+    font-weight: 800;
+    font-size: clamp(4rem, 11vw, 8.5rem);
+    line-height: 0.8;
+    color: var(--accent-text);
+  }
+  .release__name {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+  }
+  .release__title {
+    font-size: clamp(1.625rem, 3vw, 2.5rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+  }
+  .release__summary {
+    grid-column: 1 / -1;
+    max-width: 62ch;
+    color: var(--text-dim);
+    font-size: 1.0625rem;
+    text-wrap: pretty;
+  }
+  .release__groups {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .release__group {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+    padding: clamp(20px, 2.4vw, 28px);
+    border: var(--hairline) solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface-2);
+  }
+  .release__group-title {
+    color: var(--text);
+    font-size: 1.125rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  .release__group .ticks li {
+    color: var(--text-dim);
+  }
+  /* The first list of a version (the longest) runs full width in two columns of lines; the rest sit side by side,
+     and a list left alone on its row takes the row. */
+  @media (min-width: 768px) {
+    .release__groups {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .release__group:first-child,
+    .release__group:last-child:nth-child(even) {
+      grid-column: 1 / -1;
+    }
+    .release__group:first-child .ticks {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-8);
+    }
+  }
+  @media (min-width: 1100px) {
+    .release__groups {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .release__group:last-child:nth-child(even):not(:first-child) {
+      grid-column: auto;
+    }
+  }
+  @media (min-width: 900px) {
+    .release__summary {
+      grid-column: 2;
+    }
+  }
+</style>

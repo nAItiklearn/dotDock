@@ -1,0 +1,18 @@
+{"event":"sessionStart","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062600000,"cwd":"D:\\work\\dotDock","source":"new","initialPrompt":"Tidy the settings page spacing"}}
+{"event":"userPromptSubmitted","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062601000,"cwd":"D:\\work\\dotDock","prompt":"Tidy the settings page spacing"}}
+{"event":"preToolUse","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062602000,"cwd":"D:\\work\\dotDock","toolName":"view","toolArgs":{"path":"D:\\work\\dotDock\\src\\settings\\Settings.css"}}}
+{"event":"postToolUse","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062603000,"cwd":"D:\\work\\dotDock","toolName":"view","toolArgs":{},"toolResult":{"resultType":"success","textResultForLlm":"file contents are never copied"}}}
+{"event":"preToolUse","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062604000,"cwd":"D:\\work\\dotDock","toolName":"grep","toolArgs":{"pattern":"--space-","path":"src"}}}
+{"event":"postToolUse","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062605000,"cwd":"D:\\work\\dotDock","toolName":"grep","toolArgs":{},"toolResult":{"resultType":"success"}}}
+this line is not json
+{"event":"notification","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062606000,"cwd":"D:\\work\\dotDock","notification_type":"permission_prompt","message":"Allow edit of Settings.css?"}}
+{"event":"preToolUse","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062609000,"cwd":"D:\\work\\dotDock","toolName":"edit","toolArgs":{"path":"D:\\work\\dotDock\\src\\settings\\Settings.css","old_str":"gap: 6px","new_str":"gap: var(--space-2)"}}}
+{"event":"postToolUse","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062610000,"cwd":"D:\\work\\dotDock","toolName":"edit","toolArgs":{},"toolResult":{"resultType":"success"}}}
+{"event":"preToolUse","payload":{"timestamp":1795062610500,"cwd":"D:\\work\\dotDock","toolName":"view","toolArgs":{}}}
+{"event":"preToolUse","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062611000,"cwd":"D:\\work\\dotDock","toolName":"powershell","toolArgs":{"command":"pnpm vitest run src/settings","description":"Run the settings tests"}}}
+{"event":"postToolUseFailure","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062615000,"cwd":"D:\\work\\dotDock","toolName":"powershell","toolArgs":{},"error":"exit 1"}}
+{"event":"errorOccurred","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062615500,"cwd":"D:\\work\\dotDock","error":{"message":"timed out","name":"E"},"errorContext":"tool_execution","recoverable":true}}
+{"event":"agentStop","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062618000,"cwd":"D:\\work\\dotDock","stopReason":"end_turn"}}
+{"event":"userPromptSubmitted","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062630000,"cwd":"D:\\work\\dotDock","prompt":"Also fix the about page"}}
+{"event":"errorOccurred","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062632000,"cwd":"D:\\work\\dotDock","error":{"message":"You've hit your session limit · resets 5pm","name":"RateLimitError"},"errorContext":"model_call","recoverable":false}}
+{"event":"sessionEnd","payload":{"sessionId":"c0p1lot-7f3e","timestamp":1795062640000,"cwd":"D:\\work\\dotDock","reason":"user_exit"}}

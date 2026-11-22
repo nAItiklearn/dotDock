@@ -1,0 +1,55 @@
+{
+ "stage": {
+  "wide": [
+   1920,
+   600
+  ],
+  "narrow": [
+   720,
+   480
+  ]
+ },
+ "cell": {
+  "wide": 8.0,
+  "narrow": 6.0
+ },
+ "pivots": {
+  "wide": {
+   "paddock-head": [
+    0.47917,
+    0.60667
+   ],
+   "paddock-tail": [
+    0.57083,
+    0.58667
+   ],
+   "reef-head": [
+    0.5,
+    0.7547
+   ],
+   "reef-arms": [
+    0.5,
+    0.86
+   ]
+  },
+  "narrow": {
+   "paddock-head": [
+    0.45833,
+    0.61875
+   ],
+   "paddock-tail": [
+    0.64167,
+    0.6
+   ],
+   "reef-head": [
+    0.5,
+    0.7625
+   ],
+   "reef-arms": [
+    0.5,
+    0.86
+   ]
+  }
+ },
+ "dragonflyWingRoot": 0.5
+}

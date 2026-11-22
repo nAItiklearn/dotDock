@@ -5,7 +5,6 @@ import { Button, IconButton, SelectField } from "../../lib/ui/controls";
 import { Icon } from "../../lib/ui/Icon";
 import { NativeGate, useNativeResource, type NativeResource } from "../ui/native";
 import { PageHeader, Row, Section } from "../ui/layout";
-import { pageById } from "../pageMeta";
 
 interface WallpaperData {
   readonly items: readonly WallpaperItem[];
@@ -23,6 +22,9 @@ const FIT_OPTIONS: readonly { value: WallpaperFit; label: string }[] = [
 ];
 
 const ALL = "all";
+
+/** Bundled wallpapers come in a dark and a light take with one name; this tells them apart. */
+const MODE_NAMES = { dark: "Dark", light: "Light" } as const;
 
 function report(key: string, error: unknown): void {
   getApp().notices.getState().push({
@@ -97,7 +99,10 @@ function WallpaperBody({ resource, data }: { readonly resource: NativeResource<W
               <li key={item.id} className="wallpaper-grid__item">
                 <button type="button" className={`wallpaper${currentId === item.id ? " is-selected" : ""}`} aria-pressed={currentId === item.id} onClick={() => assign(item.id, currentFit)}>
                   <img className="wallpaper__thumb" src={item.thumbnailUrl} alt="" loading="lazy" />
-                  <span className="wallpaper__name">{item.name}</span>
+                  <span className="wallpaper__name">
+                    {item.name}
+                    {item.mode ? <span className="wallpaper__mode">{MODE_NAMES[item.mode]}</span> : null}
+                  </span>
                 </button>
                 {item.source === "imported" ? (
                   <span className="wallpaper-grid__remove">
@@ -123,10 +128,9 @@ export function WallpapersPage() {
       return { items, assignments, displays };
     },
   );
-  const page = pageById("wallpapers");
   return (
     <>
-      <PageHeader title={page.title} description={page.description} />
+      <PageHeader page="wallpapers" />
       <NativeGate
         resource={resource}
         icon="wallpaper"

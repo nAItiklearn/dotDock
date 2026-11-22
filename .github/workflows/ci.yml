@@ -45,6 +45,8 @@ jobs:
       - run: pnpm typecheck
       # --passWithNoTests: vitest exits 1 when no test files exist yet.
       - run: pnpm test --passWithNoTests
+      # Repository tools written in plain Node (the island session replay).
+      - run: node --test ../../tools/island-replay.test.mjs ../../tools/island-claude-settings.test.mjs
       - run: pnpm build
 
   rust:
@@ -157,8 +159,9 @@ jobs:
         working-directory: apps/desktop/src-tauri
 
       # beforeBuildCommand (pnpm build) produces the frontend; output is target/release/bundle/nsis.
+      # Updater signatures need the release key, which only release.yml has, so CI bundles skip them.
       - name: Build bundle
-        run: pnpm tauri build --config src-tauri/tauri.sentinel.conf.json
+        run: pnpm tauri build --config src-tauri/tauri.sentinel.conf.json --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
       - name: Read app version
         id: app

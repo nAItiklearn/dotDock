@@ -118,12 +118,16 @@ export function addWidget(
   widget: string,
   requestedSize: string | undefined,
   ctx: LayoutContext,
+  near?: Cell,
 ): Added | null {
   const meta = ctx.catalog.get(widget);
   if (!meta) return null;
   const size = meta.sizes.find((s) => s.id === requestedSize) ?? meta.sizes[0];
   if (!size) return null;
-  const spot = firstFreeSpot(itemsOf(ps, ctx), size.w, size.h, ctx.bounds);
+  // Added where the user pointed when they said where; otherwise in the first free cell, reading order.
+  const spot = near
+    ? nearestFreeSpot(itemsOf(ps, ctx), size.w, size.h, ctx.bounds, near)
+    : firstFreeSpot(itemsOf(ps, ctx), size.w, size.h, ctx.bounds);
   if (!spot) return null;
   const id = nextId(widget, new Set(ps.map((p) => p.id)));
   const placement: Placement = { id, widget, size: size.id, x: spot.x, y: spot.y, config: {} };

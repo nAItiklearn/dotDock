@@ -9,6 +9,7 @@
 use serde::Deserialize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::thread::JoinHandle;
 use std::time::Duration;
 
 /// Tick while the cursor is near the island, and while it is far away.
@@ -191,11 +192,16 @@ pub fn monitor_at(point: (i32, i32)) -> Option<Rect> {
 /// Stops its thread when dropped.
 pub struct Poller {
     stop: Arc<AtomicBool>,
+    thread: Option<JoinHandle<()>>,
 }
 
+/// Dropping the poller stops its thread and waits for it, at most one tick, so nothing outlives it.
 impl Drop for Poller {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::Relaxed);
+        if let Some(thread) = self.thread.take() {
+            let _ = thread.join();
+        }
     }
 }
 
@@ -207,7 +213,7 @@ pub fn spawn_poller(
 ) -> std::io::Result<Poller> {
     let stop = Arc::new(AtomicBool::new(false));
     let flag = Arc::clone(&stop);
-    std::thread::Builder::new().name("island-pointer".into()).spawn(move || {
+    let thread = std::thread::Builder::new().name("island-pointer".into()).spawn(move || {
         let mut tracker = Tracker::default();
         while !flag.load(Ordering::Relaxed) {
             let mut pause = FAR_TICK;
@@ -221,7 +227,7 @@ pub fn spawn_poller(
             std::thread::sleep(pause);
         }
     })?;
-    Ok(Poller { stop })
+    Ok(Poller { stop, thread: Some(thread) })
 }
 
 #[cfg(test)]

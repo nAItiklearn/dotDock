@@ -6,6 +6,7 @@ function session(phase: Phase, patch: Partial<SessionView> = {}): SessionView {
   return {
     id: "s1",
     agent: "claude",
+    agentLabel: "Claude Code",
     phase,
     tool: null,
     detail: null,
@@ -79,9 +80,13 @@ describe("describeSession", () => {
     expect(describeSession(session("error")).word).toBe("API error");
   });
 
-  it("gives Codex its own sign-in hint", () => {
-    const hint = describeSession(session("error", { agent: "codex", problem: problem({ kind: "login" }) })).hint;
-    expect(hint).toBe("Sign in to Codex again");
+  it("names the agent that is signed out, and keeps /login for Claude Code only", () => {
+    const hintFor = (agent: SessionView["agent"], agentLabel: string): string | null =>
+      describeSession(session("error", { agent, agentLabel, problem: problem({ kind: "login" }) })).hint;
+    expect(hintFor("claude", "Claude Code")).toBe("Run /login in the terminal");
+    expect(hintFor("codex", "Codex")).toBe("Sign in to Codex again");
+    expect(hintFor("copilot", "GitHub Copilot CLI")).toBe("Sign in to GitHub Copilot CLI again");
+    expect(hintFor("other", "Aider")).toBe("Sign in to Aider again");
   });
 });
 

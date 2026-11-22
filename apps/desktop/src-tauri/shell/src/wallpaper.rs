@@ -1,7 +1,7 @@
 //! Sets the real Windows wallpaper per monitor via `IDesktopWallpaper`. Because Windows itself
 //! draws it, the user's wallpaper is on screen from the first frame of sign-in, before any app runs.
 
-use crate::snapshot;
+use crate::{boot_log, snapshot, wallpaper_follow};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use windows::core::{HSTRING, PCWSTR, PWSTR};
@@ -26,6 +26,14 @@ pub enum Fit {
 }
 
 impl Fit {
+    /// The fit Windows reports; a position this build does not know reads as the default.
+    fn from_position(position: DESKTOP_WALLPAPER_POSITION) -> Self {
+        [Fit::Fill, Fit::Fit, Fit::Stretch, Fit::Tile, Fit::Center, Fit::Span]
+            .into_iter()
+            .find(|fit| fit.position() == position)
+            .unwrap_or_default()
+    }
+
     fn position(self) -> DESKTOP_WALLPAPER_POSITION {
         match self {
             Fit::Fill => DWPOS_FILL,
@@ -63,7 +71,17 @@ pub enum WallpaperError {
     Snapshot(#[from] snapshot::SnapshotError),
     #[error("manifest: {0}")]
     Manifest(String),
+    #[error("Windows is showing a solid colour, not a picture")]
+    SolidColour,
+    #[error("the wallpaper file is larger than {limit_mb} MB")]
+    TooLarge { limit_mb: u64 },
+    #[error("the wallpaper file could not be read: {0}")]
+    Read(String),
 }
+
+/// Largest wallpaper file Settings is handed to read the colours of; a 4K PNG is about a tenth of this.
+pub const MAX_IMAGE_BYTES: u64 = 64 * 1024 * 1024;
+const BYTES_PER_MB: u64 = 1024 * 1024;
 
 /// COM must be initialised on the calling thread; the guard undoes it.
 struct ComGuard;
@@ -92,13 +110,49 @@ fn take_pwstr(p: PWSTR) -> String {
     }
 }
 
-/// Applies `path` to one monitor (device path from `monitors()`) or, with None, to every monitor.
-pub fn apply(path: &Path, monitor: Option<&str>, fit: Fit) -> Result<(), WallpaperError> {
-    if !path.is_file() {
-        return Err(WallpaperError::Missing(path.display().to_string()));
+/// How Windows fits wallpapers to the screen now; one setting for every monitor.
+pub fn fit() -> Result<Fit, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply().
+    let position = unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        wp.GetPosition()?
+    };
+    Ok(Fit::from_position(position))
+}
+
+/// A path Windows may be handed as the wallpaper: absolute (a drive or a share, never relative to the working
+/// folder) and an existing file. A path that is neither once left Windows with a black desktop (D-042).
+pub fn is_usable(path: &Path) -> bool {
+    path.is_absolute() && path.is_file()
+}
+
+/// What to set when asked for `wanted`: `wanted` itself when it is usable, else the saved copy of the user's own
+/// wallpaper when that is, else nothing.
+pub fn choose_path(wanted: &Path, saved_copy: Option<&Path>, usable: impl Fn(&Path) -> bool) -> Option<PathBuf> {
+    if usable(wanted) {
+        return Some(wanted.to_path_buf());
     }
+    saved_copy.filter(|copy| usable(copy)).map(Path::to_path_buf)
+}
+
+/// Applies `path` to one monitor (device path from `monitors()`) or, with None, to every monitor. A path that is
+/// not absolute or does not exist is refused; the saved copy of the user's own wallpaper is set instead (logged).
+pub fn apply(path: &Path, monitor: Option<&str>, fit: Fit) -> Result<(), WallpaperError> {
     // The original wallpaper must be on record before the first change, so restore always works.
     snapshot::ensure(false)?;
+    let saved_copy = snapshot::load()?.and_then(|s| s.wallpaper_copy).map(PathBuf::from);
+    let chosen = choose_path(path, saved_copy.as_deref(), is_usable)
+        .ok_or_else(|| WallpaperError::Missing(path.display().to_string()))?;
+    if chosen != path {
+        boot_log::record(&format!(
+            "wallpaper: refused {} (not an absolute path to a file), set the saved copy {} instead",
+            path.display(),
+            chosen.display()
+        ));
+    }
+    let path = chosen.as_path();
+    wallpaper_follow::note_own_write(path);
     let _com = ComGuard::new()?;
     // SAFETY: standard COM activation of the shell's wallpaper object; all calls use owned HSTRINGs.
     unsafe {
@@ -124,6 +178,100 @@ pub fn monitors() -> Result<Vec<String>, WallpaperError> {
     }
 }
 
+/// A monitor as the shell's wallpaper object knows it: its device path and desktop rectangle in
+/// physical pixels (left, top, right, bottom).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MonitorRect {
+    pub device_path: String,
+    pub rect: (i32, i32, i32, i32),
+}
+
+/// Every attached monitor with its rectangle, so a display found by position can be given its own wallpaper.
+pub fn monitor_rects() -> Result<Vec<MonitorRect>, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply(); each returned PWSTR is freed by take_pwstr, and the device path outlives the RECT query.
+    unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        let count = wp.GetMonitorDevicePathCount()?;
+        (0..count)
+            .map(|i| {
+                let device_path = take_pwstr(wp.GetMonitorDevicePathAt(i)?);
+                let r = wp.GetMonitorRECT(&HSTRING::from(device_path.as_str()))?;
+                Ok(MonitorRect { device_path, rect: (r.left, r.top, r.right, r.bottom) })
+            })
+            .collect()
+    }
+}
+
+/// The picture the user had before dotDock changed anything, from the snapshot: the private copy when it
+/// still exists, else the original path.
+pub fn original() -> Result<Option<PathBuf>, WallpaperError> {
+    let Some(snap) = snapshot::load()? else { return Ok(None) };
+    Ok([snap.wallpaper_copy, snap.wallpaper].into_iter().flatten().map(PathBuf::from).find(|p| p.is_file()))
+}
+
+/// The wallpaper file of every monitor, by device path. Monitors showing a solid colour are left out.
+pub fn assignments() -> Result<Vec<(String, PathBuf)>, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply(); each returned PWSTR is freed by take_pwstr.
+    unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        let mut out = Vec::new();
+        for i in 0..wp.GetMonitorDevicePathCount()? {
+            let id = take_pwstr(wp.GetMonitorDevicePathAt(i)?);
+            let path = take_pwstr(wp.GetWallpaper(&HSTRING::from(id.as_str()))?);
+            if !path.is_empty() {
+                out.push((id, PathBuf::from(path)));
+            }
+        }
+        Ok(out)
+    }
+}
+
+/// The wallpaper file Windows is showing on the primary monitor: the one at the origin of the virtual
+/// screen, or the first listed when none is. None when the wallpaper is a solid colour.
+pub fn current() -> Result<Option<PathBuf>, WallpaperError> {
+    let _com = ComGuard::new()?;
+    // SAFETY: see apply(); each returned PWSTR is freed by take_pwstr.
+    unsafe {
+        let wp: IDesktopWallpaper = CoCreateInstance(&DesktopWallpaper, None, CLSCTX_LOCAL_SERVER)?;
+        let ids = (0..wp.GetMonitorDevicePathCount()?)
+            .map(|i| Ok(take_pwstr(wp.GetMonitorDevicePathAt(i)?)))
+            .collect::<windows::core::Result<Vec<String>>>()?;
+        let at_origin = ids.iter().find(|id| {
+            wp.GetMonitorRECT(&HSTRING::from(id.as_str())).is_ok_and(|rect| rect.left == 0 && rect.top == 0)
+        });
+        let Some(id) = at_origin.or(ids.first()) else { return Ok(None) };
+        let path = take_pwstr(wp.GetWallpaper(&HSTRING::from(id.as_str()))?);
+        Ok((!path.is_empty()).then(|| PathBuf::from(path)))
+    }
+}
+
+/// Reads a file, refusing one larger than `limit` bytes before reading any of it.
+fn read_limited(path: &Path, limit: u64) -> Result<Vec<u8>, WallpaperError> {
+    let size = std::fs::metadata(path).map_err(|e| WallpaperError::Read(e.to_string()))?.len();
+    if size > limit {
+        return Err(WallpaperError::TooLarge { limit_mb: limit / BYTES_PER_MB });
+    }
+    std::fs::read(path).map_err(|e| WallpaperError::Read(e.to_string()))
+}
+
+/// The bytes of a wallpaper file dotDock itself named (the one it just announced), refusing anything that is not an
+/// absolute path to a file.
+pub fn image_at(path: &Path) -> Result<Vec<u8>, WallpaperError> {
+    if !path.is_absolute() || !path.is_file() {
+        return Err(WallpaperError::Read(format!("{} is not a wallpaper file", path.display())));
+    }
+    read_limited(path, MAX_IMAGE_BYTES)
+}
+
+/// The bytes of the picture Windows is showing as the wallpaper, so Settings can read its colours.
+/// The path comes from Windows, never from the caller.
+pub fn current_image() -> Result<Vec<u8>, WallpaperError> {
+    let path = current()?.ok_or(WallpaperError::SolidColour)?;
+    read_limited(&path, MAX_IMAGE_BYTES)
+}
+
 #[derive(Deserialize)]
 struct Manifest {
     wallpapers: Vec<ManifestEntry>,
@@ -147,6 +295,54 @@ mod tests {
         let all = bundled(&dir).expect("shipped manifest parses");
         assert!(all.len() >= 32, "16 wallpapers x dark/light");
         assert!(all.iter().all(|(_, p)| p.is_file()), "every manifest entry has its file");
+    }
+
+    #[test]
+    fn only_an_absolute_path_to_an_existing_file_is_handed_to_windows() {
+        let dir = tempfile::tempdir().expect("dir");
+        let picture = dir.path().join("picture.jpeg");
+        std::fs::write(&picture, b"jpeg").expect("write");
+        assert!(is_usable(&picture));
+        assert!(!is_usable(&dir.path().join("gone.jpeg")), "missing");
+        assert!(!is_usable(dir.path()), "a folder");
+        // The path that blacked out the desktop: a shell variable mangled into a relative path.
+        assert!(!is_usable(Path::new(r":LOCALAPPDATA\dev.dotdock.desktop\original-wallpaper.jpeg")));
+        assert!(!is_usable(Path::new(r"dev.dotdock.desktop\original-wallpaper.jpeg")), "relative");
+        assert!(!is_usable(Path::new(r"\dev.dotdock.desktop\original-wallpaper.jpeg")), "no drive");
+    }
+
+    #[test]
+    fn a_refused_path_falls_back_to_the_saved_copy_and_never_to_another_bad_one() {
+        let dir = tempfile::tempdir().expect("dir");
+        let copy = dir.path().join("original-wallpaper.jpeg");
+        std::fs::write(&copy, b"jpeg").expect("write");
+        let mangled = Path::new(r":LOCALAPPDATA\dev.dotdock.desktop\original-wallpaper.jpeg");
+        assert_eq!(choose_path(mangled, Some(&copy), is_usable), Some(copy.clone()));
+        assert_eq!(choose_path(&copy, None, is_usable), Some(copy.clone()), "a usable path is kept");
+        assert_eq!(choose_path(mangled, Some(mangled), is_usable), None, "a bad copy is refused too");
+        assert_eq!(choose_path(mangled, None, is_usable), None);
+    }
+
+    #[test]
+    fn a_file_over_the_limit_is_refused_and_one_at_the_limit_is_read() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let file = dir.path().join("wall.jpg");
+        std::fs::write(&file, [7u8; 16]).expect("write");
+        assert_eq!(read_limited(&file, 16).expect("at the limit"), vec![7u8; 16]);
+        assert!(matches!(read_limited(&file, 15), Err(WallpaperError::TooLarge { .. })));
+    }
+
+    #[test]
+    fn a_missing_file_is_a_read_error_not_a_panic() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        assert!(matches!(read_limited(&dir.path().join("gone.jpg"), 16), Err(WallpaperError::Read(_))));
+    }
+
+    #[test]
+    fn every_fit_reads_back_from_its_windows_position() {
+        for fit in [Fit::Fill, Fit::Fit, Fit::Stretch, Fit::Tile, Fit::Center, Fit::Span] {
+            assert_eq!(Fit::from_position(fit.position()), fit);
+        }
     }
 
     #[test]

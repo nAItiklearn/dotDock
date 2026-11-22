@@ -1,7 +1,6 @@
 import { getApp } from "../../lib/state/app";
-import { IconButton } from "../../lib/ui/controls";
 import { Icon } from "../../lib/ui/Icon";
-import { announce } from "../editUi";
+import { removeWithExit } from "../directActions";
 import "./edit.css";
 
 export interface SlotChromeProps {
@@ -13,9 +12,11 @@ export interface SlotChromeProps {
   readonly resizable: boolean;
 }
 
-/** What a widget wears in edit mode: an outline, quick actions and a corner resize handle. All inside its own box. */
+/**
+ * What a widget wears in edit mode: an outline on its edge, a small remove button in the top-left
+ * corner and a resize handle in the bottom-right one. All inside its own box, so all inside its hit area.
+ */
 export function SlotChrome({ id, name, selected, locked, resizable }: SlotChromeProps) {
-  const layout = getApp().layout;
   return (
     <>
       <div className={`slot-chrome__frame${selected ? " is-selected" : ""}`} aria-hidden="true" />
@@ -25,24 +26,16 @@ export function SlotChrome({ id, name, selected, locked, resizable }: SlotChrome
         </span>
       ) : (
         <>
-          <div className="slot-chrome__actions" data-no-drag>
-            <IconButton
-              icon="duplicate"
-              label={`Duplicate ${name}`}
-              onClick={() => {
-                const result = layout.getState().duplicate(id);
-                if (result.ok) announce(`${name} duplicated`);
-              }}
-            />
-            <IconButton
-              icon="trash"
-              tone="danger"
-              label={`Remove ${name}`}
-              onClick={() => {
-                if (layout.getState().remove(id).ok) announce(`${name} removed`);
-              }}
-            />
-          </div>
+          <button
+            type="button"
+            className="slot-chrome__remove"
+            data-no-drag
+            aria-label={`Remove ${name}`}
+            title={`Remove ${name}`}
+            onClick={() => void removeWithExit(getApp().layout, id, name)}
+          >
+            <Icon name="close" size={12} />
+          </button>
           {resizable ? (
             <span className="slot-chrome__resize" data-resize-handle aria-hidden="true">
               <Icon name="resize" size={16} />

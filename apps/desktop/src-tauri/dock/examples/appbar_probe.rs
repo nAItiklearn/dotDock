@@ -1,7 +1,7 @@
 //! Proves the app-bar spike: a registered bar makes the work area smaller, a maximised window stops at the bar,
 //! and removing the bar gives the space back. Registers a real bar for a few seconds and ALWAYS removes it.
 //!
-//! With `--hide-taskbar` the native taskbar is hidden for the bottom-edge run (the owner allowed this for tests);
+//! With `--hide-taskbar` the native taskbar is hidden for the run (the owner allowed this for tests);
 //! a guard shows it again and restores the auto-hide state on every path, including a panic.
 //!
 //! Run: `cargo run -p dotdock-dock --example appbar_probe [-- --hide-taskbar]`
@@ -10,7 +10,6 @@ mod common;
 
 use common::{destroy, dpi_aware, probe_window, pump, Look};
 use dotdock_dock::appbar::{work_area, AppBar};
-use dotdock_dock::protocol::DockEdge;
 use dotdock_shell::taskbar;
 use std::time::Duration;
 use windows::core::w;
@@ -81,8 +80,8 @@ fn describe(rect: RECT) -> String {
     format!("[{}..{}] x [{}..{}]", rect.left, rect.right, rect.top, rect.bottom)
 }
 
-/// One run: register a bar on `edge`, maximise a window, report where it ended up, remove the bar.
-fn run(edge: DockEdge) -> bool {
+/// One run: register a bar along the bottom, maximise a window, report where it ended up, remove the bar.
+fn run() -> bool {
     let before = work_area().expect("work area");
     let ex = WINDOW_EX_STYLE(WS_EX_TOPMOST.0 | WS_EX_TOOLWINDOW.0);
     let bar_window = probe_window(
@@ -92,7 +91,7 @@ fn run(edge: DockEdge) -> bool {
         WS_POPUP,
         ex,
     );
-    let bar = AppBar::register(bar_window.0 as isize, edge, BAR_THICKNESS, WM_USER + 1).expect("register app bar");
+    let bar = AppBar::register(bar_window.0 as isize, BAR_THICKNESS, WM_USER + 1).expect("register app bar");
     pump(SETTLE);
     let granted = bar.rect();
     let with_bar = work_area().expect("work area");
@@ -106,12 +105,7 @@ fn run(edge: DockEdge) -> bool {
     pump(SETTLE);
     let maximised = visible_bounds(test);
 
-    let respects = match edge {
-        DockEdge::Top => maximised.top >= granted.bottom,
-        DockEdge::Bottom => maximised.bottom <= granted.top,
-        DockEdge::Left => maximised.left >= granted.right,
-        DockEdge::Right => maximised.right <= granted.left,
-    };
+    let respects = maximised.bottom <= granted.top;
     destroy(test);
     drop(bar);
     destroy(bar_window);
@@ -119,13 +113,13 @@ fn run(edge: DockEdge) -> bool {
     let after = work_area().expect("work area");
 
     println!(
-        "{edge:?}: work area before {} | with bar {} | after removing {}",
+        "bottom: work area before {} | with bar {} | after removing {}",
         describe(before),
         describe(with_bar),
         describe(after)
     );
     println!(
-        "{edge:?}: bar granted {} | maximised window {} | stops at the bar: {respects}",
+        "bottom: bar granted {} | maximised window {} | stops at the bar: {respects}",
         describe(granted),
         describe(maximised)
     );
@@ -135,7 +129,7 @@ fn run(edge: DockEdge) -> bool {
         && after.top == before.top
         && after.right == before.right
         && after.bottom == before.bottom;
-    println!("{edge:?}: work area shrank: {shrank}, restored: {restored}");
+    println!("bottom: work area shrank: {shrank}, restored: {restored}");
     shrank && respects && restored
 }
 
@@ -146,13 +140,13 @@ fn main() {
     let auto_hide_at_start = taskbar::auto_hide();
     println!("taskbar at start: visible {visible_at_start:?}, auto-hide {auto_hide_at_start}");
 
-    let mut ok = run(DockEdge::Top);
+    let mut ok = true;
     {
         let _taskbar = hide.then(TaskbarGuard::hide);
         if hide {
             println!("native taskbar hidden for the bottom run: visible now {:?}", taskbar::is_visible());
         }
-        ok &= run(DockEdge::Bottom);
+        ok &= run();
     }
     let visible_at_end = taskbar::is_visible();
     let auto_hide_at_end = taskbar::auto_hide();

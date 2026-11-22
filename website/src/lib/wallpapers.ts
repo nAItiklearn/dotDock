@@ -1,14 +1,15 @@
 /**
- * The product's original wallpapers, downscaled by tools/make-wallpapers.mjs. One per theme,
- * chosen so the widget cluster sits on the calm left half of the image.
+ * The product's original wallpapers shown in the desktop shots, downscaled by tools/make-wallpapers.mjs.
+ * One natural scene per theme (a halftone range over rolling hills, a wind-swept meadow with dotted wild
+ * flowers), chosen so the widget cluster sits on the calm left half of the image.
  * Names are the product's own (assets/wallpapers/manifest.json).
  */
-import arcRedLarge from "../assets/wallpapers/arc-red-dark-1920.webp?url";
-import arcRedSmall from "../assets/wallpapers/arc-red-dark-640.webp?url";
-import paperRingLarge from "../assets/wallpapers/paper-ring-light-1920.webp?url";
-import paperRingSmall from "../assets/wallpapers/paper-ring-light-640.webp?url";
-import liquidGoldLarge from "../assets/wallpapers/liquid-gold-dark-1920.webp?url";
-import liquidGoldSmall from "../assets/wallpapers/liquid-gold-dark-640.webp?url";
+import ridgeLightLarge from "../assets/wallpapers/halftone-ridge-light-1920.webp?url";
+import ridgeLightSmall from "../assets/wallpapers/halftone-ridge-light-640.webp?url";
+import ridgeDarkLarge from "../assets/wallpapers/halftone-ridge-dark-1920.webp?url";
+import ridgeDarkSmall from "../assets/wallpapers/halftone-ridge-dark-640.webp?url";
+import meadowDarkLarge from "../assets/wallpapers/meadow-dots-dark-1920.webp?url";
+import meadowDarkSmall from "../assets/wallpapers/meadow-dots-dark-640.webp?url";
 import type { ThemeId } from "./themes";
 
 export interface Wallpaper {
@@ -18,7 +19,7 @@ export interface Wallpaper {
 }
 
 export const WALLPAPERS: Record<ThemeId, Wallpaper> = {
-  obsidian: { name: "Phosphor Red", large: arcRedLarge, small: arcRedSmall },
-  paper: { name: "Paper Ring", large: paperRingLarge, small: paperRingSmall },
-  aurum: { name: "Molten Gold", large: liquidGoldLarge, small: liquidGoldSmall },
+  paper: { name: "Screen Ridge", large: ridgeLightLarge, small: ridgeLightSmall },
+  obsidian: { name: "Screen Ridge", large: ridgeDarkLarge, small: ridgeDarkSmall },
+  aurum: { name: "Wind Meadow", large: meadowDarkLarge, small: meadowDarkSmall },
 };

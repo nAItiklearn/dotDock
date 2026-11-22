@@ -300,12 +300,22 @@ pub fn handle(dirs: &ClaudeDirs, input: &HookInput, env: &HookEnv) -> bool {
     }
 }
 
-/// The binary's whole job: stdin to state file. Never panics, never returns an error.
+/// Claude Code's hook: stdin to state file. Never panics, never returns an error.
 pub fn run_from_stdin() {
     let Some(input) = read_input(std::io::stdin().lock()) else { return };
     let Some(dirs) = ClaudeDirs::from_env() else { return };
     let env = current_env(input.transcript_path.as_deref());
     handle(&dirs, &input, &env);
+}
+
+/// The binary's entry point. `--agent copilot` selects the GitHub Copilot CLI adapter; the entries Connect
+/// writes into Claude Code's settings carry no arguments and read a Claude Code event.
+pub fn run(args: &[String]) {
+    if args.windows(2).any(|pair| pair[0] == "--agent" && pair[1] == crate::copilot::AGENT) {
+        crate::copilot::run_from_stdin(&crate::copilot::HookArgs::parse(args));
+    } else {
+        run_from_stdin();
+    }
 }
 
 #[cfg(test)]

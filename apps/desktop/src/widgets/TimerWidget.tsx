@@ -2,7 +2,7 @@ import { useEffect, useMemo, type ReactNode } from "react";
 import { DotMatrix } from "../design-system/DotMatrix";
 import { Caps, DotMeter, IconButton, Ring, Surface } from "../design-system/primitives";
 import { useNow } from "../providers/clock";
-import { playChime, primeChime } from "./chime";
+import { chimeReady, claimChime, playChime, primeChime } from "./chime";
 import type { ConfigSchema } from "./configSchema";
 import { defineWidget, type WidgetProps } from "./definition";
 import { formatDuration, MS_PER_MINUTE } from "./format";
@@ -11,6 +11,7 @@ import {
   COUNTDOWN_STEP_MS,
   elapsedMs,
   finishedRecently,
+  finishKey,
   progress,
   remainingMs,
   type PomodoroPlan,
@@ -106,7 +107,7 @@ function Ticking({ timer, plan, sound, children }: { readonly timer: TimerState;
   useEffect(() => {
     const left = remainingMs(timer, plan, now);
     if (left === null || left > 0) return;
-    if (sound && finishedRecently(timer, plan, now, CHIME_WINDOW_MS)) playChime();
+    if (sound && finishedRecently(timer, plan, now, CHIME_WINDOW_MS) && chimeReady() && claimChime(finishKey(timer))) playChime();
     settle(plan);
   }, [now, timer, plan, sound, settle]);
   return <>{children(now)}</>;

@@ -25,12 +25,17 @@ export default defineConfig({
   },
   build: {
     target: "es2022",
+    // WebView2 is evergreen Chromium. A lower CSS target makes the minifier rewrite light-dark() into
+    // --lightningcss-light/--lightningcss-dark variables that exist only where color-scheme is declared in CSS; the
+    // theme sets it from script, so every light-dark() colour (dock glass, borders, category tones) went invalid.
+    cssTarget: "chrome123",
     cssCodeSplit: true,
     modulePreload: { polyfill: false },
     rollupOptions: {
       input: {
         overlay: resolve(here, "overlay.html"),
         island: resolve(here, "island.html"),
+        dock: resolve(here, "dock.html"),
         settings: resolve(here, "settings.html"),
       },
     },

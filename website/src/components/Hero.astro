@@ -1,37 +1,45 @@
 ---
+import Art from "./Art.astro";
 import Desktop from "./Desktop.astro";
-import { LATEST_RELEASE, REPO_URL, ROUTES, TAGLINE_DOTS, TAGLINE_FIRST, TAGLINE_SECOND } from "../brand";
+import { ROUTES, TAGLINE } from "../brand";
+
+// The headline's full stop is drawn as the brand's dot, so the words and the dot are split here.
+const headline = TAGLINE.replace(/\.$/, "");
 ---
 
 <section class="hero" id="top" aria-labelledby="hero-title">
-  <div class="wrap hero__inner">
-    <p class="caps caps-row chip-label">
-      <span class="dot" aria-hidden="true"></span>
-      For Windows 10 and 11
-    </p>
-
-    <h1 class="hero__title" id="hero-title">
-      <span class="hero__line">{TAGLINE_FIRST}</span>
-      <span class="hero__line">{TAGLINE_SECOND} <span class="hero__dots">{TAGLINE_DOTS}</span>.</span>
-    </h1>
-
-    <p class="hero__lede">
-      One calm environment for your whole Windows desktop.
-    </p>
-
-    <div class="hero__actions">
-      <a class="btn btn--accent btn--lg" href={ROUTES.download}>Download for Windows</a>
-      <a class="btn btn--lg btn--quiet" href={REPO_URL} rel="noopener">View on GitHub</a>
+  <!-- Hills in a halftone screen, then two bouquets of pixel flowers: all drawn by tools/site-art, all behind the page. -->
+  <div class="hero__land" aria-hidden="true">
+    <div class="hero__scape">
+      <Art piece="scape" parallax={0.1} fromPage />
     </div>
-
-    <ul class="hero__trust caps">
-      <li>Free and open source</li>
-      <li>No telemetry</li>
-      <li class="hero__soon">{LATEST_RELEASE ? `Release ${LATEST_RELEASE.tag}` : "In development"}</li>
-    </ul>
   </div>
 
-  <div class="wrap hero__shot">
-    <Desktop objects class="desk--tilt" />
+  <div class="hero__top">
+    <div class="hero__bloom hero__bloom--l">
+      <Art piece="bouquet-left" parallax={-0.04} fromPage />
+    </div>
+    <div class="hero__bloom hero__bloom--r">
+      <Art piece="bouquet-right" parallax={-0.06} fromPage />
+    </div>
+
+    <div class="wrap hero__inner">
+      <h1 class="hero__title" id="hero-title">
+        {headline}<span class="hero__stop" aria-hidden="true"></span><span class="sr-only">.</span>
+      </h1>
+      <p class="hero__lede">A home screen, a dock and an island for your AI agents.</p>
+      <a class="btn btn--accent btn--lg" href={ROUTES.download}>Download for Windows</a>
+    </div>
+  </div>
+
+  <!-- The screen rises into the hills from the foot of the hero; two tufts of flowers stand against its lower corners. -->
+  <div class="wrap hero__frame">
+    <Desktop wallpaper="aurum" />
+    <div class="hero__tuft hero__tuft--l">
+      <Art piece="tuft-left" />
+    </div>
+    <div class="hero__tuft hero__tuft--r">
+      <Art piece="tuft-right" />
+    </div>
   </div>
 </section>

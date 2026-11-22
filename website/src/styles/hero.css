@@ -1,96 +1,74 @@
-/* Hero: a centred headline and one clear action, then the desktop shot. */
+/*
+ * Hero: flowers and hills drawn in dots behind everything (styles/art.css), then the display headline,
+ * one sentence and one button, and the screen rising from the foot of the page into the hills.
+ */
 .hero {
   position: relative;
-  padding-top: calc(var(--nav-h) + clamp(36px, 5.6vw, 88px));
-  overflow-x: clip;
+  isolation: isolate;
+  overflow: clip;
+  padding-top: calc(var(--nav-h) + clamp(40px, 6vw, 96px));
+  padding-bottom: clamp(36px, 5vw, 80px);
 }
-/* A faint dot lattice behind the headline, fading out before it reaches the shot. */
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: min(100%, 880px);
-  z-index: -1;
-  background-image: radial-gradient(circle at center, var(--dot-off) 1.4px, transparent 1.8px);
-  background-size: 28px 28px;
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 20%, transparent 75%);
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 20%, transparent 75%);
+.hero__top {
+  position: relative;
 }
 .hero__inner {
   display: grid;
   justify-items: center;
-  gap: var(--space-5);
+  gap: clamp(16px, 1.8vw, 24px);
+  max-width: calc(756px + 2 * var(--page-margin));
   text-align: center;
 }
+/* Small pill used by the section heads. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  padding: 0 14px 0 12px;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+}
 .hero__title {
-  font-size: clamp(2.875rem, 8.4vw, 9rem);
-  line-height: 0.9;
-  font-weight: 600;
-  letter-spacing: -0.062em;
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 1rem + 4.2vw, 4.75rem);
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.045em;
   text-wrap: balance;
 }
-.hero__line {
-  display: block;
-}
-.hero__dots {
-  font-family: var(--font-dot);
-  font-variation-settings: "ROND" 100;
-  font-weight: 800;
-  letter-spacing: 0;
-  color: var(--accent-text);
+/* The full stop is the brand's dot: a round, accent-coloured point in place of a period. */
+.hero__stop {
+  display: inline-block;
+  width: 0.15em;
+  height: 0.15em;
+  margin-left: 0.04em;
+  border-radius: 50%;
+  background: var(--accent);
 }
 .hero__lede {
-  max-width: 36ch;
-  font-size: clamp(1.0625rem, 1.5vw, 1.375rem);
+  max-width: 46ch;
+  font-size: clamp(1.0625rem, 0.98rem + 0.3vw, 1.25rem);
   line-height: 1.45;
   color: var(--text-dim);
   text-wrap: balance;
 }
-.hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
+/* The screen: it stays whole, its foot resting on the meadow, and tufts of flowers stand at its lower corners. */
+.hero__frame {
+  position: relative;
+  max-width: calc(1062px + 2 * var(--page-margin));
+  margin-top: clamp(48px, 5vw, 72px);
 }
-.btn--quiet {
-  border-color: transparent;
-  background: var(--fill-faint);
-}
-.btn--quiet:hover {
-  border-color: var(--line-strong);
-}
-.hero__trust {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-2) var(--space-6);
-  margin-top: var(--space-2);
-  color: var(--text);
-}
-.hero__trust li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.hero__trust li::before {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.hero__trust .hero__soon::before {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--accent);
-}
-
-.hero__shot {
-  margin-top: clamp(32px, 4.4vw, 64px);
-  padding-bottom: clamp(24px, 4vw, 56px);
-}
-@media (min-width: 960px) {
-  .hero__shot {
-    padding-inline: clamp(24px, 5vw, 96px);
+@media (max-width: 899px) {
+  .hero__frame {
+    margin-top: 150px;
   }
 }

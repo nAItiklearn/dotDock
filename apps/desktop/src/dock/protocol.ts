@@ -43,7 +43,11 @@ export interface DockApp {
   readonly name: string;
   readonly category: CategoryId;
   readonly filedBy: FiledBy;
-  /** `dock-icon://<hash>.png` URL served by the core (256 px PNG, cached in %LOCALAPPDATA%). */
+  /**
+   * URL of the 256 px PNG icon, served by the core from its cache in %LOCALAPPDATA%. WebView2 has no custom schemes, so the
+   * core sends the form it can load, `http://dock-icon.localhost/<hash>.png`; an app whose icon is not extracted yet still has
+   * its URL (the request waits for the extraction), and an empty string means no icon at all.
+   */
   readonly icon: string;
   /** Publisher or company name when known, for search and the info line. */
   readonly publisher: string | null;
@@ -66,7 +70,13 @@ export interface DockWindow {
   readonly flashing: boolean;
 }
 
-export type DockEdge = "bottom" | "top" | "left" | "right";
+/**
+ * The dock is fixed to the bottom of the screen: it is the taskbar. The core's `DockSettings.edge` still has the
+ * older top, left and right values and still requires the field, so the UI keeps it on the wire, always sends
+ * "bottom", and pins anything else it receives to "bottom" (`normaliseSettings` in store.ts). Nothing in the UI
+ * reads it; the host track can treat the core field as ignored by the UI.
+ */
+export type DockEdge = "bottom";
 
 export interface DockSettings {
   readonly schema: 1;
@@ -74,6 +84,7 @@ export interface DockSettings {
   readonly enabled: boolean;
   /** Hide the native taskbar while the dock runs. Off by default until the owner has reviewed it. */
   readonly replaceTaskbar: boolean;
+  /** Always "bottom" in the UI; see `DockEdge`. */
   readonly edge: DockEdge;
   /** Reserve screen space (app bar) so maximised windows stop at the dock; false floats over them. */
   readonly reserveSpace: boolean;
@@ -111,9 +122,24 @@ export interface DockCommands {
   dock_set_regions(args: { rects: readonly { x: number; y: number; w: number; h: number }[] }): void;
   /** Show or hide live DWM thumbnails of an app's windows above a rect of the dock window. */
   dock_preview(args: { hwnds: readonly string[]; anchor: { x: number; y: number; w: number; h: number } } | { hwnds: [] }): void;
+  /**
+   * The dock window never activates on its own. While a text field, a popover or edit mode needs keys the UI asks
+   * for the foreground with `active: true` and hands it back with `false` (same idea as the overlay's `overlay_set_typing`).
+   */
+  dock_set_focus(args: { active: boolean }): void;
 }
 
 export type CommandResult = { readonly ok: true } | { readonly ok: false; readonly reason: string };
+
+/** What the core knows about the area behind the dock: whether glass can be drawn and how light it is. */
+export interface DockBackdrop {
+  /** Windows transparency effects are on, so the translucent glass plate is drawn. */
+  readonly available: boolean;
+  /** Whether the desktop behind the dock is light or dark; null while the core has not measured it. */
+  readonly tone: "light" | "dark" | null;
+  /** Windows battery saver is on: the dock drops transparency to save power. */
+  readonly saver: boolean;
+}
 
 /**
  * When the dock should stop rendering: the session is locked, the display is off, or a fullscreen app
@@ -123,6 +149,8 @@ export interface FrozenState {
   readonly locked: boolean;
   readonly displayOff: boolean;
   readonly fullscreen: boolean;
+  /** True when any of the three is. The core sends it so the window need not combine them. */
+  readonly frozen: boolean;
 }
 
 /** Events the core emits to the dock window. */
@@ -130,5 +158,15 @@ export interface DockEvents {
   "dock://apps": readonly DockApp[];
   "dock://windows": readonly DockWindow[];
   "dock://settings": DockSettings;
+  /** The global App Library shortcut was pressed. */
+  "dock://library": "toggle" | "open" | "close";
+  /**
+   * The cursor entered or left the rectangles from `dock_set_regions`. A click-through window gets no `pointerleave`
+   * from the WebView, so the core, which already polls the cursor, reports it.
+   */
+  "dock://pointer": { readonly inside: boolean };
+  /** The core froze the dock: the UI stops every frame loop and timer while any field is true, so a hidden dock costs nothing. */
   "dock://frozen": FrozenState;
+  /** The blur and tone of what is behind the dock changed (a new wallpaper, battery saver, a transparency setting). */
+  "dock://backdrop": DockBackdrop;
 }

@@ -37,6 +37,9 @@ pub struct StoreData {
     pub first_seen: BTreeMap<String, u64>,
     /// True once the first scan has run, so later new apps get a real `first_seen`.
     pub scanned_once: bool,
+    /// True once the first layout was placed on an empty dock (`starter`), so it is never placed again.
+    #[serde(default)]
+    pub laid_out: bool,
 }
 
 impl Default for StoreData {
@@ -48,6 +51,7 @@ impl Default for StoreData {
             assignments: BTreeMap::new(),
             first_seen: BTreeMap::new(),
             scanned_once: false,
+            laid_out: false,
         }
     }
 }
@@ -66,8 +70,10 @@ impl StoreData {
         }
     }
 
-    /// Drops filings that name a category that no longer exists, and refills an empty category list.
+    /// Drops filings that name a category that no longer exists, refills an empty category list, and puts a dock
+    /// saved on another edge back at the bottom.
     fn repaired(mut self) -> StoreData {
+        self.settings = self.settings.at_the_bottom();
         if self.categories.is_empty() {
             self.categories = Category::defaults();
         }
@@ -223,6 +229,28 @@ impl Drop for DebouncedFile {
         if let Some(thread) = self.thread.take() {
             let _ = thread.join();
         }
+    }
+}
+
+#[cfg(test)]
+mod bottom_tests {
+    use super::*;
+    use crate::protocol::DockEdge;
+
+    #[test]
+    fn a_dock_saved_on_the_left_loads_at_the_bottom_and_an_old_file_is_not_laid_out_yet() {
+        let dir = std::env::temp_dir().join(format!("dotdock-store-bottom-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join(STORE_FILE);
+        let mut data = StoreData::default();
+        data.settings.edge = DockEdge::Left;
+        let mut json = serde_json::to_value(&data).unwrap();
+        json.as_object_mut().unwrap().remove("laidOut");
+        std::fs::write(&path, json.to_string()).unwrap();
+        let loaded = StoreData::load(&path);
+        assert_eq!(loaded.settings.edge, DockEdge::Bottom);
+        assert!(!loaded.laid_out);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
 

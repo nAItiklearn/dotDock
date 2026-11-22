@@ -31,7 +31,6 @@ pub enum IconStyle {
 #[serde(rename_all = "camelCase", default)]
 pub struct IslandSettings {
     pub schema: u32,
-    pub enabled: bool,
     pub idle: IdleMode,
     pub scale: f64,
     pub top_offset: u32,
@@ -55,7 +54,6 @@ impl Default for IslandSettings {
     fn default() -> Self {
         Self {
             schema: SCHEMA,
-            enabled: true,
             idle: IdleMode::Tiny,
             scale: 1.0,
             top_offset: 10,
@@ -170,6 +168,20 @@ mod tests {
         };
         settings.save(&path).expect("save");
         assert_eq!(IslandSettings::load(&path), settings);
+    }
+
+    /// Earlier builds had a per-part "Show the island" switch. A file written by one still loads, keeps
+    /// every other choice, and the island shows: the only off switch is the dotDock theme itself.
+    #[test]
+    fn a_file_from_before_the_island_switch_was_removed_still_loads() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join(FILE_NAME);
+        std::fs::write(&path, r#"{"schema":1,"enabled":false,"idle":"hidden","scale":1.2}"#).expect("write");
+        let loaded = IslandSettings::load(&path);
+        assert_eq!(loaded.idle, IdleMode::Hidden);
+        assert_eq!(loaded.scale, 1.2);
+        assert!(!path.with_extension("json.bak").exists(), "not treated as damaged");
+        assert!(serde_json::to_value(&loaded).expect("json").get("enabled").is_none());
     }
 
     #[test]

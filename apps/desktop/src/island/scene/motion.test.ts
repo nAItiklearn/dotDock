@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Phase } from "../protocol";
 import { WALK_MAX, WALK_MIN } from "./layout";
-import { INITIAL_SCENE, stepScene, type SceneState } from "./motion";
+import { ENTER_SPEED, ENTERING_SCENE, INITIAL_SCENE, isEntering, stepScene, type SceneState } from "./motion";
 
 const DT = 1 / 30;
 
@@ -94,5 +94,26 @@ describe("scene motion", () => {
     const sprinting = run(INITIAL_SCENE, "running", 2);
     const cycles = stepScene(sprinting, "running", DT).gait - sprinting.gait;
     expect(cycles / DT).toBeLessThanOrEqual(6 + 1e-9);
+  });
+
+  it.each(["thinking", "running", "done", "waiting"] as const)("walks a new session's beetle in from the left and stops gently, then does %s", (phase) => {
+    expect(isEntering(ENTERING_SCENE)).toBe(true);
+    let s = ENTERING_SCENE;
+    let previous = s.x;
+    for (let i = 0; i < 2.6 / DT && isEntering(s); i++) {
+      s = stepScene(s, phase, DT);
+      expect(s.x).toBeGreaterThanOrEqual(previous);
+      expect(s.speed).toBeLessThanOrEqual(ENTER_SPEED + 1e-9);
+      previous = s.x;
+    }
+    expect(isEntering(s)).toBe(false);
+    expect(s.x).toBeGreaterThanOrEqual(WALK_MIN);
+    const after = run(s, phase, 3);
+    expect(after.x).toBeGreaterThanOrEqual(WALK_MIN);
+    expect(after.x).toBeLessThanOrEqual(WALK_MAX);
+  });
+
+  it("starts an existing scene where it is, without walking in", () => {
+    expect(isEntering(INITIAL_SCENE)).toBe(false);
   });
 });

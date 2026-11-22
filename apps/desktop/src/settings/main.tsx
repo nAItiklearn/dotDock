@@ -20,6 +20,8 @@ async function start(): Promise<void> {
   if (import.meta.env.DEV && params.get("native") === "mock") {
     const { createMockNativeApi } = await import("../lib/native/mock");
     setNativeApi(createMockNativeApi());
+    const [{ setBackend }, { devBackend }] = await Promise.all([import("../island/bridge"), import("../island/dev/devBackend")]);
+    setBackend(devBackend);
   }
   const app = initApp({ catalog: widgetCatalog });
   await Promise.all([document.fonts.ready, app.start()]);

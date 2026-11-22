@@ -1,0 +1,45 @@
+---
+/**
+ * One piece of site art. Bands and scene layers are flattened pictures (tools/flatten-art.mjs), one per theme, of
+ * which the page shows the current theme's; each is an <img> decoded off the main thread and loaded only when it
+ * nears the screen. Other pieces are a stack of masks, each painted in a theme colour by styles/art.css.
+ * Purely decorative (aria-hidden); a figure that carries meaning is labelled by its caption.
+ * `parallax` is the share of the page scroll the piece lags behind (negative: runs ahead), see
+ * scripts/parallax.ts.
+ */
+import { WIDE_FROM_PX, artRoles, flatRenders, isLazyArt, type ArtName } from "../lib/art";
+import { THEMES } from "../lib/themes";
+
+interface Props {
+  piece: ArtName;
+  class?: string;
+  parallax?: number;
+  /** Measure the drift from the top of the page instead of from the viewport centre. */
+  fromPage?: boolean;
+}
+const { piece, class: className = "", parallax, fromPage = false } = Astro.props;
+const flat = THEMES.map((t) => ({ theme: t.id, renders: flatRenders(piece, t.id) }));
+const isFlatPiece = flat.every((f) => f.renders !== null);
+const roles = isFlatPiece ? [] : artRoles(piece);
+---
+
+<div
+  class={`art art--${piece} ${isFlatPiece ? "art--flat" : ""} ${className}`.replace(/\s+/g, " ").trim()}
+  aria-hidden="true"
+  data-parallax={parallax}
+  data-parallax-origin={fromPage ? "page" : undefined}
+  data-art-lazy={isLazyArt(piece) ? "" : undefined}
+>
+  {
+    isFlatPiece
+      ? flat.map(({ theme, renders }) =>
+          renders ? (
+            <picture class={`art__flat art__flat--${theme}`}>
+              <source media={`(min-width: ${WIDE_FROM_PX}px)`} srcset={`${renders.wide.x1} 1x, ${renders.wide.x2} 2x`} width={renders.wide.w} height={renders.wide.h} />
+              <img src={renders.narrow.x1} srcset={`${renders.narrow.x1} 1x, ${renders.narrow.x2} 2x`} width={renders.narrow.w} height={renders.narrow.h} alt="" loading="lazy" decoding="async" />
+            </picture>
+          ) : null,
+        )
+      : roles.map((role) => <i class={`art__layer art__${role}`} />)
+  }
+</div>

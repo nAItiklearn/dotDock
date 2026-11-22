@@ -12,12 +12,10 @@ use windows::Win32::Graphics::Dwm::{
     DwmQueryThumbnailSourceSize, DwmRegisterThumbnail, DwmUnregisterThumbnail, DwmUpdateThumbnailProperties,
     DWM_THUMBNAIL_PROPERTIES, DWM_TNP_OPACITY, DWM_TNP_RECTDESTINATION, DWM_TNP_SOURCECLIENTAREAONLY, DWM_TNP_VISIBLE,
 };
+use windows::Win32::UI::WindowsAndMessaging::IsIconic;
 
-/// Widest and tallest a preview is drawn, in CSS px at 100 % scaling.
-pub const MAX_WIDTH: f64 = 240.0;
-pub const MAX_HEIGHT: f64 = 150.0;
-/// Space between previews, and between the previews and the item they belong to, in CSS px.
-pub const GAP: f64 = 12.0;
+/// Space between the slots of the preview card's well, in CSS px (`PREVIEW.slotGap` in the dock UI).
+pub const SLOT_GAP: f64 = 10.0;
 
 /// One registered thumbnail; unregistered when dropped.
 pub struct Thumbnail {
@@ -73,23 +71,21 @@ pub struct Previews {
 }
 
 impl Previews {
-    /// Shows live previews of `sources` in a row above `anchor` (CSS px, relative to the host window), centred
-    /// on it and kept inside the host's width. `scale` is the host's DPI scale factor. Windows that cannot be
-    /// previewed (closed meanwhile) are skipped.
-    pub fn show(&mut self, host: isize, sources: &[isize], anchor: CssRect, scale: f64, host_width_px: i32) {
+    /// Shows live previews of `sources` inside `well` (CSS px, relative to the host window): the preview card's
+    /// row of slots, one per source, in order. `scale` is the host's DPI scale factor. A minimised window has no
+    /// live picture (DWM keeps only its title bar), so its slot is left to the card, which draws a placeholder.
+    /// Windows that cannot be previewed (closed meanwhile) are skipped.
+    pub fn show(&mut self, host: isize, sources: &[isize], well: CssRect, scale: f64) {
         self.shown.clear();
-        let registered: Vec<(Thumbnail, (i32, i32))> = sources
-            .iter()
-            .filter_map(|&s| {
-                let t = Thumbnail::register(host, s).ok()?;
-                let size = t.source_size().ok().filter(|(w, h)| *w > 0 && *h > 0)?;
-                Some((t, size))
-            })
-            .collect();
-        let sizes: Vec<(i32, i32)> = registered.iter().map(|(_, s)| *s).collect();
-        let rects = layout(&sizes, anchor, scale, host_width_px);
-        for ((thumbnail, _), rect) in registered.into_iter().zip(rects) {
-            if thumbnail.place(rect, u8::MAX).is_ok() {
+        let slots = slots(well, sources.len(), scale);
+        for (&source, slot) in sources.iter().zip(slots) {
+            // SAFETY: IsIconic accepts any handle and answers false for a stale one.
+            if unsafe { IsIconic(hwnd(source)) }.as_bool() {
+                continue;
+            }
+            let Ok(thumbnail) = Thumbnail::register(host, source) else { continue };
+            let Some(size) = thumbnail.source_size().ok().filter(|(w, h)| *w > 0 && *h > 0) else { continue };
+            if thumbnail.place(fit(size, slot), u8::MAX).is_ok() {
                 self.shown.push(thumbnail);
             }
         }
@@ -104,91 +100,64 @@ impl Previews {
     }
 }
 
-/// Where each preview goes: a row above `anchor`, every preview scaled down to fit `MAX_WIDTH` by
-/// `MAX_HEIGHT` (never up), bottom edges level, the row centred on the anchor and shifted to stay inside
-/// `0..host_width_px`. Pure arithmetic, so it is tested without a screen.
-pub fn layout(sizes: &[(i32, i32)], anchor: CssRect, scale: f64, host_width_px: i32) -> Vec<RECT> {
-    let fitted: Vec<(f64, f64)> = sizes
-        .iter()
-        .map(|&(w, h)| {
-            let (w, h) = (f64::from(w), f64::from(h));
-            let factor = ((MAX_WIDTH * scale) / w).min((MAX_HEIGHT * scale) / h).min(1.0);
-            (w * factor, h * factor)
-        })
-        .collect();
-    let gap = GAP * scale;
-    let total: f64 = fitted.iter().map(|(w, _)| w).sum::<f64>() + gap * fitted.len().saturating_sub(1) as f64;
-    let centre = (anchor.x + anchor.w / 2.0) * scale;
-    let max_left = (f64::from(host_width_px) - total).max(0.0);
-    let mut x = (centre - total / 2.0).clamp(0.0, max_left);
-    let bottom = anchor.y * scale - gap;
-    fitted
-        .into_iter()
-        .map(|(w, h)| {
-            let rect = RECT {
-                left: x.round() as i32,
-                top: (bottom - h).round() as i32,
-                right: (x + w).round() as i32,
-                bottom: bottom.round() as i32,
-            };
-            x += w + gap;
-            rect
-        })
+/// The well split into `count` equal slots with `SLOT_GAP` between them, in physical px.
+pub fn slots(well: CssRect, count: usize, scale: f64) -> Vec<(f64, f64, f64, f64)> {
+    if count == 0 {
+        return Vec::new();
+    }
+    let n = count as f64;
+    let w = (well.w - SLOT_GAP * (n - 1.0)) / n;
+    (0..count)
+        .map(|i| ((well.x + i as f64 * (w + SLOT_GAP)) * scale, well.y * scale, w * scale, well.h * scale))
         .collect()
+}
+
+/// A source of `size` px scaled to fit inside `slot` (never enlarged), centred in it.
+pub fn fit((sw, sh): (i32, i32), (x, y, w, h): (f64, f64, f64, f64)) -> RECT {
+    let (sw, sh) = (f64::from(sw), f64::from(sh));
+    let factor = (w / sw).min(h / sh).min(1.0);
+    let (fw, fh) = (sw * factor, sh * factor);
+    let left = x + (w - fw) / 2.0;
+    let top = y + (h - fh) / 2.0;
+    RECT {
+        left: left.round() as i32,
+        top: top.round() as i32,
+        right: (left + fw).round() as i32,
+        bottom: (top + fh).round() as i32,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const ANCHOR: CssRect = CssRect { x: 400.0, y: 700.0, w: 60.0, h: 60.0 };
+    const WELL: CssRect = CssRect { x: 100.0, y: 600.0, w: 410.0, h: 126.0 };
 
     #[test]
-    fn a_big_window_is_scaled_down_to_fit() {
-        let rects = layout(&[(1920, 1080)], ANCHOR, 1.0, 1920);
-        let r = rects[0];
-        assert!(r.right - r.left <= MAX_WIDTH as i32 && r.bottom - r.top <= MAX_HEIGHT as i32);
-        // 16:9 stays 16:9.
-        let ratio = f64::from(r.right - r.left) / f64::from(r.bottom - r.top);
-        assert!((ratio - 16.0 / 9.0).abs() < 0.05, "{ratio}");
+    fn slots_split_the_well_with_the_card_gap() {
+        let s = slots(WELL, 2, 1.0);
+        assert_eq!(s, vec![(100.0, 600.0, 200.0, 126.0), (310.0, 600.0, 200.0, 126.0)]);
+        assert!(slots(WELL, 0, 1.0).is_empty());
+    }
+
+    #[test]
+    fn the_display_scale_turns_css_px_into_physical_px() {
+        let s = slots(CssRect { w: 200.0, ..WELL }, 1, 1.25);
+        assert_eq!(s, vec![(125.0, 750.0, 250.0, 157.5)]);
+    }
+
+    #[test]
+    fn a_big_window_fits_its_slot_keeping_its_shape_and_is_centred() {
+        let r = fit((1920, 1080), (0.0, 0.0, 200.0, 126.0));
+        assert_eq!((r.right - r.left, r.bottom - r.top), (200, 112));
+        assert_eq!(r.top, 7, "centred vertically");
+        let tall = fit((800, 1600), (0.0, 0.0, 200.0, 126.0));
+        assert_eq!((tall.left, tall.right), (69, 132), "centred horizontally");
     }
 
     #[test]
     fn a_small_window_is_never_enlarged() {
-        let rects = layout(&[(100, 60)], ANCHOR, 1.0, 1920);
-        assert_eq!((rects[0].right - rects[0].left, rects[0].bottom - rects[0].top), (100, 60));
-    }
-
-    #[test]
-    fn the_row_sits_above_the_anchor_and_is_centred_on_it() {
-        let rects = layout(&[(240, 150), (240, 150)], ANCHOR, 1.0, 1920);
-        assert!(rects.iter().all(|r| r.bottom <= ANCHOR.y as i32 - GAP as i32 + 1));
-        let left = rects[0].left;
-        let right = rects[1].right;
-        let middle = f64::from(left + right) / 2.0;
-        assert!((middle - (ANCHOR.x + ANCHOR.w / 2.0)).abs() <= 1.0, "{middle}");
-        assert_eq!(rects[1].left - rects[0].right, GAP as i32);
-        assert_eq!(rects[0].bottom, rects[1].bottom);
-    }
-
-    #[test]
-    fn the_row_stays_inside_the_host() {
-        let near_left = CssRect { x: 0.0, ..ANCHOR };
-        assert_eq!(layout(&[(240, 150), (240, 150)], near_left, 1.0, 1920)[0].left, 0);
-        let near_right = CssRect { x: 1900.0, ..ANCHOR };
-        let rects = layout(&[(240, 150), (240, 150)], near_right, 1.0, 1920);
-        assert!(rects[1].right <= 1920, "{}", rects[1].right);
-    }
-
-    #[test]
-    fn scaling_the_display_scales_the_row() {
-        let one = layout(&[(1920, 1080)], ANCHOR, 1.0, 4000)[0];
-        let two = layout(&[(1920, 1080)], ANCHOR, 2.0, 4000)[0];
-        assert!((f64::from(two.right - two.left) / f64::from(one.right - one.left) - 2.0).abs() < 0.05);
-    }
-
-    #[test]
-    fn no_sources_no_rects() {
-        assert!(layout(&[], ANCHOR, 1.0, 1920).is_empty());
+        let r = fit((100, 60), (0.0, 0.0, 200.0, 126.0));
+        assert_eq!((r.left, r.top, r.right, r.bottom), (50, 33, 150, 93));
     }
 }

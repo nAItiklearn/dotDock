@@ -1,0 +1,12 @@
+---
+/** A wide, low picture that sits between two sections (tools/site-art, bands). Decorative; its masks load as it nears the screen. */
+import Art from "./Art.astro";
+import type { ArtName } from "../lib/art";
+
+interface Props {
+  piece: Extract<ArtName, `band-${string}`>;
+}
+const { piece } = Astro.props;
+---
+
+<div class="band" aria-hidden="true"><Art piece={piece} /></div>

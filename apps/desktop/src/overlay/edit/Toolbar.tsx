@@ -12,7 +12,7 @@ export function Toolbar({ openSettings }: { readonly openSettings: () => void })
   const profileName = useSettingsStore((s) => s.settings.profiles.find((p) => p.id === s.settings.activeProfileId)?.name ?? "");
   const drawerOpen = useEditUi((s) => s.drawerOpen);
 
-  const toggleDrawer = (): void => editUi.setState({ drawerOpen: !drawerOpen, drawerTab: "add" });
+  const toggleDrawer = (): void => editUi.setState({ drawerOpen: !drawerOpen, drawerTab: "add", addAt: null });
   const toggleLock = (): void => {
     app.settings.getState().update((s) => ({ ...s, layout: { ...s.layout, locked: !s.layout.locked } }));
     announce(locked ? "Layout unlocked" : "Layout locked");

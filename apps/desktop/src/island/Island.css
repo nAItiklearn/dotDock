@@ -53,9 +53,14 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--dot-off) 38%, transparent) 0.85px, transparent 1.15px);
-  background-size: calc(6px * var(--k)) calc(6px * var(--k));
-  background-position: center;
+  /* The lattice: one flat colour shown through a mask of dots, one dot of radius 1 in each 6 x 6 cell. */
+  background-color: color-mix(in srgb, var(--dot-off) 38%, transparent);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3C/svg%3E");
+  -webkit-mask-size: calc(6px * var(--k)) calc(6px * var(--k));
+  mask-size: calc(6px * var(--k)) calc(6px * var(--k));
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 /* A 12 px pill has no room for the lattice texture. */
 .island--tiny .island__texture,
@@ -83,21 +88,6 @@
 .island__standby .island__standby-lit {
   background: var(--accent);
   opacity: 1;
-  animation: standby-breathe 3.2s ease-in-out infinite;
-}
-@keyframes standby-breathe {
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .island__standby .island__standby-lit {
-    animation: none;
-  }
 }
 
 /* Rows are placed at their resting position (top) and slid by the plate's growth (y), so they ride its bottom edge. */
@@ -227,19 +217,12 @@
   height: calc(8px * var(--k));
 }
 
-/* The strip along the bottom edge. The glow is a plain gradient: static, so it costs no frames. */
+/* The strip along the bottom edge: dots only, on the plate itself, with no glow behind them. */
 .scene {
   position: absolute;
   left: var(--pad);
   width: var(--scene-w);
   height: var(--scene-h);
-}
-.scene::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 60% 100% at 50% 100%, color-mix(in srgb, var(--text) 9%, transparent), transparent 72%);
-  mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
 }
 .scene canvas {
   position: relative;
@@ -300,4 +283,16 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* The warm copy of the expanded island primeActiveIsland puts on the page for two frames: present for the
+   compositor, invisible and untouchable for the user. */
+.island-prime {
+  position: fixed;
+  inset: 0;
+  opacity: 0.001;
+  pointer-events: none;
+}
+.island-prime * {
+  pointer-events: none !important;
 }

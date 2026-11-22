@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { actions, connectIsland } from "../bridge";
-import { DEFAULT_SETTINGS, type ConnectionStatus, type IconStyle, type IdleMode } from "../protocol";
+import { DEFAULT_SETTINGS, type AgentConnection, type AgentState, type ConnectionStatus, type IconStyle, type IdleMode } from "../protocol";
 import { useIslandStore } from "../store";
 import { connectionDetail, connectionLabel, t } from "../strings";
 import { Group, Row, Segmented, Slider, Switch } from "./controls";
@@ -66,9 +66,68 @@ function ConnectionSection({ connection }: { readonly connection: ConnectionStat
           </dd>
           <dt>Codex</dt>
           <dd>{connection.codexAvailable ? t("connection.codex.found") : t("connection.codex.missing")}</dd>
+          <dt>{t("connection.feed")}</dt>
+          <dd className="isl-conn__path" title={connection.feedDir}>
+            {connection.feedDir}
+          </dd>
         </dl>
+        <p className="isl-conn__detail">{t("connection.feed.hint")}</p>
       </div>
+      {connection.agents.map((agent) => (
+        <AgentRow key={agent.agent} connection={agent} />
+      ))}
     </Group>
+  );
+}
+
+const AGENT_TONE: Record<AgentState, "ok" | "warn" | "off"> = {
+  connected: "ok",
+  outdated: "warn",
+  "hook-missing": "warn",
+  disconnected: "off",
+  "not-found": "off",
+};
+
+/** One agent that Connect sets up with a single file of its own: state, the file, and the button. */
+function AgentRow({ connection }: { readonly connection: AgentConnection }) {
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const { agent, state, file } = connection;
+  const connected = state === "connected";
+  const canChange = state !== "not-found" && state !== "hook-missing";
+
+  const run = (): void => {
+    setBusy(true);
+    setFailed(false);
+    (connected ? actions.disconnectAgent(agent) : actions.connectAgent(agent))
+      .catch((err: unknown) => {
+        console.error(`island ${agent} connection change failed`, err);
+        setFailed(true);
+      })
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <div className="isl-conn">
+      <div className="isl-conn__head">
+        <span className="isl-conn__dot" data-tone={AGENT_TONE[state]} aria-hidden="true" />
+        <span className="isl-conn__state">
+          {t(`agent.${agent}`)} · {t(`agent.state.${state}`)}
+        </span>
+        <button type="button" className={`isl-button${connected ? "" : " isl-button--primary"}`} disabled={!canChange || busy} onClick={run}>
+          {busy ? t("connection.busy") : connected ? t("connection.disconnect") : state === "outdated" ? t("connection.reconnect") : t("connection.connect")}
+        </button>
+      </div>
+      <p className="isl-conn__detail">{failed ? t("connection.failed") : state === "not-found" ? t("agent.detail.not-found") : t(`agent.detail.${agent}`)}</p>
+      {file ? (
+        <dl className="isl-conn__facts">
+          <dt>{t("agent.file")}</dt>
+          <dd className="isl-conn__path" title={file}>
+            {file}
+          </dd>
+        </dl>
+      ) : null}
+    </div>
   );
 }
 
@@ -96,7 +155,6 @@ export function IslandSettingsPanel() {
       {connection ? <ConnectionSection connection={connection} /> : null}
 
       <Group title={t("settings.section.display")}>
-        <Row label={t("settings.enabled")}>{({ id }) => <Switch id={id} checked={settings.enabled} onChange={(enabled) => set({ enabled })} />}</Row>
         <Row label={t("settings.idle")} group>{({ labelId }) => <Segmented labelId={labelId} value={settings.idle} options={IDLE_OPTIONS} onChange={(idle) => set({ idle })} />}</Row>
         <Row label={t("settings.iconStyle")} group>
           {({ labelId }) => <Segmented labelId={labelId} value={settings.iconStyle} options={STYLE_OPTIONS} onChange={(iconStyle) => set({ iconStyle })} />}

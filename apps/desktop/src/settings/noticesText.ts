@@ -11,35 +11,73 @@ export interface ParsedNotices {
   readonly footer: readonly string[];
 }
 
+/** The cells of a Markdown table row, or null when the line is not one. */
+function tableCells(line: string): string[] | null {
+  if (!line.startsWith("|") || !line.endsWith("|")) return null;
+  return line
+    .slice(1, -1)
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+const isRuleRow = (cells: readonly string[]): boolean => cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+
 /**
- * Reads the small subset of Markdown THIRD_PARTY_NOTICES.md uses: a title, `##` sections of `-` bullets,
- * plain paragraphs, and a `---` rule before the closing note. The file stays the single source of truth;
- * About only lays it out.
+ * Reads the subset of Markdown THIRD_PARTY_NOTICES.md uses: a title, `##` and `###` sections of `-` bullets
+ * (a bullet may wrap onto the next lines), tables (one item per row, "first cell: the others"; the header row
+ * is dropped), plain paragraphs, and a `---` rule before the closing note. The file stays the single source of
+ * truth; About only lays it out.
  */
 export function parseNotices(markdown: string): ParsedNotices {
   const intro: string[] = [];
   const footer: string[] = [];
   const sections: { title: string; items: string[] }[] = [];
   let afterRule = false;
-  for (const raw of markdown.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (line === "" || line.startsWith("# ")) continue;
+  /** The previous line was part of a bullet, so a plain line right after it continues that bullet. */
+  let inBullet = false;
+  const lines = markdown.split(/\r?\n/).map((raw) => raw.trim());
+  lines.forEach((line, index) => {
+    if (line === "" || line.startsWith("# ")) {
+      inBullet = false;
+      return;
+    }
     if (line === "---") {
       afterRule = true;
-      continue;
+      inBullet = false;
+      return;
     }
     if (afterRule) {
       footer.push(line);
-    } else if (line.startsWith("## ")) {
-      sections.push({ title: line.slice(3).trim(), items: [] });
-    } else if (line.startsWith("- ")) {
-      sections.at(-1)?.items.push(line.slice(2).trim());
-    } else if (sections.length === 0) {
-      intro.push(line);
-    } else {
-      sections.at(-1)?.items.push(line);
+      return;
     }
-  }
+    const heading = /^#{2,3} (.*)$/.exec(line);
+    if (heading) {
+      sections.push({ title: (heading[1] as string).trim(), items: [] });
+      inBullet = false;
+      return;
+    }
+    const cells = tableCells(line);
+    if (cells) {
+      inBullet = false;
+      if (isRuleRow(cells)) return;
+      const next = tableCells(lines[index + 1] ?? "");
+      // A header row is the one right above the rule row.
+      if (next !== null && isRuleRow(next)) return;
+      const [first = "", ...rest] = cells.filter((cell) => cell !== "");
+      sections.at(-1)?.items.push(rest.length > 0 ? `${first}: ${rest.join(", ")}` : first);
+      return;
+    }
+    const target = sections.length === 0 ? intro : sections.at(-1)?.items;
+    if (!target) return;
+    if (line.startsWith("- ")) {
+      target.push(line.slice(2).trim());
+      inBullet = true;
+    } else if (inBullet && target.length > 0) {
+      target[target.length - 1] = `${target[target.length - 1]} ${line}`;
+    } else {
+      target.push(line);
+    }
+  });
   return { intro, sections, footer };
 }
 

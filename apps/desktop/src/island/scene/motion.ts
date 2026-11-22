@@ -1,5 +1,5 @@
 import type { Phase } from "../protocol";
-import { WALK_MAX, WALK_MIN } from "./layout";
+import { SPRITE_WIDTH, WALK_MAX, WALK_MIN } from "./layout";
 
 /**
  * Where the beetle is and how the world moves under it. The state is advanced a frame at a time and
@@ -38,6 +38,19 @@ const EDGE_MARGIN = 2;
 const COLS_PER_CYCLE = 6;
 /** Legs cannot be shown faster than the frame rate can carry. */
 const MAX_CYCLES_PER_SECOND = 6;
+/** Where a new session's beetle stops after walking in from beyond the left edge. */
+const ENTER_TO = WALK_MIN + 10;
+/** A brisk walk in, a little quicker than a stroll, so it is over in about two seconds. */
+export const ENTER_SPEED = 14;
+
+/** A new session: the beetle starts just outside the strip, already strolling in. */
+export const ENTERING_SCENE: SceneState = { x: -SPRITE_WIDTH, dir: 1, speed: ENTER_SPEED, scroll: 0, scrollSpeed: 0, gait: 0 };
+
+/** True while the beetle is still walking in; it then looks like a stroll whatever the agent does. */
+export function isEntering(state: SceneState): boolean {
+  return state.x < ENTER_TO - ARRIVED_WITHIN;
+}
+
 /** A long pause (hidden window, sleeping laptop) must not fling the beetle across the strip. */
 const MAX_STEP = 0.1;
 
@@ -53,6 +66,13 @@ function scrollTarget(phase: Phase, dir: 1 | -1): number {
 /** Advances the scene by `dt` seconds while the agent is in `phase`. */
 export function stepScene(state: SceneState, phase: Phase, dtSeconds: number): SceneState {
   const dt = Math.min(MAX_STEP, Math.max(0, dtSeconds));
+  if (isEntering(state)) {
+    const ahead = ENTER_TO - state.x;
+    const target = Math.min(ENTER_SPEED, Math.sqrt(2 * WALK_ACCEL * BRAKING_MARGIN * ahead));
+    const speed = approach(state.speed, target, WALK_ACCEL * dt);
+    const cycles = Math.min(MAX_CYCLES_PER_SECOND, speed / COLS_PER_CYCLE);
+    return { ...state, dir: 1, speed, x: Math.min(ENTER_TO, state.x + speed * dt), gait: state.gait + cycles * dt };
+  }
   let want = state.dir;
   let target = 0;
   if (phase === "reading") {

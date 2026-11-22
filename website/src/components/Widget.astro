@@ -1,12 +1,17 @@
 ---
 /**
- * One widget, drawn in code. The live kinds (clock, date, calendar, ring, batpill, timer) are
+ * One widget, drawn in code. The live kinds (clock, date, ring, batpill, timer) are
  * filled in by src/scripts/live.ts from this device; the others show sample values and say so.
  * Sizes are in grid cells, like the product's grid. Visuals follow apps/desktop/src/widgets.
  */
 import DotMatrix from "./DotMatrix.astro";
+import ridge from "../assets/wallpapers/halftone-ridge-light-640.webp";
+import cover from "../assets/photos/cover-poppy.webp";
 
+import ownerPhotos from "owner-photos";
 import type { WidgetKind } from "../lib/widgets";
+import { ownerPhotosOn, pickPhoto } from "../lib/photos";
+import { TIMER_MINUTES } from "../lib/timer";
 
 interface Props {
   kind: WidgetKind;
@@ -14,44 +19,40 @@ interface Props {
   place?: string;
   /** Clock digits style. */
   clockStyle?: "dots" | "blocks" | "stripes";
+  /** Music only: show a track playing (a sample, with our own cover art) instead of "Nothing playing". */
+  playing?: boolean;
+  /** Photo only: which of the owner's photos this widget shows when they are turned on (lib/photos.ts). */
+  photo?: number;
 }
-const { kind, place = "", clockStyle = "blocks" } = Astro.props;
+const { kind, place = "", clockStyle = "blocks", playing = false, photo = 0 } = Astro.props;
+
+// The photo widget shows one of this project's own pictures, edge to edge, with the widget's usual corner radius,
+// or the owner's photo when the build turns them on (lib/photos.ts; off by default).
+const owner = pickPhoto(ownerPhotosOn(process.env), ownerPhotos, photo);
+const picture = owner ? { image: owner, alt: "A portrait" } : { image: ridge, alt: "Misty ridges drawn in halftone dots" };
 
 const SIZE: Record<WidgetKind, [number, number]> = {
   clock: [6, 2],
   date: [2, 2],
-  calendar: [3, 2],
   ring: [2, 2],
   batpill: [3, 1],
   ram: [2, 2],
   disk: [2, 2],
-  weather: [3, 1],
-  forecast: [4, 2],
   music: [4, 1],
   timer: [3, 1],
-  todo: [3, 2],
+  photo: [2, 2],
 };
 const [w, h] = SIZE[kind];
 const style = `--w:${w};--h:${h};${place}`;
 
-// Sample values for what a web page cannot measure. They are labelled as samples on screen.
+// Sample values for what a web page cannot measure. Each such widget carries a hollow dot, and its label says
+// "sample" to assistive technology; the page text explains the dot.
 const SAMPLE = {
   ramPercent: 58,
   diskPercent: 61,
   diskUsedGb: 312,
   diskTotalGb: 512,
-  weatherTemp: 17,
-  weatherHigh: 19,
-  weatherLow: 11,
-  weatherText: "Overcast",
-  days: [
-    { day: "Mon", high: 19, low: 11 },
-    { day: "Tue", high: 17, low: 10 },
-    { day: "Wed", high: 16, low: 9 },
-    { day: "Thu", high: 18, low: 10 },
-    { day: "Fri", high: 21, low: 12 },
-  ],
-  todos: ["Pick a wallpaper", "Set up the dock", "Try the dark theme"],
+  track: { title: "Wind Meadow", artist: "Sample track", seconds: 214, at: 0.38 },
 };
 
 /** Dot-grid gauge as two SVG paths (lit and unlit), one unit per dot pitch. */
@@ -112,20 +113,6 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
 }
 
 {
-  kind === "calendar" && (
-    <section class="w w--card" style={style} aria-label="Calendar" data-calendar>
-      <div class="w-cal">
-        <div class="w-cal__head">
-          <span class="w-cal__today tabular" data-cal-today />
-          <span class="w-cal__month" data-cal-month />
-        </div>
-        <ol class="w-cal__grid" data-cal-grid />
-      </div>
-    </section>
-  )
-}
-
-{
   kind === "date" && (
     <section class="w w--circle" style={style} aria-label="Date" data-date>
       <div class="w__center w__center--date">
@@ -142,7 +129,7 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
 {
   kind === "ram" && (
     <section class="w w--card w--sample" style={style} aria-label={`Memory, sample value ${SAMPLE.ramPercent} percent`}>
-      <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+      <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
       <div class="w-ram">
         <div class="w-ram__head">
           <span class="w-ram__pct tabular">{SAMPLE.ramPercent}%</span>
@@ -165,50 +152,12 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
         <circle class="ring__value" cx="50" cy="50" r={RING_R} stroke-dasharray={RING_LEN} stroke-dashoffset={diskDash} />
       </svg>
       <div class="w__center">
-        <span class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
+        <span class="sample-mark" title="Sample value" aria-hidden="true"></span>
         <span class="w-pct">
           <DotMatrix class="dm w-ring__pct" text={String(SAMPLE.diskPercent)} matrixStyle="blocks" height={26} label={`${SAMPLE.diskPercent} percent used`} />
           <span class="w-pct__sign" aria-hidden="true">%</span>
         </span>
         <span class="w-disk__size tabular">C: {SAMPLE.diskUsedGb}/{SAMPLE.diskTotalGb} GB</span>
-      </div>
-    </section>
-  )
-}
-
-{
-  kind === "weather" && (
-    <section class="w w--pill w--sample" style={style} aria-label={`Weather, sample value ${SAMPLE.weatherTemp} degrees`}>
-      <div class="w-weather">
-        <DotMatrix class="dm w-weather__temp" text={`${SAMPLE.weatherTemp}°`} matrixStyle="dots" height={28} label={`${SAMPLE.weatherTemp} degrees`} />
-        <div class="w-weather__text">
-          <span class="w-weather__cond">
-            {SAMPLE.weatherText} <span class="w-weather__range tabular">{SAMPLE.weatherHigh}&deg; / {SAMPLE.weatherLow}&deg;</span>
-          </span>
-          <span class="caps caps-row"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-{
-  kind === "forecast" && (
-    <section class="w w--card w--sample" style={style} aria-label="Five-day forecast, sample values">
-      <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
-      <div class="w-fc">
-        <span class="caps w-fc__title">5 days</span>
-        <ul class="w-fc__days">
-          {
-            SAMPLE.days.map((d) => (
-              <li class="w-fc__day">
-                <span class="caps">{d.day}</span>
-                <span class="w-fc__hi tabular">{d.high}&deg;</span>
-                <span class="w-fc__lo tabular">{d.low}&deg;</span>
-              </li>
-            ))
-          }
-        </ul>
       </div>
     </section>
   )
@@ -226,7 +175,7 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
 }
 
 {
-  kind === "music" && (
+  kind === "music" && !playing && (
     <section class="w w--pill" style={style} aria-label="Music, nothing playing">
       <div class="w-music">
         <svg class="w-music__art" viewBox="0 0 3 3" aria-hidden="true">
@@ -246,15 +195,38 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
     </section>
   )
 }
-
+{
+  kind === "music" && playing && (
+    <section class="w w--pill w--playing" style={`${style};--at:${SAMPLE.track.at};--len:${Math.round(SAMPLE.track.seconds * (1 - SAMPLE.track.at))}s`} aria-label={`Music, sample: ${SAMPLE.track.title}, playing`} data-music-playing>
+      <span class="sample-mark" aria-hidden="true" />
+      <div class="w-music">
+        <img class="w-music__cover" src={cover.src} width={cover.width} height={cover.height} alt="" loading="lazy" decoding="async" />
+        <div class="w-music__text">
+          <span class="w-music__title">{SAMPLE.track.title}</span>
+          <span class="caps w-music__artist">{SAMPLE.track.artist}</span>
+          <span class="w-music__bar" aria-hidden="true"><span class="w-music__fill" /></span>
+        </div>
+        <span class="w-music__eq" aria-hidden="true"><i /><i /><i /><i /></span>
+        <div class="w-music__controls" aria-hidden="true">
+          <svg class="w-music__skip w-music__skip--prev" viewBox="0 0 12 10"><path d="M0 0l6 5-6 5zM6 0l6 5-6 5z" /></svg>
+          <span class="w-music__play w-music__play--pause" />
+          <svg class="w-music__skip" viewBox="0 0 12 10"><path d="M0 0l6 5-6 5zM6 0l6 5-6 5z" /></svg>
+        </div>
+      </div>
+    </section>
+  )
+}
 {
   kind === "timer" && (
     <section class="w w--pill" style={style} aria-label="Timer" data-timer>
       <div class="w-timer">
         <div class="w-timer__text">
           <span class="caps">Focus</span>
-          <span class="w-timer__time tabular" data-timer-display>25:00</span>
+          <span class="w-timer__time tabular" data-timer-display>{TIMER_MINUTES}:00</span>
         </div>
+        <svg class="w-timer__dots" viewBox={`0 0 ${TIMER_MINUTES} 1`} preserveAspectRatio="xMidYMid meet" aria-hidden="true" data-timer-dots>
+          {Array.from({ length: TIMER_MINUTES }, (_, i) => <circle cx={i + 0.5} cy="0.5" r="0.28" />)}
+        </svg>
         <div class="w-timer__buttons needs-js">
           <button type="button" class="w-timer__reset caps" data-timer-reset aria-label="Reset the timer">Reset</button>
           <button type="button" class="w-timer__go" data-timer-toggle aria-label="Start the timer" />
@@ -265,25 +237,9 @@ const diskDash = RING_LEN * (1 - SAMPLE.diskPercent / 100);
 }
 
 {
-  kind === "todo" && (
-    <section class="w w--card w--sample" style={style} aria-label="To-do list, sample items">
-      <span class="sample-tag caps"><span class="dot dot--hollow" aria-hidden="true" />Sample</span>
-      <div class="w-todo">
-        <span class="caps w-todo__title">To-do</span>
-        <ul class="w-todo__list">
-          {
-            SAMPLE.todos.map((t, i) => (
-              <li>
-                <label class="w-todo__item">
-                  <input type="checkbox" checked={i === 0} />
-                  <span class="w-todo__box" aria-hidden="true" />
-                  <span class="w-todo__text">{t}</span>
-                </label>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
+  kind === "photo" && (
+    <section class="w w--photo" style={style} aria-label="Photo widget">
+      <img src={picture.image.src} width={picture.image.width} height={picture.image.height} alt={picture.alt} loading="lazy" decoding="async" />
     </section>
   )
 }

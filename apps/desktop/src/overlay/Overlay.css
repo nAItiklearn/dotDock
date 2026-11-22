@@ -1,4 +1,9 @@
 .overlay {
+  /* Work-area insets (taskbar, docked bars), set by the core while editing; edit panels stay inside them. */
+  --safe-top: 0px;
+  --safe-right: 0px;
+  --safe-bottom: 0px;
+  --safe-left: 0px;
   position: fixed;
   inset: 0;
   outline: none;
@@ -40,10 +45,69 @@
 .overlay__slot.is-dragging {
   z-index: 6;
   cursor: grabbing;
-  scale: 1.025;
+  scale: var(--slot-lift-scale);
   /* Follows the pointer exactly: only the lift eases. */
   transition: scale var(--dur-fast) var(--ease-out);
 }
+/* Held on the plain desktop: the widget lifts to say "you can move me now", before it moves. */
+.overlay__slot.is-lifted {
+  z-index: 6;
+  scale: var(--slot-lift-scale);
+}
+/*
+ * Arrival and departure use opacity and the independent `scale` property only: composited, never layout,
+ * and never the inline transform that places the widget. Reduced motion sets the durations to 0.
+ */
+.overlay__slot.is-entering {
+  animation: slot-in var(--dur-med) var(--ease-out) backwards;
+}
+.overlay__slot.is-leaving {
+  pointer-events: none;
+  animation: slot-out var(--dur-fast) var(--ease-out) forwards;
+}
+@keyframes slot-in {
+  from {
+    opacity: 0;
+    scale: var(--slot-enter-scale);
+  }
+}
+@keyframes slot-out {
+  to {
+    opacity: 0;
+    scale: var(--slot-enter-scale);
+  }
+}
+
+/* The hover resize handle on the plain desktop: inside the widget's corner, so inside its hit area. */
+.overlay__resize {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: var(--slot-handle-size);
+  height: var(--slot-handle-size);
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: var(--shadow);
+  color: var(--bg);
+  cursor: nwse-resize;
+  touch-action: none;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    visibility var(--dur-fast);
+}
+@media (hover: hover) {
+  .overlay__slot:hover .overlay__resize {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: var(--slot-handle-delay);
+  }
+}
+
 /* Edit mode: a widget is a thing to arrange, not a thing to click, and it does not lift on hover. */
 .overlay--editing .overlay__content {
   pointer-events: none;
@@ -134,4 +198,79 @@
   inset: 0;
   z-index: -1;
   background: var(--bg);
+}
+
+/* ---- the right-click menu on a widget */
+.widget-menu {
+  --menu-margin: var(--space-2);
+  --menu-icon: 16px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  display: grid;
+  min-width: var(--menu-width);
+  padding: var(--space-1);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  /* Opaque: a menu sits over busy widgets and wallpapers, and its labels must read on any of them. */
+  background: var(--surface-2);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  animation: menu-in var(--dur-fast) var(--ease-out) both;
+}
+.widget-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: var(--control-md);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.widget-menu__item:hover:not(:disabled),
+.widget-menu__item:focus-visible {
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+  outline: none;
+}
+.widget-menu__item:disabled {
+  color: var(--text-dim);
+  cursor: default;
+}
+.widget-menu__item--separated {
+  position: relative;
+  margin-top: calc(var(--space-1) * 2 + var(--hairline));
+}
+.widget-menu__item--separated::before {
+  content: "";
+  position: absolute;
+  top: calc(-1 * var(--space-1) - var(--hairline));
+  right: var(--space-2);
+  left: var(--space-2);
+  border-top: var(--hairline) solid var(--border);
+}
+.widget-menu__item:first-child {
+  margin-top: 0;
+}
+.widget-menu__item:first-child::before {
+  content: none;
+}
+.widget-menu__blank {
+  width: var(--menu-icon);
+  flex: none;
+}
+.widget-menu__item--danger:not(:disabled) {
+  color: var(--danger);
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    scale: var(--slot-enter-scale);
+  }
 }

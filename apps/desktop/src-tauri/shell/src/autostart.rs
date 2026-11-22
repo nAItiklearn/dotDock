@@ -103,6 +103,11 @@ fn register_task(exe: &str) -> bool {
     ok
 }
 
+/// dotDock starts at sign-in, by the logon task or the Run key.
+pub fn is_enabled() -> bool {
+    task_exists() || registry::get_string(RUN_KEY, AUTOSTART_NAME).ok().flatten().is_some()
+}
+
 /// Restores StartupDelayInMSec to its snapshotted original.
 fn restore_startup_delay(snapshot: &snapshot::Snapshot) -> Result<(), AutostartError> {
     match snapshot.startup_delay_in_m_sec {
@@ -110,6 +115,11 @@ fn restore_startup_delay(snapshot: &snapshot::Snapshot) -> Result<(), AutostartE
         None => registry::delete_value(SERIALIZE_KEY, STARTUP_DELAY_VALUE)?,
     }
     Ok(())
+}
+
+/// Whether Explorer's startup delay is off for this user (the Run-key path turns it off).
+pub fn startup_delay_removed() -> bool {
+    matches!(registry::get_dword(SERIALIZE_KEY, STARTUP_DELAY_VALUE), Ok(Some(0)))
 }
 
 /// Turns launch-at-sign-in on. Idempotent, and re-registers the current exe path, so a moved

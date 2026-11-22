@@ -4,34 +4,63 @@
   --toolbar-h: 52px;
   --handle-size: 28px;
   --action-size: 28px;
+  --remove-size: 22px;
+  --undo-toast-gap: var(--space-3);
 }
 
 /* ---- per-widget chrome */
+/* Drawn on the widget's own edge (inset 0, the card radius), so outline and widget never disagree by a pixel. */
+/*
+ * No outline at rest: widgets in edit mode look exactly like widgets. Hover draws a soft hairline;
+ * the selected widget keeps a slightly firmer one and lifts on a shadow. Never dashes, never the accent.
+ */
 .slot-chrome__frame {
   position: absolute;
-  inset: calc(-1 * var(--space-1));
-  border: var(--hairline) dashed color-mix(in srgb, var(--text) 45%, transparent);
-  border-radius: calc(var(--radius-lg) + var(--space-1));
+  inset: 0;
+  border: var(--hairline) solid transparent;
+  border-radius: var(--radius-lg);
   pointer-events: none;
-  transition: border-color var(--dur-fast) var(--ease-out);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-med) var(--ease-out);
 }
-.slot-chrome__frame.is-selected {
-  border: var(--focus-width) solid var(--accent);
+.overlay__slot:hover .slot-chrome__frame {
+  border-color: color-mix(in srgb, var(--text) 18%, transparent);
+}
+.slot-chrome__frame.is-selected,
+.overlay__slot:hover .slot-chrome__frame.is-selected {
+  border-color: color-mix(in srgb, var(--text) 32%, transparent);
+  box-shadow: var(--shadow);
 }
 
-.slot-chrome__actions {
-  --ctl-h: var(--action-size);
+.slot-chrome__remove {
   position: absolute;
   top: var(--space-2);
-  right: var(--space-2);
-  display: flex;
-  gap: 2px;
-  padding: 2px;
+  left: var(--space-2);
+  display: grid;
+  place-items: center;
+  width: var(--remove-size);
+  height: var(--remove-size);
+  padding: 0;
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-pill);
+  border-radius: 50%;
   background: var(--surface);
   box-shadow: var(--shadow);
-  cursor: default;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    visibility var(--dur-fast),
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.slot-chrome__remove:hover {
+  background: var(--danger);
+  color: var(--bg);
+}
+.slot-chrome__remove:focus-visible {
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: var(--hairline);
 }
 .slot-chrome__resize {
   position: absolute;
@@ -61,24 +90,52 @@
 }
 
 /* Handles appear on the widget you are working with, not on all of them at once. */
-.slot-chrome__actions,
+.slot-chrome__remove,
 .slot-chrome__resize {
   visibility: hidden;
   opacity: 0;
+}
+.slot-chrome__resize {
   transition:
     opacity var(--dur-fast) var(--ease-out),
     visibility var(--dur-fast);
 }
-.overlay__slot:hover .slot-chrome__actions,
+.overlay__slot:hover .slot-chrome__remove,
 .overlay__slot:hover .slot-chrome__resize,
-.overlay__slot.is-selected .slot-chrome__actions,
+.overlay__slot.is-selected .slot-chrome__remove,
 .overlay__slot.is-selected .slot-chrome__resize,
-.overlay__slot:focus-within .slot-chrome__actions {
+.overlay__slot:focus-within .slot-chrome__remove {
   visibility: visible;
   opacity: 1;
 }
-.overlay__slot.is-dragging .slot-chrome__actions {
+.overlay__slot.is-dragging .slot-chrome__remove,
+.overlay__slot.is-dragging .slot-chrome__resize,
+.overlay__slot.is-lifted .slot-chrome__remove {
   visibility: hidden;
+}
+
+/* ---- undo toast, just above the toolbar */
+.undo-toast {
+  position: absolute;
+  bottom: calc(var(--edge) + var(--safe-bottom) + var(--toolbar-h) + var(--undo-toast-gap));
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  translate: -50% 0;
+  animation: panel-rise var(--dur-med) var(--ease-out) both;
+}
+.undo-toast__text {
+  padding: var(--space-2) 0;
 }
 
 /* ---- guides and drop target */
@@ -87,7 +144,8 @@
   top: 0;
   left: 0;
   z-index: 7;
-  background: var(--accent);
+  /* Shown only while an edge or centre is magnetically aligned with a neighbour. */
+  background: color-mix(in srgb, var(--text) 40%, transparent);
   pointer-events: none;
   will-change: transform;
 }
@@ -96,18 +154,6 @@
 }
 .guide--y {
   height: var(--hairline);
-}
-.ghost {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  border: var(--focus-width) dashed var(--accent);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  pointer-events: none;
-  transition: transform var(--dur-fast) var(--ease-out);
-  will-change: transform;
 }
 /* Invisible, but reported to the core as a hit area so the pointer stays ours for the whole drag. */
 .drag-shield {
@@ -119,7 +165,7 @@
 /* ---- toolbar */
 .toolbar {
   position: absolute;
-  bottom: var(--edge);
+  bottom: calc(var(--edge) + var(--safe-bottom));
   left: 50%;
   z-index: 10;
   transform: translateX(-50%);
@@ -163,9 +209,9 @@
 /* ---- drawer */
 .drawer {
   position: absolute;
-  top: var(--edge);
-  right: var(--edge);
-  bottom: calc(var(--edge) + var(--toolbar-h) + var(--space-3));
+  top: calc(var(--edge) + var(--safe-top));
+  right: calc(var(--edge) + var(--safe-right));
+  bottom: calc(var(--edge) + var(--safe-bottom) + var(--toolbar-h) + var(--space-3));
   z-index: 9;
   width: var(--drawer-w);
 }
@@ -212,6 +258,7 @@
 
 .gallery {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   margin: 0;
   padding: 0;
@@ -219,6 +266,7 @@
 }
 .gallery-card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   padding: var(--space-3);
   border: var(--hairline) solid var(--border);
@@ -253,6 +301,7 @@
 }
 .gallery-card__actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);

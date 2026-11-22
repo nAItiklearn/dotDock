@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isTauri } from "../providers/bridge";
+import { holdKeyboard } from "../lib/native/keyboardFocus";
 
 interface HitRect {
   readonly x: number;
@@ -24,9 +25,40 @@ export function reportFirstFrame(): void {
   if (isTauri()) call("overlay_ready");
 }
 
-/** Reports edit mode to the core so it can raise the overlay and give it keyboard focus (command `overlay_edit_mode`). */
+/**
+ * Edit mode needs the keyboard (Esc, Ctrl+Z, Delete, arrows). The overlay stays at the bottom of the
+ * z-order and click-through outside its widgets; it only takes the foreground while editing.
+ */
 export function reportEditMode(on: boolean): void {
-  if (isTauri()) call("overlay_edit_mode", { on });
+  holdKeyboard("editing", on);
+}
+
+/** How far the taskbar and any docked bar reach into the overlay, per side, in CSS pixels. */
+export interface WorkAreaInsets {
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly left: number;
+}
+
+const SAFE_SIDES = ["top", "right", "bottom", "left"] as const;
+
+/** Publishes the insets as `--safe-<side>` on the overlay, where edit-mode panels read them. */
+export function applyWorkArea(root: HTMLElement, insets: WorkAreaInsets): void {
+  for (const side of SAFE_SIDES) root.style.setProperty(`--safe-${side}`, `${Math.max(0, insets[side])}px`);
+}
+
+/**
+ * Asks the core where the work area is (read once per edit session: the taskbar or a docked bar can
+ * sit over the bottom of this full-screen window, and edit controls under it could not be clicked).
+ */
+export function syncWorkArea(root: HTMLElement): void {
+  if (!isTauri()) return;
+  invoke<WorkAreaInsets | null>("overlay_work_area")
+    .then((insets) => {
+      if (insets) applyWorkArea(root, insets);
+    })
+    .catch((err: unknown) => console.error("overlay_work_area failed", err));
 }
 
 /**
@@ -80,6 +112,11 @@ export function syncHitRegions(root: HTMLElement): () => void {
   });
   watchAll();
   mutations.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-hit"] });
+  // Panels, menus and toasts slide or scale in, and a box measured on their first frame is not where they
+  // come to rest. Neither a resize nor a DOM change marks the end of that motion, so measure again then:
+  // otherwise the edge the panel moved away from passes clicks through to the desktop.
+  root.addEventListener("animationend", push);
+  root.addEventListener("transitionend", push);
   window.addEventListener("resize", push);
   activeInvalidate = push;
   push();
@@ -88,6 +125,8 @@ export function syncHitRegions(root: HTMLElement): () => void {
     cancelAnimationFrame(frame);
     resize.disconnect();
     mutations.disconnect();
+    root.removeEventListener("animationend", push);
+    root.removeEventListener("transitionend", push);
     window.removeEventListener("resize", push);
   };
 }

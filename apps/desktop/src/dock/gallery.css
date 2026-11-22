@@ -1,0 +1,204 @@
+/* The widget gallery. The surface and head are the popover's (panels.css); the controls reuse the tile popovers' (tiles/popovers.css). */
+.gallery {
+  --card-fill: color-mix(in srgb, var(--surface-2) 70%, transparent);
+}
+.gallery .popover__content {
+  gap: var(--space-3);
+}
+.gallery__close {
+  margin-left: auto;
+}
+.gallery__search {
+  flex: none;
+  height: var(--control-md);
+  padding: 0 var(--space-4);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--text-md);
+}
+.gallery__search::placeholder {
+  color: var(--text-dim);
+}
+.gallery__search:focus-visible,
+.gallery__chip:focus-visible,
+.gcard__action:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-ring);
+}
+
+.gallery__chips {
+  display: flex;
+  flex: none;
+  /* Wraps onto a second line: a row that scrolled sideways with no scrollbar looked cut off at the edge. */
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-bottom: var(--space-1);
+}
+.gallery__chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--control-sm);
+  padding: 0 var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.gallery__chip[aria-selected="true"] {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.gallery__chip:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+@media (hover: hover) {
+  .gallery__chip:not(:disabled):not([aria-selected="true"]):hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+}
+.gallery__count {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  opacity: 0.7;
+}
+
+.gallery__grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+  gap: var(--card-gap);
+  align-content: start;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  scrollbar-width: thin;
+}
+.gallery__hint {
+  flex: none;
+  text-align: center;
+}
+
+.gcard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card-fill);
+}
+.gcard[draggable="true"] {
+  cursor: grab;
+}
+.gcard[data-on="true"] {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+}
+.gcard__preview {
+  display: grid;
+  place-items: center;
+  height: calc(var(--control-lg) + var(--space-3));
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+/* A tile draws itself to fill its box; the box is as long as the tile is on the dock. */
+.gcard__tile {
+  position: relative;
+}
+.gcard__stack {
+  display: grid;
+  place-items: center;
+  width: var(--d-icon);
+  height: var(--d-icon);
+  border: var(--hairline) solid color-mix(in srgb, var(--tone) 42%, var(--border));
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface-2) 80%, var(--tone));
+}
+.gcard__stack .stack-grid {
+  width: calc(var(--d-icon) * 0.6);
+}
+.gcard__closed {
+  display: flex;
+  gap: var(--space-2);
+}
+.gcard__closed i {
+  width: var(--marker);
+  height: var(--marker);
+  border-radius: 50%;
+  background: var(--dot-off);
+}
+.gcard__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.gcard__name {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+.gcard__about {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+}
+.gcard__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-1) 0 0;
+  color: var(--text-dim);
+}
+.gcard__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--control-sm);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.gcard__action .icon {
+  height: 1em;
+  width: auto;
+}
+.gcard__action[data-primary="true"] {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.gcard__action:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+@media (hover: hover) {
+  .gcard__action:not(:disabled):hover {
+    background: var(--surface-2);
+  }
+  .gcard__action[data-primary="true"]:not(:disabled):hover {
+    background: color-mix(in srgb, var(--accent) 88%, var(--text));
+  }
+}
+.gcard__action:not(:disabled):active {
+  transform: scale(var(--press));
+}
