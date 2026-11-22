@@ -266,6 +266,8 @@
   flex: 1;
   min-width: 0;
   height: var(--row-h);
+  /* In a column the flex: 1 above stretched the field to the column's height (a giant pill). */
+  max-height: var(--row-h);
   padding: 0 var(--space-4);
   border: var(--hairline) solid var(--border);
   border-radius: var(--radius-pill);
@@ -375,6 +377,11 @@
   text-align: left;
   cursor: pointer;
 }
+.tp-device .icon {
+  flex: none;
+  width: auto;
+  height: 1em;
+}
 .tp-device i {
   width: var(--marker);
   height: var(--marker);
@@ -395,10 +402,10 @@
 .tp-tabs {
   display: flex;
   flex: none;
+  /* Wraps onto a second line: a row that scrolled sideways with no scrollbar looked cut off at the edge. */
+  flex-wrap: wrap;
   gap: var(--space-1);
   padding-bottom: var(--space-1);
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 .tp-tabs button {
   flex: none;

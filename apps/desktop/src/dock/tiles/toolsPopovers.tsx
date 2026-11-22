@@ -174,7 +174,7 @@ export function ConvertBody() {
   const amount = parseAmount(setup.amount);
   const result = amount === null ? null : convert(setup.category, setup.from, setup.to, amount);
   return (
-    <div className="tp-body">
+    <div className="tp-body tp-body--fit">
       <div className="tp-tabs" role="tablist" aria-label={t("tile.convert")}>
         {UNIT_CATEGORIES.map((c) => (
           <button key={c} type="button" role="tab" aria-selected={c === setup.category} onClick={() => setConversion({ category: c })}>

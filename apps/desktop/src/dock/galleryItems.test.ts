@@ -5,6 +5,7 @@ import {
   dropIndex,
   filterGallery,
   GALLERY_CATEGORIES,
+  HELD_TILES,
   galleryItems,
   isAddable,
   placeTile,
@@ -28,9 +29,12 @@ const input = (over: Partial<GalleryInput> = {}): GalleryInput => ({
 describe("galleryItems", () => {
   const items = galleryItems(input());
 
-  it("has a card for every tile, once, with its words", () => {
+  const offered = TILE_IDS.filter((id) => !HELD_TILES.has(id));
+
+  it("has a card for every offered tile, once, with its words, and none for the held ones", () => {
     const tiles = items.filter((i) => i.kind === "tile");
-    expect(tiles.map((i) => i.tile)).toEqual([...TILE_IDS]);
+    expect(tiles.map((i) => i.tile)).toEqual(offered);
+    for (const held of HELD_TILES) expect(items.some((i) => i.tile === held)).toBe(false);
     for (const tile of tiles) {
       expect(tile.name).not.toBe("");
       expect(tile.about).not.toBe("");
@@ -62,7 +66,7 @@ describe("galleryItems", () => {
   });
 
   it("puts every tile in a group, so none can only be found by searching", () => {
-    for (const id of TILE_IDS) expect(items.find((i) => i.tile === id)?.category).toBeDefined();
+    for (const id of offered) expect(items.find((i) => i.tile === id)?.category).toBeDefined();
   });
 });
 
@@ -80,7 +84,8 @@ describe("filterGallery", () => {
 
   it("shows everything with no search and no group, and one group when picked", () => {
     expect(filterGallery(items, "", "all")).toHaveLength(items.length);
-    expect(keys(filterGallery(items, "", "people"))).toEqual(["tile:contacts"]);
+    expect(keys(filterGallery(items, "", "media"))).toContain("tile:media");
+    expect(keys(filterGallery(items, "", "people"))).toEqual([]);
   });
 
   it("finds a tile by its name, best match first", () => {
@@ -96,7 +101,7 @@ describe("filterGallery", () => {
   });
 
   it("finds a card by the name of its group", () => {
-    expect(keys(filterGallery(items, "people", "all"))).toContain("tile:contacts");
+    expect(keys(filterGallery(items, "focus", "all"))).toContain("tile:stopwatch");
   });
 
   it("ignores accents and case", () => {
@@ -119,7 +124,7 @@ describe("categoryCounts", () => {
   it("counts each group, and all of them", () => {
     const counts = categoryCounts(items, "");
     expect(counts.all).toBe(items.length);
-    expect(counts.people).toBe(1);
+    expect(counts.people).toBe(0);
     expect(counts.stacks).toBe(2);
     expect(GALLERY_CATEGORIES.reduce((sum, c) => sum + counts[c], 0)).toBe(items.length);
   });

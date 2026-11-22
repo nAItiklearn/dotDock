@@ -260,7 +260,7 @@ export function libraryColumns(width: number): number {
  */
 export const TILE_POPOVER = { pad: 16, head: 52, gap: 12 } as const;
 export const TILE_POPOVER_SIZE = {
-  system: { w: 320, h: 300 },
+  system: { w: 320, h: 344 },
   agenda: { w: 340, h: 380 },
   meeting: { w: 340, h: 250 },
   focus: { w: 320, h: 320 },

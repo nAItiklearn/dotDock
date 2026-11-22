@@ -299,6 +299,7 @@ const EN = {
   "tile.reminders.due.overdue": "Overdue",
   "tile.reminders.due.today": "Today",
 
+  "tile.calendar.setup.hint": "Add a calendar account in Windows Settings, under Accounts, to see your events here.",
   "tile.agenda.none": "Nothing on today",
   "tile.agenda.none.hint": "Events from your calendar show here.",
   "tile.agenda.more": "+{count} more",

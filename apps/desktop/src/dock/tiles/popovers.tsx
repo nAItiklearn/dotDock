@@ -62,8 +62,10 @@ function Empty({ title, hint }: { readonly title: string; readonly hint?: string
 }
 
 /** What a popover shows instead of its content when its feed has none, one state for each reason. */
-function Issue({ issue }: { readonly issue: TileIssue }) {
-  return <Empty title={issueText(issue)} hint={t(`tile.issue.${issue}.hint`)} />;
+/** A tile's issue, with the general hint for it unless the tile knows the one step that fixes it. */
+function Issue({ issue, setupHint }: { readonly issue: TileIssue; readonly setupHint?: string }) {
+  const hint = issue === "needs-setup" && setupHint ? setupHint : t(`tile.issue.${issue}.hint`);
+  return <Empty title={issueText(issue)} hint={hint} />;
 }
 
 function Button({
@@ -137,7 +139,7 @@ function AgendaBody() {
   const read = readFeed(useFeed("agenda"));
   const events = read.state === "ready" ? read.data.events : NO_EVENTS;
   const now = useBoundary((at) => nextAgendaChange(events, at));
-  if (read.state === "issue") return <Issue issue={read.issue} />;
+  if (read.state === "issue") return <Issue issue={read.issue} setupHint={t("tile.calendar.setup.hint")} />;
   if (read.state === "pending") return null;
   const summary = summariseAgenda(read.data.events, now, Number.POSITIVE_INFINITY);
   if (read.data.events.length === 0) return <Empty title={t("tile.agenda.none")} hint={t("tile.agenda.none.hint")} />;
@@ -182,7 +184,7 @@ function MeetingBody() {
   const read = readFeed(useFeed("meeting"));
   const meeting = read.state === "ready" ? read.data : null;
   const now = useBoundary((at) => (meeting ? nextCountdownChange(meeting, at) : null));
-  if (read.state === "issue") return <Issue issue={read.issue} />;
+  if (read.state === "issue") return <Issue issue={read.issue} setupHint={t("tile.calendar.setup.hint")} />;
   if (read.state === "pending") return null;
   if (meeting === null) return <Empty title={t("tile.meeting.none")} hint={t("tile.meeting.none.hint")} />;
   const countdown = meetingCountdown(meeting, now);

@@ -11,6 +11,12 @@ import { categoryLabel, t, type StringKey } from "./strings";
 export const GALLERY_CATEGORIES = ["time", "focus", "media", "system", "tools", "people", "stacks"] as const;
 export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
 
+/**
+ * Tiles not offered in V1 because nothing can fill them yet (D-043): the core has no exchange-rate or wind feed, and
+ * no screen adds a contact. A tile already on someone's dock still draws; it just cannot be added again.
+ */
+export const HELD_TILES: ReadonlySet<TileId> = new Set<TileId>(["contacts", "currency", "wind"]);
+
 const TILE_CATEGORY: Readonly<Record<TileId, GalleryCategory>> = {
   clock: "time",
   agenda: "time",
@@ -81,7 +87,7 @@ export const categoryName = (category: GalleryCategory): string => t(`gallery.ca
 /** Every card the gallery can show, tiles first, then stacks, then the closed slots, each group in a steady order. */
 export function galleryItems(input: GalleryInput): GalleryItem[] {
   const onDock = new Set(input.tiles);
-  const tiles = TILE_IDS.map(
+  const tiles = TILE_IDS.filter((id) => !HELD_TILES.has(id)).map(
     (id): GalleryItem => ({
       key: `tile:${id}`,
       kind: "tile",

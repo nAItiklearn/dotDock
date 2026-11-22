@@ -483,3 +483,11 @@ Numbered D-026 because main has D-025; renumber on merge if another track took i
   tool. Scene captures with masks and flattened differ by under 0.6 % of pixels (moving sprites and petals):
   docs/QA/website-art-live/masks and /flat.
 - Cost: 12 MB of pictures in the repository (396 files); a page downloads only its theme, render and ratio.
+
+## D-043 V1 offers only dock tiles that can show something (2026-11-22, lead, live test)
+- The live sweep of every tile popover found three tiles that can never fill: Currency and Wind need core feeds that do
+  not exist yet (B-002), and Contacts has a store in the core but no screen to add a person. They are held out of the
+  widget gallery (`HELD_TILES`); a tile already on a dock still draws. The "People" group, now empty, is not shown.
+- Today and Next meeting stay: they read the Windows calendar store. Their "needs setting up" hint now names the real
+  step (add a calendar account in Windows Settings) instead of pointing to dock settings that have no calendar control.
+- Web search stays: `dock_open_url` exists in the tiles host, so B-002 item 3 is done.

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { INITIAL_TIMER, type TimerState } from "../../widgets/timerModel";
 import type { TileId } from "../model";
 import { TILE_IDS } from "../model";
+import { HELD_TILES } from "../galleryItems";
 import type { AgendaView, AudioView, ContactsView, HydrationView, MeetingView, StopwatchView, TileFeed, TileFeeds, TileIssue } from "./ui-types";
 
 /**
@@ -178,7 +179,7 @@ describe("agenda", () => {
     feeds({ agenda: failed("needs-setup") });
     const html = popover("agenda");
     expect(html).toContain("Needs setting up");
-    expect(html).toContain("Choose what to show in the dock settings.");
+    expect(html).toContain("Add a calendar account in Windows Settings, under Accounts, to see your events here.");
   });
 });
 
@@ -496,12 +497,14 @@ describe("the widget gallery", () => {
 
   it("has a card with a live preview and an Add button for every tile that is not on the dock", () => {
     const html = gallery(["clock"]);
-    for (const id of TILE_IDS.filter((tile) => tile !== "clock")) {
+    const offered = TILE_IDS.filter((tile) => !HELD_TILES.has(tile));
+    for (const id of offered.filter((tile) => tile !== "clock")) {
       expect(html).toContain(`tile--${id}`);
     }
+    for (const held of HELD_TILES) expect(html).not.toContain(`tile--${held}"`);
     expect(html).toContain('aria-label="Add Next meeting"');
     expect(html).toContain('aria-label="Add Stopwatch"');
-    expect(html.match(/gcard__tile/g)?.length).toBe(TILE_IDS.length);
+    expect(html.match(/gcard__tile/g)?.length).toBe(offered.length);
   });
 
   it("makes a preview something to look at, not to press", () => {
@@ -538,7 +541,8 @@ describe("the widget gallery", () => {
 
   it("shows the groups with how many cards each holds", () => {
     const html = gallery();
-    for (const words of ["All", "Time", "Focus and health", "Media and sound", "System", "People", "Stacks"]) expect(html).toContain(words);
+    for (const words of ["All", "Time", "Focus and health", "Media and sound", "System", "Stacks"]) expect(html).toContain(words);
+    expect(html).not.toContain(">People<");
     expect(html).toContain('role="tablist"');
     expect(html).toMatch(/aria-selected="true"[^>]*>All/);
   });

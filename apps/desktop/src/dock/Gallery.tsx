@@ -187,14 +187,13 @@ export function Gallery({ open }: { readonly open: OpenGallery }) {
           onChange={(e) => setQuery(e.target.value)}
         />
         <div className="gallery__chips" role="tablist" aria-label={t("gallery.title")}>
-          {(["all", ...GALLERY_CATEGORIES] as const).map((id) => (
+          {(["all", ...GALLERY_CATEGORIES.filter((c) => counts[c] > 0)] as const).map((id) => (
             <button
               key={id}
               type="button"
               role="tab"
               className="gallery__chip"
               aria-selected={group === id}
-              disabled={id !== "all" && counts[id] === 0}
               onClick={() => setGroup(id)}
             >
               {id === "all" ? t("gallery.category.all") : categoryName(id)}
