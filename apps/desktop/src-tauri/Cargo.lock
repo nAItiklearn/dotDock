@@ -925,7 +925,7 @@ dependencies = [
 
 [[package]]
 name = "dotdock"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "dotdock-dock",
  "dotdock-island",
@@ -943,7 +943,7 @@ dependencies = [
 
 [[package]]
 name = "dotdock-dock"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "dotdock-shell",
  "notify",
@@ -957,7 +957,7 @@ dependencies = [
 
 [[package]]
 name = "dotdock-island"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "notify",
  "serde",
@@ -969,7 +969,7 @@ dependencies = [
 
 [[package]]
 name = "dotdock-island-hook"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "dotdock-island",
  "serde_json",
@@ -978,14 +978,14 @@ dependencies = [
 
 [[package]]
 name = "dotdock-sentinel"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "dotdock-shell",
 ]
 
 [[package]]
 name = "dotdock-shell"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "base64 0.23.1",
  "serde",
@@ -999,7 +999,7 @@ dependencies = [
 
 [[package]]
 name = "dotdock-tiles"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "base64 0.23.1",
  "dotdock-shell",
