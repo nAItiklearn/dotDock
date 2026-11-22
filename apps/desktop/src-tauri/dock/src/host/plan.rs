@@ -50,6 +50,10 @@ mod tests {
         frozen: FrozenState { locked: false, display_off: false, fullscreen: false },
     };
 
+    fn plan_reserves(settings: &DockSettings) -> bool {
+        plan(settings, READY).reserve
+    }
+
     fn settings(change: impl FnOnce(&mut DockSettings)) -> DockSettings {
         let mut settings = DockSettings::default();
         change(&mut settings);
@@ -57,9 +61,11 @@ mod tests {
     }
 
     #[test]
-    fn a_fresh_install_shows_the_dock_and_reserves_space_but_leaves_the_taskbar_alone() {
+    fn a_fresh_install_shows_an_auto_hiding_dock_that_reserves_nothing_and_leaves_the_taskbar_alone() {
         let plan = plan(&DockSettings::default(), READY);
-        assert_eq!(plan, Plan { visible: true, reserve: true, hide_taskbar: false });
+        assert_eq!(plan, Plan { visible: true, reserve: false, hide_taskbar: false });
+        let kept_up = settings(|s| s.auto_hide = false);
+        assert!(plan_reserves(&kept_up), "a dock that stays up keeps windows clear of it");
     }
 
     #[test]
@@ -94,7 +100,10 @@ mod tests {
 
     #[test]
     fn a_frozen_dock_hides_but_keeps_the_strip_and_the_taskbar_state() {
-        let replace = settings(|s| s.replace_taskbar = true);
+        let replace = settings(|s| {
+            s.replace_taskbar = true;
+            s.auto_hide = false;
+        });
         for frozen in [
             FrozenState { locked: true, ..FrozenState::default() },
             FrozenState { display_off: true, ..FrozenState::default() },

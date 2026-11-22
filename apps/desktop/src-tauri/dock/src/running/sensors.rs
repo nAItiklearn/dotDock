@@ -32,11 +32,11 @@ use windows::Win32::UI::Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVE
 use windows::Win32::UI::Shell::SHQueryUserNotificationState;
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DeregisterShellHookWindow, DestroyWindow, DispatchMessageW, GetClassNameW,
-    GetForegroundWindow, GetMessageW, GetWindowRect, GetWindowThreadProcessId, IsZoomed, KillTimer, PostMessageW,
-    PostQuitMessage, RegisterClassW, RegisterShellHookWindow, RegisterWindowMessageW, SetTimer, TranslateMessage,
-    UnregisterClassW, DEVICE_NOTIFY_WINDOW_HANDLE, MSG, PBT_APMRESUMEAUTOMATIC, PBT_POWERSETTINGCHANGE,
-    WINDOW_EX_STYLE, WM_CLOSE, WM_DESTROY, WM_DISPLAYCHANGE, WM_POWERBROADCAST, WM_TIMER, WM_WTSSESSION_CHANGE,
-    WNDCLASSW, WS_EX_TOOLWINDOW, WS_POPUP,
+    GetForegroundWindow, GetMessageW, GetWindowLongW, GetWindowRect, GetWindowThreadProcessId, IsZoomed, KillTimer,
+    PostMessageW, PostQuitMessage, RegisterClassW, RegisterShellHookWindow, RegisterWindowMessageW, SetTimer,
+    TranslateMessage, UnregisterClassW, DEVICE_NOTIFY_WINDOW_HANDLE, GWL_STYLE, MSG, PBT_APMRESUMEAUTOMATIC,
+    PBT_POWERSETTINGCHANGE, WINDOW_EX_STYLE, WM_CLOSE, WM_DESTROY, WM_DISPLAYCHANGE, WM_POWERBROADCAST, WM_TIMER,
+    WM_WTSSESSION_CHANGE, WNDCLASSW, WS_CAPTION, WS_EX_TOOLWINDOW, WS_POPUP,
 };
 
 /// Quiet time after the first event before the list is recomputed, so a burst (an app opening three windows)
@@ -151,7 +151,9 @@ fn foreground_fills_monitor() -> bool {
             return false;
         }
         let edges = |r: RECT| Edges { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
-        fills_monitor(edges(rect), edges(info.rcMonitor), IsZoomed(hwnd).as_bool())
+        let style = GetWindowLongW(hwnd, GWL_STYLE) as u32;
+        let titled = style & WS_CAPTION.0 == WS_CAPTION.0;
+        fills_monitor(edges(rect), edges(info.rcMonitor), IsZoomed(hwnd).as_bool(), titled)
     }
 }
 

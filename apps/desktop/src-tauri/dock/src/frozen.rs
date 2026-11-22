@@ -99,10 +99,12 @@ pub struct Edges {
     pub bottom: i32,
 }
 
-/// Whether a foreground window is a full-screen app: it covers the whole of its monitor and is not merely
-/// maximised (a maximised window keeps its title bar and the dock stays useful over it).
-pub fn fills_monitor(window: Edges, monitor: Edges, maximised: bool) -> bool {
+/// Whether a foreground window is a full-screen app: it covers the whole of its monitor, is not merely maximised
+/// and has no title bar. Games, players and browsers in full screen drop their title bar; an ordinary window that
+/// was dragged or restored to the size of the screen keeps it (File Explorer did, and the dock vanished under it).
+pub fn fills_monitor(window: Edges, monitor: Edges, maximised: bool, titled: bool) -> bool {
     !maximised
+        && !titled
         && window.left <= monitor.left
         && window.top <= monitor.top
         && window.right >= monitor.right
@@ -176,23 +178,29 @@ mod tests {
 
     #[test]
     fn a_window_covering_its_monitor_is_full_screen() {
-        assert!(fills_monitor(MONITOR, MONITOR, false));
+        assert!(fills_monitor(MONITOR, MONITOR, false, false));
         // Some games and players overhang the monitor by their invisible borders.
-        assert!(fills_monitor(Edges { left: -8, top: -8, right: 1928, bottom: 1088 }, MONITOR, false));
+        assert!(fills_monitor(Edges { left: -8, top: -8, right: 1928, bottom: 1088 }, MONITOR, false, false));
     }
 
     #[test]
     fn a_maximised_or_smaller_window_is_not() {
-        assert!(!fills_monitor(Edges { left: -8, top: -8, right: 1928, bottom: 1088 }, MONITOR, true));
-        assert!(!fills_monitor(Edges { left: 0, top: 0, right: 1920, bottom: 1032 }, MONITOR, false));
-        assert!(!fills_monitor(Edges { left: 60, top: 80, right: 700, bottom: 500 }, MONITOR, false));
+        assert!(!fills_monitor(Edges { left: -8, top: -8, right: 1928, bottom: 1088 }, MONITOR, true, false));
+        assert!(!fills_monitor(Edges { left: 0, top: 0, right: 1920, bottom: 1032 }, MONITOR, false, false));
+        assert!(!fills_monitor(Edges { left: 60, top: 80, right: 700, bottom: 500 }, MONITOR, false, false));
+    }
+
+    #[test]
+    fn a_window_with_a_title_bar_that_fills_the_screen_is_not() {
+        assert!(!fills_monitor(Edges { left: -8, top: -8, right: 1928, bottom: 1088 }, MONITOR, false, true));
+        assert!(!fills_monitor(MONITOR, MONITOR, false, true));
     }
 
     #[test]
     fn a_window_on_another_monitor_is_judged_against_that_monitor() {
         let second = Edges { left: 1920, top: 0, right: 3840, bottom: 1080 };
-        assert!(fills_monitor(second, second, false));
-        assert!(!fills_monitor(MONITOR, second, false));
+        assert!(fills_monitor(second, second, false, false));
+        assert!(!fills_monitor(MONITOR, second, false, false));
     }
 
     #[test]
