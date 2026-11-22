@@ -19,6 +19,9 @@ export interface RedisLike {
 export interface RedisEnv {
   readonly KV_REST_API_URL?: string | undefined;
   readonly KV_REST_API_TOKEN?: string | undefined;
+  /** The same pair under the prefix chosen when the owner connected the database to this project (2026-11-22). */
+  readonly DOCK_DOCK_KV_REST_API_URL?: string | undefined;
+  readonly DOCK_DOCK_KV_REST_API_TOKEN?: string | undefined;
   readonly UPSTASH_REDIS_REST_URL?: string | undefined;
   readonly UPSTASH_REDIS_REST_TOKEN?: string | undefined;
 }
@@ -30,11 +33,13 @@ export interface RedisCredentials {
 
 /**
  * Credentials from the environment. The Vercel Marketplace integration sets the KV_REST_API_* pair, a direct
- * Upstash database the UPSTASH_REDIS_REST_* pair; the first complete pair wins.
+ * Upstash database the UPSTASH_REDIS_REST_* pair, and this project's connection the DOCK_DOCK_ prefixed pair; the
+ * first complete pair wins.
  */
 export function redisCredentials(env: RedisEnv): RedisCredentials | null {
   const pairs: [string | undefined, string | undefined][] = [
     [env.KV_REST_API_URL, env.KV_REST_API_TOKEN],
+    [env.DOCK_DOCK_KV_REST_API_URL, env.DOCK_DOCK_KV_REST_API_TOKEN],
     [env.UPSTASH_REDIS_REST_URL, env.UPSTASH_REDIS_REST_TOKEN],
   ];
   for (const [url, token] of pairs) {

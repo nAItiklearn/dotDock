@@ -27,6 +27,7 @@ function mockRedis(start?: number): RedisLike & { calls: string[]; store: Map<st
 describe("redisCredentials", () => {
   it("reads the Vercel Marketplace pair", () => {
     assert.deepEqual(redisCredentials({ KV_REST_API_URL: "https://kv", KV_REST_API_TOKEN: "k" }), { url: "https://kv", token: "k" });
+    assert.deepEqual(redisCredentials({ DOCK_DOCK_KV_REST_API_URL: "https://dd", DOCK_DOCK_KV_REST_API_TOKEN: "d" }), { url: "https://dd", token: "d" });
   });
   it("reads the Upstash pair", () => {
     assert.deepEqual(redisCredentials({ UPSTASH_REDIS_REST_URL: "https://up", UPSTASH_REDIS_REST_TOKEN: "u" }), { url: "https://up", token: "u" });
