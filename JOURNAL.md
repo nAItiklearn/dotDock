@@ -52,9 +52,13 @@ adding screenshots of  each session usage -
 ![alt text](image-19.png)
 ![alt text](image-20.png)
 
+
+
 these were the main sessions , other than this , Ill just say , try the application , you will def see the efforts :)
 
 PS- Got some good response too from ppl on the same day I launched it -
+<img width="1006" height="1600" alt="image" src="https://github.com/user-attachments/assets/1d61d5fd-6785-42a4-aef9-19352ea12216" />
+
 <img width="960" height="1238" alt="image" src="https://github.com/user-attachments/assets/28903610-e0b8-4a12-953f-a2059c55082e" />
 <img width="1080" height="536" alt="image" src="https://github.com/user-attachments/assets/ad8c29d8-9b23-4fe3-9035-189a15718fad" />
 <img width="1080" height="515" alt="image" src="https://github.com/user-attachments/assets/99b4c403-a43e-437d-baf7-db1e34417c60" />
