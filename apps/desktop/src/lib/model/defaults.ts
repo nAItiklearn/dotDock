@@ -4,6 +4,7 @@ import {
   SETTINGS_SCHEMA,
   WALLPAPER_THEME_ID,
   type AppSettings,
+  type Bounds,
   type LayoutDoc,
   type Placement,
   type ProfileMeta,
@@ -56,29 +57,44 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shortcuts: DEFAULT_SHORTCUTS,
 };
 
+/**
+ * The smallest cell grid a built-in layout has to fit, so a new install never has a widget pushed off
+ * the screen and relocated. The grid cell is a fixed CSS pixel token, so the cell count follows the
+ * viewport the webview gets, which is the panel divided by the Windows scaling: seven rows is a 660 px
+ * tall viewport, met by every 1080p and 1440p screen at 100, 125 and 150 %, and by a 1366 x 768 laptop
+ * at the 100 % Windows recommends for it. Smaller than this the built-in layout sheds what cannot fit
+ * from the end of each column; it never reflows into a different arrangement.
+ */
+export const MIN_SUPPORTED_BOUNDS: Bounds = { cols: 7, rows: 7 };
+
 function p(id: string, widget: string, size: string, x: number, y: number, config: Placement["config"] = {}): Placement {
   return { id, widget, size, x, y, config };
 }
 
 /**
- * Placements of the built-in profiles, by registry widget id and size. The Work layout is the owner's own home
- * screen (2026-11-22, `docs/defaults-from-owner/home-storage.json`): the clock, battery ring, player, a photo frame,
- * the timer dial, a fun fact, the RAM grid and the date pill, nine columns by eight rows, with the RAM grid and the date
- * set a little lower as the owner placed them. The owner's 1/32-cell jitter is snapped to whole rows, so the layout fits
- * eight rows (1366 x 768) unchanged; the RAM grid's offset is pulled in by the edge there. On a screen with fewer rows,
- * `normalizePlacements` moves what does not fit to the nearest free spot. The photo frame starts empty:
- * the picture is the user's to choose. Config is empty wherever the defaults are wanted.
+ * Placements of the built-in profiles, by registry widget id and size. The Work layout is the owner's
+ * own home screen as two columns (B5, `docs/BUGS_1_0_3.md`): on the left the big clock with the weekday
+ * under it, the now-playing card and the photo frame; beside it the date pill, the battery ring, the
+ * timer dial and the RAM dots.
+ *
+ * Every position is a whole cell. The owner's captured layout (`docs/defaults-from-owner/home-storage.json`)
+ * carried a 1/32-cell jitter from free placement, which D-044 believed it had snapped to whole rows and had
+ * not: `system` sat at row 6.3125 and `date` at 6.53125, so on any viewport shorter than eight rows they
+ * were clamped into an occupied cell and then relocated to the "nearest free spot" - the scattered default
+ * users reported. Whole cells, and a footprint inside `MIN_SUPPORTED_BOUNDS`, are what keep the arrangement
+ * identical on every screen: the cell is a fixed CSS pixel token, so a larger screen only adds empty cells
+ * around it. The photo frame starts empty: the picture is the user's to choose. Config is empty wherever
+ * the widget's own defaults are wanted.
  */
 const BUILTIN_PLACEMENTS: Readonly<Record<string, readonly Placement[]>> = {
   work: [
     p("clock-1", "clock", "m", 0, 0),
-    p("battery-1", "battery", "m", 4, 0),
-    p("music-1", "music", "l", 0, 2),
-    p("photo-1", "photo", "s", 4, 2, { radius: 12 }),
-    p("timer-1", "timer", "s", 4, 4),
-    p("fun-fact-1", "fun-fact", "m", 0, 6, { rotation: "daily" }),
-    p("system-1", "system", "m", 4, 6.3125),
-    p("date-1", "date", "m", 6, 6.53125),
+    p("music-1", "music", "m", 0, 2),
+    p("photo-1", "photo", "s", 0, 4, { radius: 12 }),
+    p("date-1", "date", "m", 4, 0),
+    p("battery-1", "battery", "m", 4, 1),
+    p("timer-1", "timer", "s", 4, 3),
+    p("system-1", "system", "m", 4, 5),
   ],
   focus: [
     p("clock-1", "clock", "m", 0, 0),

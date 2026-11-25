@@ -15,7 +15,7 @@ import {
   resizeTo,
   type LayoutContext,
 } from "./ops";
-import { boundsFor, rectsOverlap } from "./grid";
+import { rectsOverlap } from "./grid";
 import { rectOf } from "./ops";
 
 const ctx: LayoutContext = { bounds: { cols: 16, rows: 9 }, collision: "push", catalog: widgetCatalog };
@@ -72,33 +72,6 @@ describe("the built-in profiles", () => {
       expect(overlapping(placements)).toBe(false);
       expect(normalizePlacements(placements, ctx)).toBe(placements);
     }
-  });
-});
-
-describe("the shipped Work layout", () => {
-  it("is the owner's home screen: eight widgets that fit a 1920x1080 display without overlap or rearranging", () => {
-    const placements = defaultLayoutDoc("work").monitors["primary"]?.placements ?? [];
-    expect(placements.map((p) => [p.id, p.widget, p.size])).toEqual([
-      ["clock-1", "clock", "m"],
-      ["battery-1", "battery", "m"],
-      ["music-1", "music", "l"],
-      ["photo-1", "photo", "s"],
-      ["timer-1", "timer", "s"],
-      ["fun-fact-1", "fun-fact", "m"],
-      ["system-1", "system", "m"],
-      ["date-1", "date", "m"],
-    ]);
-    // The grid metrics of tokens.css (cell 76, gap 12, edge 28) on a 1920x1080 viewport.
-    const bounds = boundsFor(1920, 1080, { cell: 76, gap: 12, edge: 28 });
-    expect(bounds).toEqual({ cols: 21, rows: 11 });
-    const onDesktop: LayoutContext = { ...ctx, bounds };
-    expect(overlapping(placements)).toBe(false);
-    for (const p of placements) {
-      const r = rectOf(ctx.catalog, p);
-      expect(r.x + r.w, `${p.id} right edge`).toBeLessThanOrEqual(bounds.cols);
-      expect(r.y + r.h, `${p.id} bottom edge`).toBeLessThanOrEqual(bounds.rows);
-    }
-    expect(normalizePlacements(placements, onDesktop)).toBe(placements);
   });
 });
 

@@ -24,8 +24,8 @@ const settings = (app: AppContext) => app.settings.getState();
 const ids = (ps: readonly Placement[]): string[] => ps.map((p) => p.id);
 /** The shipped Work layout, which every fresh boot shows on the primary display. */
 const WORK = defaultLayoutDoc("work").monitors["primary"]?.placements ?? [];
-/** Where the shipped Work layout puts the RAM card; it is moved around by the edit-session tests. */
-const SYSTEM_HOME = { x: 4, y: 6.3125 };
+/** Where the shipped Work layout puts the RAM dots; they are moved around by the edit-session tests. */
+const SYSTEM_HOME = { x: 4, y: 5 };
 
 describe("first run", () => {
   it("shows the Work profile on the primary display", async () => {
@@ -225,9 +225,9 @@ describe("edit session", () => {
     const app = await boot();
     settings(app).update((s) => ({ ...s, layout: { ...s.layout, collision: "swap" } }));
     layout(app).enterEdit();
-    // The RAM card and the photo frame are both 2 x 2: dropping one on the other trades their places.
-    layout(app).moveTo("system-1", { x: 4, y: 2 });
-    expect(layout(app).placements.find((p) => p.id === "system-1")).toMatchObject({ x: 4, y: 2 });
+    // The RAM dots and the photo frame are both 2 x 2: dropping one on the other trades their places.
+    layout(app).moveTo("system-1", { x: 0, y: 4 });
+    expect(layout(app).placements.find((p) => p.id === "system-1")).toMatchObject({ x: 0, y: 4 });
     expect(layout(app).placements.find((p) => p.id === "photo-1")).toMatchObject(SYSTEM_HOME);
   });
 
