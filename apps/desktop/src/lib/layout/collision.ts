@@ -1,5 +1,5 @@
 import type { Bounds, CollisionMode, Rect } from "../model/types";
-import { clampRect, fitsBounds, nearestFreeSpot, rectsOverlap } from "./grid";
+import { clampRect, fitsBounds, freeSpotInColumn, nearestFreeSpot, rectsOverlap } from "./grid";
 
 export interface Item extends Rect {
   readonly id: string;
@@ -219,7 +219,11 @@ export function normalizeArrangement(items: readonly Item[], bounds: Bounds): Ar
     const wanted = clampRect({ x: item.x, y: item.y, w: item.w, h: item.h }, bounds);
     let final: Rect = wanted;
     if (placed.some((p) => rectsOverlap(p, wanted))) {
-      const spot = nearestFreeSpot(placed, wanted.w, wanted.h, bounds, wanted);
+      // Its own column first: a layout designed as columns must not have one widget swap sides because
+      // the screen is a row short. Only a column with no room at all sends it looking wider (B5).
+      const spot =
+        freeSpotInColumn(placed, wanted.w, wanted.h, bounds, wanted) ??
+        nearestFreeSpot(placed, wanted.w, wanted.h, bounds, wanted);
       if (spot) final = { ...wanted, x: spot.x, y: spot.y };
     }
     placed.push(final);

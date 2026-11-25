@@ -107,6 +107,32 @@ export function nearestFreeSpot(
   return best;
 }
 
+/**
+ * Closest free spot that keeps `around`'s left edge, so a widget pushed out of place by a smaller
+ * screen stays in the column it was designed into instead of jumping to the other one. Ties go to
+ * the earlier row. Null when nothing in that column fits, and the caller has to look wider.
+ */
+export function freeSpotInColumn(
+  occupied: readonly Rect[],
+  w: number,
+  h: number,
+  bounds: Bounds,
+  around: Cell,
+): Cell | null {
+  if (around.x < 0 || around.x + w > bounds.cols) return null;
+  let best: Cell | null = null;
+  let bestDistance = Infinity;
+  for (let y = 0; y + h <= bounds.rows; y++) {
+    const distance = Math.abs(y - around.y);
+    if (distance >= bestDistance) continue;
+    const candidate: Rect = { x: around.x, y, w, h };
+    if (occupied.some((o) => rectsOverlap(o, candidate))) continue;
+    best = { x: around.x, y };
+    bestDistance = distance;
+  }
+  return best;
+}
+
 /** First free spot in reading order (left to right, top to bottom). */
 export function firstFreeSpot(occupied: readonly Rect[], w: number, h: number, bounds: Bounds): Cell | null {
   for (let y = 0; y + h <= bounds.rows; y++) {

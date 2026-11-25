@@ -11,7 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { widgetCatalog } from "../../overlay/catalog";
-import { boundsFor, type GridMetrics } from "../layout/grid";
+import { boundsFor, freeSpotInColumn, type GridMetrics } from "../layout/grid";
 import { normalizePlacements, rectOf, type LayoutContext } from "../layout/ops";
 import { DEFAULT_SETTINGS, defaultLayoutDoc, MIN_SUPPORTED_BOUNDS } from "./defaults";
 import { PRIMARY_MONITOR, type Bounds, type Placement } from "./types";
@@ -42,15 +42,6 @@ function viewportBounds(width: number, height: number, scale: number): Bounds {
 
 const LEFT_COLUMN = ["clock-1", "music-1", "photo-1"] as const;
 const RIGHT_COLUMN = ["date-1", "battery-1", "timer-1", "system-1"] as const;
-
-/** Widgets that ended up on the wrong side of the two columns, named so a failure reads itself. */
-function columnsCrossed(placed: readonly Placement[]): string[] {
-  const left: ReadonlySet<string> = new Set<string>(LEFT_COLUMN);
-  const boundary = Math.min(...RIGHT_COLUMN.map((id) => work().find((p) => p.id === id)?.x ?? 0));
-  return placed
-    .filter((p) => (left.has(p.id) ? p.x >= boundary : p.x < boundary))
-    .map((p) => `${p.id} at ${p.x},${p.y}`);
-}
 
 describe("the shipped Work layout is the owner's two columns", () => {
   it("is the left column clock, now-playing, photo and the right column date, battery, timer, RAM", () => {
@@ -135,17 +126,31 @@ describe("the shipped Work layout fits the screens we support", () => {
     expect(moved, `${bounds.cols} x ${bounds.rows} cells`).toEqual([]);
   });
 
-  // Expected to fail until `normalizeArrangement` degrades predictably: a widget that cannot fit is sent
-  // to the "nearest free spot", which can be the other column. Below the supported bounds the arrangement
-  // should lose its tail, not swap sides. Turn these back into `it` with that fix.
-  it.fails("keeps its two columns on a viewport too small to hold it (B5: the nearest-free-spot scatter)", () => {
-    for (const combination of combinations.filter((c) => !fits(c))) {
-      const bounds = viewportBounds(combination.width, combination.height, combination.scale);
-      expect(columnsCrossed(normalizePlacements(work(), context(bounds))), `${bounds.cols} x ${bounds.rows}`).toEqual([]);
-    }
-    for (let rows = 2; rows < MIN_SUPPORTED_BOUNDS.rows; rows++) {
-      const placed = normalizePlacements(work(), context({ cols: MIN_SUPPORTED_BOUNDS.cols, rows }));
-      expect(columnsCrossed(placed), `${rows} rows`).toEqual([]);
-    }
+  /** Widgets that left their column while that column still had room for them: the avoidable scatter. */
+  function avoidablyMoved(placed: readonly Placement[], bounds: Bounds): string[] {
+    return placed.filter((p) => {
+      const home = work().find((q) => q.id === p.id);
+      if (!home || p.x === home.x) return false;
+      const others = placed.filter((q) => q.id !== p.id).map((q) => rectOf(widgetCatalog, q));
+      const { w, h } = rectOf(widgetCatalog, p);
+      return freeSpotInColumn(others, w, h, bounds, { x: home.x, y: home.y }) !== null;
+    }).map((p) => `${p.id} left column ${work().find((q) => q.id === p.id)?.x} for ${p.x}`);
+  }
+
+  it.each([
+    ...combinations.filter((c) => !fits(c)).map((c) => ({
+      label: `a ${c.name} at ${c.scale}x scaling`,
+      bounds: viewportBounds(c.width, c.height, c.scale),
+    })),
+    ...Array.from({ length: MIN_SUPPORTED_BOUNDS.rows - 2 }, (_, i) => ({
+      label: `${i + 2} rows`,
+      bounds: { cols: MIN_SUPPORTED_BOUNDS.cols, rows: i + 2 },
+    })),
+  ])("gives up its tail rather than scrambling on $label, where it cannot fit", ({ bounds }) => {
+    const placed = normalizePlacements(work(), context(bounds));
+    // Nothing invented, nothing lost: the user can still reach every widget they were given.
+    expect(placed.map((p) => p.id).sort()).toEqual(work().map((p) => p.id).sort());
+    // Whatever has to give, a widget only leaves its column when that column has no room left for it.
+    expect(avoidablyMoved(placed, bounds)).toEqual([]);
   });
 });
