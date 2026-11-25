@@ -13,7 +13,7 @@ use crate::home_host::{Home, HomeState};
 use crate::island_host::{IslandSlot, Notch};
 use crate::tray;
 use dotdock_shell::modules::{Environment, ModuleId, Modules};
-use dotdock_shell::{boot_log as boot, dock_guard, handover};
+use dotdock_shell::{boot_log as boot, desktop_icons, dock_guard, handover};
 use std::sync::{Mutex, PoisonError};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -33,12 +33,25 @@ pub fn install(app: &AppHandle) {
     app.manage(modules);
 }
 
+/// Hides Windows' desktop icons while the dotDock theme is on, and gives them back when it is off
+/// (B4): a new install has them on, and shortcuts showing through the widget layer is the first thing
+/// a user sees. Called at every start as well as on every switch, so a run that was killed with the
+/// icons hidden is undone by the next start rather than leaving the user to find the View menu.
+fn sync_desktop_icons(on: bool) {
+    match dotdock_shell::app_data_dir() {
+        Some(dir) => boot::record(&format!("desktop icons: {:?}", desktop_icons::apply(&dir, on))),
+        None => boot::record("desktop icons: LOCALAPPDATA is not set, Windows' own setting is left alone"),
+    }
+}
+
 /// Plugs in every part this build has, on a thread of its own: building a window waits for the main
 /// thread, which is only free once setup has returned.
 pub fn start_enabled(app: &AppHandle) -> std::io::Result<()> {
     let app = app.clone();
     std::thread::Builder::new().name("modules-start".into()).spawn(move || {
         let modules = app.state::<Modules>();
+        // Before the first window: the widget layer must never appear over the user's shortcuts.
+        sync_desktop_icons(modules.environment().on);
         // The dock first: it is what the user reaches for, so its window gets the first WebView2 start-up.
         if app.try_state::<DockState>().is_some() {
             modules.register(ModuleId::Dock, Box::new(DockPart::new(app.clone())));
@@ -117,6 +130,8 @@ fn switch_theme(app: &AppHandle, on: bool) -> Result<Environment, String> {
             boot::record(&format!("theme on undone: {handed:?}"));
             return Err(e.to_string());
         }
+        // Only once the theme is really on: a switch that failed must not leave the icons hidden.
+        sync_desktop_icons(true);
         set_handover_problem(match taken {
             Err(e) => Some(format!("{e}, so the Windows wallpaper stays for now.")),
             Ok(t) if !t.nothing_recorded && !t.windows_kept => Some(
@@ -127,6 +142,8 @@ fn switch_theme(app: &AppHandle, on: bool) -> Result<Environment, String> {
         });
     } else {
         modules.set_environment(false).map_err(|e| e.to_string())?;
+        // Before the hand-over, so the desktop the user is given back already has their own icons on it.
+        sync_desktop_icons(false);
         let handed = handover::hand_back(&dir, &handover::Windows);
         boot::record(&format!("theme off: {handed:?}"));
         set_handover_problem(handed.err().map(|e| format!("{e}.")));

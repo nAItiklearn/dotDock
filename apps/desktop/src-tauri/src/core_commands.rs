@@ -85,6 +85,12 @@ pub async fn startup_set(setting: StartupToggle, value: bool) -> Result<StartupS
             // The original visibility must be on record before the first change, so restore can undo it.
             dotdock_shell::snapshot::ensure(false).map_err(|e| e.to_string())?;
             desktop_icons::set_visible(!value).map_err(|e| e.to_string())?;
+            // Asking for the icons back takes them off dotDock's hands, so switching the theme off does
+            // not then "restore" them to whatever the snapshot held (B4). The next start still hides them
+            // while the theme is on: the environment owns them for as long as it runs.
+            if let Some(dir) = (!value).then(dotdock_shell::app_data_dir).flatten() {
+                desktop_icons::forget(&dir);
+            }
         }
     }
     Ok(startup_state())

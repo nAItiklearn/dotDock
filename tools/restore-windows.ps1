@@ -84,6 +84,13 @@ if ($snap) {
     }
 }
 
+# The icons are the user's again, so dotDock must stop claiming them: a record left behind would have
+# the next start hide them once more (B4, desktop_icons.rs).
+Step 'Drop the desktop-icon claim' {
+    $claim = Join-Path (Split-Path -Parent $snapshotPath) 'desktop-icons.json'
+    if (Test-Path -LiteralPath $claim) { Remove-Item -LiteralPath $claim -Force }
+}
+
 # No snapshot value to go by: the value from before the dock hid the taskbar is the next best.
 $snapHasAutoHide = $snap -and $snap.PSObject.Properties.Name -contains 'taskbarAutoHide' -and $null -ne $snap.taskbarAutoHide
 if (-not $snapHasAutoHide -and $null -ne $script:markerAutoHide) {

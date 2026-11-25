@@ -48,6 +48,11 @@ pub fn restore_windows() -> Result<Report, RestoreError> {
     // Best effort: with no Explorer desktop there are no icons to bring back.
     let icons = desktop_icons::original(snap.desktop_icons_visible, snap.hide_icons_registry);
     report.desktop_icons_restored = desktop_icons::set_visible(icons).is_ok();
+    // The icons are the user's again, so dotDock stops claiming them: the next start must not hide them
+    // on the strength of a record from before this restore.
+    if let Some(dir) = crate::app_data_dir() {
+        desktop_icons::forget(&dir);
+    }
 
     // Prefer the private copy: the original path may be a file Windows has since overwritten
     // (Spotlight and slideshow write to `TranscodedWallpaper`).
