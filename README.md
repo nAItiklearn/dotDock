@@ -28,6 +28,11 @@ There are basically 3 big features -
 ive been coding for more than 3 years now , im still a learner , ive made slop projects , I know which are which are not .
 Ive worked for more than 5 days now on this(still somehow hacktime tracked only around 40hrs), and I know how hard it was to fix , debugg all those minute errors and layout , more than 1000 tests pass , 7 times live testing for each feature . So idc if its ai gen as long it works well. Still ik it still be having bugs which ill eventually fix when I get to know :)
 
+## KNOWN BUGS 
+1. the arrow dropdown for apps shortcut is missing which ppl use often
+2. sometime dock disappears when ram usage is too much or playing a high end game on low device
+3. notch has to be connected everytime when starting a new session in claude code
+
 # run locally 
 ```bash
 git clone https://github.com/nAItiklearn/dotDock.git
